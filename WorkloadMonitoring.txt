@@ -1,0 +1,5 @@
+2/21/2023
+08:30AM	Conferred with Miss Cat regarding the processing of Service Records and the proposed features for the Service Record Generation System.
+10:00AM	Started creating User Stories-Set 1
+12:15PM Finished User Stories-Set 1; To be shown to Ma'am Cath
+01:03PM Started creating workflow diagram in Dia (had to install Dia first; actual start time is 1:33PM)
