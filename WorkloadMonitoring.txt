@@ -3,9 +3,17 @@
 10:00AM	Started creating User Stories-Set 1
 12:15PM	Finished User Stories-Set 1; To be shown to Ma'am Cath
 01:03PM	Started creating workflow diagram in Dia (had to install Dia first; actual start time is 1:33PM)
+
 2/22/2023
 12:45PM	Finished creating workflow diagrams in Dia (work interrupted for around an hour due to HR concerns)
 12:55PM Started constructing wireframe prototypes for the pages
 04:57PM	Committed a wireframe prototype and set it up to be viewable on the web
+
 2/23/2023
 07:37AM	Exported and committed/pushed an updated wireframe prototype, as I forgot to re-export it yesterday.
+07:58AM	Had to stop for HR/Landbank concerns
+11:32AM	Returned to office
+02:02PM	Finished adding content to Wireframe Prototype (put Wireframe creation ON-HOLD to wait for further inputs)
+02:25PM	Committed/pushed updated Wireframe Prototype
+02:35PM	Started creating ERD and UML diagrams
+04:18PM	Added a Technical Manual for the system.
