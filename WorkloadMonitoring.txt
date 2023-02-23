@@ -6,3 +6,6 @@
 2/22/2023
 12:45PM	Finished creating workflow diagrams in Dia (work interrupted for around an hour due to HR concerns)
 12:55PM Started constructing wireframe prototypes for the pages
+04:57PM	Committed a wireframe prototype and set it up to be viewable on the web
+2/23/2023
+07:37AM	Exported and committed/pushed an updated wireframe prototype, as I forgot to re-export it yesterday.
