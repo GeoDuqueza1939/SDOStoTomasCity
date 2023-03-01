@@ -1,0 +1,621 @@
+.material-icons, .material-icons-outlined, .material-icons-round {
+    /* text-transform: capitalize; */
+}
+
+.login-page {}
+
+.login-page > header {
+    background-color: #04508c;
+    padding: 2em;
+    align-content: center;
+    text-align: center;
+}
+
+.login-page > header > div {
+    display: inline-table;
+    margin: 0;
+    padding: 0;
+    border-collapse: separate;
+}
+
+.login-page > header > div > div {
+    display: table-row;
+    margin: 0;
+    padding: 0;
+}
+
+.login-page > header > div > div > span {
+    display: table-cell;
+    margin: 0;
+    padding: 0;
+}
+
+.login-page .header-logo {
+}
+
+.login-page .header-text {
+    padding-left: 2em;
+    text-align: left;
+    font-size: 1.25em;
+}
+
+.login-page .header-text-deped {
+    display: block;
+}
+
+.login-page .header-text-sdo {
+    display: block;
+}
+
+.login-page > section {
+    text-align: center;
+}
+
+.login-page form {
+}
+
+.login-page form > fieldset {
+    display: inline-block;
+    border: 1px solid blue;
+    border-radius: 0.5em;
+    margin: 2em;
+    padding: 2em 2em 1em;
+    width: 25em;
+}
+
+.login-page form > fieldset > legend {
+    display: block;
+    font-size: 1em;
+    background-color: white;
+}
+
+.login-page form > fieldset .textbox,
+.login-page form > fieldset .lev1-link,
+.login-page form > fieldset .link {
+    display: block;
+    margin: 1em 0;
+    padding: 0;
+}
+
+.login-page form > fieldset .textbox > input {
+    width: 15em;
+}
+
+.login-page form > fieldset .lev1-link > button {
+    width: 15em;
+}
+
+#sergs {
+    display: grid;
+}
+
+#sergs > header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+#sergs > header > h1 {
+    font-size: 1em;
+}
+
+/* NAV NORMAL */
+#sergs > header {
+    position: fixed;
+    top: 0.2em;
+    left: 4em;
+    right: 0;
+    z-index: 1;
+}
+
+#sergs > header > h1 {
+
+}
+
+#sergs > nav { /*.navbar.flex-column {*/
+    background-color: #022642;
+    position: fixed;
+    display: block;
+    top: 0;
+    left: 0;
+    bottom: 2em;
+    padding: 0.25em;
+    /* width: 3.65em; */
+    overflow-x: hidden;
+    /* transition: right 1s ease-in-out; */
+}
+
+#sergs > nav .navbar-nav.lev1 {
+    display: block;
+    position: absolute;
+    top: 2.6em;
+    bottom: 1em;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 3.15em;
+}
+
+#sergs > nav #menu-btn {
+    font-size: 1.5em;
+    padding: 0.2em 0.5em 0.17em;
+}
+
+#sergs > nav #menu-btn > [class^=material-icons] {
+    font-size: 1em;
+}
+
+#sergs > nav .navbar-nav.lev1 {
+    margin-top: 1em;
+}
+
+#sergs > nav .navbar-item {
+    user-select: none;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item {
+    text-shadow: 1px 1px black;
+    margin-top: 0.5em;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item:hover {
+    background-color: #0d6efd;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item:active {
+    background-color: #0a58ca;
+}
+
+#sergs > nav .navbar-link {
+    text-decoration: none;
+    display: block;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item {
+    /* outline: 1px dotted red; */
+    height: 2.2em;
+    overflow: hidden;
+    /* transition: height 0.1s ease-in-out, width 0.1s ease-in-out; */
+    /* transition: all 0.1s ease-in-out; */
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item.expanded {
+    /* outline: 1px dotted green; */
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item:hover  > .navbar-link {
+    color: white;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item:active > .navbar-link {
+    color: white;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item > .navbar-link > [class^=material-icons] {
+    font-size: 1.5em;
+    /* border: 1px solid; */
+    /* border-radius: 0.25em; */
+    padding: 0.2em 0.5em 0.17em;
+    vertical-align: -0.275em;
+    margin-right: 0.25em;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item > .btn-collapse-toggle {
+    display: none;
+    visibility: hidden;
+}
+
+#sergs > nav .navbar-nav.lev2 {
+    margin-left: 5em;
+    font-size: 0.9em;
+    font-weight: normal;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item:hover > .navbar-nav.lev2 > .navbar-item > .navbar-link {
+    display: block;
+    border-radius: 0.25em;
+    color: white;
+}
+
+#sergs > nav .navbar-nav.lev1 > .navbar-item:hover > .navbar-nav.lev2 > .navbar-item:hover > .navbar-link {
+    border-radius: 0.25em;
+    background-color: aquamarine;
+    color: black;
+    text-shadow: none;
+}
+
+/* NAV EXPAND */
+#sergs > header.expanded {
+    color: white;
+    text-shadow: 1px 1px black;
+}
+
+#sergs > nav.expanded {
+    width: auto;
+}
+
+#sergs > nav.expanded .navbar-nav.lev1 {
+    width: auto;
+    position: static;
+}
+
+#sergs > nav.expanded .navbar-nav.lev1 > .navbar-item {
+    /* outline: 1px dotted cyan; */
+    height: 2.2em;
+    padding-right: 3.00em;
+    font-weight: bold;
+}
+
+#sergs > nav.expanded .navbar-nav.lev1 > .navbar-item.expanded {
+    /* outline: 1px dotted magenta; */
+    height: auto;
+}
+
+#sergs > nav.expanded .navbar-nav.lev1 > .navbar-item > .navbar-link {
+    display: block;
+    /* width: 100%; */
+}
+
+
+#sergs > nav.expanded .navbar-nav.lev1 > .navbar-item > .btn-collapse-toggle {
+    display: inline;
+    visibility: visible;
+    color: white;
+    /* margin-top: 0.18em; */
+    /* margin-right:-1em; */
+    float: right;
+    /* border: 1px solid; */
+    /* border-radius: 1em; */
+    position: absolute;
+    margin-top: -1.18em;
+    right: 0.75em;
+}
+
+@keyframes drop-down-btn-bounce {
+    from { transform: translateY(0.1em); }
+    to { transform: translateY(-0.1em); }
+}
+
+#sergs > nav.expanded .navbar-nav.lev1 > .navbar-item > .btn-collapse-toggle:hover {
+    animation: drop-down-btn-bounce 1s infinite alternate;
+}
+
+/* NAV MAXIMIZED */
+#sergs > header.max {
+    top: 0;
+    left: 0;
+    height: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #022642;
+    overflow-y: auto;
+}
+
+#sergs > header.max > h1 {
+    font-size: 3em;
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px black;
+}
+
+#sergs > nav.max {
+    display: flex;
+    top: 30%;
+    right: 0;
+    overflow: auto;
+    width: auto;
+}
+
+#sergs > nav.max #menu-btn,
+#sergs > nav.max #nav-home {
+    display: none;
+    visibility: hidden;
+}
+
+#sergs > nav.max .navbar-nav.lev1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item {
+    display: inline-flex;
+    text-indent: 0;
+    text-align: center;
+    margin: 1em;
+    padding: 1em;
+    width: 8em;
+    height: 8em;
+    border-radius: 1em;
+    align-items: start;
+    justify-content: center;
+    line-height: 1.25;
+    /* outline: 1px dotted blue; */
+    overflow: initial;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item:hover {
+    background-color: #0d6efd;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item:active {
+    background-color: #0a58ca;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item.expanded {
+    /* outline: 1px dotted yellow; */
+    height: 8em;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item > .navbar-link {
+    display: block;
+    margin: 0;
+    padding: 0;
+    color: white;
+    text-shadow: 1px 1px black;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item:hover > .navbar-link {
+    text-shadow: 2px 2px black;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item:active > .navbar-link {
+    text-shadow: 1px 1px black;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item > .navbar-link > [class^=material-icons] {
+    display: block;
+    font-size: 4em;
+    border-style: none;
+    border-radius: initial;
+    padding: 0;
+    vertical-align: initial;
+    margin: 0;
+}
+
+#sergs > nav.max .navbar-nav.lev1 > .navbar-item > .btn-collapse-toggle {
+    display: none;
+    visibility: hidden;
+}
+
+#sergs > nav.max .navbar-nav.lev2 {
+    display: none;
+    visibility: hidden;
+}
+
+/* MAIN */
+#sergs > main {
+    /* outline: 1px dotted darkgreen; */
+}
+
+#sergs > footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+/* 
+NAV NORMAL
+.sergs > nav {
+    background-color: #022642;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow: hidden;
+    padding: 0.5em;
+}
+
+.sergs > nav > .app-name {
+    position: fixed;
+    z-index: 10;
+    top: 0.6em;
+    left: 3.75em;
+    font-size: 1em;
+    margin: 0;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    text-shadow: 1px 1px darkgray;
+    font-variant: small-caps;
+}
+
+.sergs > nav .nav-links {
+    padding-top: 1em;
+}
+
+.sergs > nav .lev1 {
+    margin-top: 0.5em;
+    color: white;
+}
+
+.sergs > nav > .menu-button-wrapper,
+.sergs > nav .lev1 {
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.sergs > nav .menu-button-wrapper > button,
+.sergs > nav .lev1 > .lev1-link {
+    padding: 0.1em;
+    border: 1px solid transparent;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sergs > nav .lev1 > .lev1-link:hover {
+    background-color: #0d6efd;
+}
+
+.sergs > nav .lev1 > .lev1-link:active {
+    background-color: #0a58ca;
+}
+
+.sergs > nav .menu-button-wrapper > button > .material-icons,
+.sergs > nav .lev1 > .lev1-link > .material-icons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.sergs > nav .lev1 > .lev1-link > .lev1-text {
+    display: none;
+    visibility: hidden;
+    line-height: 1;
+}
+
+.sergs > nav .lev2 {
+    display: none;
+    visibility: hidden;
+}
+
+NAV OPEN
+.sergs > nav.open {
+    overflow: unset;
+    transition: width 2s;
+}
+
+.sergs > nav.open > .app-name {
+    color: white;
+    text-shadow: 1px 1px black;
+}
+
+.sergs > nav.open .menu-button-wrapper > button {
+    width: auto;
+}
+
+.sergs > nav .lev1.open {
+    
+}
+
+.sergs > nav .lev1.closed {
+    outline: 1px solid red;
+}
+
+.sergs > nav.open .lev1 > .lev1-link > .lev1-text {
+    display: inline-flex;
+    visibility: visible;
+    align-items: center;
+    vertical-align: top;
+    height: 2.25em;
+    padding-right: 0.5em;
+}
+.sergs > nav.open .lev2 {
+    display: block;
+    text-align: left;
+    margin-left: 3em;
+}
+
+
+.sergs > nav.max {
+    right: 0;
+    text-align: center;
+    overflow: unset;
+    padding: 0;
+}
+
+.sergs > nav.max > .app-name {
+    position: static;
+    z-index: unset;
+    top: unset;
+    left: unset;
+    font-size: initial;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30%;
+    color: white;
+    overflow: auto;
+    text-shadow: 1px 1px black;
+    font-weight: bold;
+}
+
+.sergs > nav.max > .app-name > .app-name-text {
+    font-size: 3em;
+}
+
+.sergs > nav.max > .menu-button-wrapper {
+    display: none;
+    visibility: hidden;
+}
+
+.sergs > nav.max > .nav-links {
+    display: block;
+    height: 70%;
+    overflow-y: auto;
+    padding-top: 0;
+}
+
+.sergs > nav.max #nav-home {
+    display: none;
+    visibility: hidden;
+}
+
+.sergs > nav.max .lev1 {
+    display: inline;
+    margin-top: 0.25em;
+}
+
+.sergs > nav.max .lev1 > .lev1-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    background-color: none;
+    border-radius: 1em;
+    width: 10em;
+    height: 10em;
+    margin: 1em;
+    padding: 1em 2em;
+    text-shadow: 1px 1px black;
+}
+
+.sergs > nav.max .lev1 > .lev1-link:hover {
+    text-shadow: 2px 2px black;
+}
+
+.sergs > nav.max .lev1 > .lev1-link:active {
+    text-shadow: 1px 1px black;
+}
+
+.sergs > nav.max .lev1 > .lev1-link > .material-icons {
+    display: block;
+    font-size: 5em;
+    width: unset;
+    height: unset;
+}
+
+.sergs > nav.max .lev1 > .lev1-link > .lev1-text {
+    display: block;
+    visibility: visible;
+    height: 2.25em;
+    padding-bottom: 1em;
+    line-height: 1.25;
+}
+
+.sergs > nav.max .lev2 {
+    display: none;
+    visibility: hidden;
+}
+
+.sergs main {
+    position: fixed;
+    z-index: -1;
+    top: 2.5em;
+    right: 0;
+    bottom: 0;
+    left: 3.7em;
+} */

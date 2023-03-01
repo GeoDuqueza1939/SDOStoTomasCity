@@ -6,7 +6,7 @@
 
 2/22/2023
 12:45PM	Finished creating workflow diagrams in Dia (work interrupted for around an hour due to HR concerns)
-12:55PM Started constructing wireframe prototypes for the pages
+12:55PM	Started constructing wireframe prototypes for the pages
 04:57PM	Committed a wireframe prototype and set it up to be viewable on the web
 
 2/23/2023
@@ -17,3 +17,22 @@
 02:25PM	Committed/pushed updated Wireframe Prototype
 02:35PM	Started creating ERD and UML diagrams
 04:18PM	Added a Technical Manual for the system.
+
+2/27/2023
+09:00AM	Conferred with Ma'am Cath about comments/feedbacks regarding the User stories; Put on old after a few minutes.
+09:30AM	Started coding login page (HTML/CSS)
+10:20AM	Went for early lunch/mini-buffet for birthday celebrants
+10:52AM	Resumed coding
+01:00PM	Continued conference about system specifications/requirements; also consolidated and filed notes after conference.
+02:15PM	Resumed coding
+02:40PM	The file login.html has been tentatively finished. Improvements shall be effected later. sergs.html has been added to design app styles.
+
+2/28/2023
+08:00AM	Submitted a copy of the User Stories and the user-system interaction flowchart to Ma'am Catalina
+08:25AM	Resumed coding (had to restart to refresh my system and cure its lag)
+04:50PM	Put coding on hold to determine whether to rewrite the code without using BootStrap or pursue it as it is.
+
+3/1/2023
+07:51AM	Resumed coding. Decided to abandon old code. Will attempt to style bootstrap first.
+09:00AM Fire/Earthquake Drill
+09:18AM	Resumed coding
