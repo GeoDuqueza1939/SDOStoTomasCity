@@ -4,144 +4,161 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEPED-Sto. Tomas City, Batangas | Service Record Generation System</title>
-    <!-- <link href="styles/default.css" rel="stylesheet" /> -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
+    <title>Service Record Generation System</title>
+    <script src="https://code.jquery.com/jquery-3.6.3.slim.min.js" integrity="sha256-ZwqZIVdD3iXNyGHbSYdsmWP//UBokj2FHAxKuSBKDSo=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="styles/main.css" rel="stylesheet" />
+    <link href="styles/sergs.css" rel="stylesheet" />
     <script src="js/elements.js"></script>
-    <!-- <script src="js/types.js"></script> -->
+    <script src="js/async.js"></script>
 </head>
 <body>
     <div id="sergs">
-        <header class="">
-            <h1>Service Record <br />Generation System</h1>
-        </header>
-        <nav class="navbar flex-column">
-            <button type="button" class="btn btn-primary navbar-toggler" id="menu-btn"><span class="material-icons-round">menu</span></button>
+        <h1 id="app-name">Service Record Generation System</h1>
 
-            <ul class="navbar-nav lev1">
-                <li class="navbar-item" id="nav-home"><a class="navbar-link" href="/sergs/home/"><span class="material-icons-round">home</span> Home</a></li>
-                <li class="navbar-item" id="nav-dashboard"><a class="navbar-link" href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
-                <li class="navbar-item" id="nav-view-sr"><a class="navbar-link" href="/sergs/view/"><span class="material-icons-round">pageview</span> View Service Record</a>
-                    <ul class="navbar-nav lev2">
-                        <li class="navbar-item" id="nav-view-my-sr"><a class="navbar-link" href="/sergs/view/my_service_record/">My Service Record</a></li>
-                        <li class="navbar-item restricted" id="nav-search-sr"><a class="navbar-link" href="/sergs/view/search/">Search</a></li>
-                    </ul>
-                </li>
-                <li class="navbar-item" id="nav-requests"><a class="navbar-link" href="/sergs/requests/"><span class="material-icons-round">task</span> Requests</a>
-                    <ul class="navbar-nav lev2">
-                        <li class="navbar-item" id="nav-my-requests"><a class="navbar-link" href="/sergs/requests/my_requests/">My Requests</a></li>
-                        <li class="navbar-item" id="nav-new-request"><a class="navbar-link" href="/sergs/requests/new_request/">New Request</a></li>
-                        <li class="navbar-item restricted" id="nav-encode"><a class="navbar-link" href="/sergs/requests/for_update/">For Encode/Update</a></li>
-                        <li class="navbar-item restricted" id="nav-certify"><a class="navbar-link" href="/sergs/requests/for_certification/">For Certification</a></li>
-                        <li class="navbar-item restricted" id="nav-approval"><a class="navbar-link" href="/sergs/requests/for_approval/">For Approval</a></li>
-                        <li class="navbar-item restricted" id="nav-release"><a class="navbar-link" href="/sergs/requests/for_release/">For Release</a></li>
-                        <li class="navbar-item restricted" id="nav-archived-requests"><a class="navbar-link" href="/sergs/requests/archive/">Archived Requests</a></li>
-                        <li class="navbar-item restricted" id="nav-search-request"><a class="navbar-link" href="/sergs/requests/search/">Search</a></li>
-                    </ul>
-                </li>
-                <li class="navbar-item restricted" id="nav-logs"><a class="navbar-link" href="/sergs/logs/"><span class="material-icons-round">fact_check</span> System Logs</a></li>
-                <li class="navbar-item" id="nav-account"><a class="navbar-link" href="/sergs/account/"><span class="material-icons-round">account_circle</span> Account</a>
-                    <ul class="navbar-nav lev2">
-                        <li class="navbar-item" id="nav-edit-myaccount"><a class="navbar-link" href="/sergs/account/edit/">Edit My Account</a></li>
-                        <li class="navbar-item" id="nav-edit-otheraccount"><a class="navbar-link" href="/sergs/account/edit_other/">Edit Another Account</a></li>
-                        <li class="navbar-item" id="nav-logout"><a class="navbar-link" href="/sergs/logout/">Logout</a></li>
-                    </ul>
-                </li>
-                <li class="navbar-item" id="nav-settings"><a class="navbar-link" href="/sergs/settings/"><span class="material-icons-round">settings</span> Settings</a></li>
-            </ul>
-        </nav>
+        <ul id="nav">
+            <li><a href="/sergs/home/"><span class="material-icons-round">home</span> Home</a></li>
+            <li><a href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
+            <li><a href="/sergs/view/"><span class="material-icons-round">pageview</span> View Service Record</a>
+                <ul>
+                    <li><a href="/sergs/view/my_service_record/">My Service Record</a></li>
+                    <li><a href="/sergs/view/search/">Search</a></li>
+                </ul>
+            </li>
+            <li><a href="/sergs/requests/"><span class="material-icons-round">task</span> Requests</a>
+                <ul>
+                    <li><a href="/sergs/requests/my_requests/">My Requests</a></li>
+                    <li><a href="/sergs/requests/new_request/">New Request</a></li>
+                    <li><a href="/sergs/requests/for_update/">For Encode/Update</a></li>
+                    <li><a href="/sergs/requests/for_certification/">For Certification</a></li>
+                    <li><a href="/sergs/requests/for_approval/">For Approval</a></li>
+                    <li><a href="/sergs/requests/for_release/">For Release</a></li>
+                    <li><a href="/sergs/requests/archive/">Archived Requests</a></li>
+                    <li><a href="/sergs/requests/search/">Search</a></li>
+                </ul>
+            </li>
+            <li><a href="/sergs/logs/"><span class="material-icons-round">fact_check</span> System Logs</a></li>
+            <li><a href="/sergs/account/"><span class="material-icons-round">account_circle</span> Account</a>
+                <ul>
+                    <li><a href="/sergs/account/edit/">Edit My Account</a></li>
+                    <li><a href="/sergs/account/edit_other/">Edit Another Account</a></li>
+                    <li><a href="/sergs/logout/">Logout</a></li>
+                </ul>
+            </li>
+            <li><a href="/sergs/settings/"><span class="material-icons-round">settings</span> Settings</a></li>
+    </ul>
 
-         <main>Main</main>
-         
-         <footer>
-            <div>&copy; DepEd&mdash;Sto. Tomas City, Batangas</div>
-         </footer>
+        <main>Main</main>
+
+        <footer>&copy; DepEd - Sto. Tomas City, Batangas</footer>
     </div>
 </body>
+<script src="js/sergs-retag.js"></script>
 <script>
-    "use strict";
+    "use script";
 
-    var sergs = document.getElementById("sergs");
-    var appName = sergs.getElementsByTagName("header")[0];
-    var nav = document.getElementById("menu-btn");
-    var navPanel = sergs.getElementsByTagName("nav")[0];
-    var navLev1 = sergs.getElementsByClassName("lev1")[0];
-    var navLev1Items = navLev1.getElementsByClassName("navbar-item");
-    var navLev2 = sergs.getElementsByClassName("lev2");
+    function sergsRetag() {
+        this.app = $("#sergs")[0];
+        this.appName = $("#app-name")[0];
+        this.nav = $("#nav")[0];
+        this.main = $("main")[0];
+        this.footer = $("footer")[0];
 
-    nav.addEventListener("click", () => {
-        navPanel.classList.toggle("expanded"); // TRACK USING COOKIES
-        appName.classList.toggle("expanded"); // TRACK USING COOKIES
-    });
+        $("#app-name").wrap("<header class='navbar justify-content-start p-2 position-fixed start-0 top-0 end-0 z-2'></header>")
+        createElementEx("", "span", 
+            createElementEx("", "button", this.appName.parentElement, this.appName,
+                "", "class", "navbar-toggler me-2",// collapsed",
+                "", "type", "button",
+                "", "title", "Toggle navigation"
+            ),
+            null, "", "class", "navbar-toggler-icon"
+        );
 
-    Array.from(navLev1Items).forEach((item, index, arr) => {
-        var link = item.getElementsByTagName("a")[0]; // link has to be the first anchor tag in the item element
-        link.removeAttribute("href");
+        $("header > .navbar-toggler").tabIndex = 0;
 
-        switch(item.id) {
-            case "nav-home":
-                link.addEventListener("click", () => {
-                    sergs.getElementsByTagName("header")[0].classList.add("max");
-                    // sergs.getElementsByTagName("nav")[0].classList.remove("expanded"); // MONITOR VIA COOKIES
-                    sergs.getElementsByTagName("nav")[0].classList.add("max");
-                });
-                break;
-            default:
-                link.addEventListener("click", () => {
-                    sergs.getElementsByTagName("header")[0].classList.remove("max");
-                    // sergs.getElementsByTagName("nav")[0].classList.add("expanded"); // MONITOR VIA COOKIES
-                    sergs.getElementsByTagName("nav")[0].classList.remove("max");
-                });
-                break;
-        }
-    });
-
-    Array.from(navLev2).forEach((level, index, arr) => {
-        var btnCollapseToggle = createElementEx("", "span", level.parentElement, level, "", "class", "material-icons-round btn-collapse-toggle");
-        addText("expand_more", btnCollapseToggle);
-
-        var fn = function() {
-            if (btnCollapseToggle.innerHTML == "expand_more") {
-                btnCollapseToggle.innerHTML = "expand_less";
-                btnCollapseToggle.parentElement.classList.add("expanded");
+        $("header > .navbar-toggler").click(event, async () => {
+            if ($(".app-content")[0].classList.contains("nav-open")) {
+                $(".app-content")[0].classList.remove("nav-open");
+                $(".app-content")[0].classList.add("nav-opening");
+                await sleep(150);
+                $(".app-content")[0].classList.remove("nav-opening");
             }
             else {
-                btnCollapseToggle.innerHTML = "expand_more";
-                btnCollapseToggle.parentElement.classList.remove("expanded");
+                $(".app-content")[0].classList.add("nav-opening");
+                await sleep(150);
+                $(".app-content")[0].classList.remove("nav-opening");
+                $(".app-content")[0].classList.add("nav-open");
             }
-        };
 
-        btnCollapseToggle.addEventListener("click", fn);
-        btnCollapseToggle.parentElement.getElementsByTagName("a")[0].addEventListener("click", fn);
-    });
+            // await sleep(200);
 
-    /*
-    var navPanel = document.getElementsByTagName("nav")[0];
-    var nav = document.getElementById("menu");
-    var navLinksLev1 = document.getElementsByClassName("lev1");
-
-    nav.addEventListener("click", () => {
-        navPanel.classList.toggle("open"); // TRACK USING COOKIES
-    });
-
-    Array.from(navLinksLev1).forEach((el, i, arr) => {
-        // assign NAV mode change function
-        var navModeFn = (el.id == "nav-home" ? (event) => {
-            navPanel.classList.remove("open"); // TRACK USING COOKIES
-            navPanel.classList.add("max"); // TRACK USING COOKIES
-        } : (event) => {
-            navPanel.classList.remove("max"); // TRACK USING COOKIES
+            // $("main").css("left", Math.trunc($("#navbar").width()) + "px");
         });
         
-        el.getElementsByClassName("lev1-link")[0].addEventListener("click", navModeFn);
-    });
-    */
+        $("#app-name").addClass("navbar-brand p-0 m-0");
 
-    
+        $("#nav").addClass("navbar-nav p-2 align-items-start");
+        $("#nav").wrap("<div class='app-content nav-open'><nav id='navbar' class='navbar bg-primary p-0 align-items-start z-1'></nav></div>"); //collapse'></nav></div>");
+        $("#nav li").addClass("navbar-item");
+        $("#nav ul").addClass("nav navbar-nav");
+        $("#nav li > a").addClass("navbar-link");
+        $("#nav li > a").removeAttr("href");
+        $("#nav li > a").toArray().forEach((el, aIndex, iArr) => {
+            el.childNodes.forEach((node, nIndex, nArr) => {
+                if (node.nodeType == 3) {
+                    var txt = node.textContent.trim();
+                    var parent = node.parentElement;
+                    node.remove();
+                    addText(" ", parent);
+                    addText(txt, createElementEx("", "span", parent, null, "", "class", "navbar-item-text"));
+                }
+            });
+        });
+
+        $("#nav li > ul").toArray().forEach((lev2list, index, arr) => {
+            // lev2list.parentElement.classList.add("accordion-item");
+            lev2list.id = "lev2list" + index;
+            lev2list.classList.add("accordion-collapse", "collapse");
+            lev2list.previousElementSibling.role = "button";
+            lev2list.previousElementSibling.classList.add("accordion-button", "collapsed");
+            lev2list.previousElementSibling.setAttribute("data-bs-toggle", "collapse");
+            lev2list.previousElementSibling.setAttribute("data-bs-target", "#lev2list" + index);
+            lev2list.previousElementSibling.setAttribute("aria-expanded", "false");
+            lev2list.previousElementSibling.setAttribute("aria-controls", "lev2list" + index);
+        });
+
+        this.nav.parentElement.parentElement.appendChild(this.main);
+
+        // $("main").addClass("col-9");
+
+        $("footer").addClass("position-fixed start-0 bottom-0 end-0 d-flex align-items-center justify-content-center");
+
+        $("body").addClass("pb-10");
+
+        $("#sergs > .container-fluid").top = $("header")[0].height;
+        $("#sergs > .container-fluid").bottom = $("footer")[0].height;
+
+        $("#navbar").resize(() => {
+            console.log("NAVBAR IS BEING RESIZED.")
+            $("main").css("left", Math.trunc($("#navbar").width()) + "px");            
+        });
+
+        var interval = setInterval(() => {
+            // TRY TO ADD A ROUTINE THAT WILL CHECK THE SCREEN DIMENSIONS
+            console.log("updating...");
+            $("main").css("left", Math.trunc($("#navbar").width()) + "px");
+        }, 1000);
+
+        $("#nav a").toArray().forEach((link, index, array) => {
+            link.tabIndex = 0;
+        });
+
+        return this;
+    }
+
+    var sergs = sergsRetag();
 </script>
 </html>

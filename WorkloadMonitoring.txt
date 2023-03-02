@@ -36,3 +36,8 @@
 07:51AM	Resumed coding. Decided to abandon old code. Will attempt to style bootstrap first.
 09:00AM Fire/Earthquake Drill
 09:18AM	Resumed coding
+04:54PM Side-panel mostly finished. Committed and Pushed to online repository. (page was later found to be not responsive enough in mobile)
+
+3/2/2023
+07:30AM Started coding an alternative web app page using both Bootstrap ang JQuery.
+

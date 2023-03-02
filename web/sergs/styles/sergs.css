@@ -1,0 +1,165 @@
+[class^=material-icons] {
+    vertical-align: middle;
+    font-size: 2rem;
+    margin: 0;
+    padding: 0 0.75rem;
+}
+
+.navbar-item {
+    display: block;
+    width: 100%;
+}
+
+.navbar-link {
+    color: white;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    position: static;
+}
+
+#sergs header {
+    background-color: gray;
+    height: 3.51rem;
+    flex-wrap: nowrap;
+}
+
+#sergs footer {
+    background-color: gray;
+    height: 1.5rem;
+}
+
+#sergs #nav > li > ul {
+    padding-left: 0;
+    margin-left: 5rem;
+}
+
+#sergs #nav .nav-link {
+    display: block;
+}
+
+#sergs .app-content {
+    /* position: fixed;
+    top: 3.51rem;
+    bottom: 1rem; */
+}
+
+#sergs .app-content > nav {
+    position: fixed;
+    top: 3.51rem;
+    bottom: 1.5rem;
+    left: 0;
+}
+
+#sergs .app-content > main {
+    position: fixed;
+    top: 3.51rem;
+    bottom: 1.5rem;
+    left: 4.45rem;
+    right: 0;
+}
+/* 
+.collapse {
+    transition: none;
+    transition: width .35s ease;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: unset;
+}
+
+.collapse:not(.show) {
+    display: initial;
+    height: unset;
+    width: 4.45rem;
+    transition: none;
+    transition: width .35s ease;
+}
+
+.collapsing #nav > li > .navbar-link > .navbar-item-text,
+.collapsing #nav > li > ul,
+.collapse:not(.show) #nav > li > .navbar-link > .navbar-item-text,
+.collapse:not(.show) #nav > li > ul {
+    display: none;
+    visibility: hidden;
+}
+
+.collapsing {
+    display: initial;
+    transition: none;
+    transition: width .35s ease;
+    width: 4.45rem;
+    height: unset;
+} */
+
+#nav > li + li {
+    margin-top: 0.5rem;
+}
+
+/* 
+:not(.nav-open) #navbar {
+    transition: width .15s ease;
+    width: 4.45rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+:not(.nav-open) #nav .navbar-item-text {
+    display: none;
+    visibility: hidden;
+}
+
+:not(.nav-open) #nav .navbar-nav {
+    display: none;
+    visibility: hidden;
+}
+
+.nav-open #navbar {
+    transition: width 0.15s ease;
+    width: auto;
+    overflow-x: auto;
+}
+
+.nav-open #nav .navbar-item-text {
+    display: initial;
+    visibility: visible;
+}
+
+.nav-open #nav .navbar-nav {
+    display: flex;
+    visibility: visible;
+}
+
+.nav-opening #navbar {
+    transition: width 0.15s ease;
+    width: 10rem;
+}
+*/
+
+:not(.nav-open) #navbar {
+    transition: height .15s ease;
+    width: 0;
+    height: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+/* :not(.nav-open) #nav .navbar-item-text {
+    display: none;
+    visibility: hidden;
+} */
+
+/* :not(.nav-open) #nav .navbar-nav {
+    display: none;
+    visibility: hidden;
+} */
+
+.nav-open #navbar {
+    position: fixed;
+    transition: height 0.15s ease;
+    width: auto;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+
