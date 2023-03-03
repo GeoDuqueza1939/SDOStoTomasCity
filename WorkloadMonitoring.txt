@@ -40,4 +40,7 @@
 
 3/2/2023
 07:30AM Started coding an alternative web app page using both Bootstrap ang JQuery.
+05:00PM Committed and pushed new sergs.html to repository; Side-bar navigation partially implemented
 
+3/3/2023
+07:50AM Resumed UML diagram construction so as to aide in further front-end design, development, and testing.
