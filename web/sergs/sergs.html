@@ -20,35 +20,35 @@
         <h1 id="app-name">Service Record Generation System</h1>
 
         <ul id="nav">
-            <li><a href="/sergs/home/"><span class="material-icons-round">home</span> Home</a></li>
-            <li><a href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
-            <li><a href="/sergs/view/"><span class="material-icons-round">pageview</span> View Service Record</a>
+            <li id="home"><a href="/sergs/home/"><span class="material-icons-round">home</span> Home</a></li>
+            <li id="dashboard"><a href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
+            <li id="view-sr"><a href="/sergs/view/"><span class="material-icons-round">pageview</span> View Service Record</a>
                 <ul>
-                    <li><a href="/sergs/view/my_service_record/">My Service Record</a></li>
-                    <li><a href="/sergs/view/search/">Search</a></li>
+                    <li id="view-my-sr"><a href="/sergs/view/my_service_record/">My Service Record</a></li>
+                    <li id="search-sr"><a href="/sergs/view/search/">Search</a></li>
                 </ul>
             </li>
-            <li><a href="/sergs/requests/"><span class="material-icons-round">task</span> Requests</a>
+            <li id="requests"><a href="/sergs/requests/"><span class="material-icons-round">task</span> Requests</a>
                 <ul>
-                    <li><a href="/sergs/requests/my_requests/">My Requests</a></li>
-                    <li><a href="/sergs/requests/new_request/">New Request</a></li>
-                    <li><a href="/sergs/requests/for_update/">For Encode/Update</a></li>
-                    <li><a href="/sergs/requests/for_certification/">For Certification</a></li>
-                    <li><a href="/sergs/requests/for_approval/">For Approval</a></li>
-                    <li><a href="/sergs/requests/for_release/">For Release</a></li>
-                    <li><a href="/sergs/requests/archive/">Archived Requests</a></li>
-                    <li><a href="/sergs/requests/search/">Search</a></li>
+                    <li id="my-requests"><a href="/sergs/requests/my_requests/">My Requests</a></li>
+                    <li id="new-request"><a href="/sergs/requests/new_request/">New Request</a></li>
+                    <li id="for-encode"><a href="/sergs/requests/for_update/">For Encode/Update</a></li>
+                    <li id="for-certify"><a href="/sergs/requests/for_certification/">For Certification</a></li>
+                    <li id="for-approve"><a href="/sergs/requests/for_approval/">For Approval</a></li>
+                    <li id="for-release"><a href="/sergs/requests/for_release/">For Release</a></li>
+                    <li id="requests-archive"><a href="/sergs/requests/archive/">Archived Requests</a></li>
+                    <li id="search-requests"><a href="/sergs/requests/search/">Search</a></li>
                 </ul>
             </li>
-            <li><a href="/sergs/logs/"><span class="material-icons-round">fact_check</span> System Logs</a></li>
-            <li><a href="/sergs/account/"><span class="material-icons-round">account_circle</span> Account</a>
+            <li id="logs"><a href="/sergs/logs/"><span class="material-icons-round">fact_check</span> System Logs</a></li>
+            <li id="account"><a href="/sergs/account/"><span class="material-icons-round">account_circle</span> Account</a>
                 <ul>
-                    <li><a href="/sergs/account/edit/">Edit My Account</a></li>
-                    <li><a href="/sergs/account/edit_other/">Edit Another Account</a></li>
-                    <li><a href="/sergs/logout/">Logout</a></li>
+                    <li id="my-account"><a href="/sergs/account/edit/">Edit My Account</a></li>
+                    <li id="other-account"><a href="/sergs/account/edit_other/">Edit Another Account</a></li>
+                    <li id="logout"><a href="/sergs/logout/">Logout</a></li>
                 </ul>
             </li>
-            <li><a href="/sergs/settings/"><span class="material-icons-round">settings</span> Settings</a></li>
+            <li id="settings"><a href="/sergs/settings/"><span class="material-icons-round">settings</span> Settings</a></li>
     </ul>
 
         <main>Main</main>
@@ -58,6 +58,111 @@
 </body>
 <script src="js/sergs-retag.js"></script>
 <script src="js/classes.js"></script>
+<script src="js/test.js"></script>
 <script>
+    "use strict";
+
+    sr = JSON.parse(sr);
+
+    $("main")[0].innerHTML = "";
+
+    var viewSRUI = createElementEx(NO_NS, "div", $("main")[0], null, "class", "sr-view");
+
+    addText("My Service Record", viewSRUI.header = createElementEx(NO_NS, "h2", viewSRUI));
+
+    viewSRUI.empinfo = createElementEx(NO_NS, "div", viewSRUI, null, "class", "sr-info container-fluid");
+    viewSRUI.empname = createElementEx(NO_NS, "p", viewSRUI.empinfo, null, "class", "sr-name row");
+    addText("Name: ", createElementEx(NO_NS, "span", viewSRUI.empname, null, "class", "sr-name-label col-2"));
+    [createElementEx(NO_NS, "span", createElementEx(NO_NS, "span", viewSRUI.empname, null, "class", "sr-name-blank col-8 container"), null, "class", "row")].forEach(blank => {
+        if (sr[0].employee.lastName.trim() != "") {
+            addText(sr[0].employee.lastName, viewSRUI.lastName = createElementEx(NO_NS, "span", blank, null, "class", "sr-last-name col"));
+            addText(", ", blank);
+        }
+        addText(sr[0].employee.firstName, viewSRUI.firstName = createElementEx(NO_NS, "span", blank, null, "class", "sr-first-name col"));
+        if (sr[0].employee.extName.trim() != "") {
+            addText(" ", blank);
+            addText(sr[0].employee.extName, viewSRUI.extName = createElementEx(NO_NS, "span", blank, null, "class", "sr-ext-name col"));
+        }
+        if (sr[0].employee.middleName.trim() != "") {
+            addText(" ", blank);
+            addText(sr[0].employee.middleName, viewSRUI.middleName = createElementEx(NO_NS, "span", blank, null, "class", "sr-middle-name col"));
+        }
+    });
+    addText("(If married, give also full name and other surname used.)", createElementEx(NO_NS, "span", viewSRUI.empname, null, "class", "sr-name-comment col-2"));
+
+    viewSRUI.empbirth = createElementEx(NO_NS, "p", viewSRUI.empinfo, null, "class", "sr-birth row");
+    addText("Date of Birth: ", createElementEx(NO_NS, "span", viewSRUI.empbirth, null, "class", "sr-birthdate-label col-2"));
+    var dt = new Date(sr[0].employee.birthday);
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    addText(`${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`, createElementEx(NO_NS, "span", viewSRUI.empbirth, null, "class", "sr-birthdate-blank col-3"));
+
+    addText("Place of Birth: ", createElementEx(NO_NS, "span", viewSRUI.empbirth, null, "class", "sr-birthplace-label col-2"));
+    addText(sr[0].employee.birthplace, createElementEx(NO_NS, "span", viewSRUI.empbirth, null, "class", "sr-birthplace-blank col-3"));
+
+    addText("(Date herein should be checked from birth baptismal certificate of some official documents.)", createElementEx(NO_NS, "span", viewSRUI.empbirth, null, "class", "sr-birth-comment col-2"));
+
+    viewSRUI.empno = createElementEx(NO_NS, "p", viewSRUI.empinfo, null, "class", "sr-empno-row row");
+    addText("Emp. No.: ", createElementEx(NO_NS, "span", viewSRUI.empno, null, "class", "sr-empno-label col-2"));
+
+    var tosLatest = sr[0].employee.termOfService[0];
+    sr[0].employee.termOfService.forEach((tos, index, arr) => {
+        if (Date(tosLatest.end) < Date(tos.end)) {
+            tosLatest = tos;
+        }
+    });
+
+    addText((sr[0].employee.employeeId == "" ? tosLatest.appointment.plantillaItem : sr[0].employee.employeeId), createElementEx(NO_NS, "span", viewSRUI.empno, null, "class", "sr-empno-blank col-3"));
+
+    addText("This is to certify that the employee named herein above actually rendered service in this office or office as indicated below each line of which is supported by appointment and other papers actually issued and approved by the authorities concerned.", createElementEx(NO_NS, "p", viewSRUI, null, "class", "sr-comment"));
+
+    var srTable = createElementEx(NO_NS, "table", viewSRUI, null, "class", "sr-table");
+
+    
+    srTable.thead = createElementEx(NO_NS, "thead", srTable);
+    srTable.thead.tr = [
+        createElementEx(NO_NS, "tr", srTable.thead),
+        createElementEx(NO_NS, "tr", srTable.thead),
+        createElementEx(NO_NS, "tr", srTable.thead)
+    ];
+
+    addText("Service", createElementEx(NO_NS, "th", srTable.thead.tr[0], null, "colspan", 2));
+    addText("Record of Appointment", createElementEx(NO_NS, "th", srTable.thead.tr[0], null, "colspan", 3));
+    addText("Office", createElementEx(NO_NS, "th", srTable.thead.tr[0]));
+    addText("Branch", createElementEx(NO_NS, "th", srTable.thead.tr[0], null, "rowspan", 3));
+    addText("Leave of Absence w/o Pay", createElementEx(NO_NS, "th", srTable.thead.tr[0], null, "rowspan", 3));
+    addText("Date", createElementEx(NO_NS, "th", srTable.thead.tr[0], null, "rowspan", 3));
+
+    addText("(Inclusive Date)", createElementEx(NO_NS, "th", srTable.thead.tr[1], null, "colspan", 2));
+    addText("Designation", createElementEx(NO_NS, "th", srTable.thead.tr[1], null, "rowspan", 2));
+    addText("Status", createElementEx(NO_NS, "th", srTable.thead.tr[1], null, "rowspan", 2));
+    addText("Salary", createElementEx(NO_NS, "th", srTable.thead.tr[1], null, "rowspan", 2));
+    addText("Station/Place", createElementEx(NO_NS, "th", srTable.thead.tr[1], null, "rowspan", 2));
+
+    addText("From", createElementEx(NO_NS, "th", srTable.thead.tr[2]));
+    addText("To", createElementEx(NO_NS, "th", srTable.thead.tr[2]));
+
+    srTable.tbody = createElementEx(NO_NS, "tbody", srTable);
+
+    sr[0].employee.termOfService.forEach((tos, index, arr) => {
+        [createElementEx(NO_NS, "tr", srTable.tbody)].forEach(tr => {
+            addText(tos.start, createElementEx(NO_NS, "td", tr));
+            addText(tos.end, createElementEx(NO_NS, "td", tr));
+            addText(tos.appointment.designation, createElementEx(NO_NS, "td", tr));
+            addText(tos.status, createElementEx(NO_NS, "td", tr));
+            addText(tos.salary, createElementEx(NO_NS, "td", tr));
+            addText(tos.workplace, createElementEx(NO_NS, "td", tr));
+            addText(tos.branch, createElementEx(NO_NS, "td", tr));
+            var leavesStr = "";
+            var leavesDateStr = "";
+            tos.leavesTaken.forEach((leave, leaveIndex, leaveArr) => {
+                leavesStr += leave.toString() + (leaveIndex + 1 >= leaveArr.length? "" : "; ");
+                leavesDateStr += leave.toString() + (leaveIndex + 1 >= leaveArr.length? "" : "; ");
+            });
+            addText((leavesStr.trim() == "" ? "none" : leavesStr), createElementEx(NO_NS, "td", tr));
+            addText(leavesDateStr, createElementEx(NO_NS, "td", tr));
+        });
+    });
+
+    addText("Issued in  compliance with Executive Order No. 54 dated August 10, 1954 and in accordance with Circular No. 58 dated August 10, 1954 of the system.", createElementEx(NO_NS, "p", viewSRUI, null, "class", "sr-comment"));
 </script>
 </html>

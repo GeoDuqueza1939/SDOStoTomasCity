@@ -92,6 +92,8 @@ function sergsRetag() {
         link.tabIndex = 0;
     });
 
+    // createElementEx(NO_NS, "div")
+
     return this;
 }
 

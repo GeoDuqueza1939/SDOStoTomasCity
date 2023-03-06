@@ -100,14 +100,43 @@ class Person
         this.birthday = null; // Date
         this.birthplace = null; // Date
     }
+
+    toJSON()
+    {
+        return {
+            id:this.id,
+            lastName:this.lastName,
+            firstName:this.firstName,
+            middleName:this.middleName,
+            extName:this.extName,
+            birthday:this.birthday,
+            birthplace:this.birthplace,
+        };
+    }
 };
   
 class Employee extends Person
 {
     constructor()
     {
+        super();
         this.employeeId = ""; // may initially use item number specified in Appointment form; may be updated later once an Employee number is assigned
         this.termOfService = []; // TermOfService[]
+    }
+
+    toJSON()
+    {
+        return {
+            id:this.id,
+            lastName:this.lastName,
+            firstName:this.firstName,
+            middleName:this.middleName,
+            extName:this.extName,
+            birthday:this.birthday,
+            birthplace:this.birthplace,
+            employeeId:this.employeeId,
+            termOfService:this.termOfService
+        };
     }
 };
 
@@ -118,6 +147,24 @@ class User extends Employee
         this.username = ""; // this should be UNIQUE
         this.password = "";
         this.accessLevel = -1; /// Level of system access
+    }
+
+    toJSON()
+    {
+        return {
+            id:this.id,
+            lastName:this.lastName,
+            firstName:this.firstName,
+            middleName:this.middleName,
+            extName:this.extName,
+            birthday:this.birthday,
+            birthplace:this.birthplace,
+            employeeId:this.employeeId,
+            termOfService:this.termOfService,
+            username:this.username,
+            password:this.password,
+            accessLevel:this.accessLevel
+        };
     }
 };
 
@@ -139,6 +186,7 @@ class Location
         this.type = null; // LocationType Enum
         this.coordinates = null; /// GPS Coordinates (OPTIONAL property)
         this.broadLocation = []; // Location; index 0 will be preferred unless preference is specified
+        this.locationIndeces = []
     }
 
     getAddress (locationIndeces = null)
@@ -158,6 +206,17 @@ class Location
         }
 
         return this.name + (broadLocationStr.length == 0 ? "" : ", " + broadLocationStr);
+    }
+
+    toJSON()
+    {
+        return {
+            id:this.id,
+            name:this.name,
+            type:this.type,
+            coordinates:this.coordinates,
+            broadLocation:this.broadLocation
+        }
     }
 };
     
@@ -283,7 +342,7 @@ class TermOfService
         this.status = null; // Status Enum
         this.salary = -1; // may be updated
         this.leavesTaken = []; // Leave[]
-        this.branch = string;
+        this.branch = "NM"; // FIXED VALUE FOR NOW
     }
 }
 

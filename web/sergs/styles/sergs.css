@@ -57,6 +57,8 @@
     bottom: 1.5rem;
     left: 4.45rem;
     right: 0;
+    padding: 1em;
+    overflow: auto;
 }
 /* 
 .collapse {
@@ -162,4 +164,115 @@
     overflow-y: auto;
 }
 
+.sr-view {
+    text-align: center;
+}
 
+.sr-view > h2 {
+    margin: 0.5em 0 0.5em;
+}
+
+.sr-view [class*="label"],
+.sr-view [class*="comment"] {
+    text-align: left;
+    margin: 0;
+    padding: 0;
+}
+
+.sr-view > * > * > [class*="label"] {
+    white-space: nowrap;
+}
+
+.sr-view > * > * > [class*="comment"] {
+    font-size: smaller;
+    /* max-height: 4em; */
+}
+
+.sr-view .sr-info [class*=blank]:before {
+    border-bottom: 1px solid black;
+    display: block;
+    content: " ";
+    height: 0;
+    margin: 0 0 -1px 0;
+    padding: 0;
+    position: relative;
+    top: 1.5em;
+}
+
+.sr-view .sr-name-blank {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: large;
+}
+
+.sr-view .sr-name-blank > .row {
+    /* height: 0.25em; */
+}
+
+.sr-view .sr-name-blank > .row > :after {
+    display: block;
+    font-size: smaller;
+    font-weight: normal;
+    /* height: 0; */
+}
+
+.sr-view .sr-info > .row + .row {
+    margin-top: 2.5
+    em;
+}
+
+.sr-view .sr-last-name:after {
+    content: "(Surname)";
+}
+
+.sr-view .sr-first-name:after {
+    content: "(First Name)";
+}
+
+.sr-view .sr-ext-name:after {
+    content: "(Ext. Name)";
+}
+
+.sr-view .sr-middle-name:after {
+    content: "(Middle Name)";
+}
+
+.sr-table {
+    border: 1px solid black;
+    overflow: auto;
+    max-width: 100%;
+}
+
+.sr-table tr > * {
+    border: 1px solid black;
+}
+
+.sr-table > thead > tr:first-child {
+    text-transform: uppercase;
+}
+
+.sr-table > tbody > tr > td:first-child,
+.sr-table > tbody > tr > td:first-child+td {
+    width: 10%;
+}
+
+.sr-table > tbody > tr > td:first-child+td+td {
+    width: 15%;
+}
+
+.sr-table > tbody > tr > td:first-child+td+td+td {}
+
+.sr-table > tbody > tr > td:first-child+td+td+td+td {}
+
+.sr-table > tbody > tr > td:first-child+td+td+td+td+td {
+    width: 15%;
+}
+
+.sr-table > tbody > tr > td:first-child+td+td+td+td+td+td,
+.sr-table > tbody > tr > td:first-child+td+td+td+td+td+td+td {
+    width: 5%;
+}
+
+.sr-table > tbody > tr > td:first-child+td+td+td+td+td+td+td+td {
+    width: 12%;
+}
