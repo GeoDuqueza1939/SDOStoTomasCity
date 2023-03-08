@@ -17,5 +17,5 @@ ___
 
 ## Links to Notes
 
-* [Work Log](https://geoduqueza1939.github.io/SDOStoTomasBatangas/WorkLog.md)
-* [Development Notes](https://geoduqueza1939.github.io/SDOStoTomasBatangas/Notes.md)
+* [Work Log](https://github.com/GeoDuqueza1939/SDOStoTomasBatangas/blob/main/WorkLog.md)
+* [Development Notes](https://github.com/GeoDuqueza1939/SDOStoTomasBatangas/blob/main/Notes.md)
