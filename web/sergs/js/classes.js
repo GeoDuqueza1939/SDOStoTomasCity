@@ -144,6 +144,7 @@ class User extends Employee
 {  
     constructor()
     {
+        super();
         this.username = ""; // this should be UNIQUE
         this.password = "";
         this.accessLevel = -1; /// Level of system access
@@ -186,7 +187,7 @@ class Location
         this.type = null; // LocationType Enum
         this.coordinates = null; /// GPS Coordinates (OPTIONAL property)
         this.broadLocation = []; // Location; index 0 will be preferred unless preference is specified
-        this.locationIndeces = []
+        this.locationIndeces = [];
     }
 
     getAddress (locationIndeces = null)

@@ -1,0 +1,74 @@
+CREATE TABLE SDOStoTomas.Person (
+	id INT UNSIGNED auto_increment NOT NULL,
+	first_name VARCHAR(100) NOT NULL,
+	middle_name VARCHAR(100) NULL,
+	last_name VARCHAR(100) NULL,
+	ext_name VARCHAR(20) NULL,
+	birth_date DATE NULL,
+	birth_place BIGINT UNSIGNED NULL,
+	CONSTRAINT Person_PK PRIMARY KEY (id),
+	CONSTRAINT Person_UN UNIQUE KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+CREATE UNIQUE INDEX Person_id_IDX USING BTREE ON SDOStoTomas.Person (id);
+
+CREATE TABLE SDOStoTomas.Employee (
+	employeeId VARCHAR(100) NOT NULL,
+	personId INT UNSIGNED NOT NULL,
+	CONSTRAINT Employee_PK PRIMARY KEY (id),
+	CONSTRAINT Employee_UN UNIQUE KEY (id,personId),
+	CONSTRAINT Employee_FK FOREIGN KEY (personId) REFERENCES SDOStoTomas.Person(id) ON DELETE RESTRICT ON UPDATE CASCADE
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+
+-- ALTER TABLE SDOStoTomas.Employee CHANGE id employeeId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+
+CREATE TABLE SDOStoTomas.User (
+	username VARCHAR(100) NOT NULL,
+	password VARCHAR(100) NULL,
+	employeeId VARCHAR(100) NOT NULL,
+    sergs_access_level TINYINT UNSIGNED DEFAULT 0 NOT NULL,
+	CONSTRAINT User_PK PRIMARY KEY (username),
+	CONSTRAINT User_UN UNIQUE KEY (username,employeeId),
+	CONSTRAINT User_FK FOREIGN KEY (employeeId) REFERENCES SDOStoTomas.Employee(employeeId) ON DELETE RESTRICT ON UPDATE CASCADE
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+
+-- ALTER TABLE SDOStoTomas.`User` ADD sergs_access_level TINYINT UNSIGNED DEFAULT 0 NOT NULL;
+
+CREATE TABLE SDOStoTomas.SERGS_Access_Level (
+	id TINYINT UNSIGNED NOT NULL,
+	access_level_name varchar(100) NOT NULL,
+	description MEDIUMTEXT NULL,
+	CONSTRAINT SERGS_Access_Level_PK PRIMARY KEY (id),
+	CONSTRAINT SERGS_Access_Level_UN UNIQUE KEY (id,access_level_name)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+CREATE UNIQUE INDEX SERGS_Access_Level_id_IDX USING BTREE ON SDOStoTomas.SERGS_Access_Level (id);
+
+ALTER TABLE SDOStoTomas.`User` ADD CONSTRAINT User_FK_1 FOREIGN KEY (sergs_access_level) REFERENCES SDOStoTomas.SERGS_Access_Level(id) ON UPDATE CASCADE;
+
+
+ALTER TABLE SDOStoTomas.`User` DROP FOREIGN KEY User_FK_1;
+
+ALTER TABLE SDOStoTomas.SERGS_Access_Level DROP KEY SERGS_Access_Level_id_IDX;
+ALTER TABLE SDOStoTomas.SERGS_Access_Level DROP KEY SERGS_Access_Level_UN;
+ALTER TABLE SDOStoTomas.SERGS_Access_Level DROP PRIMARY KEY;
+ALTER TABLE SDOStoTomas.SERGS_Access_Level DROP INDEX SERGS_Access_Level_id_IDX;
+ALTER TABLE SDOStoTomas.SERGS_Access_Level DROP INDEX SERGS_Access_Level_UN;
+ALTER TABLE SDOStoTomas.SERGS_Access_Level DROP INDEX `PRIMARY`;
+ALTER TABLE SDOStoTomas.SERGS_Access_Level ADD CONSTRAINT SERGS_Access_Level_PK PRIMARY KEY (id);
+ALTER TABLE SDOStoTomas.SERGS_Access_Level ADD CONSTRAINT SERGS_Access_Level_UN UNIQUE KEY (id,access_level_name);
+
+
+CREATE UNIQUE INDEX SERGS_Access_Level_id_IDX USING BTREE ON SDOStoTomas.SERGS_Access_Level (id);
+ALTER TABLE SDOStoTomas.SERGS_Access_Level ADD CONSTRAINT SERGS_Access_Level_PK PRIMARY KEY (id);
+ALTER TABLE SDOStoTomas.SERGS_Access_Level ADD CONSTRAINT SERGS_Access_Level_UN UNIQUE KEY (id,access_level_name);
