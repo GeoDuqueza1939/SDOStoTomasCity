@@ -72,3 +72,13 @@
 * 12:00PM   Took my lunch
 * 01:00PM   Resumed database construction.
 * 04:00PM   Put database construction for SERGS on hold. Started to do proceed with some documentation and priotization activities.
+
+## 3/9/2023
+* 07:30AM   Fixed manual filing of documents.
+* 08:00AM   Started viewing and analyzing the RPMS documents sent.
+* 10:50AM   Had to leave for City Hall for some HR-related matters
+* 12:15PM   Resumed reading about the PPST in teacherph.com (deped.gov.ph went down earlier for maintenance)
+* 12:40PM   Created User Stories and Scenarios for ROnAS.
+* 01:15PM   Joined National Earthquake Drill while continuing with the user stories.
+* 03:50PM   Puts scenarios formulation for the ROnAS on hold and proceeds to continue with the database construction for SeRGS.
+* 04:58PM   Finished initial database structure.
