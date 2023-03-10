@@ -84,4 +84,9 @@
 * 04:58PM   Finished initial database structure.
 
 ## 3/10/2023
-* 07:30AM   Renamed remote repository to git@github.com:GeoDuqueza1939/SDOStoTomasCity.git and tried fixing the links and the repository authorization and references
+* 07:30AM   Renamed remote repository to git@github.com:GeoDuqueza1939/SDOStoTomasCity.git and tried fixing the links and the repository authorization and references.
+* 08:50AM   Added placeholder files for prototype pages of ROnAS. Continued readings of documents and other materials related to the proposed system.
+* 11:30AM   Took lunch
+* 12:30PM   Resumed readings.
+* 03:20PM   Started coding prototype PHP page for SeRGS
+* 05:00PM   Committed and pushed updated SeRGS files
