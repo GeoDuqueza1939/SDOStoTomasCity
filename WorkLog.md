@@ -82,3 +82,6 @@
 * 01:15PM   Joined National Earthquake Drill while continuing with the user stories.
 * 03:50PM   Puts scenarios formulation for the ROnAS on hold and proceeds to continue with the database construction for SeRGS.
 * 04:58PM   Finished initial database structure.
+
+## 3/10/2023
+* 07:30AM   Renamed remote repository to git@github.com:GeoDuqueza1939/SDOStoTomasCity.git and tried fixing the links and the repository authorization and references

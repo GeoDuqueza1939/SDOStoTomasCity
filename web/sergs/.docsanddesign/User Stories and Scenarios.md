@@ -2,8 +2,8 @@
 ___
 
 > Version: 1.00 (*for updating and re-versioning*)<br>
-> Target Software: [**Service Record Generation System (<i>SeRGS</i>)**](https://geoduqueza1939.github.io/SDOStoTomasBatangas/web/sergs/)<br>
-> Link to the older MS Word document format version: https://github.com/GeoDuqueza1939/SDOStoTomasBatangas/raw/main/web/sergs/.docsanddesign/User%20Stories%20and%20Scenarios.docx
+> Target Software: [**Service Record Generation System (<i>SeRGS</i>)**](https://geoduqueza1939.github.io/SDOStoTomasCity/web/sergs/)<br>
+> Link to the older MS Word document format version: https://github.com/GeoDuqueza1939/SDOStoTomasCity/raw/main/web/sergs/.docsanddesign/User%20Stories%20and%20Scenarios.docx
 ___
 
 ### Teacher A
