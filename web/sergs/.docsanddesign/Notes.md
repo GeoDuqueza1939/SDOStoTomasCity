@@ -1,4 +1,5 @@
 # DEVELOPMENT NOTES
+###### for SeRGS
 ___
 
 ## SERVICE RECORD GENERATION SYSTEM
@@ -7,11 +8,11 @@ ___
 - Generate service record
 - Target Users:
   - Approvers: Approving AO
-  - Access rights: encoding; editing; approving auto-generated entries; approval; viewing; request for update/correction
+    - Access rights: encoding; editing; approving auto-generated entries; approval; viewing; request for update/correction
   - Encoders: Assigned AO/ICT Coordinators
-  - Access rights: encoding; editing; approving auto-generated entries; viewing; request for update/correction
+    - Access rights: encoding; editing; approving auto-generated entries; viewing; request for update/correction
   - End users: Teaching and Non-teaching personnel (including admin users)
-- Access rights: viewing; request for update/correction
+    - Access rights: viewing; request for update/correction
 - Former workflow:
   1. Personnel goes to SDO to request for Service Record
   2. Assigned AO reviews appointments attached in personnel's 201 file, encodes service record entries, and signs to certify its correctness.
