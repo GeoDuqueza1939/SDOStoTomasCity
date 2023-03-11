@@ -12,7 +12,7 @@ ___
   - Archived
 
 * RPMS/Personnel
- - Eligibility for Promotions
+  - Eligibility for Promotions
 ___
 
 ## TASK BOARD (Projects)
@@ -78,10 +78,11 @@ ___
 
 #### REQUIREMENTS DEFINITION
 - Determine the target users and their needs
-- surveys
-- field observations
-- consultations
+  - surveys
+  - field observations
+  - consultations
 - Identify use cases and formulate user stories
+  - 
 
 #### SYSTEM & SOFTWARE DESIGN
 - Front-end prototyping and development
