@@ -1,4 +1,4 @@
-# Development Notes
+# DEVELOPMENT NOTES
 #### *RPMS Online Assessment System (ROnAS)*
 
 * Raters are automatically assigned among the heads of each school, section, or division. Master teachers are sometimes assigned as raters along with the school heads/principals.
