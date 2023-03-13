@@ -96,3 +96,8 @@
 * 08:45AM   Had issues with monitor/computer hardware; fixed at around 9:00AM
 * 09:03AM   Browsed aroung SDO Sto. Tomas City Google Sites page and FB page to view some info, page styling, and any downloadable forms related to the developing systems
 * 09:20AM   Resumed readings for ROnAS.
+* 10:30AM   Commenced construction of Wireframe Prototypes
+* 12:00PM   Put ROnAS wireframe construction; went for lunch
+* 01:00PM   Resumed wireframe construction. Renamed ROnAS to ROMaS to better reflect the nature of the system. Added link to ROMaS wireframe prototype.
+* 01:55PM   Started creating a tester page with a query tester for use in testing the database.
+* 04:55PM   Committed changes

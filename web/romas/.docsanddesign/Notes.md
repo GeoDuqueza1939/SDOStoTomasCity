@@ -17,7 +17,6 @@
   * Performance Monitoring and Coaching Form (PMCF) - Phase II
   * Teacher-related observation and feedback forms (FOR CLARIFICATION) - when encoding, should indicate whether it is a real-time use or merely an encoding of a paper-based form - Phase II
     * Classroom Observation Tool (COT)
-    * LAC
 * A Dashboard may be introduced to display all statistics and status related to the rater, ratee, and performance management roles. (FOR CLARIFICATION)
 * Timeouts may be introduced to make sure that raters and ratees commit to the accomplishment of the online IPCRF/OPCRF. (FOR CLARIFICATION)
 * Timetables:
@@ -44,7 +43,8 @@
 * KRA's for non-school-based personnel shall be clarified.
 * Implementation of eSignatures for just rater and ratee. (FOR CLARIFICATION)
 * User Access Levels (FOR CLARIFICATION):
-  * Basic User (Ratee View; Rater View)
-  * PMT User (Basic View; PM View; Dashboard; Logs)
-  * Maintenance User (Logs; Database Backup)
+  1. Basic User (Ratee View)
+  2. Advanced User (Ratee View; Rater View)
+  3. PMT User (Ratee View; Rater View; PM View (Summaries, Reports Generation); Logs)
+  10. Maintenance User (Logs; Data Backup)
 * Also add links to the RPMS Manual and other relevant info (FOR CLARIFICATION)

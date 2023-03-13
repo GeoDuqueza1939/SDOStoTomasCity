@@ -35,14 +35,12 @@ ___
 ## TASK BOARD (Daily Tasks)
 
 ### TO DO:
-* [ ] Prototype (ROnAS)
-* [ ] Wireframe Prototype (ROnAS)
-* [ ] Narrative Progress Report on System Development (SeRGS)
+* [ ] Prototype (ROMaS)
 
 ### TO DO (*BACKLOGS*):
+* [ ] Narrative Progress Report on System Development (SeRGS)
 
 ### ON-GOING:
-* [ ] User Stories and Scenarios (ROnAS)
 
 ### ON HOLD:
 * [ ] Prototype (SeRGS)
@@ -51,6 +49,8 @@ ___
 * [ ] User Manual (SeRGS)
 * [ ] UML Diagram (SeRGS: front-end/JS)
 * [ ] UML Diagram (SeRGS: back-end/PHP)
+* [ ] User Stories and Scenarios (ROMaS)
+* [ ] Wireframe Prototype (ROMaS)
 
 ### DISCONTINUED:
 * [ ] ERD Diagram (SeRGS: database)
@@ -59,6 +59,7 @@ ___
 * [x] User Stories and Scenarios (SeRGS)
 * [x] Workflow Chart (SeRGS)
 * [x] Database construction (SeRGS)
+* [x] Database Query Tester
 ___
 
 ___
