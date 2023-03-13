@@ -1,17 +1,15 @@
 # DEVELOPMENT NOTES
-___
+#### *Service Record Generation System (SeRGS)*
 
-## SERVICE RECORD GENERATION SYSTEM
-
-### Specifications (from RAW NOTES)
+## Specifications (from RAW NOTES)
 - Generate service record
 - Target Users:
   - Approvers: Approving AO
-  - Access rights: encoding; editing; approving auto-generated entries; approval; viewing; request for update/correction
+    - Access rights: encoding; editing; approving auto-generated entries; approval; viewing; request for update/correction
   - Encoders: Assigned AO/ICT Coordinators
-  - Access rights: encoding; editing; approving auto-generated entries; viewing; request for update/correction
+    - Access rights: encoding; editing; approving auto-generated entries; viewing; request for update/correction
   - End users: Teaching and Non-teaching personnel (including admin users)
-- Access rights: viewing; request for update/correction
+    - Access rights: viewing; request for update/correction
 - Former workflow:
   1. Personnel goes to SDO to request for Service Record
   2. Assigned AO reviews appointments attached in personnel's 201 file, encodes service record entries, and signs to certify its correctness.
@@ -57,10 +55,11 @@ ___
 - How should we handle updating of own Service Record? Should the highest access level be allowed to edit their own Service Record or should a specific lower level be allowed to approve the highest access level's updates? [Higher-ups will normally ask those higher than them when requesting for Service Record. However, the system should be able to be MANUALLY OVERRIDEN to manually encode the Service Record of higher ups should the need arise.]
 - Once a specific staff, takes charge of a request, the request shall be locked and can no longer be processed by another until the processing stage is finished.
 - Only the latest/current SR document can be printed. No historical versions even on the previous requests.
+- The Service Record shall be an evolving document (no historical versions; only the most recent version shall be available to view or print).
 
-### TO DISCUSS
-- Should we treat the Service Record as a static document (specific snapshots) or as an evolving document (always current, no historical versions)?
-___
+## TO DISCUSS
+
+none
 
 ## OTHER THINGS TO TAKE NOTE:
 
