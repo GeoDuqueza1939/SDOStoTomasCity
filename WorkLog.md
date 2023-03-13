@@ -90,3 +90,9 @@
 * 12:30PM   Resumed readings.
 * 03:20PM   Started coding prototype PHP page for SeRGS
 * 05:00PM   Committed and pushed updated SeRGS files
+
+## 3/13/2023
+* 07:35AM   Flag Ceremony
+* 08:45AM   Had issues with monitor/computer hardware; fixed at around 9:00AM
+* 09:03AM   Browsed aroung SDO Sto. Tomas City Google Sites page and FB page to view some info, page styling, and any downloadable forms related to the developing systems
+* 09:20AM   Resumed readings for ROnAS.
