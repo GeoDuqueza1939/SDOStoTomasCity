@@ -13,9 +13,10 @@
   * Include a way to input MFO's, KRA's, Objectives, and Performance Indicators. However, any existing data may be suggested proactively or included in available options. Should the needed items not be included among the options, ratees and raters, in agreement, can add those themselves. The ratee proposing an item and the rater clicking the <button>Approve</button> button shall constitute an agreement.
   * Once KRA's and the others are chosen, a preview of the corresponding (I|O)PCRF will be made available.
 * Other forms that can be proposed:
+  * Self-Assessment Tool (SAT) - Phase I
   * Performance Monitoring and Coaching Form (PMCF) - Phase II
-  * Teacher-related observation and feedback forms (FOR CLARIFICATION) - when encoding, should indicate whether it is a real-time use or merely an encoding of a paper-based form
-    * COT
+  * Teacher-related observation and feedback forms (FOR CLARIFICATION) - when encoding, should indicate whether it is a real-time use or merely an encoding of a paper-based form - Phase II
+    * Classroom Observation Tool (COT)
     * LAC
 * A Dashboard may be introduced to display all statistics and status related to the rater, ratee, and performance management roles. (FOR CLARIFICATION)
 * Timeouts may be introduced to make sure that raters and ratees commit to the accomplishment of the online IPCRF/OPCRF. (FOR CLARIFICATION)
@@ -41,4 +42,9 @@
   * 
 * For adaptability, the system shall automatically allow the reassignment of raters at the beginning of each Phase of the Cycle, although the prevailing policy in DepEd should be obeyed. (FOR CLARIFICATION)
 * KRA's for non-school-based personnel shall be clarified.
-* Implementation of eSignatures for just rater and ratee. (FOR CLARIFICATION or NOT)
+* Implementation of eSignatures for just rater and ratee. (FOR CLARIFICATION)
+* User Access Levels (FOR CLARIFICATION):
+  * Basic User (Ratee View; Rater View)
+  * PMT User (Basic View; PM View; Dashboard; Logs)
+  * Maintenance User (Logs; Database Backup)
+* Also add links to the RPMS Manual and other relevant info (FOR CLARIFICATION)
