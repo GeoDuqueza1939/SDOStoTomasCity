@@ -1,47 +1,33 @@
 <?php
-include_once('../php/ajaxResponse.php');
-include_once('db.php');
+require('../php/ajaxResponse.php');
+require('db.php');
 
-if (isset($_REQUEST['query']))
+if (isset($_POST['query']))
 {
-    $servername = 'localhost';
-	$dbname = 'SDOStoTomas';
-	$dbuser = 'root';
-	$dbpass = 'admin';
-
-	try
+    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas");
+    if ($dbconn->testConnect())
     {
-		$conn = new PDO("mysql:host=$servername;dbname=$dbname", $dbuser, $dbpass);
-
-		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	}
-	catch (PDOException $e)
-    {
-		die("Connection failed: " . $e->getMessage());
-	}
-
-    try {
-        $sql = $conn->prepare($_REQUEST['query']);
+        $result = $dbconn->executeQuery($_REQUEST['query']);
         
-        $sql->execute();
-        
-        $sql->setFetchMode(PDO::FETCH_ASSOC);
-
-        $result = $sql->fetchAll();
+        if (!is_null($dbconn->lastException))
+        {
+            $result = $dbconn->lastException->getMessage();
+        }
     }
-    catch (PDOException $e)
+    else
     {
-        $result = 'Invalid query';
-    }
-    finally {
-        echo json_encode(new ajaxResponse('Result', json_encode($result)));
-        exit;
+        $result = "Invalid query . $dbconn->lastException->getMessage()";
     }
 
+    echo json_encode(new ajaxResponse('Result', json_encode($result)));
+
+    if ($dbconn->isConnected())
+    {
+        $dbconn->disconnect();
+    }
+    exit;
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,14 +56,19 @@ if (isset($_REQUEST['query']))
         }
 
         #query-tester {
+            margin-top:-2em;
             max-width: 100%;
         }
 
         #query {
             width: 30em;
-            margin: 0.5em 0 1em;
+            margin: 0;
             font-size: 1em;
             max-width: 100%;
+        }
+
+        #auto-query, [for=auto-query] {
+            margin: 0 0 1em;
         }
 
         #query-result {
@@ -98,18 +89,28 @@ if (isset($_REQUEST['query']))
 
         #query-result table > * > * > * {
             border: 1px solid black;
+            padding: 0 0.25em;
+        }
+
+        #query-result table th {
+            background-color: gray;
+            color: white;
+            text-shadow: 1px 1px black;
+        }
+
+        #query-result table td {
+            background-color: white;
         }
     </style>
 </head>
 <body>
     <div id="tester">
         <div id="query-tester">
-            <form action="self" method="GET">
+            <form method="GET">
                 <label for="query">Enter query:</label><br>
                 <input type="text" name="query" id="query"><br>
-                <div name="query-result" id="query-result">
-
-                </div>
+                <button type="button" name="execute-query" id="execute-query" default>Execute Query</button> <input type="checkbox" name="auto-query" id="auto-query"> <label for="auto-query">Automatic execution</label><br>
+                <div name="query-result" id="query-result"></div>
             </form>
         </div>
     </div>
@@ -117,53 +118,101 @@ if (isset($_REQUEST['query']))
 <script>
 "use strict";
 
-document.getElementById("query").addEventListener("keyup", function(event) {
-    var query = this.value;
+function displayResult(response)
+{
+    var result = null;
     var resultBox = document.getElementById("query-result");
-    
+
+    if (response.type == "Result")
+    {
+        result = JSON.parse(response.content);
+        // console.log(response.content);
+        // console.log(result);
+        if (result != "Invalid query" && result !==undefined && result !== null && result != "" && Array.isArray(result) && result.length > 0)
+        {
+            resultBox.innerHTML = "";
+            var table = createElementEx(NO_NS, "table", resultBox);
+            var el = createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", table));
+            
+            Object.keys(result[0]).forEach((value)=>{
+                addText(value, createElementEx(NO_NS, "th", el));
+            });
+            el = createElementEx(NO_NS, "tbody", table);
+            result.forEach(row=>{
+                var tr = createElementEx(NO_NS, "tr", el);
+                Object.values(row).forEach(value=>{
+                    addText(value, createElementEx(NO_NS, "td", tr));
+                });
+            });
+        }
+        else
+        {
+            resultBox.innerHTML = result;
+        }
+    }
+    else
+    {
+        resultBox.innerHTML = "NO RESULTS FOUND";
+    }
+}
+
+function executeQuery(event) {
+    var query = document.getElementById("query").value;
+
     postData("index.php", "query=" + query, function() {
         var response;
         var result;
         if (this.readyState == 4 && this.status == 200) {
             response = JSON.parse(this.responseText);
 
-            if (response.type == "Result")
-            {
-                result = JSON.parse(response.content);
-                // console.log(response.content);
-                // console.log(result);
-                if (result != "Invalid query" && result !==undefined && result !== null && result != "")
-                {
-                    resultBox.innerHTML = "";
-                    var table = createElementEx(NO_NS, "table", resultBox);
-                    var el = createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", table));
-                    
-                    Object.keys(result[0]).forEach((value)=>{
-                        addText(value, createElementEx(NO_NS, "th", el));
-                    });
-                    el = createElementEx(NO_NS, "tbody", table);
-                    result.forEach(row=>{
-                        var tr = createElementEx(NO_NS, "tr", el);
-                        Object.values(row).forEach(value=>{
-                            addText(value, createElementEx(NO_NS, "td", tr));
-                        });
-                    });
-                }
-                else
-                {
-                    resultBox.innerHTML = result;
-                }
-            }
-            else
-            {
-                resultBox.innerHTML = "NO RESULTS FOUND";
-            }
+            displayResult(response);
         }
 
     });
+}
 
-
-    // resultBox.innerHTML = ;
+document.getElementById("query").addEventListener("keyup", function(event) {
+    if (document.getElementById("auto-query").checked)
+    {
+        executeQuery();
+    }
 });
+
+document.getElementById("execute-query").addEventListener("click", executeQuery);
+
+document.getElementById("auto-query").addEventListener("change", ()=>{
+    document.getElementById("execute-query").disabled = document.getElementById("auto-query").checked;
+});
+
+<?php
+if (isset($_GET['query']))
+{
+    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas");
+    if ($dbconn->connect())
+    {
+        $result = $dbconn->executeQuery($_REQUEST['query']);
+        
+        if (!is_null($dbconn->lastException))
+        {
+            $result = $dbconn->lastException->getMessage();
+        }
+    }
+    else
+    {
+        $result = "Invalid query . $dbconn->lastException->getMessage()";
+    }
+
+    echo "
+        document.getElementById('query').value = '" . $_REQUEST['query'] . "';
+        displayResult(". json_encode(new ajaxResponse('Result', json_encode($result))) .");
+    ";
+
+    if ($dbconn->isConnected())
+    {
+        $dbconn->disconnect();
+    }
+    // exit;
+}
+?>
 </script>
 </html>

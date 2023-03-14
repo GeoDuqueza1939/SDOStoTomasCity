@@ -48,3 +48,4 @@
   3. PMT User (Ratee View; Rater View; PM View (Summaries, Reports Generation); Logs)
   10. Maintenance User (Logs; Data Backup)
 * Also add links to the RPMS Manual and other relevant info (FOR CLARIFICATION)
+* Mid-Year Review (FOR CLARIFICATION)

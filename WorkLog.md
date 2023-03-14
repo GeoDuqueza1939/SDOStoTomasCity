@@ -101,3 +101,9 @@
 * 01:00PM   Resumed wireframe construction. Renamed ROnAS to ROMaS to better reflect the nature of the system. Added link to ROMaS wireframe prototype.
 * 01:55PM   Started creating a tester page with a query tester for use in testing the database.
 * 04:55PM   Committed changes
+
+## 3/14/2023
+* 08:00AM   Continued testing and restructuring database for both SeRGS and ROMaS and coding for the backend
+* 12:15PM   Went for lunch
+* 12:45PM   Continuing backend (PHP/MySQL) coding
+* 04:50PM   Committed some backend code (DatabaseConnection class and database test page)

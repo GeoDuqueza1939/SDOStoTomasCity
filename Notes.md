@@ -39,6 +39,9 @@ ___
 
 ### TO DO (*BACKLOGS*):
 * [ ] Narrative Progress Report on System Development (SeRGS)
+* [ ] Database tester page
+* [ ] Database construction (SeRGS)
+* [ ] Database construction (ROMaS)
 
 ### ON-GOING:
 
@@ -58,7 +61,6 @@ ___
 ### FINISHED:
 * [x] User Stories and Scenarios (SeRGS)
 * [x] Workflow Chart (SeRGS)
-* [x] Database construction (SeRGS)
 * [x] Database Query Tester
 ___
 
