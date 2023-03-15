@@ -107,3 +107,10 @@
 * 12:15PM   Went for lunch
 * 12:45PM   Continuing backend (PHP/MySQL) coding
 * 04:50PM   Committed some backend code (DatabaseConnection class and database test page)
+
+## 3/15/2023
+* 07:52AM   Started reviewing database structure; encountered and fixed issues with switching foreign key checks setting.
+* 12:10PM   Took lunch.
+* 12:50PM   Resumed coding.
+* 02:10PM   Completed DatabaseConnection class. Started creating other PHP classes for accessing and storing specific data sets in the database.
+* 05:00PM   Committed remaining unstaged changes to repository.
