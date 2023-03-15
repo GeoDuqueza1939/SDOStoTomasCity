@@ -1,5 +1,5 @@
 <?php
-function returnConnection()
+function returnConnection() // KEEP THIS FUNCTION FOR FUTURE USE!!!
 {
     $servername = 'localhost';
 	$dbname = 'SDOStoTomas';
@@ -13,7 +13,7 @@ function returnConnection()
 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 	catch (PDOException $e) {
-		die("Connection failed: " . $e->getMessage());
+		die('Connection failed: ' . $e->getMessage());
 	}
 	// if ($conn->connect_error)
 	// 	die(json_encode(new ajaxResponse('Error', 'Connection failed: ' . $conn->connect_error)));
@@ -24,17 +24,18 @@ function returnConnection()
 class DatabaseConnection
 {
 	private $conn = null;
-	private $dbtype = "";
-	private $servername = "";
-	private $username = "";
-	private $password = "";
-	private $dbname = "";
+	private $dbtype = '';
+	private $servername = '';
+	private $username = '';
+	private $password = '';
+	private $dbname = '';
+	private $ddl = [];
 	public $lastException = null;
-	private $lastConnStr = "";
-	private $lastSQLStr = "";
-	private $lastInsertId = -1;
+	public $lastConnStr = '';
+	public $lastSQLStr = '';
+	public $lastInsertId = -1;
 
-	public function __construct($dbtype, $servername, $username, $password, $dbname)
+	public function __construct($dbtype, $servername, $username, $password, $dbname, array $ddl = null)
 	{
 		$this->dbtype = $dbtype;
 		$this->servername = $servername;
@@ -42,9 +43,11 @@ class DatabaseConnection
 		$this->password = $password;
 		$this->dbname = $dbname;
 
+		$this->setDDL($ddl);
+
 		if ($this->dbExists())
 		{
-			// CHECK IF ALL TABLES EXIST
+			$this->constructTables(); // will create any missing tables
 		}
 		elseif ($this->dbServerExists())
 		{
@@ -53,15 +56,20 @@ class DatabaseConnection
 		}
 		else
 		{
-			$this->lastException = new Exception("Can't connect to database server.");
+			$this->lastException = new Exception('Can\'t connect to database server.');
 		}
+	}
+
+	public function setDDL(array $ddlArr)
+	{
+		$this->ddl = $ddlArr;
 	}
 
 	private function connectToStr($connStr)
 	{
 		if ($this->isConnected())
 		{
-			$this->lastException = new Exception("Connection already exists.");
+			$this->lastException = new Exception('Connection already exists.');
 
 			return false;
 		}
@@ -91,11 +99,10 @@ class DatabaseConnection
 
 		switch ($this->dbtype)
 		{
-			case "mysql":
+			case 'mysql':
 				$connStr .= "host=$this->servername;dbname=$this->dbname";
-
 				break;
-			case "sqlite":
+			case 'sqlite':
 				$connStr .= "$this->dbname";
 				break;
 			default:
@@ -107,11 +114,9 @@ class DatabaseConnection
 
 	public function connectToServer() // won't connect to database; useful for creating database on the fly
 	{
-		if ($this->dbtype == "mysql")
+		if ($this->dbtype == 'mysql')
 		{
-			$connStr = "mysql:host=$this->servername";
-
-			return $this->connectToStr($connStr);
+			return $this->connectToStr("mysql:host=$this->servername");
 		}
 
 		return false;
@@ -124,9 +129,12 @@ class DatabaseConnection
 		return $test;
 	}
 
-	public function disconnect()
+	public function disconnect($keepException = false)
 	{
-		$this->clearLastException();
+		if (!$keepException) {
+			$this->clearLastException();
+		}
+
 		if ($this->isConnected())
 		{
 			$this->conn = null;
@@ -178,30 +186,53 @@ class DatabaseConnection
 	{
 		if ($this->connectToServer())
 		{
-			// CREATE DB HERE; ADD ANY NECESSARY EXCEPTIONS
+			$this->executeStatement("CREATE DATABASE `$this->dbname`");
 		}
 		else
 		{
-			$this->lastException = new Exception("Can't construct database.");
+			$this->lastException = new Exception('Can\'t construct database.');
 		}
 	}
 
 	private function constructTables()
 	{
-		if ($this->connect())
+		if ($this->connectToServer())
 		{
-			// CREATE TABLES HERE; ADD ANY NECESSARY EXCEPTIONS
-			// $this->lastException = new Exception("Problems were encountered during table creation.");
+			$errMsg = '';
+
+			$tables = Array_keys($this->ddl);
+
+			foreach ($tables as $table)
+			{
+				if (!$this->tableExists($table)) {
+					$this->executeStatement($this->ddl[$table]);
+					
+					if (!is_null($this->lastException))
+					{
+						$errMsg += ($errMsg == '' ? "Problems were encountered during the creation of the following tables: $key" : "; $key");
+					}
+				}
+			}
+
+			if ($errMsg != '')
+			{
+				$this->lastException = new Exception($errMsg);
+			}
 		}
 		else
 		{
-			$this->lastException = new Exception("Can't create tables.");
+			$this->lastException = new Exception('Can\'t create tables.');
 		}
+	}
+
+	private function tableExists($tableName)
+	{
+		return count($this->executeStatement("SHOW TABLE STATUS FROM `$this->dbname` WHERE NAME = '$tableName';")) > 0;
 	}
 
 	public function select($table, $fieldStr, $criteriaStr)
 	{
-		return $this->executeQuery("SELECT $fieldStr FROM $table" . ($criteriaStr == "" ? "" : " $criteriaStr"));
+		return $this->executeQuery("SELECT $fieldStr FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
 	public function insert($table, $fieldStr, $valueStr)
@@ -211,56 +242,38 @@ class DatabaseConnection
 
 	public function update($table, $fieldValueStr, $criteriaStr)
 	{
-		return $this->executeStatement("UPDATE $table SET $fieldValueStr" . ($criteriaStr == "" ? "" : " $criteriaStr"));
+		return $this->executeStatement("UPDATE $table SET $fieldValueStr" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
 	public function delete($table, $criteriaStr)
 	{
-		return $this->executeStatement("DELETE FROM $table" . ($criteriaStr == "" ? "" : " $criteriaStr"));
+		return $this->executeStatement("DELETE FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
 	public function executeQuery($sql) // SHOULD BE USED ONLY FOR COMPLEX SELECT STATEMENTS
 	{
-		if (preg_match("/(INSERT|UPDATE|DELETE|CREATE)/i", $sql))
+
+		if (preg_match('/(INSERT|UPDATE|DELETE|CREATE|ALTER)/i', $sql))
 		{
-			$this->lastException = new Exception("Operation not allowed.");
+			$this->lastException = new Exception('Operation not allowed.');
 			return null; // do nothing for non-select statements
 		}
 		else
 		{
-			try
-			{
-				$this->connect();
-
-				$query = $this->conn->prepare($sql);
-				$query->execute();
-				$query->setFetchMode(PDO::FETCH_ASSOC);
-
-				$results = $query->fetchAll();
-
-				$this->clearLastException();
-			}
-			catch (PDOException $e)
-			{
-				$this->lastException = $e;
-
-				$results = null;
-			}
-			finally
-			{
-				$this->disconnect();
-
-				return $results;
-			}
+			return $this->executeStatement($sql);
 		}
 	}
 
 	public function executeStatement($sql)
 	{
+		$keepException = false;
+
 		try
 		{
+			$this->connect();
+
 			$query = $this->conn->prepare($sql);
-			$query->execute(); // VERIFY IF CORRECT CODE
+			$query->execute(); // VERIFY IF BEST ALTERNATIVE STATEMENT
 			$query->setFetchMode(PDO::FETCH_ASSOC);
 
 			$results = $query->fetchAll();
@@ -271,14 +284,36 @@ class DatabaseConnection
 		{
 			$this->lastException = $e;
 
+			$keepException = true;
+
 			$results = null;
 		}
 		finally
 		{
-			$this->disconnect();
+			$this->disconnect($keepException);
 
 			return $results;
 		}
+	}
+
+	public function isForeignKeyCheckOn() // GLOBAL ONLY
+	{
+		return ($this->executeQuery('SELECT @@GLOBAL.foreign_key_checks;')[0]['@@GLOBAL.foreign_key_checks'] == '1');
+	}
+
+	public function disableForeignKeyCheck()
+	{
+		return $this->setForeignKeyCheck("OFF");
+	}
+
+	public function enableForeignKeyCheck()
+	{
+		return $this->setForeignKeyCheck("ON");
+	}
+
+	public function setForeignKeyCheck(string $setting = "ON") // GLOBAL ONLY
+	{
+		return $this->executeStatement("SET @@GLOBAL.foreign_key_checks=$setting;");
 	}
 
 	private function clearLastException()
@@ -288,6 +323,7 @@ class DatabaseConnection
 
 	public function __destruct()
 	{
+		$this->enableForeignKeyCheck();
 		$this->disconnect();
 	}
 }

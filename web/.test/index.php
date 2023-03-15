@@ -1,17 +1,24 @@
 <?php
 require('../php/ajaxResponse.php');
 require('db.php');
+require('db-ddl.php');
 
 if (isset($_POST['query']))
 {
-    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas");
+    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
+
     if ($dbconn->testConnect())
     {
-        $result = $dbconn->executeQuery($_REQUEST['query']);
+        $result = ($_REQUEST["forced"] == "1" ? $dbconn->executeStatement($_REQUEST['query']) : $dbconn->executeQuery($_REQUEST['query']));
         
         if (!is_null($dbconn->lastException))
         {
             $result = $dbconn->lastException->getMessage();
+        }
+        elseif (preg_match("/(INSERT|UPDATE|DELETE|CREATE|ALTER)/i", $_REQUEST['query']) && $_REQUEST["forced"] == "1")
+        {
+            $result = "Operation completed.";
+            // $result = json_encode($dbconn);
         }
     }
     else
@@ -109,7 +116,9 @@ if (isset($_POST['query']))
             <form method="GET">
                 <label for="query">Enter query:</label><br>
                 <input type="text" name="query" id="query"><br>
-                <button type="button" name="execute-query" id="execute-query" default>Execute Query</button> <input type="checkbox" name="auto-query" id="auto-query"> <label for="auto-query">Automatic execution</label><br>
+                <button type="button" name="execute-query" id="execute-query" default>Execute</button>
+                <button type="button" name="execute-query-forced" id="execute-query-forced" default>Execute (Force)</button>
+                <input type="checkbox" name="auto-query" id="auto-query"> <label for="auto-query">Automatic execution</label><br>
                 <div name="query-result" id="query-result"></div>
             </form>
         </div>
@@ -159,7 +168,7 @@ function displayResult(response)
 function executeQuery(event) {
     var query = document.getElementById("query").value;
 
-    postData("index.php", "query=" + query, function() {
+    postData("index.php", "query=" + query + "&forced=" + (event.target == document.getElementById("execute-query-forced") ? "1" : "0"), function() {
         var response;
         var result;
         if (this.readyState == 4 && this.status == 200) {
@@ -179,6 +188,7 @@ document.getElementById("query").addEventListener("keyup", function(event) {
 });
 
 document.getElementById("execute-query").addEventListener("click", executeQuery);
+document.getElementById("execute-query-forced").addEventListener("click", executeQuery);
 
 document.getElementById("auto-query").addEventListener("change", ()=>{
     document.getElementById("execute-query").disabled = document.getElementById("auto-query").checked;
@@ -187,8 +197,9 @@ document.getElementById("auto-query").addEventListener("change", ()=>{
 <?php
 if (isset($_GET['query']))
 {
-    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas");
-    if ($dbconn->connect())
+    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
+
+    if ($dbconn->testConnect())
     {
         $result = $dbconn->executeQuery($_REQUEST['query']);
         
