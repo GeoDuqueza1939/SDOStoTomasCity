@@ -1,7 +1,7 @@
 <?php
 require('../php/ajaxResponse.php');
-require('db.php');
-require('db-ddl.php');
+require('../php/db.php');
+require('../sergs/.php/db-ddl.php');
 
 if (isset($_POST['query']))
 {

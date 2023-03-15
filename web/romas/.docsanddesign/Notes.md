@@ -1,5 +1,5 @@
 # DEVELOPMENT NOTES
-#### *RPMS Online Assessment System (ROnAS)*
+#### *RPMS Online Management System (ROMaS)*
 
 * Raters are automatically assigned among the heads of each school, section, or division. Master teachers are sometimes assigned as raters along with the school heads/principals.
 * IPCRF/OPCRF used to have been annotated by raters whenever necessary, with the annotations being used by the ratees in revising their forms. After revisions, the revised form is the only one submitted

@@ -39,24 +39,28 @@ ___
 
 ### TO DO (*BACKLOGS*):
 * [ ] Narrative Progress Report on System Development (SeRGS)
-* [ ] Database tester page
-* [ ] Database construction (SeRGS)
-* [ ] Database construction (ROMaS)
 
 ### ON-GOING:
+* [x] Database tester page
+  * [ ] Construction of utility classes for recreating and accessing the database
+* [ ] Database construction
+  * [x] SeRGS
+  * [ ] ROMaS
+
+### ON-GOING (LONG-TERM)
+* [ ] Technical Manual (SeRGS)
+* [ ] User Manual (SeRGS)
 
 ### ON HOLD:
 * [ ] Prototype (SeRGS)
 * [ ] Wireframe Prototype (SeRGS)
-* [ ] Technical Manual (SeRGS)
-* [ ] User Manual (SeRGS)
 * [ ] UML Diagram (SeRGS: front-end/JS)
 * [ ] UML Diagram (SeRGS: back-end/PHP)
 * [ ] User Stories and Scenarios (ROMaS)
 * [ ] Wireframe Prototype (ROMaS)
 
 ### DISCONTINUED:
-* [ ] ERD Diagram (SeRGS: database)
+* [ ] ERD Diagram (SeRGS: database) - NOTE: Database structure already realized.
 
 ### FINISHED:
 * [x] User Stories and Scenarios (SeRGS)

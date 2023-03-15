@@ -237,7 +237,9 @@ class DatabaseConnection
 
 	public function insert($table, $fieldStr, $valueStr)
 	{	
-		return $this->executeStatement("INSERT INTO $table ($fieldStr) VALUES ($valueStr)");
+		$this->executeStatement("INSERT INTO $table $fieldStr VALUES $valueStr");
+
+		return $this->lastInsertId;
 	}
 
 	public function update($table, $fieldValueStr, $criteriaStr)
@@ -274,6 +276,7 @@ class DatabaseConnection
 
 			$query = $this->conn->prepare($sql);
 			$query->execute(); // VERIFY IF BEST ALTERNATIVE STATEMENT
+			$this->lastInsertId = $query->lastInsertId();
 			$query->setFetchMode(PDO::FETCH_ASSOC);
 
 			$results = $query->fetchAll();
@@ -290,6 +293,7 @@ class DatabaseConnection
 		}
 		finally
 		{
+			$this->lastSQLStr = $sql;
 			$this->disconnect($keepException);
 
 			return $results;

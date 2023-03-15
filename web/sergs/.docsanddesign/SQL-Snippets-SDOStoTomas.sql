@@ -137,12 +137,14 @@ CREATE TABLE `SDOStoTomas`.`Workplace` (
 
 CREATE TABLE `SDOStoTomas`.`Person` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `first_name` varchar(100) NOT NULL,
+  `given_name` varchar(100) NOT NULL,
   `middle_name` varchar(100) DEFAULT NULL,
-  `last_name` varchar(100) DEFAULT NULL,
-  `ext_name` varchar(20) DEFAULT NULL,
+  `family_name` varchar(100) DEFAULT NULL,
+  `spouse_name` varchar(20) DEFAULT NULL,
+  `ext_name` varchar(100) DEFAULT NULL,
   `birth_date` date DEFAULT NULL,
-  `birth_place` bigint(20) unsigned DEFAULT NULL COMMENT 'Connect to Location table',
+  `birth_place` bigint(20) unsigned DEFAULT NULL,
+  `sex` enum('Male','Female') DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Person_id_IDX` (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
