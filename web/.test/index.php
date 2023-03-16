@@ -1,7 +1,38 @@
 <?php
-require('../php/ajaxResponse.php');
-require('../php/db.php');
-require('../sergs/.php/db-ddl.php');
+$baseDir = '/var/www/html';
+require_once("$baseDir/php/ajaxResponse.php");
+require_once("$baseDir/php/db.php");
+require_once("$baseDir/sergs/.php/db-ddl.php");
+require_once("$baseDir/sergs/.php/sergs-classes.php");
+
+// DEBUG
+$dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
+$employee = new Employee($dbconn);
+// // $employee->add("Juan");
+$employee->retrieve('B3129847');
+$employee->setBirthDate('1979-11-29');
+// var_dump($employee->getParentDBObjectStatus());
+// var_dump($employee->getDBObjectStatus());
+$employee->save();
+$employee->setEmployeeId('B3129848');
+$employee->setFamilyName('Melor');
+$employee->save();
+$employee->setIsTempId(false);
+$employee->save();
+echo($employee->dbconn->lastSQLStr);
+
+// echo "<br>In /.test/index.php:<br>";
+echo json_encode($employee);
+
+echo "<br><hr><br>";
+
+$person = new Person($dbconn);
+$person->retrieve(2);
+var_dump($person->getDBObjectStatus());
+echo json_encode($person);
+
+exit;
+// DEBUG
 
 if (isset($_POST['query']))
 {
@@ -9,8 +40,8 @@ if (isset($_POST['query']))
 
     if ($dbconn->testConnect())
     {
-        $result = ($_REQUEST["forced"] == "1" ? $dbconn->executeStatement($_REQUEST['query']) : $dbconn->executeQuery($_REQUEST['query']));
-        
+        $result = ($_REQUEST["forced"] == "1" ? $dbconn->executeStatement($_REQUEST['query']) : $dbconn->executeQuery($_REQUEST['query']));        
+
         if (!is_null($dbconn->lastException))
         {
             $result = $dbconn->lastException->getMessage();

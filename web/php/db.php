@@ -43,8 +43,9 @@ class DatabaseConnection
 		$this->password = $password;
 		$this->dbname = $dbname;
 
+		
 		$this->setDDL($ddl);
-
+		
 		if ($this->dbExists())
 		{
 			$this->constructTables(); // will create any missing tables
@@ -93,7 +94,7 @@ class DatabaseConnection
 		return true;
 	}
 
-	public function connect()
+	public function connect() // avoid using this manually
 	{
 		$connStr = "$this->dbtype:";
 
@@ -112,7 +113,7 @@ class DatabaseConnection
 		return $this->connectToStr($connStr);
 	}
 
-	public function connectToServer() // won't connect to database; useful for creating database on the fly
+	public function connectToServer() // won't connect to database; useful for creating database on the fly; avoid using this manually
 	{
 		if ($this->dbtype == 'mysql')
 		{
@@ -199,9 +200,9 @@ class DatabaseConnection
 		if ($this->connectToServer())
 		{
 			$errMsg = '';
-
+			
 			$tables = Array_keys($this->ddl);
-
+			
 			foreach ($tables as $table)
 			{
 				if (!$this->tableExists($table)) {
@@ -232,10 +233,19 @@ class DatabaseConnection
 
 	public function select($table, $fieldStr, $criteriaStr)
 	{
-		return $this->executeQuery("SELECT $fieldStr FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr"));
+		$sql = "SELECT $fieldStr FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr") . ';';
+
+		$results = $this->executeQuery($sql);
+
+		// // DEBUG
+		// echo "<br>In /php/db.php:<br>";
+		// var_dump($results);
+		// // DEBUG
+
+		return $results;
 	}
 
-	public function insert($table, $fieldStr, $valueStr)
+	public function insert($table, $fieldStr, $valueStr) // include parentheses for both field list and value lists
 	{	
 		$this->executeStatement("INSERT INTO $table $fieldStr VALUES $valueStr");
 
@@ -252,7 +262,7 @@ class DatabaseConnection
 		return $this->executeStatement("DELETE FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
-	public function executeQuery($sql) // SHOULD BE USED ONLY FOR COMPLEX SELECT STATEMENTS
+	public function executeQuery($sql) // SHOULD BE USED ONLY FOR SELECT STATEMENTS
 	{
 
 		if (preg_match('/(INSERT|UPDATE|DELETE|CREATE|ALTER)/i', $sql))
@@ -273,10 +283,10 @@ class DatabaseConnection
 		try
 		{
 			$this->connect();
-
+			
 			$query = $this->conn->prepare($sql);
 			$query->execute(); // VERIFY IF BEST ALTERNATIVE STATEMENT
-			$this->lastInsertId = $query->lastInsertId();
+			$this->lastInsertId = $this->conn->lastInsertId();
 			$query->setFetchMode(PDO::FETCH_ASSOC);
 
 			$results = $query->fetchAll();
