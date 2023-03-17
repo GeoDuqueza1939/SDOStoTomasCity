@@ -1,9 +1,22 @@
 # Work Log
 
+## 3/17/2023
+* 07:45AM   Started reviewing code of Person and Employee classes.
+* 09:00AM   Sent email to Dr. Neil informing about the systems development progress.
+* 09:30AM   Resumed coding.
+* 10:30AM   Issues were encountered with current implementation of Person and Employee PHP classes; started reimplementation.
+* 12:30PM   Finished reimplementation of Person and Employee PHP classes; I PROMISE TO NEVER TOUCH ANYTHING THAT STILL WORKS; Took my lunch.
+* 01:15PM   Resumed coding of PHP classes.
+* 02:10PM   Finished implementation of User class.
+* 02:20PM   Started/resumed creation of RPMS related database tables
+* 04:45PM   Committed code and file changes to repository.
+
+
 ## 3/16/2023
-* 07:55AM   Resumed coding of utility classes for SeRGS backend
+* 07:55AM   Resumed coding of utility classes for SeRGS/ROMaS backend
 * 12:10PM   Lunch
 * 12:40PM   Resumed coding
+* 04:50PM   Stopped coding; encountered bugs while testing Person and Employee classes.
 
 ## 3/15/2023
 * 07:52AM   Started reviewing database structure; encountered and fixed issues with switching foreign key checks setting.

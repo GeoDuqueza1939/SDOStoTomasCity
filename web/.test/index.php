@@ -8,27 +8,34 @@ require_once("$baseDir/sergs/.php/sergs-classes.php");
 // DEBUG
 $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
 $employee = new Employee($dbconn);
-// // $employee->add("Juan");
-$employee->retrieve('B3129847');
+// // // $employee->add("Juan");
+$employee->retrieve('B3129848');
 $employee->setBirthDate('1979-11-29');
-// var_dump($employee->getParentDBObjectStatus());
-// var_dump($employee->getDBObjectStatus());
+$employee->setMiddleName('Culambo');
+// // var_dump($employee->getParentDBObjectStatus());
+// // var_dump($employee->getDBObjectStatus());
 $employee->save();
-$employee->setEmployeeId('B3129848');
+echo($employee->dbconn->lastSQLStr);
+$employee->setEmployeeId('B3129847');
 $employee->setFamilyName('Melor');
 $employee->save();
-$employee->setIsTempId(false);
+echo($employee->dbconn->lastSQLStr);
+$employee->setIsTempId(true);
 $employee->save();
 echo($employee->dbconn->lastSQLStr);
 
-// echo "<br>In /.test/index.php:<br>";
+// // echo "<br>In /.test/index.php:<br>";
 echo json_encode($employee);
 
 echo "<br><hr><br>";
 
 $person = new Person($dbconn);
 $person->retrieve(2);
-var_dump($person->getDBObjectStatus());
+// $person->setMiddleName('Colambo');
+// $person->setFamilyName('Miller');
+// $person->setBirthDate('1989-11-29');
+// $person->save();
+// var_dump($person->getDBObjectStatus());
 echo json_encode($person);
 
 exit;

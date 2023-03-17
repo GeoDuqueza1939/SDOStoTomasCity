@@ -12,31 +12,40 @@ enum dbObjectStatus
 
 interface dbObjectInterface
 {
-    public function add(); // Add to database
-    public function addFromJson($Json); // Add to database from JSON; Useful in extracting data send from clients
-    public function retrieve($primaryKey); // Retrieve from database
-    public function save(); // Update changes to database
-    public function delete(); // Remove from database; AVOID USING THIS!!!
-    public function to_array(); // Useful in jsonSerialize
+    public function add() : mixed; // Add to database; return PRIMARY KEY
+    public function addFromJson($Json) : mixed; // Add to database from JSON; Useful in extracting data send from clients; return PRIMARY KEY
+    public function retrieve($primaryKey) : bool; // Retrieve from database
+    public function save() : bool; // Update changes to database
+    public function delete() : bool; // Remove from database; AVOID USING THIS!!!
+    public function to_array() : array; // Useful in jsonSerialize
 }
 
 abstract class dbObject implements JsonSerializable, dbObjectInterface
 {
-    abstract public function getDBObjectStatus() : dbObjectStatus;
+    public ?DatabaseConnection $dbconn = null; // dbObjects shall share one database connection
+    private dbObjectStatus $dbObjstatus = dbObjectStatus::Unlinked;
 
-    abstract protected function setDBObjectStatus(dbObjectStatus $status);
+    protected function initialize()
+    {}
+
+    public function getDBObjectStatus() : dbObjectStatus
+    {
+        return $this->dbObjstatus;
+    }
+
+    protected function setDBObjectStatus(dbObjectStatus $status)
+    {
+        $this->dbObjstatus = $status;
+    }
 }
 
 class Person extends dbObject
 {
-    private dbObjectStatus $dbObjstatus = dbObjectStatus::Unlinked;
+    private const PERSONTABLE ='Person';
+    private $personCriteriaStr = ''; // update once the dbObject is linked
+    private $personUpdateStr = ''; // update everytime a field is modified or the dbObject is saved
 
-    public ?DatabaseConnection $dbconn = null;
-    private $table = 'Person';
-    private $criteria = ''; // update once the dbObject is linked
-    private $fieldValueStr = ''; // update everytime a field is modified or the dbObject is saved
-
-    protected $id = -1; // PRIMARY KEY
+    protected $id = -1; // PRIMARY KEY (auto-increment; can't be changed in DB)
     private $givenName = null;
     private $middleName = null;
     private $familyName = null;
@@ -48,17 +57,34 @@ class Person extends dbObject
     public function __construct($dbconn)
     {
         $this->dbconn = $dbconn;
-        $this->dbObjstatus = dbObjectStatus::Unlinked;
-        $this->criteria = "WHERE id = '$this->id'";
+        $this->setDBObjectStatus(dbObjectStatus::Unlinked);
+        $this->personCriteriaStr = "WHERE id = '$this->id'";
     }
 
-    public function add($givenName = null, $middleName = null, $familyName = null, $spouseName = null, $extName = null) // should only add if dbObject is unlinked
+    protected function initialize()
     {
-        if ($this->dbObjstatus == dbObjectStatus::Unlinked)
+        $this->personCriteriaStr = '';
+        $this->personUpdateStr = '';
+    
+        $this->id = -1;
+        $this->givenName = null;
+        $this->middleName = null;
+        $this->familyName = null;
+        $this->spouseName = null;
+        $this->extName = null;
+        $this->birthDate = null;
+        $this->birthPlace = null;
+
+        $this->setDBObjectStatus(dbObjectStatus::Unlinked);
+    }
+
+    public function add($givenName = null, $middleName = null, $familyName = null, $spouseName = null, $extName = null) : mixed
+    {
+        if ($this->getDBObjectStatus() == dbObjectStatus::Unlinked)
         {
             $fieldStr = '';
             $valueStr = '';
-    
+
             foreach (['given_name'=>$givenName, 'middle_name'=>$middleName, 'family_name'=>$familyName, 'spouse_name'=>$spouseName, 'ext_name'=>$extName] as $fieldName=>$value)
             {
                 if ($value != null && is_string($value) && trim($value) != '')
@@ -67,17 +93,17 @@ class Person extends dbObject
                     $valueStr .= ($valueStr == '' ? '' : ', ') . "\"$value\"";
                 }
             }
-    
+
             if ($fieldStr == '')
             {
                 throw new Exception("Unable to add person with no name.", 1);
             }
-    
-            $this->id = (int)$this->dbconn->insert($this->table, "($fieldStr)", "($valueStr)");
-    
+
+            $this->id = (int)$this->dbconn->insert(self::PERSONTABLE, "($fieldStr)", "($valueStr)");
+
             if (is_null($this->dbconn->lastException) && $this->id > 0) // insert to database is successful
             {
-                $this->retrieve($this->id);
+                $this->retrieve($this->id); // will also update dbObject status to linked
             }
             else
             {
@@ -88,7 +114,7 @@ class Person extends dbObject
         return $this->id;
     }
 
-    public function addFromJson($Json)
+    public function addFromJson($Json) : mixed
     {
         $value = json_decode($Json);
 
@@ -101,13 +127,13 @@ class Person extends dbObject
         );
     }
 
-    public function retrieve($id) // should only retrieve if dbObject is unlinked
+    public function retrieve($key) : bool
     {
-        if ($this->dbObjstatus == dbObjectStatus::Unlinked)
+        if ($this->getDBObjectStatus() == dbObjectStatus::Unlinked)
         {
-            $this->criteria = "WHERE id = '$id'";
-    
-            $dbResults = $this->dbconn->select($this->table, "*", $this->criteria);
+            $this->personCriteriaStr = "WHERE id = '$key'";
+
+            $dbResults = $this->dbconn->select(self::PERSONTABLE, "*", $this->personCriteriaStr);
 
             if (is_null($this->dbconn->lastException) && is_array($dbResults) && count($dbResults) > 0)
             {
@@ -120,30 +146,8 @@ class Person extends dbObject
                 $this->birthDate = $dbResults[0]['birth_date'];
                 $this->birthPlace = $dbResults[0]['birth_place'];
     
-                $this->dbObjstatus = dbObjectStatus::Linked;
+                $this->setDBObjectStatus(dbObjectStatus::Linked);
         
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    public function save() // should only save/update to database if dbObject is edited
-    {
-        if ($this->dbObjstatus == dbObjectStatus::Edited)
-        {
-            $this->dbconn->update($this->table, $this->fieldValueStr, $this->criteria);
-
-            if (is_null($this->dbconn->lastException))
-            {
-                $this->dbObjstatus = dbObjectStatus::Linked;
                 return true;
             }
         }
@@ -151,27 +155,58 @@ class Person extends dbObject
         return false;
     }
 
-    public function delete() // should only delete from database if dbObject is linked but not edited
+    public function save($resetStatus = true) : bool
     {
-        if ($this->dbObjstatus == dbObjectStatus::Linked)
+        if ($this->getDBObjectStatus() == dbObjectStatus::Edited)
         {
-            $this->dbconn->delete($this->table, $this->criteria);
+            $this->dbconn->update(self::PERSONTABLE, $this->personUpdateStr, $this->personCriteriaStr);
+
+            if (is_null($this->dbconn->lastException)) // no error in DB update
+            {
+                if ($resetStatus)
+                {
+                    $this->setDBObjectStatus(dbObjectStatus::Linked);
+                    $this->personUpdateStr = ''; // clear update string
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function delete() : bool
+    {
+        if ($this->getDBObjectStatus() == dbObjectStatus::Linked)
+        {
+            $this->dbconn->delete(self::PERSONTABLE, $this->personCriteriaStr);
+
+            $this->initialize(); // should unlink and reinitialize regardless of the success of deletion
 
             return is_null($this->dbconn->lastException);
         }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 
-    protected function setField(&$field, $value)
+    private function setField(&$field, $dbFieldName, $value)
     {
-        if ($this->dbObjstatus == dbObjectStatus::Linked || $this->dbObjstatus == dbObjectStatus::Edited)
+        // DEBUG
+        echo "<br>setField in Person<br>";
+        // DEBUG
+
+        if (($this->getDBObjectStatus() == dbObjectStatus::Linked || $this->getDBObjectStatus() == dbObjectStatus::Edited) && $field != $value)
         {
             $field = $value;
 
-            $this->dbObjstatus = dbObjectStatus::Edited;
+            if ($this->getDBObjectStatus() == dbObjectStatus::Linked)
+            {
+                $this->setDBObjectStatus(dbObjectStatus::Edited);
+                $this->personUpdateStr = ''; // clear update string
+            }
+
+            $this->personUpdateStr .= ($this->personUpdateStr == '' ? '' : ', ') . "$dbFieldName='$value'";
 
             return true;
         }
@@ -181,90 +216,38 @@ class Person extends dbObject
 
     public function setGivenName($name)
     {
-        if ($this->setField($this->givenName, $name))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "given_name='$name'";
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->givenName, 'given_name', $name);
     }
 
     public function setMiddleName($name)
     {
-        if ($this->setField($this->middleName, $name))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "middle_name='$name'";
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->middleName, 'middle_name', $name);
     }
 
     public function setFamilyName($name)
     {
-        if ($this->setField($this->familyName, $name))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "family_name='$name'";
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->familyName, 'family_name', $name);
     }
 
     public function setSpouseName($name)
     {
-        if ($this->setField($this->spouseName, $name))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "spouse_name='$name'";
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->spouseName, 'spouse_name', $name);
     }
 
     public function setExtName($name)
     {
-        if ($this->setField($this->extName, $name))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "ext_name='$name'";
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->extName, 'ext_name', $name);
     }
 
     public function setBirthDate($date) // should be a PHP date object
     {
-        if ($this->setField($this->birthDate, $date))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "birth_date='$date'";
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->birthDate, 'birth_date', $date);
     }
 
     public function setBirthPlace($address) // TO IMPLEMENT AFTER IMPLEMENTING ADDRESS CLASS
     {}
 
-    public function getDBObjectStatus() : dbObjectStatus
-    {
-        return $this->dbObjstatus;
-    }
-
-    protected function setDBObjectStatus(dbObjectStatus $status)
-    {
-        $this->dbObjstatus = $status;
-    }
-
-    public function to_array() // always update when new properties are added
+    public function to_array() : array
     {
         return [
             'id' => $this->id,
@@ -278,211 +261,180 @@ class Person extends dbObject
         ];
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize() : mixed
     {
         return $this->to_array();
     }
 
-    // protected function self()
-    // {
-    //     $me = $this;
-
-    //     return $me;
-    // }
-
     public function __destruct()
-    {
-        // $this->save();
-    }
+    {}
 }
 
 class Employee extends Person
 {
-    private dbObjectStatus $dbObjstatus = dbObjectStatus::Unlinked;
+    private const EMPLOYEETABLE = 'Employee';
+    private $employeeCriteriaStr = ''; // update once the dbObject is linked
+    private $employeeUpdateStr = ''; // update everytime a field is modified or the dbObject is saved
 
-    // private ?DatabaseConnection $dbconn = null;
-    private $table = 'Employee';
-    private $criteria = ''; // update once the dbObject is linked
-    private $fieldValueStr = ''; // update everytime a field is modified or the dbObject is saved
-
-    private $employeeId = null;
-    private $isTemporaryEmpNo = false;
+    protected $employeeId = null; // PRIMARY KEY
+    private $isTemporaryEmpNo = 1;
 
     public function __construct($dbconn)
-    {    
+    {   
         parent::__construct($dbconn);
-
-        // DEBUG
-        echo ("<br>In /sergs/.php/sergs-classes.php:<br>");
-        // var_dump();
-        // DEBUG
+        $this->setDBObjectStatus(dbObjectStatus::Unlinked);
+        $this->employeeCriteriaStr = "WHERE employeeId = '$this->employeeId'";
     }
 
-    public function add($employeeId = null, $givenName = null, $middleName = null, $familyName = null, $spouseName = null, $extName = null)
+    protected function initialize()
+    {
+        parent:: initialize();
+        
+        $this->employeeCriteriaStr = '';
+        $this->employeeUpdateStr = '';
+        
+        $this->employeeId = null;
+        $this->isTemporaryEmpNo = 1;
+        
+        $this->setDBObjectStatus(dbObjectStatus::Unlinked);
+    }
+    
+    public function add($employeeId = null, $givenName = null, $middleName = null, $familyName = null, $spouseName = null, $extName = null) : mixed
     {
         if ($this->getDBObjectStatus() == dbObjectStatus::Unlinked && !is_null($employeeId))
         {
             parent::add($givenName, $middleName, $familyName, $spouseName, $extName);
-    
-            if ($this->id > 0)
+            
+            if ($this->id > 0) // person details is added
             {
-                $this->employeeId = $this->dbconn->insert($this->table, "(employeeId)", "($employeeId)");
+                $this->employeeId = $this->dbconn->insert(self::EMPLOYEETABLE, "(employeeId)", "($employeeId)");
             }
-
+            
             if (is_null($this->dbconn->lastException) && !is_null($this->employeeId)) // insert to database is successful
             {
                 $this->retrieve($this->employeeId);
             }
-            else
-            {
-                $this->employeeId = null;
-            }            
+            // else
+            // {
+                // $this->employeeId = null; // IS THIS EVEN NECESSARY?
+            // }            
         }
-
-        if (!is_null($this->employeeId))
-        {
-            $this->setDBObjectStatus(dbObjectStatus::Linked);
-        }
-
+        
         return $this->employeeId;
     }
-
-    public function addFromJson($Json)
+    
+    public function addFromJson($Json) : mixed
     {
         $value = json_decode($Json);
 
         return $this->add(
             trim($value['employeeId']),
-            trim($value['givenName']),
-            trim($value['middleName']),
-            trim($value['familyName']),
-            trim($value['spouseName']),
-            trim($value['extName'])
+            trim($value['person']['givenName']),
+            trim($value['person']['middleName']),
+            trim($value['person']['familyName']),
+            trim($value['person']['spouseName']),
+            trim($value['person']['extName'])
         );
     }
-
-    public function retrieve($empId) // also retrieve person using Person.id
-    {        
+    
+    public function retrieve($key): bool
+    {
         if ($this->getDBObjectStatus() == dbObjectStatus::Unlinked)
         {
-            $this->criteria = "WHERE employeeId = '$empId'";
+            $this->employeeCriteriaStr = "WHERE employeeId = '$key'";
 
-            $dbResults = $this->dbconn->select($this->table, "*", $this->criteria);
-            // // DEBUG
-            // var_dump($this->dbconn->lastSQLStr);
-            // // DEBUG
-
-            $this->setDBObjectStatus(dbObjectStatus::Linked);
+            $dbResults = $this->dbconn->select(self::EMPLOYEETABLE, "*", $this->employeeCriteriaStr);
 
             if (is_null($this->dbconn->lastException) && is_array($dbResults) && count($dbResults) > 0)
             {
-
-                // echo("<br>Test:$empId<br>");
-                // var_dump(parent::getDBObjectStatus());
-                // var_dump($this->getDBObjectStatus());
-                // var_dump($dbResults);
-                // echo($this->dbconn->lastSQLStr);
-                
-                if (parent::retrieve($dbResults[0]['personId']))
+                if (parent::retrieve($dbResults[0]['personId'])) // will also set dbObject status to linked when successful
                 {
                     $this->employeeId = $dbResults[0]['employeeId'];
                     $this->isTemporaryEmpNo = (bool)$dbResults[0]['is_temporary_empno'];
                     
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
-            }    
+            }
         }
-        else
-        {
-            return false;
-        }
-    }
 
-    public function save()
+        return false;
+    }
+    
+    public function save($resetStatus = true): bool
     {
-        // var_dump($this->getDBObjectStatus());
-        // var_dump(parent::getDBObjectStatus());
-        
-        if ($this->getDBObjectStatus() == dbObjectStatus::Edited || parent::getDBObjectStatus() == dbObjectStatus::Edited)
+        if ($this->getDBObjectStatus() == dbObjectStatus::Edited)
         {
-            if (parent::getDBObjectStatus() == dbObjectStatus::Edited)
-            {
-                echo("<br>Saving parent...<br>");
-                if (!parent::save())
-                {
-                    echo("<br>Parent not saved!<br>");
-                    return false;
-                }
-                
-                echo("<br>Parent saved!<br>");
-            }
-            
-            echo("<br>Preparing to save child...<br>");
-            if ($this->getDBObjectStatus() == dbObjectStatus::Edited)
-            {
-                echo("<br>Saving child...<br>");
-                $this->dbconn->update($this->table, $this->fieldValueStr, $this->criteria);
-            }
-            
+            parent::save(false);
+
+            // may fail in updating, but employee should still push through with updates no matter what
+            $this->dbconn->update(self::EMPLOYEETABLE, $this->employeeUpdateStr, $this->employeeCriteriaStr);
+
             if (is_null($this->dbconn->lastException))
             {
-                echo("<br>Child saved!<br>");
-                $this->setDBObjectStatus(dbObjectStatus::Linked);
+                if ($resetStatus)
+                {
+                    $this->employeeCriteriaStr = "WHERE employeeId = '$this->employeeId'";
+                    $this->employeeUpdateStr = ''; // clear the string of field-value pairs in this object
+
+                    $this->setDBObjectStatus(dbObjectStatus::Linked); // should still update this manually
+                }
+
                 return true;
             }
         }
-        echo("<br>Child not saved!<br>");
-
+        
         return false;
     }
-
-    public function setEmployeeId($employeeId)
+    
+    public function delete() : bool
     {
-        if ($this->setField($this->employeeId, $employeeId))
+        if ($this->getDBObjectStatus() == dbObjectStatus::Linked)
         {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . "employeeId='$employeeId'";
-            $this->criteria = "WHERE employeeId = '$employeeId'";
-            $this->setDBObjectStatus(dbObjectStatus::Edited);
+            $this->dbconn->delete(self::EMPLOYEETABLE, $this->employeeCriteriaStr);
+            
+            $this->initialize(); // should unlink and reinitialize regardless of the success of deletion
+            
+            return is_null($this->dbconn->lastException);
+        }
+        
+        return false;
+    }
+    
+    private function setField(&$field, $dbFieldName, $value)
+    {
+        // DEBUG
+        echo "<br>setField in Employee<br>";
+        // DEBUG
+
+        if (($this->getDBObjectStatus() == dbObjectStatus::Linked || $this->getDBObjectStatus() == dbObjectStatus::Edited) && $field != $value)
+        {
+            $field = $value;
+
+            if ($this->getDBObjectStatus() == dbObjectStatus::Linked)
+            {
+                $this->setDBObjectStatus(dbObjectStatus::Edited);
+                $this->employeeUpdateStr = ''; // clear update string
+            }
+
+            $this->employeeUpdateStr .= ($this->employeeUpdateStr == '' ? '' : ', ') . "$dbFieldName='$value'";
 
             return true;
         }
-
+        
         return false;
     }
-
+    
+    public function setEmployeeId($employeeId) // update PRIMARY KEY
+    {
+        return $this->setField($this->employeeId, 'employeeId', $employeeId);
+    }
+    
     public function setIsTempId($isTemp)
     {
-        if ($this->setField($this->isTemporaryEmpNo, $isTemp))
-        {
-            $this->fieldValueStr .= ($this->fieldValueStr == '' ? '' : ', ') . 'is_temporary_empno="' . (int)$isTemp . '"';
-            $this->setDBObjectStatus(dbObjectStatus::Edited);
-
-            return true;
-        }
-
-        return false;
+        return $this->setField($this->isTemporaryEmpNo, 'is_temporary_empno', (int)$isTemp);
     }
-
-    public function getParentDBObjectStatus() : dbObjectStatus
-    {
-        return parent::getDBObjectStatus();
-    }
-
-    public function getDBObjectStatus() : dbObjectStatus
-    {
-        return $this->dbObjstatus;
-    }
-
-    protected function setDBObjectStatus(dbObjectStatus $status)
-    {
-        $this->dbObjstatus = $status;
-    }
-
-    public function to_array()
+    
+    public function to_array() : array
     {
         return [
             'employeeId' => $this->employeeId,
@@ -490,26 +442,202 @@ class Employee extends Person
             'person' => parent::to_array()
         ];
     }
+}
 
-    // protected function self()
-    // {
-    //     return $this;
-    // }
-
-    // public function getParent()
-    // {
-    //     return parent::self();
-    // }
-
-    public function __destruct()
-    {
-        // parent::save();
-        // $this->save();
-    }
+class AccessLevels
+{
+    public $sergs = -1;
+    public $romas = -1;
 }
 
 class User extends Employee
-{}
+{
+    private const USERTABLE = 'User';
+    private $userCriteriaStr = ''; // update once the dbObject is linked
+    private $userUpdateStr = ''; // update everytime a field is modified or the dbObject is saved
+
+    protected $username = ''; // PRIMARY KEY
+    private $password = '';
+    private $accessLevels = null;
+
+    public function __construct($dbconn)
+    {
+        parent::__construct($dbconn);
+        $this->setDBObjectStatus(dbObjectStatus::Unlinked);
+        $this->userCriteriaStr = "WHERE username = '$this->username'";
+    }
+
+    protected function initialize()
+    {
+        parent::initialize();
+
+        $this->userCriteriaStr = '';
+        $this->userUpdateStr = '';
+    
+        $this->username = null;
+        $this->password = null;
+        $this->accessLevels = null;
+    }
+
+    public function add($username = null, $employeeId = null, $givenName = null, $middleName = null, $familyName = null, $spouseName = null, $extName = null): mixed
+    {
+        if ($this->getDBObjectStatus() == dbObjectStatus::Unlinked && !is_null($employeeId))
+        {
+            parent::add($employeeId, $givenName, $middleName, $familyName, $spouseName, $extName);
+
+            if (!is_null($this->employeeId))
+            {
+                $this->username = $this->dbconn->insert(self::USERTABLE, "(username)", "($username)");
+            }
+
+            if (is_null($this->dbconn->lastException) && !is_null($this->username)) // insert to database is successful
+            {
+                $this->retrieve($this->employeeId);
+            }
+        }
+
+        return $this->username;
+    }
+
+    public function addFromJson($Json): mixed
+    {
+        $value = json_decode($Json);
+
+        return $this->add(
+            trim($value['username']),
+            trim($value['employee']['employeeId']),
+            trim($value['employee']['person']['givenName']),
+            trim($value['employee']['person']['middleName']),
+            trim($value['employee']['person']['familyName']),
+            trim($value['employee']['person']['spouseName']),
+            trim($value['employee']['person']['extName'])
+        );
+    }
+
+    public function retrieve($key): bool
+    {
+        if ($this->getDBObjectStatus() == dbObjectStatus::Unlinked)
+        {
+            $this->userCriteriaStr = "WHERE employeeId = '$key'";
+
+            $dbResults = $this->dbconn->select(self::USERTABLE, "*", $this->username);
+
+            if (is_null($this->dbconn->lastException) && is_array($dbResults) && count($dbResults) > 0)
+            {
+                if (parent::retrieve($dbResults[0]['employeeId'])) // will also set dbObject status to linked when successful
+                {
+                    $this->username = $dbResults[0]['username'];
+                    $this->password = $dbResults[0]['password'];
+
+                    $this->accessLevels = new AccessLevels();
+                    $this->accessLevels->sergs = (isset($dbResults[0]['sergs_access_level']) && is_numeric($dbResults[0]['sergs_access_level']) && $dbResults[0]['sergs_access_level'] > 0 ? $dbResults[0]['sergs_access_level'] : -1);
+                    $this->accessLevels->romas = (isset($dbResults[0]['romas_access_level']) && is_numeric($dbResults[0]['romas_access_level']) && $dbResults[0]['romas_access_level'] > 0 ? $dbResults[0]['romas_access_level'] : -1);
+                    
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function save($resetStatus = true): bool
+    {
+        if ($this->getDBObjectStatus() == dbObjectStatus::Edited)
+        {
+            parent::save(false);
+
+            // may fail in updating, but employee should still push through with updates no matter what
+            $this->dbconn->update(self::USERTABLE, $this->userUpdateStr, $this->userCriteriaStr);
+
+            if (is_null($this->dbconn->lastException))
+            {
+                if ($resetStatus)
+                {
+                    $this->userCriteriaStr = "WHERE username = '$this->username'";
+                    $this->userUpdateStr = ''; // clear the string of field-value pairs in this object
+
+                    $this->setDBObjectStatus(dbObjectStatus::Linked); // should still update this manually
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    public function delete() : bool
+    {
+        if ($this->getDBObjectStatus() == dbObjectStatus::Linked)
+        {
+            $this->dbconn->delete(self::USERTABLE, $this->userCriteriaStr);
+            
+            $this->initialize(); // should unlink and reinitialize regardless of the success of deletion
+            
+            return is_null($this->dbconn->lastException);
+        }
+        
+        return false;
+    }
+    
+    private function setField(&$field, $dbFieldName, $value)
+    {
+        // DEBUG
+        echo "<br>setField in User<br>";
+        // DEBUG
+
+        if (($this->getDBObjectStatus() == dbObjectStatus::Linked || $this->getDBObjectStatus() == dbObjectStatus::Edited) && $field != $value)
+        {
+            $field = $value;
+
+            if ($this->getDBObjectStatus() == dbObjectStatus::Linked)
+            {
+                $this->setDBObjectStatus(dbObjectStatus::Edited);
+                $this->userUpdateStr = ''; // clear update string
+            }
+
+            $this->userUpdateStr .= ($this->userUpdateStr == '' ? '' : ', ') . "$dbFieldName='$value'";
+
+            return true;
+        }
+        
+        return false;
+    }
+
+    public function setUsername($username)
+    {
+        return $this->setField($this->username, 'username', $username);
+    }
+
+    public function setPassword($password)
+    {
+        return $this->setField($this->password, 'password', $password); // SHOULD BE HASHED IN FULL IMPLENTATION!!!!!!!!!!!!!!!!!!!
+    }
+
+    public function setSergsAccessLevel($accessLevel)
+    {
+        return $this->setField($this->accessLevels->sergs, 'sergs_access_level', $accessLevel);
+    }
+
+    public function setRomasAccessLevel($accessLevel)
+    {
+        return $this->setField($this->accessLevels->romas, 'romas_access_level', $accessLevel);
+    }
+
+    public function to_array(): array
+    {
+        return [
+            'username' => $this->username,
+            'password' => $this->password,
+            'employee' => parent::to_array(),
+            'accessLevels' => [
+                'sergs_access_level' => $this->accessLevels->sergs,
+                'romas_access_level' => $this->accessLevels->romas
+            ]
+        ];
+    }
+}
 
 class Location
 {}

@@ -21,15 +21,15 @@ CREATE TABLE `SDOStoTomas`.`ENUM_Location_Type` (
   UNIQUE KEY `Location_Type_UN` (`location_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- SDOStoTomas.ENUM_SERGES_Access_Level definition
+-- SDOStoTomas.ENUM_SERGS_Access_Level definition
 
-CREATE TABLE `SDOStoTomas`.`ENUM_SERGES_Access_Level` (
+CREATE TABLE `SDOStoTomas`.`ENUM_SERGS_Access_Level` (
   `index` tinyint(3) unsigned NOT NULL,
   `level_name` varchar(50) NOT NULL,
   `description` longtext DEFAULT NULL,
   PRIMARY KEY (`index`),
-  UNIQUE KEY `SERGES_Access_Level_index_IDX` (`index`) USING BTREE,
-  UNIQUE KEY `SERGES_Access_Level_UN` (`level_name`)
+  UNIQUE KEY `SERGS_Access_Level_index_IDX` (`index`) USING BTREE,
+  UNIQUE KEY `SERGS_Access_Level_UN` (`level_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- SDOStoTomas.Address definition
@@ -173,7 +173,7 @@ CREATE TABLE `SDOStoTomas`.`User` (
   UNIQUE KEY `User_UN` (`employeeId`),
   KEY `User_FK_1` (`sergs_access_level`),
   CONSTRAINT `User_FK` FOREIGN KEY (`employeeId`) REFERENCES `Employee` (`employeeId`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `User_FK_1` FOREIGN KEY (`sergs_access_level`) REFERENCES `ENUM_SERGES_Access_Level` (`index`) ON UPDATE CASCADE
+  CONSTRAINT `User_FK_1` FOREIGN KEY (`sergs_access_level`) REFERENCES `ENUM_SERGS_Access_Level` (`index`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- SDOStoTomas.`Leave` definition
