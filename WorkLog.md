@@ -1,5 +1,15 @@
 # Work Log
 
+## 3/20/2023
+* 08:20AM   Started reviewing ERD for ROMaS and redesigning the database.
+* 10:14AM   Started modifying database based on design.
+* 11:55AM   Took lunch
+* 12:45PM   Experienced issue with monitor (power cable)
+* 12:50PM   Resumed database design and construction.
+* 01:38PM   Finished first group of database tables for ROMaS; Resumed coding PHP classes for SeRGS.
+* 03:50PM   Encountered another issue with monitor power cable
+* 04:55PM   Completed Location class; Ongoing construction of Address class logic; Committed to repository
+
 ## 3/17/2023
 * 07:45AM   Started reviewing code of Person and Employee classes.
 * 09:00AM   Sent email to Dr. Neil informing about the systems development progress.

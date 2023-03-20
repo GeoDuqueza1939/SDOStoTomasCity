@@ -49,3 +49,26 @@
   10. Maintenance User (Logs; Data Backup)
 * Also add links to the RPMS Manual and other relevant info (FOR CLARIFICATION)
 * Mid-Year Review (FOR CLARIFICATION)
+* Performance Management Plans (in IPCRF/OPCRF) should be effective all throughout the performance cycle, but may be edited particularly during planning and review stages. Edits on the plan itself may appear in a form of edits history log in the database. Statuses may include the following:
+  * 0 - Inactive
+  * 1 - For Agreement/Commitment
+  * 2 - Active
+  * 3 - For Review
+  * 4 - Updated/Active
+  * 5 - For Approval
+  * 6 - Finalized
+* Performance Management Objectives (and the KRA's and MFO's that encompass them) may be added/removed and their MOV's modified. If entire KRA's and MFO's shall be removed, a warning shall be issued asking the user to confirm the removal of all the related objectives. The statuses of objectives may include the following:
+  * 0 - Added-For Agreement/Commitment
+  * 1 - Added-Agreed/Committed
+  * 2 - Removed-For Agreement/Commitment
+  * 3 - Removed-Agreed/Committed
+* Methods of Verification (MOV's) may be modified during planning and/or mid-year review. Any changes shall be uploaded to the database and implemented as previous versions of each indicator. Statuses may include:
+  * 0 - Added-For Agreement/Commitment
+  * 1 - Added-Agreed/Committed
+  * 2 - Removed-For Agreement/Commitment
+  * 3 - Removed-Agreed/Committed
+* Performance Indicators may be modified during planning and/or mid-year review (only when necessary). Any changes shall be uploaded to the database and implemented as previous versions of each indicator. Statuses may include:
+  * 0 - Added-For Agreement/Commitment
+  * 1 - Added-Agreed/Committed
+  * 2 - Removed-For Agreement/Commitment
+  * 3 - Removed-Agreed/Committed
