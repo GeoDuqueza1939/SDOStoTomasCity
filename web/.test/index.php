@@ -1,45 +1,67 @@
 <?php
+function test()
+{
+    $addressText = "Block 19 Lot 15 Phase IV Mt. Claire Village, Sta. Anastacia, Sto. Tomas City, Batangas";
+    $locationStr = null;
+    preg_match_all("/[\w\-\s\.\d]+/i", $addressText, $locationStr);
+    var_dump($locationStr[0]);
+    echo("<br>");
+    $new = array_map(function ($value) {
+        return trim($value);
+    }, $locationStr[0]);
+    var_dump($new);
+    exit;
+    
+    $baseDir = '/var/www/html';
+    require_once("$baseDir/php/classes/ajaxResponse.php");
+    require_once("$baseDir/php/classes/db.php");
+    require_once("$baseDir/sergs/.php/db-ddl.php");
+    require_once("$baseDir/sergs/.php/sergs-classes.php");
+    
+    // DEBUG
+    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
+    $employee = new Employee($dbconn);
+    // // // $employee->add("Juan");
+    $employee->retrieve('B3129848');
+    $employee->setBirthDate('1979-11-29');
+    $employee->setMiddleName('Culambo');
+    // // var_dump($employee->getParentDBObjectStatus());
+    // // var_dump($employee->getDBObjectStatus());
+    $employee->save();
+    echo($employee->dbconn->lastSQLStr);
+    $employee->setEmployeeId('B3129847');
+    $employee->setFamilyName('Melor');
+    $employee->save();
+    echo($employee->dbconn->lastSQLStr);
+    $employee->setIsTempId(true);
+    $employee->save();
+    echo($employee->dbconn->lastSQLStr);
+    
+    // // echo "<br>In /.test/index.php:<br>";
+    echo json_encode($employee);
+    
+    echo "<br><hr><br>";
+    
+    $person = new Person($dbconn);
+    $person->retrieve(2);
+    // $person->setMiddleName('Colambo');
+    // $person->setFamilyName('Miller');
+    // $person->setBirthDate('1989-11-29');
+    // $person->save();
+    // var_dump($person->getDBObjectStatus());
+    echo json_encode($person);
+    
+    exit;
+    // DEBUG
+}
+
+// test();
+
 $baseDir = '/var/www/html';
-require_once("$baseDir/php/ajaxResponse.php");
-require_once("$baseDir/php/db.php");
+require_once("$baseDir/php/classes/ajaxResponse.php");
+require_once("$baseDir/php/classes/db.php");
 require_once("$baseDir/sergs/.php/db-ddl.php");
 require_once("$baseDir/sergs/.php/sergs-classes.php");
-
-// DEBUG
-$dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
-$employee = new Employee($dbconn);
-// // // $employee->add("Juan");
-$employee->retrieve('B3129848');
-$employee->setBirthDate('1979-11-29');
-$employee->setMiddleName('Culambo');
-// // var_dump($employee->getParentDBObjectStatus());
-// // var_dump($employee->getDBObjectStatus());
-$employee->save();
-echo($employee->dbconn->lastSQLStr);
-$employee->setEmployeeId('B3129847');
-$employee->setFamilyName('Melor');
-$employee->save();
-echo($employee->dbconn->lastSQLStr);
-$employee->setIsTempId(true);
-$employee->save();
-echo($employee->dbconn->lastSQLStr);
-
-// // echo "<br>In /.test/index.php:<br>";
-echo json_encode($employee);
-
-echo "<br><hr><br>";
-
-$person = new Person($dbconn);
-$person->retrieve(2);
-// $person->setMiddleName('Colambo');
-// $person->setFamilyName('Miller');
-// $person->setBirthDate('1989-11-29');
-// $person->save();
-// var_dump($person->getDBObjectStatus());
-echo json_encode($person);
-
-exit;
-// DEBUG
 
 if (isset($_POST['query']))
 {

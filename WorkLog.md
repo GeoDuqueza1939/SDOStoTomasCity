@@ -1,5 +1,12 @@
 # Work Log
 
+## 33/22/2023
+* 07:30AM-  Started reviewing PHP classes code for optimization
+
+## 3/21/2023
+* 08:15AM-12:10PM   Resumed coding database utility classes; finished the following classes: Location, Address; also separated classes and class stubs into different files for better manageability
+* 01:05PM-  Resumed coding database utility classes; finished the following classes: Institution, Workplace
+
 ## 3/20/2023
 * 08:20AM   Started reviewing ERD for ROMaS and redesigning the database.
 * 10:14AM   Started modifying database based on design.
