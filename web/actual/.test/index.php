@@ -12,7 +12,7 @@ function test()
     var_dump($new);
     exit;
     
-    $baseDir = '/var/www/html';
+    $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
     require_once("$baseDir/php/classes/ajaxResponse.php");
     require_once("$baseDir/php/classes/db.php");
     require_once("$baseDir/sergs/.php/db-ddl.php");
@@ -57,7 +57,7 @@ function test()
 
 // test();
 
-$baseDir = '/var/www/html';
+$baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
 require_once("$baseDir/php/classes/ajaxResponse.php");
 require_once("$baseDir/php/classes/db.php");
 require_once("$baseDir/sergs/.php/db-ddl.php");

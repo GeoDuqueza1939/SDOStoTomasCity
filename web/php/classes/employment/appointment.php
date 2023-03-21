@@ -1,10 +1,10 @@
 <?php
-$baseDir = '/var/www/html';
+$baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
 require_once("$baseDir/php/classes/dbObject.php");
 
 class Appointment extends dbObject
 {
-    
+
 
     public function add(): mixed
     {}
