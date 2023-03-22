@@ -1,6 +1,6 @@
 <?php
-$baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
-require_once("$baseDir/php/classes/dbObject.php");
+define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
+require_once(__ROOT__ . '/php/classes/dbObject.php');
 
 class Appointment extends dbObject
 {

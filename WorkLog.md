@@ -1,7 +1,11 @@
 # Work Log
 
 ## 33/22/2023
-* 07:30AM-  Started reviewing PHP classes code for optimization
+* 07:30AM-08:05AM   Started reviewing PHP classes code for optimization
+* 08:05AM-10:00AM   Poster-making activity
+* 10:25AM-11:55AM  Started (re)designing data interchange formats and protocols between and among client, server, and database
+* 12:40PM-05:21PM  Set up actual sign-in page procedure
+
 
 ## 3/21/2023
 * 08:15AM-12:10PM   Resumed coding database utility classes; finished the following classes: Location, Address; also separated classes and class stubs into different files for better manageability

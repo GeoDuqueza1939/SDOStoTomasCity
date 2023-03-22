@@ -1,7 +1,7 @@
 <?php
-$baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
-require_once("$baseDir/php/classes/dbObject.php");
-require_once("$baseDir/php/classes/places/location.php");
+define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
+require_once(__ROOT__ . 'php/classes/dbObject.php');
+require_once(__ROOT__ . '/php/classes/places/location.php');
 
 class Address extends dbObject
 {

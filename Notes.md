@@ -101,3 +101,42 @@ ___
 
 #### OPERATION & MAINTENANCE
 -
+
+### PHP SUPERGLOBALS
+- $GLOBALS
+- $_SERVER
+- $_REQUEST
+- $_POST
+- $_GET
+- $_FILES
+- $_ENV
+- $_COOKIE
+- $_SESSION
+
+### GENERAL POST DATA VARIABLE STRINGS/SWITCHES
+- a : Action
+  - login (use with: unm, pwd)
+  - logout
+  - getCurrentUser
+  - pwreset
+  - query (use with: q)
+  - fetch (use with: f, k, qcs, flim)
+- q : Query
+- unm : Username (use with: a=login)
+- pwd : Password (use with: a=login)
+- f : fetch (use with: a=fetch, k, qcs, flim)
+  - person
+  - employee
+  - user
+  - institution
+  - address
+  - workplace
+  - appointment
+  - leave
+  - termOfOffice
+- k : Primary Key (use with: a=fetch, f, qcs, flim)
+  - all (all results)
+  - [specify]
+- qcs : Query Criteria String (use with: a=fetch, f, k, flim)
+- flim : Fetch Limit (use with: a=fetch, f, k, qcs)
+- src: Redirect Source URL

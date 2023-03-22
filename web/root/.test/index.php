@@ -1,5 +1,5 @@
 <?php
-function test()
+function testOther()
 {
     $addressText = "Block 19 Lot 15 Phase IV Mt. Claire Village, Sta. Anastacia, Sto. Tomas City, Batangas";
     $locationStr = null;
@@ -55,7 +55,35 @@ function test()
     // DEBUG
 }
 
-// test();
+function hashMyPassword()
+{   
+    $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
+    require_once("$baseDir/php/classes/db.php");
+    require_once("$baseDir/sergs/.php/db-ddl.php");
+
+    $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
+
+    if ($dbconn->testConnect())
+    {
+        $pass = trim(hash('ripemd320', '1234'));
+        $sql = 'UPDATE User SET password="' . $pass . '" WHERE username="GeoTheDuke"';
+
+        $dbconn->executeStatement($sql);
+
+        if (!is_null($dbconn->lastException))
+        {
+            echo "$pass<br>";
+            echo $dbconn->lastException->getMessage();
+        }
+    }
+
+    $dbconn = null;
+
+    exit;
+}
+
+// testOther();
+// hashMyPassword();
 
 $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
 require_once("$baseDir/php/classes/ajaxResponse.php");
