@@ -15,7 +15,7 @@ function testOther()
     $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
     require_once("$baseDir/php/classes/ajaxResponse.php");
     require_once("$baseDir/php/classes/db.php");
-    require_once("$baseDir/sergs/.php/db-ddl.php");
+    require_once("$baseDir/sergs/php/db-ddl.php");
     require_once("$baseDir/sergs/.php/sergs-classes.php");
     
     // DEBUG
@@ -59,7 +59,7 @@ function hashMyPassword()
 {   
     $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
     require_once("$baseDir/php/classes/db.php");
-    require_once("$baseDir/sergs/.php/db-ddl.php");
+    require_once("$baseDir/sergs/php/db-ddl.php");
 
     $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
 
@@ -88,7 +88,7 @@ function hashMyPassword()
 $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
 require_once("$baseDir/php/classes/ajaxResponse.php");
 require_once("$baseDir/php/classes/db.php");
-require_once("$baseDir/sergs/.php/db-ddl.php");
+require_once("$baseDir/sergs/php/db-ddl.php");
 require_once("$baseDir/sergs/.php/sergs-classes.php");
 
 if (isset($_POST['query']))

@@ -1,0 +1,97 @@
+.login-page {}
+
+.login-page > header {
+    background-color: var(--bg1);
+    padding: 2em;
+    align-content: center;
+    text-align: center;
+}
+
+.login-page > header > div {
+    display: inline-table;
+    margin: 0;
+    padding: 0;
+    border-collapse: separate;
+}
+
+.login-page > header > div > div {
+    display: table-row;
+    margin: 0;
+    padding: 0;
+}
+
+.login-page > header > div > div > span {
+    display: table-cell;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.login-page .header-logo {
+    /* display: inline-block; */
+    /* max-width: 8em; */
+}
+
+.login-page .header-logo > img {
+    max-width: 7em;
+}
+
+.login-page .header-text {
+    /* display: inline-flex; */
+    padding-left: 1em;
+    text-align: left;
+    font-size: 1.25em;
+    /* align-items: start; */
+    /* justify-items: center; */
+    /* flex-direction: column; */
+}
+
+.login-page .header-text-deped {
+    display: block;
+    font-family: 'Old English Text MT', 'Times New Roman', serif;
+    font-weight: bold;
+    text-shadow: 0.03em 0.025em gray;
+    color: var(--hlt);
+}
+
+.login-page .header-text-sdo {
+    display: block;
+}
+
+.login-page > section {
+    text-align: center;
+}
+
+.login-page form {
+}
+
+.login-page form > fieldset {
+    display: inline-block;
+    border: 1px solid blue;
+    border-radius: 0.5em;
+    margin: 2em;
+    padding: 2em 2em 1em;
+    width: 25em;
+}
+
+.login-page form > fieldset > legend {
+    display: block;
+    font-size: 1em;
+    background-color: white;
+}
+
+.login-page form > fieldset .textbox,
+.login-page form > fieldset .lev1-link,
+.login-page form > fieldset .link {
+    display: block;
+    margin: 1em 0;
+    padding: 0;
+}
+
+.login-page form > fieldset .textbox > input {
+    width: 15em;
+}
+
+.login-page form > fieldset .lev1-link > button {
+    width: 15em;
+}

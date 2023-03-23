@@ -1,0 +1,30 @@
+:root {
+    --bg2: #5c87fe; /* main */
+    --fg1: #678ffe;
+    --bg1: #0247fe; /* header, nav */
+    --fg2: #012998;
+    --hlt: #070f26; /* footer, header (if nav is bg2) */
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body, header, div {
+/*    
+   margin: 0;
+   padding: 0;
+   text-indent: 0;
+   */
+}
+
+:hover {
+    /* outline: 1px dotted red; */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    /* font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; */
+}

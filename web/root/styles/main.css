@@ -1,0 +1,88 @@
+.app {
+    margin: 0;
+    padding: 0;
+}
+
+.app > header {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    height: 3em;
+    background-color: var(--bg2);
+    overflow: auto;
+}
+
+.app > header > h1 {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 1.5em;
+    margin: 0;
+    padding: 0;
+}
+
+.app #navbar {
+    background-color: var(--bg1);
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    top: 3em;
+    left: 0;
+    right: 0;
+}
+
+.app #nav, .app #nav ul, .app #nav li {
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+.app #nav > li {
+    display: inline-block;
+}
+
+.app #nav ul {
+    margin-left: 2em;
+    display: none;
+    visibility: hidden;
+}
+
+.app #nav a:link {
+    text-decoration: none;
+}
+
+.app #nav > li > a {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: start;
+}
+
+span[class^=material-] {
+    /* outline: 1px dotted red; */
+    line-height: 1em;
+    display: inline-flex;
+    margin: 0;
+    padding: 0.25em;
+    font-size: 1.25em;
+    height: 2em;
+    width: 2em;
+    align-items: center;
+    justify-content: center;
+}
+
+span[class^=material-symbol] {
+    
+}
+
+.app #nav > li + li {
+    margin-left: 0.5em;
+}
+
+.app #nav > li:hover > ul {
+    display: block;
+    visibility: visible;
+    position: fixed;
+}

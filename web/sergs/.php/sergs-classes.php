@@ -10,5 +10,5 @@ require_once("$baseDir/php/classes/firms/workplace.php");
 require_once("$baseDir/php/classes/employment/appointment.php");
 require_once("$baseDir/php/classes/employment/leave.php");
 require_once("$baseDir/php/classes/employment/termOfService.php");
-require_once("$baseDir/sergs/.php/db-ddl.php");
+require_once("$baseDir/sergs/php/db-ddl.php");
 ?>

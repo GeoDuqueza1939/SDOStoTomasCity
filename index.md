@@ -15,16 +15,16 @@ ___
         * [Hosted on LAN](http://duqueza-l003/sergs/)
   * [User Stories and Scenarios v1.00 (*for updating and re-versioning*)](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/sergs/.docsanddesign/User%20Stories%20and%20Scenarios.md)
   * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/sergs)
-* **RPMS Online Management System (*ROMaS*):**
-  * [Wireframe Prototype](https://geoduqueza1939.github.io/SDOStoTomasCity/web/romas/Prototype)
-  * [User Stories and Scenarios v0.00 (*in-progress*)](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/romas/.docsanddesign/User%20Stories%20and%20Scenarios.md)
-  * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/romas)
+* **Online Performace Management System (*OPMS*):**
+  * [Wireframe Prototype](https://geoduqueza1939.github.io/SDOStoTomasCity/web/opms/Prototype)
+  * [User Stories and Scenarios v0.00 (*in-progress*)](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/opms/.docsanddesign/User%20Stories%20and%20Scenarios.md)
+  * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/opms)
 
 ___
 
 ## Links to Notes and Miscellaneous Items
 
 * [Development Notes for SeRGS](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/sergs/.docsanddesign/Notes.md)
-* [Development Notes for ROMaS](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/romas/.docsanddesign/Notes.md)
+* [Development Notes for ROMaS](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/opms/.docsanddesign/Notes.md)
 * [Work Log](WorkLog.md)
 * [Miscellaneous Notes](Notes.md)

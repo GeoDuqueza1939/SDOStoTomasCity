@@ -1,10 +1,15 @@
 # Work Log
 
-## 33/22/2023
+## 3/23/2023
+* 07:55AM-11:45AM   Resumed designing sign-in page procedure; started setting up web app landing pages.
+* 12:40PM-02:10PM   Resumed coding SERGS landing page. Restyling is 'TO DO'
+* 02:10PM-04:49PM   Renamed ROMaS to OPMS for better future adaptability. Started defining general layouts and styling for both SeRGS and OPMS.
+
+## 3/22/2023
 * 07:30AM-08:05AM   Started reviewing PHP classes code for optimization
 * 08:05AM-10:00AM   Poster-making activity
-* 10:25AM-11:55AM  Started (re)designing data interchange formats and protocols between and among client, server, and database
-* 12:40PM-05:21PM  Set up actual sign-in page procedure
+* 10:25AM-11:55AM   Started (re)designing data interchange formats and protocols between and among client, server, and database
+* 12:40PM-05:21PM   Set up actual sign-in page procedure
 
 
 ## 3/21/2023

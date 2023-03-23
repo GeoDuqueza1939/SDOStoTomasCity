@@ -5,7 +5,7 @@ require_once(__ROOT__ . '/php/classes/db.php');
 
 function isValidCredentials(string $username, string $password): bool
 {
-    require_once(__ROOT__ . '/sergs/.php/db-ddl.php');
+    require_once(__ROOT__ . '/sergs/php/db-ddl.php');
     require_once(__ROOT__ . '/php/secure/dbcreds.php');
 
     $dbconn = new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl);

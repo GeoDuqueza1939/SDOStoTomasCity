@@ -3,18 +3,18 @@ session_start();
 
 define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
 require_once(__ROOT__ . '/php/enums/pagetypes.php');
+require_once(__ROOT__ . '/php/secure/validateUser.php');
 
-$requiresSignIn = false;
-$pageTitle = 'Department of Education | Sto. Tomas City SDO';
-$pageType = PageType::Landing;
+$requiresSignIn = true;
+$pageTitle = 'Online Performance Management System | Sto. Tomas City SDO';
+$pageType = PageType::OPMS;
 $addDebug = true;
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <?php require_once(__ROOT__ . '/php/snippets/html_head.php');?>
 <body>
-    <div class="app">
+    <div id="opms" class="app">
 <?php
 if (isset($_SESSION['user']))
 {
@@ -26,7 +26,7 @@ if (isset($_SESSION['user']))
     {
         // MODE: operation
         // User is signed in
-        echo "OK<br>";
+        // echo "OK<br>";
         require_once(__ROOT__ . '/php/snippets/signout_interface.php');
     }
 }
@@ -34,26 +34,22 @@ else
 {
     // MODE: Signed out
     echo('NO USER<br>');
-    
+
     if ($requiresSignIn)
     {
         // redirect to login
         header('Location: /login?src=' . $_SERVER['PHP_SELF']);
     }
-    else
-    {
-?>
-        <a href="<?php echo('/login?src=' . $_SERVER['PHP_SELF']);?>">Click to sign-in</a>
-<?php
-    }
 }
-        // display a page with a login link/button
-?>
-    <ul>
-        <li><a href="/sergs">Service Record Generation System</a></li>
-        <li><a href="/opms">Online Performance Management System</a></li>
-    </ul>
+
+require_once(__ROOT__ . '/opms/php/snippets/header_full.php');
+require_once(__ROOT__ . '/opms/php/snippets/nav_full.php');
+
+// HTML Content ?>
+    <main>OPMS</main>
+
 <?php
+require_once(__ROOT__ . '/php/snippets/footer_full.php');
 require_once(__ROOT__ . '/php/snippets/html_tail.php');
 ?>
     </div>

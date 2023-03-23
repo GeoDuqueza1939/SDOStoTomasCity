@@ -35,25 +35,25 @@ ___
 ## TASK BOARD (Daily Tasks)
 
 ### TO DO:
-* [ ] Prototype (ROMaS)
 * [ ] Wireframe Prototype (ROMaS)
 
 ### TO DO (*BACKLOGS*):
 
 ### ON-GOING:
+* [ ] Prototype (SeRGS)
+* [ ] Prototype (ROMaS)
 * [x] ERD Diagram (ROMaS: database)
 * [x] Database tester page
   * [ ] Construction of utility classes for recreating and accessing the database
 * [x] Database construction
   * [x] SeRGS
-  * [x] ROMaS
+  * [x] ROMaS (initial tables)
 
 ### ON-GOING (LONG-TERM)
 * [ ] Technical Manual (SeRGS)
 * [ ] User Manual (SeRGS)
 
 ### ON HOLD:
-* [ ] Prototype (SeRGS)
 * [ ] Wireframe Prototype (SeRGS)
 * [ ] UML Diagram (SeRGS: front-end/JS)
 * [ ] UML Diagram (SeRGS: back-end/PHP)
