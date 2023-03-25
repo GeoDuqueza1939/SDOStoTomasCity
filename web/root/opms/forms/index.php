@@ -6,15 +6,15 @@ require_once(__ROOT__ . '/php/enums/pagetypes.php');
 require_once(__ROOT__ . '/php/secure/validateUser.php');
 
 $requiresSignIn = true;
-$pageTitle = 'Service Record Generation System | Sto. Tomas City SDO';
-$pageType = PageType::SERGS;
+$pageTitle = 'Online Forms | OPMS | Sto. Tomas City SDO';
+$pageType = PageType::OPMS;
 $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <?php require_once(__ROOT__ . '/php/snippets/html_head.php');?>
 <body>
-    <div id="sergs" class="app home">
+    <div id="opms" class="app">
 <?php
 if (isset($_SESSION['user']))
 {
@@ -22,31 +22,27 @@ if (isset($_SESSION['user']))
     {
         require_once(__ROOT__ . '/php/secure/process_signout.php');
     }
-    else
-    {
-        // MODE: operation
-        // User is signed in
-        // echo "OK<br>";
-        // require_once(__ROOT__ . '/php/snippets/signout_interface.php');
-    }
 }
-else
+elseif ($requiresSignIn)
 {
-    // MODE: Signed out
-    echo('NO USER<br>');
-
-    if ($requiresSignIn)
-    {
-        // redirect to login
-        header('Location: /login?src=' . $_SERVER['PHP_SELF']);
-    }
+    // redirect to login
+    header('Location: /login?src=' . $_SERVER['PHP_SELF']);
 }
 
-require_once(__ROOT__ . '/sergs/php/snippets/header_full.php');
-require_once(__ROOT__ . '/sergs/php/snippets/nav_full.php');
+require_once(__ROOT__ . '/opms/php/snippets/header_full.php');
+require_once(__ROOT__ . '/opms/php/snippets/nav_full.php');
 
 // HTML Content ?>
-    <main>SERGS</main>
+    <main>
+        <h2>Performance Management Forms</h2>
+        <p>Welcome to the Online Performance Management System!</p>
+        <p>Please select the form tat you need to use:</p>
+        <ul>
+            <li><a href="/opms/forms/_pcrf/">IPCRF/OPCRF</a></li>
+            <li><a href="/opms/forms/sat/">SAT</a></li>
+            <li><a href="/opms/forms/pmcf/">PMCF</a></li>
+        </ul>
+    </main>
 
 <?php
 require_once(__ROOT__ . '/php/snippets/footer_full.php');

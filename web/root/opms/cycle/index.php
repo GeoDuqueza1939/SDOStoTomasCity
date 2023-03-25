@@ -6,7 +6,7 @@ require_once(__ROOT__ . '/php/enums/pagetypes.php');
 require_once(__ROOT__ . '/php/secure/validateUser.php');
 
 $requiresSignIn = true;
-$pageTitle = 'Online Performance Management System | Sto. Tomas City SDO';
+$pageTitle = 'The RPMS Cycle | OPMS | Sto. Tomas City SDO';
 $pageType = PageType::OPMS;
 $addDebug = true;
 ?>
@@ -14,7 +14,7 @@ $addDebug = true;
 <html lang="en">
 <?php require_once(__ROOT__ . '/php/snippets/html_head.php');?>
 <body>
-    <div id="opms" class="app home">
+    <div id="opms" class="app">
 <?php
 if (isset($_SESSION['user']))
 {
@@ -22,31 +22,31 @@ if (isset($_SESSION['user']))
     {
         require_once(__ROOT__ . '/php/secure/process_signout.php');
     }
-    else
-    {
-        // MODE: operation
-        // User is signed in
-        // echo "OK<br>";
-        // require_once(__ROOT__ . '/php/snippets/signout_interface.php');
-    }
 }
-else
+elseif ($requiresSignIn)
 {
-    // MODE: Signed out
-    echo('NO USER<br>');
-
-    if ($requiresSignIn)
-    {
-        // redirect to login
-        header('Location: /login?src=' . $_SERVER['PHP_SELF']);
-    }
+    // redirect to login
+    header('Location: /login?src=' . $_SERVER['PHP_SELF']);
 }
 
 require_once(__ROOT__ . '/opms/php/snippets/header_full.php');
 require_once(__ROOT__ . '/opms/php/snippets/nav_full.php');
 
 // HTML Content ?>
-    <main>OPMS</main>
+    <main>
+        <h2>The RPMS Cycle</h2>
+        
+        <p>Welcome to the Online Performance Management System!</p>
+        <p>Please select the cycle that you need to work on:</p>
+        <ul>
+            <li><a href="/opms/cycle/phase1/">Phase I: Performance Planning and Commitment</a></li>
+            <li><a href="/opms/cycle/phase2/">Phase II: Performance Monitoring and Coaching</a></li>
+            <li><a href="/opms/cycle/phase3/">Phase III: Performance Review and Evaluation</a></li>
+            <li><a href="/opms/cycle/phase4/">Phase IV: Performance Rewarding and Development</a></li>
+        </ul>
+
+
+    </main>
 
 <?php
 require_once(__ROOT__ . '/php/snippets/footer_full.php');

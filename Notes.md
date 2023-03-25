@@ -13,6 +13,7 @@ ___
 
 * RPMS/Personnel
   - Eligibility for Promotions
+
 ___
 
 ## TASK BOARD (Projects)
@@ -29,7 +30,8 @@ ___
 * HRPS (for hiring process) - Google Forms/Sheets (Collab with Sir Alexis)
 
 ### PRIORITY 0:
-* 
+* Personnel Records, Services, and Information System (PerSIS) - for manual data entry of personnel records (test or actual data), but may eventually subsume SeRGS because of its possibly and potentially larger scope
+* Information System Creation and Management System (ISCreAMS) - for system development (similar to CMS, but for MIS)
 ___
 
 ## TASK BOARD (Daily Tasks)
@@ -69,8 +71,6 @@ ___
 * [x] Database Query Tester
 ___
 
-___
-
 ## GUIDES
 ___
 
@@ -80,6 +80,8 @@ ___
 * 1 - Not Urgent, Important
 * 2 - Urgent, Not Important
 * 3 - Urgent, Important (Default)
+
+> Importance refers to the significance of something to the goals of both the organization and my officially designated tasks. Urgency shall refer to the necessity to finish or deliver something regardless of importance to myself or to the organization.
 ___
 
 ### SPRINT (Guide)

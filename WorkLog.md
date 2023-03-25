@@ -1,5 +1,10 @@
 # Work Log
 
+## 3/24/2023
+* 07:48AM-10:50AM   Resumed generalizing of layouts and styles
+* 10:50AM-12:15PM   Started coding a few more OPMS pages.
+* 12:58PM-04:50PM   Resumed coding OPMS pages and styling; also added other placeholder OPMS pages
+
 ## 3/23/2023
 * 07:55AM-11:45AM   Resumed designing sign-in page procedure; started setting up web app landing pages.
 * 12:40PM-02:10PM   Resumed coding SERGS landing page. Restyling is 'TO DO'
