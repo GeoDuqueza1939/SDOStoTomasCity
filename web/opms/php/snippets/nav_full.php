@@ -1,4 +1,5 @@
 <nav id="navbar">
+    <button id="nav-toggle"><span class="material-icons-round">menu</span></button>
     <ul id="nav">
         <li id="home"><a href="/opms/"><span class="material-icons-round">home</span> Home</a></li>
         <li id="requests"><a href="/opms/cycle/"><span class="material-symbols-rounded">cycle</span> RPMS Cycle</a>
@@ -21,7 +22,7 @@
             <ul>
                 <li id="my-account"><a href="/opms/account/edit/">Edit My Account</a></li>
                 <li id="other-account"><a href="/opms/account/edit_other/">Edit Another Account</a></li>
-                <li id="logout"><a href="/opms/logout/">Logout</a></li>
+                <li id="logout"><a href="?a=logout">Logout</a></li>
             </ul>
         </li>
         <li id="settings"><a href="/opms/settings/"><span class="material-icons-round">settings</span> Settings</a></li>

@@ -32,6 +32,7 @@
     </ul>
 </nav> -->
 <nav id="navbar">
+    <button id="nav-toggle"><span class="material-icons-rounded">menu</span></button>
     <ul id="nav">
         <li id="home"><a href="/sergs/"><span class="material-icons-round">home</span> Home</a></li>
         <li id="dashboard"><a href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
@@ -58,7 +59,7 @@
             <ul>
                 <li id="my-account"><a href="/sergs/account/edit/">Edit My Account</a></li>
                 <li id="other-account"><a href="/sergs/account/edit_other/">Edit Another Account</a></li>
-                <li id="logout"><a href="/sergs/logout/">Logout</a></li>
+                <li id="logout"><a href="?a=logout">Logout</a></li>
             </ul>
         </li>
         <li id="settings"><a href="/sergs/settings/"><span class="material-icons-round">settings</span> Settings</a></li>
