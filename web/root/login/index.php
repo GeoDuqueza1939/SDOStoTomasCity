@@ -25,7 +25,9 @@ else
     if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'login')
     {
         // MODE: signing in
-        if (isset($_POST['unm']) && isset($_POST['pwd']) && isValidCredentials($_POST['unm'], $_POST['pwd']))
+        $userInfo = getValidCredentials($_POST['unm'], $_POST['pwd']);
+
+        if (isset($_POST['unm']) && isset($_POST['pwd']) && !is_null($userInfo))
         {
             require_once(__ROOT__ . '/php/secure/process_signin.php');
         }

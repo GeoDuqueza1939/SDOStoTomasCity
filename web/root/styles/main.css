@@ -4,6 +4,237 @@
 }
 
 .app > header {
+    background-color: var(--header-bg);
+    color: var(--header-fg);
+    text-shadow: 0.05em 0.05em var(--header-shadow);
+    margin: 0;
+    padding: 0.5em;
+    height: 2.5em;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+}
+
+.app > header > h1 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.1em;
+}
+
+.app > #navbar {
+    color: var(--nav-fg);
+    text-shadow: 0.05em 0.05em var(--nav-shadow);
+    position: fixed;
+    top: 0;
+    left: 0.25em;
+    padding-top: 2.5em;
+}
+
+.app > #navbar > #nav-toggle {
+    height: 2.25em;
+    width: 3em;
+    position: fixed;
+    top: 0.35em;
+    left: 0.35em;
+    border-radius: 0.35em;
+}
+
+.app > #navbar > #nav {
+    display: block;
+    margin: 0;
+    padding: 0;
+    background-color: var(--nav-bg);
+    overflow: hidden;
+    height: 0;
+}
+
+.app > #navbar:hover > #nav {
+    overflow: auto;
+    height: auto;
+    max-height: 100%;
+}
+
+.app > #navbar > #nav > li {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+.app > #navbar li + li {
+    border-top: 0.1em groove;
+}
+
+.app > #navbar a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    padding: 0.1em;
+}
+
+span[class^=material-] {
+    line-height: 1em;
+    display: inline-flex;
+    margin: 0;
+    padding: 0.25em;
+    font-size: 1.5em;
+    height: 1.5em;
+    width: 1.5em;
+    align-items: center;
+    justify-content: center;
+}
+
+span[class^=material-symbol] {
+    
+}
+
+.app > #navbar > #nav-toggle > span[class^=material-] {
+    line-height: initial;
+    display: inline;
+    padding: 0;
+    font-size: 1.9em;
+}
+
+.app > #navbar .nav-dropdown-icon {
+    /* display: inline-block; */
+    font-family: 'Material Icons Round';
+    float: right;
+    margin-top: -1.75em;
+}
+
+.app > #navbar li:hover > .nav-dropdown-icon {
+    transform: rotate(180deg);
+}
+
+.app > #navbar > #nav > li > ul {
+    display: block;
+    margin: 0 0 0 7em;
+    padding: 0;
+    position: fixed;
+    height: 0;
+    overflow: hidden;
+    background-color: var(--nav2-bg);
+    color: var(--nav2-fg);
+}
+
+.app > #navbar > #nav > li > a {
+    display: flex;
+    align-items: center;
+    padding-right: 1em;
+}
+
+.app > #navbar > #nav > li:hover > a {
+    background-color: var(--nav-hover-bg);
+    color: var(--nav-hover-fg);
+    text-shadow: 0.05em 0.05em var(--nav-hover-shadow);
+}
+
+.app > #navbar > #nav > li:hover > ul {
+    height: auto;
+    overflow: auto;
+    padding: 0.5em;
+}
+
+.app > #navbar > #nav > li > ul > li {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+.app > #navbar > #nav > li > ul > li:hover > a {
+    background-color: var(--nav2-hover-bg);
+    color: var(--nav2-hover-fg);
+}
+
+.app > main {
+    padding: 1em;
+}
+
+.app > footer {
+    background-color: var(--footer-bg);
+    color: var(--footer-fg);
+    text-shadow: 0.05em 0.05em var(--footer-shadow);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 0.8em;
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Extra small devices (phones, 600px and below) */
+@media only screen and (max-width: 600px) {
+    .app > header {
+        padding-left: 3.25em;
+    }    
+
+    .app > #navbar:hover > #nav {
+        padding: 0.5em;
+    }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+    .app > header {
+        padding-left: 3.25em;
+    }    
+
+    .app > #navbar:hover > #nav {
+        padding: 0.5em;
+    }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+    .app > header {
+        padding-left: 0.5em;
+    }
+
+    .app > #navbar {
+        top: 2.5em;
+        left: 0;
+        bottom: 1em;
+        width: 12em;
+        background-color: var(--nav-bg);
+        padding-top: initial;
+        overflow: auto;
+    }
+
+    .app > #navbar > #nav-toggle {
+        display: none;
+        visibility: hidden;
+    }
+
+    .app > #navbar > #nav {
+        padding: 0.5em;
+        height: auto;
+        background-color: none;
+    }
+
+    .app > #navbar > #nav > li > a {
+        padding-right: 0.1em;
+    }
+
+    .app > main {
+        margin-left: 12em;
+    }
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+    
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+    
+}
+
+/*
+.app > header {
     display: flex;
     position: fixed;
     top: 0;
@@ -61,7 +292,6 @@
 }
 
 span[class^=material-] {
-    /* outline: 1px dotted red; */
     line-height: 1em;
     display: inline-flex;
     margin: 0;
@@ -86,3 +316,4 @@ span[class^=material-symbol] {
     visibility: visible;
     position: fixed;
 }
+*/

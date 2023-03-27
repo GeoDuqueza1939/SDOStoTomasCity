@@ -36,13 +36,13 @@
     <ul id="nav">
         <li id="home"><a href="/sergs/"><span class="material-icons-round">home</span> Home</a></li>
         <li id="dashboard"><a href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
-        <li id="view-sr"><a href="/sergs/view/"><span class="material-icons-round">pageview</span> View Service Record</a>
+        <li id="view-sr"><a href="/sergs/view/"><span class="material-icons-round">pageview</span> View Service Record</a> <span class="nav-dropdown-icon">&#xe5cf;</span>
             <ul>
                 <li id="view-my-sr"><a href="/sergs/view/my_service_record/">My Service Record</a></li>
                 <li id="search-sr"><a href="/sergs/view/search/">Search</a></li>
             </ul>
         </li>
-        <li id="requests"><a href="/sergs/requests/"><span class="material-icons-round">task</span> Requests</a>
+        <li id="requests"><a href="/sergs/requests/"><span class="material-icons-round">task</span> Requests</a> <span class="nav-dropdown-icon">&#xe5cf;</span>
             <ul>
                 <li id="my-requests"><a href="/sergs/requests/my_requests/">My Requests</a></li>
                 <li id="new-request"><a href="/sergs/requests/new_request/">New Request</a></li>
@@ -55,7 +55,7 @@
             </ul>
         </li>
         <li id="logs"><a href="/sergs/logs/"><span class="material-icons-round">fact_check</span> System Logs</a></li>
-        <li id="account"><a href="/sergs/account/"><span class="material-icons-round">account_circle</span> Account</a>
+        <li id="account"><a href="/sergs/account/"><span class="material-icons-round">account_circle</span> Account</a> <span class="nav-dropdown-icon">&#xe5cf;</span>
             <ul>
                 <li id="my-account"><a href="/sergs/account/edit/">Edit My Account</a></li>
                 <li id="other-account"><a href="/sergs/account/edit_other/">Edit Another Account</a></li>
