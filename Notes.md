@@ -19,7 +19,8 @@ ___
 ## TASK BOARD (Projects)
 
 ### PRIORITY 3:
-* RPMS Online System (collab with Doc Rose)
+* Merit Promotion and Selection Information System (on instructions from Dr. Rose)
+* RPMS Online System (collab with Dr. Rose)
 * Service Record Generation System (SERGS)/Step-Increment Monitoring (STIM) (Collab with Ma'am Cathy)
 
 ### PRIORITY 2:
@@ -27,29 +28,32 @@ ___
 
 ### PRIORITY 1:
 * Student/School Info Database/System (Collab with Sir Ivan)
-* HRPS (for hiring process) - Google Forms/Sheets (Collab with Sir Alexis)
 
 ### PRIORITY 0:
 * Personnel Records, Services, and Information System (PerSIS) - for manual data entry of personnel records (test or actual data), but may eventually subsume SeRGS because of its possibly and potentially larger scope
 * Information System Creation and Management System (ISCreAMS) - for system development (similar to CMS, but for MIS)
+* HRPS (for hiring process) - Google Forms/Sheets (Collab with Sir Alexis) [*Replaced by MPASIS*]
+
 ___
 
 ## TASK BOARD (Daily Tasks)
 
 ### TO DO:
-* [ ] Wireframe Prototype (ROMaS)
+* [ ] Wireframe Prototype (MPASIS)
+* [ ] Wireframe Prototype (OPMS)
 
 ### TO DO (*BACKLOGS*):
 
 ### ON-GOING:
+* [ ] Specifications (MPASIS)
 * [ ] Prototype (SeRGS)
-* [ ] Prototype (ROMaS)
-* [x] ERD Diagram (ROMaS: database)
+* [ ] Prototype (OPMS)
+* [x] ERD Diagram (OPMS: database)
 * [x] Database tester page
   * [ ] Construction of utility classes for recreating and accessing the database
 * [x] Database construction
   * [x] SeRGS
-  * [x] ROMaS (initial tables)
+  * [x] OPMS (initial tables)
 
 ### ON-GOING (LONG-TERM)
 * [ ] Technical Manual (SeRGS)
@@ -59,7 +63,7 @@ ___
 * [ ] Wireframe Prototype (SeRGS)
 * [ ] UML Diagram (SeRGS: front-end/JS)
 * [ ] UML Diagram (SeRGS: back-end/PHP)
-* [ ] User Stories and Scenarios (ROMaS)
+* [ ] User Stories and Scenarios (OPMS)
 * [ ] Narrative Progress Report on System Development (SeRGS)
 
 ### DISCONTINUED:

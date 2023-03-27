@@ -19,8 +19,9 @@ ___
   * [Wireframe Prototype](https://geoduqueza1939.github.io/SDOStoTomasCity/web/opms/Prototype)
   * [User Stories and Scenarios v0.00 (*in-progress*)](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/opms/.docsanddesign/User%20Stories%20and%20Scenarios.md)
   * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/opms)
-* **Unnamed system for Human Resource Merit Promotion and Selection Board:**
-  * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/mps)
+* **Merit Promotion and Selection Information System (*MPASIS*):**
+  * [Specifications](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/mpasis/.docsanddesign/Specifications.md)
+  * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/mpasis)
 ___
 
 ## Links to Notes and Miscellaneous Items
