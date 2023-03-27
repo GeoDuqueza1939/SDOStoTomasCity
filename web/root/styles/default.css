@@ -5,6 +5,31 @@
     --fg2: #012998;
     --hlt: #070f26; /* footer, header (if nav is bg2) */
     font-family: Verdana, Geneva, Tahoma, sans-serif;
+    /* font-size: 10pt; */
+
+    --header-fg: orange;
+    --header-bg: gray;
+    --header-shadow: black;
+
+    --nav-fg: white;
+    --nav-bg: #0247fe;
+    --nav-shadow: black;
+
+    --nav-hover-fg: white;
+    --nav-hover-bg: #070f26;
+    --nav-hover-shadow: gray;
+
+    --nav2-fg: white; /*#678ffe;*/
+    --nav2-bg: #070f26;
+    --nav2-shadow: black;
+
+    --nav2-hover-fg: white;
+    --nav2-hover-bg: #0247fe;
+    --nav2-hover-shadow: black;
+
+    --footer-fg: #678ffe;
+    --footer-bg: #070f26;
+    --footer-shadow: transparent;
 }
 
 * {

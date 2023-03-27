@@ -1,5 +1,14 @@
 # Work Log
 
+## 3/27/2023
+* 09:00AM-12:50PM   Resumed creation of OPMS pages. Started working on (I/O)PCRF.
+* 01:20PM-03:30PM   Attended meeting on HRMPSB; received some info on the requested system; possible expedited development time would be at least 5 to 7 days, but could lengthen a bit due to the need to review the job qualifications of all 70+ positions.
+* 03:30PM-
+
+## 3/25/2023 (Saturday)
+* xx:xxXX   Cleaned up/reorganized directory structure and repaired styling impacted.
+* xx:xxXX   Started the ISCreAMS project that could aid in further system development.
+
 ## 3/24/2023
 * 07:48AM-10:50AM   Resumed generalizing of layouts and styles
 * 10:50AM-12:15PM   Started coding a few more OPMS pages.

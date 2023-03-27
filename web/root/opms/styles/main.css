@@ -1,0 +1,35 @@
+.pcrf-ratee-info {
+
+}
+
+.pcrf-ratee-name::before {
+    content: 'Your Name: ';
+}
+
+.pcrf-ratee-name {
+    display: block;
+}
+
+.pcrf-ratee-position::before {
+    content: 'Position: ';
+}
+
+.pcrf-ratee-position {
+    display: block;
+}
+
+.pcrf-ratee-workplace::before {
+    content: 'Bureau/Center/Service/Division: ';
+}
+
+.pcrf-ratee-workplace {
+    display: block;
+}
+
+.pcrf-rating-period::before {
+    content: 'Rating Period: ';
+}
+
+.pcrf-rating-period {
+    display: block;
+}
