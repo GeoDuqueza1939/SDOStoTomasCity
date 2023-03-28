@@ -21,6 +21,7 @@ ___
   * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/opms)
 * **Merit Promotion and Selection Information System (*MPASIS*):**
   * [Specifications](https://github.com/GeoDuqueza1939/SDOStoTomasCity/blob/main/web/mpasis/.docsanddesign/Specifications.md)
+  * [Wireframe Prototype](https://geoduqueza1939.github.io/SDOStoTomasCity/web/mpasis/Prototype)
   * [Code Repository](https://github.com/GeoDuqueza1939/SDOStoTomasCity/tree/main/web/mpasis)
 ___
 

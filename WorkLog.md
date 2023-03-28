@@ -1,5 +1,8 @@
 # Work Log
 
+## 3/28/2023
+* 07:30AM-   Review of MPASIS specifications; 
+
 ## 3/27/2023
 * 09:00AM-12:50PM   Resumed creation of OPMS pages. Started working on (I/O)PCRF.
 * 01:20PM-03:30PM   Attended meeting on HRMPSB; received some info on the requested system; possible expedited development time would be at least 5 to 7 days, but could lengthen a bit due to the need to review the job qualifications of all 70+ positions.
