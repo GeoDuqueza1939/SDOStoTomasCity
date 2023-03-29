@@ -1,7 +1,16 @@
 # Work Log
 
+## 3/29/2023
+* 07:30AM-12:05PM   Added a some elements to dashboard and other account views.
+* 12:30PM-05:15PM   Finished Add Account function in Other Accounts view; MPASIS is now ready to accept users!
+
 ## 3/28/2023
-* 07:30AM-   Review of MPASIS specifications; 
+* 07:30AM-10:10AM   Review of MPASIS specifications; added wireframe prototype; started coding of PHP backend (MPASIS landing page).
+* 10:10AM-11:40AM   Started construction/restructuring of database; added some MPASIS code
+* 11:40AM-12:05PM   Conference with Ma'am Cathy.
+* 12:40PM-02:30PM   Resumed coding.
+* 02:30PM-05:17PM   Attended meeting with HRMPSB.
+* xx:xxXX    Implemented nav menus according to ISCreAMS design.
 
 ## 3/27/2023
 * 09:00AM-12:50PM   Resumed creation of OPMS pages. Started working on (I/O)PCRF.

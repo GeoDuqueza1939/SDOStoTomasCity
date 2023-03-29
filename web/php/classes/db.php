@@ -35,7 +35,7 @@ class DatabaseConnection
 	public $lastSQLStr = '';
 	public $lastInsertId = -1;
 
-	public function __construct($dbtype, $servername, $username, $password, $dbname, array $ddl = null)
+	public function __construct($dbtype, $servername, $username, $password, $dbname, array $ddl = [])
 	{
 		$this->dbtype = $dbtype;
 		$this->servername = $servername;
@@ -43,7 +43,8 @@ class DatabaseConnection
 		$this->password = $password;
 		$this->dbname = $dbname;
 
-		
+		// print('DBNAME: ' . $this->dbname . '<br><br>');
+
 		$this->setDDL($ddl);
 		
 		if ($this->dbExists())
@@ -68,6 +69,8 @@ class DatabaseConnection
 
 	private function connectToStr($connStr)
 	{
+		// print($connStr . '<br><br>');
+
 		if ($this->isConnected())
 		{
 			$this->lastException = new Exception('Connection already exists.');
@@ -233,7 +236,7 @@ class DatabaseConnection
 
 	public function select($table, $fieldStr, $criteriaStr)
 	{
-		$sql = "SELECT $fieldStr FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr") . ';';
+		$sql = "SELECT $fieldStr FROM `$this->dbname`.`$table`" . ($criteriaStr == '' ? '' : " $criteriaStr") . ';';
 
 		$results = $this->executeQuery($sql);
 
@@ -247,19 +250,19 @@ class DatabaseConnection
 
 	public function insert($table, $fieldStr, $valueStr) // include parentheses for both field list and value lists
 	{	
-		$this->executeStatement("INSERT INTO $table $fieldStr VALUES $valueStr");
+		$this->executeStatement("INSERT INTO `$this->dbname`.`$table` $fieldStr VALUES $valueStr");
 
 		return $this->lastInsertId;
 	}
 
 	public function update($table, $fieldValueStr, $criteriaStr)
 	{
-		return $this->executeStatement("UPDATE $table SET $fieldValueStr" . ($criteriaStr == '' ? '' : " $criteriaStr"));
+		return $this->executeStatement("UPDATE `$this->dbname`.`$table` SET $fieldValueStr" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
 	public function delete($table, $criteriaStr)
 	{
-		return $this->executeStatement("DELETE FROM $table" . ($criteriaStr == '' ? '' : " $criteriaStr"));
+		return $this->executeStatement("DELETE FROM `$this->dbname`.`$table`" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
 	public function executeQuery($sql) // SHOULD BE USED ONLY FOR SELECT STATEMENTS
@@ -339,6 +342,12 @@ class DatabaseConnection
 	{
 		$this->enableForeignKeyCheck();
 		$this->disconnect();
+	}
+
+	////// TEMPORARY ONLY!!!!!!
+	public function getDBName()
+	{
+		return $this->dbname;
 	}
 }
 ?>

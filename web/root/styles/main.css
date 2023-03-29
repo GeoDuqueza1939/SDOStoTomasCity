@@ -69,6 +69,7 @@
     color: inherit;
     display: block;
     padding: 0.1em;
+    cursor: pointer;
 }
 
 span[class^=material-] {
@@ -128,6 +129,13 @@ span[class^=material-symbol] {
     text-shadow: 0.05em 0.05em var(--nav-hover-shadow);
 }
 
+.app > #navbar > #nav > li:hover > a:active {
+    background-color: red;
+    color: black;
+    text-shadow: 0.05em 0.05em white;
+}
+
+
 .app > #navbar > #nav > li:hover > ul {
     height: auto;
     overflow: auto;
@@ -145,8 +153,18 @@ span[class^=material-symbol] {
     color: var(--nav2-hover-fg);
 }
 
+.app > #navbar > #nav > li > ul > li:hover > a:active {
+    background-color: red;
+    color: black;
+    text-shadow: 0.05em 0.05em white;
+}
+
 .app > main {
     padding: 1em;
+}
+
+.app > main h2 {
+    text-align: center;
 }
 
 .app > footer {
@@ -163,6 +181,53 @@ span[class^=material-symbol] {
     align-items: center;
     justify-content: center;
     text-align: center;
+}
+
+.app .dialog-scrim {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: #0008;
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.86em;
+}
+
+.app .dialog {
+    border: 2px outset;
+    background-color: lightgray;
+    max-height: 50em;
+    max-width: 80%;
+    padding: 1.5em;
+    line-height: 2;
+}
+
+.app .dialog-closeBtn {
+    break-after: always;
+    float: right;
+    padding: 0;
+    margin-top: -1.5em;
+    margin-right: -1.5em;
+}
+
+.app .dialog-closeBtn > .material-icons-round {
+    font-size: 1em;
+    padding: 0;
+    margin: 0;
+}
+
+.app .dialog label {
+    display: inline-block;
+    width: 10em;
+}
+
+.app .dialog .dialog-btn-grp {
+    text-align: center;
+    margin-top: 1em;
 }
 
 /* Extra small devices (phones, 600px and below) */

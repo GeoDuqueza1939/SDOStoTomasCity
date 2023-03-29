@@ -52,6 +52,7 @@ else
     <ul>
         <li><a href="/sergs">Service Record Generation System</a></li>
         <li><a href="/opms">Online Performance Management System</a></li>
+        <li><a href="/mpasis">Merit Promotion and Selection Information System</a></li>
     </ul>
 <?php
 require_once(__ROOT__ . '/php/snippets/html_tail.php');

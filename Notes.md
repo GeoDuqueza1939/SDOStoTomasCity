@@ -127,6 +127,7 @@ ___
   - pwreset
   - query (use with: q)
   - fetch (use with: f, k, qcs, flim)
+  - addTempUser
 - q : Query
 - unm : Username (use with: a=login)
 - pwd : Password (use with: a=login)
@@ -146,3 +147,5 @@ ___
 - qcs : Query Criteria String (use with: a=fetch, f, k, flim)
 - flim : Fetch Limit (use with: a=fetch, f, k, qcs)
 - src: Redirect Source URL
+- dbflds
+- dbvals

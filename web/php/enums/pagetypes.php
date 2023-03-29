@@ -6,5 +6,6 @@ enum PageType
     case SignOut;
     case SERGS;
     case OPMS;
+    case MPASIS;
 }
 ?>

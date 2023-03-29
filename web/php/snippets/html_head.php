@@ -6,8 +6,8 @@
 <link href="/styles/default.css" rel="stylesheet" />
 <link href="/styles/main.css" rel="stylesheet" />
 <?php
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/php/enums/pagetypes.php');
+define('__FILE_ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
+require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 
 switch ($pageType)
 {
@@ -31,7 +31,14 @@ switch ($pageType)
         echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />');
         echo('<link href="/opms/styles/main.css" rel="stylesheet" />');
         break;
-}
+    case PageType::MPASIS:
+        echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
+        echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
+        echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">');
+        echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />');
+        echo('<link href="/mpasis/styles/main.css" rel="stylesheet" />');
+        break;
+    }
 
 if ($addDebug)
 {

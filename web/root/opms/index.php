@@ -1,9 +1,9 @@
 <?php E_STRICT;
 session_start();
 
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/php/enums/pagetypes.php');
-require_once(__ROOT__ . '/php/secure/validateUser.php');
+define('__FILE_ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
+require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
+require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 $requiresSignIn = true;
 $pageTitle = 'Online Performance Management System | Sto. Tomas City SDO';

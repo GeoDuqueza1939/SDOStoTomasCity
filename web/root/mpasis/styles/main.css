@@ -1,0 +1,15 @@
+body, .app > main {
+    background-color: beige;
+}
+
+.app > main {
+    padding: 2em;
+}
+
+[class^=query-results-] {
+    display: block;
+    border: 2px inset;
+    min-height: 3em;
+    background-color: lightgray;
+    margin-top: 1em;
+}
