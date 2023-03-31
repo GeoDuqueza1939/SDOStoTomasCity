@@ -127,6 +127,7 @@ ___
   - pwreset
   - query (use with: q)
   - fetch (use with: f, k, qcs, flim)
+  - add (use with: add)
   - addTempUser
 - q : Query
 - unm : Username (use with: a=login)
@@ -141,6 +142,9 @@ ___
   - appointment
   - leave
   - termOfOffice
+  - eligibilities
+- add : add an entry (use with a=add);
+  - same as fetch
 - k : Primary Key (use with: a=fetch, f, qcs, flim)
   - all (all results)
   - [specify]

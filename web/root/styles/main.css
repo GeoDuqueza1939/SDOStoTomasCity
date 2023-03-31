@@ -13,6 +13,10 @@
     overflow: auto;
     display: flex;
     align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
 }
 
 .app > header > h1 {
@@ -161,6 +165,7 @@ span[class^=material-symbol] {
 
 .app > main {
     padding: 1em;
+    margin-top: 2.5em;
 }
 
 .app > main h2 {
@@ -183,7 +188,7 @@ span[class^=material-symbol] {
     text-align: center;
 }
 
-.app .dialog-scrim {
+.app .dialog-scrim, .app .dialog-ex-scrim {
     position: fixed;
     top: 0;
     left: 0;
@@ -197,7 +202,7 @@ span[class^=material-symbol] {
     font-size: 0.86em;
 }
 
-.app .dialog {
+.app .dialog, .app .dialog-ex {
     border: 2px outset;
     background-color: lightgray;
     max-height: 50em;
@@ -206,7 +211,7 @@ span[class^=material-symbol] {
     line-height: 2;
 }
 
-.app .dialog-closeBtn {
+.app .dialog-closeBtn, .app .dialog-ex-closeBtn {
     break-after: always;
     float: right;
     padding: 0;
@@ -214,18 +219,18 @@ span[class^=material-symbol] {
     margin-right: -1.5em;
 }
 
-.app .dialog-closeBtn > .material-icons-round {
+.app .dialog-closeBtn > .material-icons-round, .app .dialog-ex-closeBtn > .material-icons-round {
     font-size: 1em;
     padding: 0;
     margin: 0;
 }
 
-.app .dialog label {
+.app .dialog label, .app .dialog-ex label {
     display: inline-block;
-    width: 10em;
+    width: 10em; /* SHOULD BE AUTO */
 }
 
-.app .dialog .dialog-btn-grp {
+.app .dialog .dialog-btn-grp, .app .dialog-ex .dialog-ex-btn-grp {
     text-align: center;
     margin-top: 1em;
 }

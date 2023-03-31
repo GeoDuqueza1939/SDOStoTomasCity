@@ -26,7 +26,7 @@ else
     {
         // MODE: signing in
         $userInfo = getValidCredentials($_POST['unm'], $_POST['pwd']);
-        
+
         if (isset($_POST['unm']) && isset($_POST['pwd']) && !is_null($userInfo))
         {
             require_once(__ROOT__ . '/php/secure/process_signin.php');

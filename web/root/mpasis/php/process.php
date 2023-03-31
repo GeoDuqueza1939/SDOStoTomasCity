@@ -1,14 +1,41 @@
 <?php E_STRICT;
 session_start();
 
-class ajaxResponse
+class ajaxResponse// implements JsonSerializable
 {
-    public function __construct($type, $content)
-    {
-        $this->type = $type;
-        $this->content = $content;
-    }
-}
+	// private $type; // possible values: "Success", "Info", "Error", "Text", "Username", "JSON", "DataRows", "DataRow", "User", "Entries", "Entry"
+	// private $content;
+	
+	public function __construct($type, $content)
+	{
+		$this->type = $type;
+		$this->content = $content;
+	}
+	
+	// public function get_type()
+	// {
+	// 	return $this->type;
+	// }
+	
+	// public function get_content()
+	// {
+	// 	return $this->content;
+	// }
+	
+	// public function to_array()
+	// {
+    //     return array(
+    //         "type"=>$this->type,
+    //         "content"=>$this->content
+    //     );
+	// }
+	
+	// // override to allow json_encode() to convert an instance of this class
+	// public function jsonSerialize ()
+	// { 
+	// 	return $this->to_array();
+    // }
+};
 
 $basedir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
 
@@ -58,6 +85,121 @@ if (isset($_SESSION['user']))
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         break;
+                    case 'positionCategory':
+                        $dbResults = $dbconn->select('Position_Category', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    case 'educLevel':
+                        $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    case 'eligibilities':
+                        $dbResults = $dbconn->select('Eligibility', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    }
+                break;
+            case 'add':
+                if (isset($_REQUEST['eligibilities']))
+                {
+                    $eligibilities = json_decode($_REQUEST['eligibilities'], true);
+    
+                    $errMsg = '';
+                    $valueStr = '';
+    
+                    foreach ($eligibilities as $eligibility)
+                    {
+                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $eligibility['name'] . '","' . $eligibility['description'] . '")';
+                    }
+    
+                    $dbconn->insert('Eligibility', '(name, description)', $valueStr);
+    
+                    if (is_null($dbconn->lastException))
+                    {
+                        echo(json_encode(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                    }
+                    
+                }
+                elseif (isset($_REQUEST['positions']))
+                {
+                    $positions = json_decode($_REQUEST['positions'], true);
+
+                    foreach($positions as $position)
+                    {
+                        $fieldStr = '';
+                        $valueStr = '';
+
+                        
+                        foreach($position as $key => $value)
+                        {
+                            if ($key != 'required_eligibility')
+                            {
+                                $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                                $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                            }
+                        }
+                        $fieldStr = '(' . $fieldStr . ')';
+                        $valueStr = '(' . $valueStr . ')';
+
+                        // foreach($position['required_eligibility'] as $reqElig)
+                        // {
+                        //     echo($reqElig);
+                        //     echo("x");
+                        // }
+
+                        $dbconn->insert('Position', $fieldStr, $valueStr);
+
+                        if (is_null($dbconn->lastException))
+                        {
+                            foreach($position['required_eligibility'] as $reqElig)
+                            {
+                                $dbconn->insert('Required_Eligibility', '(plantilla_item_number, eligibilityId)', '("' . $position['plantilla_item_number'] . '", "' . $reqElig . '")');
+
+                                if (!is_null($dbconn->lastException))
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                    return;        
+                                }
+                            }
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            return;
+                        }
+                    }
+                    
+                    echo(json_encode(new ajaxResponse('Success', 'Successfully added Position details!')));
+                    
+                    return;
                 }
                 break;
             case 'addTempUser':
@@ -74,8 +216,8 @@ if (isset($_SESSION['user']))
                         $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
                     }
 
-                    // $personId = $dbconn->insert('Person', "($fieldStr)", "($valueStr)");
-                    $personId = 1;
+                    $personId = $dbconn->insert('Person', "($fieldStr)", "($valueStr)");
+                    // $personId = 1;
 
                     if (is_null($dbconn->lastException))
                     {
@@ -91,8 +233,6 @@ if (isset($_SESSION['user']))
                                 $tempUser['password'] = trim(hash('ripemd320', $tempUser['password']));
                             }
 
-                            echo $tempUser['password'];
-
                             foreach ($tempUser as $key => $value) {
                                 $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
                                 $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
@@ -102,47 +242,47 @@ if (isset($_SESSION['user']))
 
                             if (is_null($dbconn->lastException))
                             {
-                                echo(new ajaxResponse('Success', 'User successfully created'));
+                                echo(json_encode(new ajaxResponse('Success', 'User successfully created')));
                                 return;
                             }
                             else
                             {
-                                echo(new ajaxResponse('Error', 'Exception encountered in inserting user details'));
+                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting user details')));
                                 return;
                             }
                         }
                         else
                         {
-                            echo(new ajaxResponse('Error', 'Username is required'));
+                            echo(json_encode(new ajaxResponse('Error', 'Username is required')));
                             return;
                         }
                     }
                     else
                     {
-                        echo(new ajaxResponse('Error', 'Exception encountered in inserting personal details'));
+                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting personal details')));
                         return;
                     }
                 }
                 else
                 {
-                    echo(new ajaxResponse('Error', 'Given Name is required'));
+                    echo(json_encode(new ajaxResponse('Error', 'Given Name is required')));
                     return;
                 }
 
-                // var_dump(array_keys($person));
-                // var_dump(array_keys($tempUser));
+                break;
+            case 'getSalaryFromSG':
+                $salaryGrade = $_REQUEST['sg'];
 
-                // echo("x");
-                // $dbconn->insert('Temp_User', $_REQUEST['dbflds'], $_REQUEST['dbvals']);
-
-                // if (is_null($dbconn->lastException))
-                // {
-                //     echo(new ajaxResponse('Success', 'Successfully inserted data with id=' . $dbconn->lastInsertId));
-                // }
-                // else
-                // {
-                //     echo(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
-                // }
+                $dbResults = $dbconn->select('Salary_Table', 'salary', 'WHERE salary_grade="' . $salaryGrade . '" AND step_increment=1 AND effectivity_date="2023/1/1"');
+                
+                if (is_null($dbconn->lastException))
+                {
+                    echo(json_encode(new ajaxResponse('Salary', $dbResults[0]['salary'])));
+                }
+                else
+                {
+                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                }
 
                 break;
         }

@@ -1,8 +1,19 @@
 # Work Log
 
+## 3/31/2023
+* 07:00AM-   Resumed coding of Job Data Entry form
+
+## 3/30/2023
+* 07:24AM-08:35AM   Resumed construction of additional database tables.
+* 08:35AM-10:03AM   Input salary tables (2022-2023) into database; employed OCR on downloaded SSL tables and reformatted extracted text as CSV for direct upload to database.
+* 10:03AM-11:07AM   Started coding Job Data Entry form
+* 11:40PM-05:20PM   Resumed coding of Job Data Entry form
+
+
 ## 3/29/2023
 * 07:30AM-12:05PM   Added a some elements to dashboard and other account views.
 * 12:30PM-05:15PM   Finished Add Account function in Other Accounts view; MPASIS is now ready to accept users!
+* xx:xxXX   Designed and constructed additional database tables for storing applicant and position information.
 
 ## 3/28/2023
 * 07:30AM-10:10AM   Review of MPASIS specifications; added wireframe prototype; started coding of PHP backend (MPASIS landing page).

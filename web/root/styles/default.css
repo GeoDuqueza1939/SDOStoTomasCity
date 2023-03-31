@@ -82,3 +82,18 @@ body {
     font-size: 0.8em;
     text-align: center;
 }
+
+.input-ex.reversed {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: start;
+    align-items: baseline;
+}
+
+.input-ex.reversed > label {
+    margin-left: 0.5em;
+}
+
+.input-ex label {
+    user-select: none;
+}
