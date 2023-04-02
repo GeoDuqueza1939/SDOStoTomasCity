@@ -1,7 +1,15 @@
 # Work Log
 
+## 4/2/2023
+* xx:xxXX   Finished most of the implements of InputEx, FormEx, and DialogEx classes after a while. Started to test their capabilities by reimplementing Other Accounts interface. Also considered reimplementing Job Data Entry form.
+
+## 4/1/2023
+* xx:xxXX   Tried to optimize Job Data Entry form. Because of spaghetti code, optimization was a bit difficult. I decided to reimplement the InputEx and DialogEx classes while also creating FormEx class as an intermediary between the two classes. The goal is to smoothen future coding processes.
+
 ## 3/31/2023
-* 07:00AM-   Resumed coding of Job Data Entry form
+* 07:00AM-12:05PM   Resumed coding of Job Data Entry form
+* 12:40PM-03:15PM   Finished Job Data Entry Form interface and CRUD (will optimize or reimplement at home, if possible)
+* 02:15PM-05:02PM   Started coding Applicant Data Entry form.
 
 ## 3/30/2023
 * 07:24AM-08:35AM   Resumed construction of additional database tables.
