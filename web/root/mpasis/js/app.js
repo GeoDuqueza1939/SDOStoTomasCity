@@ -1179,7 +1179,7 @@ class InputEx
     {
         var invalidArgsStr = "";
 
-        invalidArgsStr += (typeof(index) == "null" || (typeof(index) == "number" && Number.isInteger(this) && index >= 0 && index < this.fields.length) ? "" : "index:" + index);
+        invalidArgsStr += (index == null || (typeof(index) == "number" && (index == 0 || Number.isInteger(this)) && index >= 0 && index < this.fields.length) ? "" : "index:" + index);
         invalidArgsStr += (typeof(doEnable) == "boolean" ? "" : (invalidArgsStr == "" ? "" : ", ") + "doEnable:" + doEnable);
 
         if (invalidArgsStr != "")
@@ -1925,7 +1925,7 @@ class FormEx
         }
     }
 
-    addInputEx(labelText = "", type = "text", value = "", tooltip = "", dbColName = "", dbTableName = "") // should return a reference to the InputEx object created
+    addInputEx(labelText = "", type = "text", value = "", tooltip = "", dbColName = "", dbTableName = "", useFieldSet = false) // should return a reference to the InputEx object created
     {
         var invalidArgsStr = "";
 
@@ -1935,6 +1935,7 @@ class FormEx
         invalidArgsStr += (typeof(tooltip) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "tooltip:" + tooltip);
         invalidArgsStr += (typeof(dbColName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbColName:" + dbColName);
         invalidArgsStr += (typeof(dbTableName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbTableName:" + dbTableName);
+        invalidArgsStr += (typeof(useFieldSet) == "boolean" ? "" : (invalidArgsStr == "" ? "" : "; ") + "useFieldSet:" + useFieldSet);
 
         if (invalidArgsStr.trim() != "")
         {
@@ -1948,7 +1949,7 @@ class FormEx
         dbColName = dbColName.trim();
         dbTableName = dbTableName.trim();
 
-        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), type));
+        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), type, useFieldSet));
         
         if (labelText != "")
         {
@@ -2480,6 +2481,193 @@ class MPASIS_App
                                 }
                             });
                             break;
+                        case 'job-data-entry':
+                                link.addEventListener("click", ()=>{
+                                    var jobDataForm = null;
+                                    var field = null;
+                                    var header = null;
+
+                                    for (var id in this.mainSections)
+                                    {
+                                        this.mainSections[id].classList.toggle("hidden", (id != mainSectionId));
+                                    }
+    
+                                    setCookie("current_view", value.id, 1);
+    
+                                    if (this.mainSections[mainSectionId].innerHTML.trim() == '')
+                                    {
+                                        jobDataForm = new FormEx(this.mainSections[mainSectionId], "job-data-form");
+                                        jobDataForm.fieldWrapper.style.display = "grid";
+                                        jobDataForm.fieldWrapper.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
+                                        jobDataForm.fieldWrapper.style.gridAutoFlow = "column";
+                                        jobDataForm.fieldWrapper.style.gridGap = "1em";
+
+                                        jobDataForm.setFullWidth();
+                                        jobDataForm.setTitle("Job Data Entry", 2);
+
+                                        field = jobDataForm.addInputEx("Position Title", "text", "", "", "position_title", "Position");
+                                        field.container.style.gridColumn = "1 / span 6";
+                                        field.setVertical();
+                                        field.showColon();
+
+                                        jobDataForm.addSpacer();
+
+                                        field = jobDataForm.addInputEx("Parenthetical Position Title", "text", "", "Enter in cases of parenthetical position titles, \ne.g., in \"Administrative Assistant (Secretary)\", \n\"Secretary\" is a parenthetical title.", "parenthetical_title", "Position");
+                                        field.container.style.gridColumn = "7 / span 6";
+                                        field.setPlaceholderText("(optional");
+                                        field.setVertical();
+                                        field.showColon();
+
+                                        jobDataForm.addSpacer();
+
+                                        field = jobDataForm.addInputEx("Salary Grade", "number", "1", "", "salary_grade", "Position");
+                                        field.container.style.gridColumn = "1 / span 3";
+                                        field.setVertical();
+                                        field.showColon();
+                                        field.setMin(0);
+                                        field.setMax(33);
+                                        field.addStatusPane();
+                                        field.setStatusMsgTimeout(20);
+                                        field.addEvent("change", (changeEvent)=>{
+                                            postData("/mpasis/php/process.php", "a=getSalaryFromSG&sg=" + changeEvent.target.inputEx.getValue(), (event)=>{
+                                                var response;
+                                                var sgField = changeEvent.target.inputEx;
+    
+                                                if (event.target.readyState == 4 && event.target.status == 200) {
+                                                    response = JSON.parse(event.target.responseText);
+                                                    
+                                                    if (response.type == "Error") {
+                                                        sgField.raiseError(response.content);
+                                                    }
+                                                    else if (response.type == "Salary") {
+                                                        if (response.content == null)
+                                                        {
+                                                            sgField.resetStatus();
+                                                        }
+                                                        else
+                                                        {
+                                                            sgField.showInfo("<i>Monthly Salary: \u20b1" + parseFloat(response.content).toFixed(2) + "</i>");
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        });
+    
+                                        jobDataForm.addSpacer();
+
+                                        field = jobDataForm.addInputEx("Plantilla Item No.", "textarea", "", "", "plantilla_item_number", "Position");
+                                        field.container.style.gridColumn = "4 / span 9";
+                                        field.setFullWidth(false);
+                                        field.setVertical();
+                                        field.showColon();
+
+                                        jobDataForm.addSpacer();
+
+                                        field = jobDataForm.addInputEx("Please select the position category", "radio-multiple", "", "", "category", "Position", true);
+                                        field.container.style.gridColumn = "1 / span 12";
+                                        field.reverse();
+                                        field.runAfterFilling = function(){
+                                            this.inputExs[0].check();
+                                        };
+                                        field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=positionCategory", "category", "id", "description");
+                                        
+                                        jobDataForm.addSpacer();
+                                        
+                                        header = jobDataForm.addHeader("Qualification Standards", 3);
+                                        header.style.marginBottom = "0";
+                                        header.style.gridColumn = "1 / span 12";
+
+                                        header = jobDataForm.addHeader("Education", 4);
+                                        header.style.gridColumn = "1 / span 12";
+
+                                        field = jobDataForm.addInputEx("Please select the minimum required educational attainment", "radio-multiple", "", "", "required_educational_attainment", "Position", true);
+                                        field.container.style.gridColumn = "1 / span 6";
+                                        field.container.style.gridRow = "span 4";
+                                        field.reverse();
+                                        field.setVertical();
+                                        field.runAfterFilling = function(){
+                                            this.inputExs[0].check();
+                                        };
+                                        field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=educLevel", "educational_attainment", "index", "description");
+                                        
+                                        // jobDataForm.addSpacer();
+
+                                        field = jobDataForm.addInputEx("Position requires specific education", "checkbox");
+                                        field.labels[0].style.fontWeight = "bold";
+                                        field.reverse();
+                                        field.container.style.gridColumn = "7 / span 6";
+                                        
+                                        var specEduc = jobDataForm.addInputEx("Please enter a description of the required education. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_education_required", "Position");
+                                        specEduc.container.style.gridColumn = "7 / span 6";
+                                        specEduc.container.style.gridRow = "span 3";
+                                        specEduc.fields[0].style.height = "7em";
+                                        specEduc.setVertical();
+                                        specEduc.showColon();
+                                        specEduc.disable();
+
+                                        field.addEvent("change", (event)=>{
+                                            specEduc.enable(0, event.target.inputEx.isChecked());
+                                        });
+
+                                        header = jobDataForm.addHeader("Training", 4);
+                                        header.style.gridColumn = "1 / span 12";
+                                        
+                                        field = jobDataForm.addInputEx("Total hours of relevant training", "number", "0", "", "required_training_hours", "Position");
+                                        field.container.style.gridColumn = "1 / span 6";
+                                        field.container.style.gridRow = "span 3";
+                                        // field.setVertical();
+                                        field.showColon();
+                                        field.setMin(0);
+                                        field.setMax(999);
+                                        field.setFullWidth();
+
+                                        field = jobDataForm.addInputEx("Position requires specific training", "checkbox");
+                                        field.labels[0].style.fontWeight = "bold";
+                                        field.reverse();
+                                        field.container.style.gridColumn = "7 / span 6";
+                                        
+                                        var specTraining = jobDataForm.addInputEx("Please enter a description of the required training. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_training_required", "Position");
+                                        specTraining.container.style.gridColumn = "7 / span 6";
+                                        specTraining.container.style.gridRow = "span 2";
+                                        specTraining.fields[0].style.height = "4em";
+                                        specTraining.setVertical();
+                                        specTraining.showColon();
+                                        specTraining.disable();
+
+                                        field.addEvent("change", (event)=>{
+                                            specTraining.enable(0, event.target.inputEx.isChecked());
+                                        });
+
+                                        header = jobDataForm.addHeader("Work Experience", 4);
+                                        header.style.gridColumn = "1 / span 12";
+                                        
+                                        field = jobDataForm.addInputEx("Total years of relevant work experience", "number", "0", "", "required_work_experience_years", "Position");
+                                        field.container.style.gridColumn = "1 / span 6";
+                                        field.container.style.gridRow = "span 3";
+                                        // field.setVertical();
+                                        field.showColon();
+                                        field.setMin(0);
+                                        field.setMax(99);
+                                        field.setFullWidth();
+
+                                        field = jobDataForm.addInputEx("Position requires specific work experience", "checkbox");
+                                        field.labels[0].style.fontWeight = "bold";
+                                        field.reverse();
+                                        field.container.style.gridColumn = "7 / span 6";
+                                        
+                                        var specExp = jobDataForm.addInputEx("Please enter a description of the required work experience. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_training_required", "Position");
+                                        specExp.container.style.gridColumn = "7 / span 6";
+                                        specExp.container.style.gridRow = "span 2";
+                                        specExp.fields[0].style.height = "4em";
+                                        specExp.setVertical();
+                                        specExp.showColon();
+                                        specExp.disable();
+
+                                        field.addEvent("change", (event)=>{
+                                            specExp.enable(0, event.target.inputEx.isChecked());
+                                        });
+                                    }
+                                });
                         case 'job-data-entry':
                             link.addEventListener("click", ()=>{
                                 for (var id in this.mainSections)
@@ -3238,7 +3426,7 @@ class MPASIS_App
             });
         });
 
-        if (getCookie("current_view") == "")
+        if (getCookie("current_view") == "" || getCookie("current_view") == undefined)
         {
             setCookie("current_view", "dashboard", 1);
         }
