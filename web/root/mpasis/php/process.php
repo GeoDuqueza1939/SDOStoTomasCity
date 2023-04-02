@@ -73,8 +73,8 @@ if (isset($_SESSION['user']))
             case 'fetch':
                 switch($_REQUEST['f'])
                 {
-                    case 'user':
-                        $dbResults = $dbconn->executeQuery('SELECT username, personId, sergs_access_level, opms_access_level, mpasis_access_level FROM `SDOStoTomas`.`Temp_User`' . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE username LIKE "' . trim($_REQUEST['k']) . '";'));
+                    case 'tempuser':
+                        $dbResults = $dbconn->executeQuery('SELECT given_name, middle_name, family_name, spouse_name, ext_name, username, sergs_access_level, opms_access_level, mpasis_access_level FROM SDOStoTomas.Person INNER JOIN SDOStoTomas.Temp_User ON Person.id=Temp_User.personId' . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE Temp_User.username LIKE "' . trim($_REQUEST['k']) . '";'));
     
                         if (is_null($dbconn->lastException))
                         {

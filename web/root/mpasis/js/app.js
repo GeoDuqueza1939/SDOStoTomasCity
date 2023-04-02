@@ -210,7 +210,7 @@ function getCookie(cname) {
     return "";
 }
 
-class InputEx
+class OldInputEx
 {
     constructor(parent)
     {
@@ -220,7 +220,7 @@ class InputEx
         // }
         // else
         // {
-            this.container = createElementEx(NO_NS, "span", parent, null, "class", "input-ex");
+            this.container = createElementEx(NO_NS, "span", parent, null, "class", "old-input-ex");
             this.textBox = createElementEx(NO_NS, "input", this.container, null, "type", "input");
             this.label = null;
             this.status = null;
@@ -370,6 +370,16 @@ class InputEx
     getWidth()
     {
         return this.textBox.style.width;
+    }
+
+    setFullWidth(setting)
+    {
+        this.container.classList.toggle("full-width", setting);
+    }
+
+    isFullWidth()
+    {
+        return this.container.classList.contains("full-width");
     }
 
     setLabelWidth(val)
@@ -584,7 +594,7 @@ class InputEx
     }
 }
 
-class DialogEx
+class OldDialogEx
 {
     constructor(container)
     {
@@ -707,7 +717,7 @@ class DialogEx
         }
         else
         {
-            textBox = new InputEx(null);
+            textBox = new OldInputEx(null);
             this.addNode(nodeKey, textBox.container, parentNodeKey, nextSiblingNodeKey);
             textBox.setType(type);
             textBox.setId(id);
@@ -779,6 +789,1445 @@ class DialogEx
 
     addStatusPane()
     {}
+
+    close()
+    {
+        this.scrim.remove();
+    }
+}
+
+/**
+ * Class InputEx
+ * @requires NO_NS
+ * @requires createElementEx
+ * @requires createSimpleElement
+ * @requires addText
+ * @requires isElement
+ */
+class InputEx
+{
+    constructor(parentEl = null, idStr = "", typeStr = "text", useFieldSet = false)
+    {
+        var invalidArgsStr = "";
+        var nextSibling = null;
+
+        invalidArgsStr += (parentEl == null || isElement(parentEl) ? "" : "parentEl:" + parentEl);
+        invalidArgsStr += (typeof(idStr) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "idStr:" + idStr);
+        invalidArgsStr += (typeof(typeStr) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "typeStr:" + typeStr);
+        invalidArgsStr += (typeof(useFieldSet) == "boolean" ? "" : (invalidArgsStr == "" ? "" : "; ") + "useFieldSet:" + useFieldSet);
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        this.container = createElementEx(NO_NS, "span", parentEl, null, "class", "input-ex");
+        this.container.style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
+        this.setFullWidth(false);
+        this.useFieldSet = useFieldSet; // will contain the input element with its label or other InputEx elements
+        this.fieldWrapper = createElementEx(NO_NS, (useFieldSet ? "fieldset" : "span"), this.container, null, "class", "input-ex-fields-wrapper", "style", "display: block;");
+        this.inputExs = []; // references to multiple InputEx chhildren (for multiple input types)
+        this.fields = []; // groups of input element; index 0 will point to single input types
+        this.labels = []; // label elements for input elements; legend element for fieldset
+        this.colon = null;
+        this.datalist = null;
+        this.listeners = {
+            field: {},
+            label: {},
+            status: {}
+        };
+        this.statusPane = null; // a status pane for displaying success, error, or info messages.
+        this.id = idStr.trim(); // use to set the id; will also set the name of a single field or a serve as a name prefix for field groups; SHOULDN'T BE CHANGED
+        this.name = this.id;
+        
+        this.values = [];
+        this.statusMode = 1; // 0: not displayed; 1: marker displayed with tooltip ; 2: full status message displayed
+        this.statusTimer = null; // will store the timeout for auto-resetting status
+        this.statusTimeout = 5; // seconds; < 0 will disable the creation of statusTimer
+        this.isMultipleInput = false;
+        this.reversed = false;
+        this.disabled = false;
+        this.isFilling = false;
+        this.runAfterFilling = null; // function to run after filling items from server; should be assigned before running fillItemsFromServer
+        this.spacer = ""; // a reference a single space textnode that shall come before this InputEx object
+        
+        this.type = typeStr;
+        switch(typeStr)
+        {
+            case "radio-multiple": // group of radio buttons
+            case "checkbox-multiple": // group of check boxes
+            case "buttons": // a group of button inputs
+            case "buttonExs": // a group of button elements
+                this.isMultipleInput = true;
+                break;
+            case "buttonEx": // button element
+                this.fields.push(createElementEx(NO_NS, "button", this.fieldWrapper, null, "id", idStr, "name", idStr, "type", "button"));
+                this.fields[0].inputEx = this;
+                break;
+            case "textarea":
+                this.fields.push(createElementEx(NO_NS, "textarea", this.fieldWrapper, null, "id", idStr, "name", idStr, "style", "display: block; width: 100%;"));
+                this.setFullWidth();
+                this.fields[0].style.fontSize = "inherit";
+                this.fields[0].inputEx = this;
+                break;
+            case "combo": // input with a datalist
+                nextSibling = this.datalist = createElementEx(NO_NS, "datalist", this.fieldWrapper, null, "id", idStr + "-datalist", "name", idStr + "-datalist");
+                typeStr = "text";
+            default:
+                this.fields.push(createElementEx(NO_NS, "input", this.fieldWrapper, nextSibling, "id", idStr, "name", idStr, "type", typeStr));
+                if (this.datalist != null)
+                {
+                    this.fields[0].setAttribute("list", idStr + "-datalist");
+                }
+                if (this.type != "button")
+                {
+                    this.fields[0].style.fontSize = "inherit";
+                }
+                this.fields[0].inputEx = this;
+                break;
+        }
+    }
+
+    setValue(...values) // ALWAYS USE STRING VALUES IN CHECKBOX MULTIPLE
+    {
+        // validate at least the first value
+        if (typeof(values[0]) != "string" && typeof(values[0]) != "number")
+        {
+            throw("Invalid argument type: values:" + values.toString());
+        }
+
+        if (typeof(values[0]) == "string")
+        {
+            values[0] = values[0].trim();
+        }
+
+        switch (this.type)
+        {
+            case "radio-multiple":
+                for (const inputEx of this.inputExs) {
+                    if (inputEx.getValue() == values[0])
+                    {
+                        inputEx.check();
+                    }
+                }
+                break;
+            case "checkbox-multiple":
+                for (const inputEx of this.inputExs) {
+                    if (values.includes(inputEx.getValue()))
+                    {
+                        inputEx.check();
+                    }
+                }
+                break;
+            case "buttons":
+            case "buttonExs":
+                break;
+            case "combo":
+            case "buttonEx": // value attribute is still set but is not displayed
+            case "button":
+            case "submit":
+            case "reset":
+            default:
+                this.fields[0].value = values[0];
+                break;
+        }
+    }
+
+    getValue()
+    {
+        switch (this.type)
+        {
+            case "radio-multiple":
+                for (const inputEx of this.inputExs) {
+                    if (inputEx.isChecked())
+                    {
+                        return inputEx.getValue();
+                    }
+                }
+                break;
+            case "checkbox-multiple":
+                var values = [];
+                for (const inputEx of this.inputExs) {
+                    console.log(inputEx + "\n" + inputEx.isChecked() + inputEx.fields[0].checked);
+                    if (inputEx.isChecked())
+                    {
+                        values.push(inputEx.getValue());
+                    }
+                }
+                return values;
+                break;
+            case "buttons":
+            case "buttonExs":
+                break;
+            case "combo":
+            case "buttonEx":
+            case "button":
+            case "submit":
+            case "reset":
+            default:
+                return this.fields[0].value.trim();
+                break;
+        }
+
+        return "";
+    }
+
+    check(doCheck = true) // single input only
+    {
+        if (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox"))
+        {
+            // this.fields[0].toggleAttribute("checked", doCheck); // hard-coded HTML check attributes confuse the browser
+            this.fields[0].checked = doCheck;
+        }
+    }
+
+    uncheck() // single input only
+    {
+        this.check(false);
+    }
+
+    isChecked() // single input only
+    {
+        return (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox") && (this.fields[0].checked)) //|| this.fields[0].hasAttribute("checked"))); // hard-coded HTML check attributes confuse the browser
+    }
+
+    setLabelText(labelText) // legend for fieldset of non-single input
+    {
+        if (typeof(labelText) != "string")
+        {
+            throw("Invalid argument type: labelText:" + labelText);
+        }
+
+        labelText = labelText.trim();
+
+        if (this.type == "button" || this.type == "submit" || this.type == "reset")
+        {
+            this.setValue(labelText);
+        }
+        else if (this.type == "buttonEx")
+        {
+            this.fields[0].innerHTML = labelText;
+        }
+        else if (!this.type.startsWith("button"))
+        {
+            if (this.labels.length == 0)
+            {
+                if (this.useFieldSet && this.isMultipleInput)
+                {
+                    this.labels.push(createElementEx(NO_NS, "legend", this.fieldWrapper));
+                }
+                else
+                {
+                    this.labels.push(createElementEx(NO_NS, "label", this.fieldWrapper, this.fields[0], "for", this.id));
+                }
+            }
+            this.fieldWrapper.insertBefore(document.createTextNode(" "), this.fields[0]);
+            this.labels[0].innerHTML = labelText;
+            this.labels[0].appendChild(this.colon = htmlToElement("<span class=\"colon hidden\">:</span>"));
+            // this.labels[0].style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
+        }
+    }
+
+    getLabelText() // legend for fieldset of non-single input
+    {
+        if (this.type == "button" || this.type == "submit" || this.type == "reset")
+        {
+            return this.getValue();
+        }
+        else if (this.type == "buttonEx")
+        {
+            return this.fields[0].innerHTML;
+        }
+        else if (this.labels.length == 1 && !this.type.startsWith("button"))
+        {
+            return this.labels[0].innerHTML;
+        }
+
+        return "";
+    }
+
+    setPlaceholderText(placeholderText) // single input only
+    {
+        if (typeof(placeholderText) != "string")
+        {
+            throw("Invalid argument type: placeholderText:" + placeholderText);
+        }
+
+        placeholderText = placeholderText.trim();
+
+        if (!this.isMultipleInput && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
+        {
+            this.fields[0].placeholder = placeholderText;
+        }
+    }
+
+    getPlaceholderText() // single input only
+    {
+        if (!this.isMultipleInput && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
+        {
+            return this.fields[0].placeholder;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    require(setting = true)
+    {
+        if (!this.isMultipleInput)
+        {
+            this.fields[0].required = setting;
+        }
+    }
+
+    isRequired()
+    {
+        return this.fields[0].required;
+    }
+
+    getId()
+    {
+        return this.id;
+    }
+
+    setTooltipText(tooltipText)
+    {
+        if (typeof(tooltipText) != "string" && typeof(tooltipText) != "number")
+        {
+            throw("Invalid argument type: tooltipText:" + tooltipText);
+        }
+
+        if (typeof(tooltipText) == "string")
+        {
+            tooltipText = tooltipText.trim();
+        }
+
+        if (!this.isMultipleInput)
+        {
+            if (tooltipText == "")
+            {
+                if (this.fields[0].hasAttribute("title"))
+                {
+                    this.fields[0].removeAttribute("title");
+                }
+            }
+            else
+            {
+                this.fields[0].title = tooltipText;
+            }
+        }
+        
+        if (this.labels.length > 0)
+        {
+            if (tooltipText == "")
+            {
+                if (this.labels[0].hasAttribute("title"))
+                {
+                    this.labels[0].removeAttribute("title");
+                }
+            }
+            else
+            {
+                this.labels[0].title = tooltipText;
+            }
+        }
+    }
+
+    getToolTipText() // single-input element types only
+    {
+        if (!this.isMultipleInput)
+        {
+            return this.fields[0].title;
+        }
+        else if (this.labels.length > 0)
+        {
+            return this.labels[0].title;
+        }
+
+        return "";
+    }
+
+    setParent(parentEl, nextSibling = null)
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (isElement(parentEl) ? "" : "parentEl:" + parentEl);
+        invalidArgsStr += (nextSibling == null || isElement(nextSibling) ? "" : (invalidArgsStr == "" ? "" : "; ") + "nextSibling:" + nextSibling);
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        if (nextSibling == null)
+        {
+            parentEl.insertBefore(this.container, nextSibling);
+        }
+        else
+        {
+            parentEl.appendChild(this.container);
+        }
+    }
+
+    getParent()
+    {
+        return this.container.parentElement;
+    }
+
+    enable(index = null, doEnable = true) // null index means all inputs should be enabled
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (typeof(index) == "null" || (typeof(index) == "number" && Number.isInteger(this) && index >= 0 && index < this.fields.length) ? "" : "index:" + index);
+        invalidArgsStr += (typeof(doEnable) == "boolean" ? "" : (invalidArgsStr == "" ? "" : ", ") + "doEnable:" + doEnable);
+
+        if (invalidArgsStr != "")
+        {
+            throw("Invalid argument type: " + invalidArgsStr);
+        }
+
+        if (this.isMultipleInput && index == null)
+        {
+            this.inputExs.forEach((inputEx)=>{
+                inputEx.enable();
+            });
+
+            index = 0;
+        }
+        else
+        {
+            if (index == null)
+            {
+                index = 0;
+            }
+    
+            this.fields[index].toggleAttribute("disabled", !doEnable);
+        }
+
+        if (this.labels.length > index)
+        {
+            this.labels[index].toggleAttribute("disabled", !doEnable);
+        }
+
+        this.disabled = !doEnable;
+    }
+    
+    disable(index = null)
+    {
+        this.enable(index, false);
+    }
+
+    isDisabled()
+    {
+        return this.disabled;
+    }
+
+    setGroupName(nameStr)
+    {
+        if (typeof(nameStr) != "string")
+        {
+            throw("Invalid argument type: nameStr:" + nameStr);
+        }
+
+        this.name = nameStr.trim();
+
+        if (this.isMultipleInput)
+        {
+            this.inputExs.forEach((inputEx)=>{
+                inputEx.setGroupName(this.name);
+            });
+        }
+        else
+        {
+            this.fields[0].name = this.name;
+            if (this.labels.length > 0)
+            {
+                this.labels[0].for = this.name;
+            }
+        }
+    }
+
+    getGroupName()
+    {
+        return this.name;
+    }
+
+    addItem(labelText, value = "", tooltipText = "") // only for combo (will add to datalist), radio-multiple, and multiple-single-select
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (typeof(labelText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "labelText:" + labelText);
+        invalidArgsStr += (typeof(value) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "value:" + value);
+        invalidArgsStr += (typeof(tooltipText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "tooltipText:" + tooltipText);
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        labelText = labelText.trim();
+        tooltipText = tooltipText.trim();
+
+        switch (this.type)
+        {
+            case "radio-multiple":
+                if (this.inputExs.length > 0)
+                {
+                    this.fieldWrapper.appendChild(document.createTextNode(" "));
+                }
+                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "radio"));
+                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
+                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+                this.inputExs[this.inputExs.length - 1].setValue(value);
+                this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
+                // this.inputExs[this.inputExs.length - 1].setFullWidth();
+                if (tooltipText != "")
+                {
+                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
+                }
+                this.inputExs[this.inputExs.length - 1].setGroupName(this.id);
+
+                if (this.statusPane != null)
+                {
+                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
+                    this.fieldWrapper.appendChild(this.statusPane);
+                }
+
+                break;
+            case "checkbox-multiple":
+                if (this.inputExs.length > 0)
+                {
+                    this.fieldWrapper.appendChild(document.createTextNode(" "));
+                }
+                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "checkbox"));
+                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
+                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+                this.inputExs[this.inputExs.length - 1].setValue(value);
+                this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
+                // this.inputExs[this.inputExs.length - 1].setFullWidth();
+                if (tooltipText != "")
+                {
+                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
+                }
+
+                if (this.statusPane != null)
+                {
+                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
+                    this.fieldWrapper.appendChild(this.statusPane);
+                }
+
+                break;
+            case "combo":
+                [createElementEx(NO_NS, "option", this.datalist, null, "value", labelText, "data-value", value)].forEach(option=>{
+                    if (tooltipText != "")
+                    {
+                        option.title = tooltipText; // HAS NO EFFECT!!!
+                    }
+                });
+                break;
+            case "buttons":
+                if (this.inputExs.length > 0)
+                {
+                    this.fieldWrapper.appendChild(document.createTextNode(" "));
+                }
+                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "button"));
+                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
+                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+                if (tooltipText != "")
+                {
+                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
+                }
+
+                if (this.statusPane != null)
+                {
+                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
+                    this.fieldWrapper.appendChild(this.statusPane);
+                }
+
+                break;
+            case "buttonExs":
+                if (this.inputExs.length > 0)
+                {
+                    this.fieldWrapper.appendChild(document.createTextNode(" "));
+                }
+                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "buttonEx"));
+                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
+                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+                if (tooltipText != "")
+                {
+                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
+                }
+
+                if (this.statusPane != null)
+                {
+                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
+                    this.fieldWrapper.appendChild(this.statusPane);
+                }
+
+                break;
+        }
+    }
+
+    addItems(...labelStrs) // only for combo (will add to datalist), radio-multiple, and multiple-single-select; no tooltip
+    {
+        labelStrs.forEach(labelText=>{
+            this.addItem(labelText);
+        });
+    }
+
+    fillItemsFromServer(url, postQueryString, labelColName = "", valueColName = "", tooltipColName = "")
+    {
+        postData(url, postQueryString, (event)=>{
+            var response;
+            var data = null;
+
+            if (event.target.readyState == 4 && event.target.status == 200)
+            {
+                response = JSON.parse(event.target.responseText);
+
+                if (response.type == "Error")
+                {
+                    this.raiseError("AJAX Error: " + response.content);
+                }
+                else if (response.type == "Data")
+                {
+                    data = JSON.parse(response.content);
+
+                    data.forEach(dataRow=>{
+                        var label = dataRow[labelColName].toString();
+                        var value = (dataRow[valueColName] ?? "").toString();
+                        var tooltip = (dataRow[tooltipColName] ?? "").toString();
+                        this.addItem(label, value, tooltip);
+                        if (this.isReversed())
+                        {
+                            this.inputExs[this.inputExs.length - 1].reverse();
+                        }
+                    });
+
+                    if (this.runAfterFilling != null)
+                    {
+                        this.runAfterFilling();
+                    }
+                }
+            }
+        });
+    }
+
+    setWidth(width = "none")
+    {
+        if (typeof(width) != "string")
+        {
+            throw("Invalid argument type: width:" + width);
+        }
+
+        width = width.trim();
+
+        if (this.isMultipleInput)
+        {
+            this.inputExs.forEach(inputEx=>{
+                inputEx.setWidth(width);
+            });
+        }
+        else if (width == "none")
+        {
+            this.fields[0].style.width = null;
+        }
+        else
+        {
+            this.fields[0].style.width = width;
+        }
+    }
+
+    getWidth()
+    {
+        return this.fields[0].style.width;
+    }
+
+    setFullWidth(setting = true)
+    {
+        if (typeof(setting) != "boolean")
+        {
+            throw("Invalid argument type: setting:" + setting);
+        }
+
+        var flex = (this.container.style.display.match(/flex/) > 0);
+
+        this.container.style.display = (setting ? (flex ? "flex" : "block") : "inline-" + (flex ? "flex" : "block"));
+    }
+
+    isFullWidth()
+    {
+        // return this.container.classList.contains("full-width");
+        return (this.container.style.display == "block" || this.container.style.display == "flex");
+    }
+
+    setLabelWidth(width = "none")
+    {
+        if (typeof(width) != "string")
+        {
+            throw("Invalid argument type: width:" + width);
+        }
+
+        width = width.trim();
+
+        if (this.isMultipleInput)
+        {
+            this.inputExs.forEach(inputEx=>{
+                inputEx.setLabelWidth(width);
+            });
+        }
+        else if (this.labels.length > 0)
+        {
+            if (width == "none")
+            {
+                this.labels[0].style.display = null;
+                this.labels[0].style.width = null;
+            }
+            else
+            {
+                this.labels[0].style.display = "inline-block";
+                this.labels[0].style.width = width;
+            }
+        }
+    }
+
+    getLabelWidth()
+    {
+        return (this.labels.length > 0 ? this.labels[0].style.width : "");
+    }
+
+    setVertical(setting = true)
+    {
+        // this.container.classList.toggle("vertical", setting);
+        if (setting)
+        {
+            this.fieldWrapper.style.display = "flex";
+            this.fieldWrapper.style.flexDirection = "column";
+        }
+        else
+        {
+            this.fieldWrapper.style.display = null;
+            this.fieldWrapper.style.flexDirection = null;
+        }
+    }
+
+    isVertical()
+    {
+        // return this.container.classList.contains("vertical");
+        return (this.fieldWrapper.style.display == "flex" && this.fieldWrapper.style.flexDirection == "column")
+    }
+
+    reverse() // change actual order of label and field; toggle setting
+    {
+        console.log()
+        if (this.isMultipleInput || this.type.startsWith("button") || this.labels.length <= 0)
+        {
+            this.inputExs.forEach((inputEx)=>{
+                inputEx.reverse();
+            });
+        }
+        else
+        {
+            if (this.reversed)
+            {
+                this.fieldWrapper.insertBefore(this.labels[0], this.fields[0]);
+                this.fieldWrapper.appendChild(this.fields[0]);
+            }
+            else
+            {
+                this.fieldWrapper.insertBefore(this.fields[0], this.labels[0]);
+                this.fieldWrapper.appendChild(this.labels[0]);
+            }
+
+        }
+
+        this.reversed = !this.reversed;
+    }
+
+    isReversed() // single-input element types only
+    {
+        return this.reversed;
+    }
+
+    addStatusPane()
+    {
+        if (this.statusPane == null || this.statusPane == undefined)
+        {
+            this.statusPane = createSimpleElement(NO_NS, "span", "status-pane", this.fieldWrapper);
+            this.statusPane["spacer"] = document.createTextNode(" ");
+            this.fieldWrapper.insertBefore(this.statusPane["spacer"], this.statusPane);
+            this.statusPane.style.fontSize = "0.8em";
+            this.statusPane.style.fontStyle = "italic";
+            this.statusPane.style.fontFamily = "serif";
+        }
+    }
+
+    removeStatusPane()
+    {
+        if (isElement(this.statusPane))
+        {
+            this.statusPane.remove();
+            this.statusPane = null;
+        }
+    }
+
+    setStatusMode(setting = 1)
+    {
+        if (Number.isInteger(setting) && (setting == 0 || setting == 1 || setting == 2))
+        {
+            this.statusMode = setting;
+        }
+        else
+        {
+            throw("Invalid argument: setting:" + setting);
+        }
+    }
+
+    getStatusMode()
+    {
+        return this.statusMode;
+    }
+
+    setStatusMessage(msg, status = "info")
+    {
+        if (typeof(msg) == "string" && msg.trim() != "")
+        {
+            if (this.statusPane == null || this.statusPane == undefined)
+            {
+                this.addStatusPane();
+            }
+            else
+            {
+                this.resetStatus();
+            }
+        
+            this.statusPane.innerHTML = "<span class=\"status-marker\" title=\"" + msg + "\">*</span> <span class=\"status-message\">" + msg + "</span>";
+
+            // clear any existing timers
+            clearTimeout(this.statusTimer);
+            this.statusTimer = null;
+
+            this.statusPane.classList.add(status);
+
+            this.statusPane.style.color = (status == "error" ? "red" : (status == "success" ? "green" : "blue"));
+
+            if (this.statusTimeout >= 0)
+            {
+                this.statusTimer = setTimeout(()=>{
+                    this.resetStatus();
+                }, this.statusTimeout * 1000);
+            }
+
+        }
+        else
+        {
+            throw("Invalid argument: msg:" + msg);
+        }
+    }
+
+    raiseError(errMsg) // red
+    {
+        this.setStatusMessage(errMsg, "error");
+    }
+
+    showSuccess(successMsg) // green
+    {
+        this.setStatusMessage(successMsg, "success");
+    }
+
+    showInfo(infoMsg) // blue
+    {
+        this.setStatusMessage(infoMsg, "info");
+    }
+
+    resetStatus()
+    {
+        if (this.statusPane != null && this.statusPane != undefined)
+        {
+            this.statusPane.innerHTML = "";
+            this.statusPane.classList.remove("success", "error", "info");
+            this.statusPane.style.color = null;
+        }
+    }
+    
+    getStatus()
+    {
+        if (this.statusPane == null || this.statusPane == undefined)
+        {
+            if (this.statusPane.classList.contains("success"))
+            {
+                return "success";
+            }
+            else if (this.statusPane.classList.contains("info"))
+            {
+                return "info";
+            }
+            else if (this.statusPane.classList.contains("error"))
+            {
+                return "error";
+            }
+        }
+        else
+        {
+            return "no status";
+        }
+    }
+
+    getStatusMessage()
+    {
+        if (this.statusPane == null || this.statusPane == undefined)
+        {
+            return "No Status";
+        }
+        else
+        {
+            return this.statusPane.innerHTML;
+        }
+    }
+
+    setStatusMsgTimeout(seconds)
+    {
+        if (typeof(seconds) == "number")
+        {
+            this.statusTimeout = seconds;
+        }
+    }
+
+    getStatusMsgTimeout()
+    {
+        return this.statusTimeout;
+    }
+
+    addEvent(eventType, func) // single input only
+    {
+        if (!this.isMultipleInput)
+        {
+            this.listeners.field[eventType] = func;
+            this.fields[0].addEventListener(eventType, this.listeners.field[eventType]);
+        }
+    }
+
+    addLabelEvent(eventType, func)
+    {
+        if (!this.isMultipleInput)
+        {
+            this.listeners.label[eventType] = func;
+            this.labels[0].addEventListener(eventType, this.listeners.label[eventType]);
+        }
+    }
+
+    addStatusEvent(eventType, func)
+    {
+        if (!this.isMultipleInput)
+        {
+            this.listeners.status[eventType] = func;
+            this.statusPane.addEventListener(eventType, this.listeners.status[eventType]);
+        }
+    }
+
+    removeEvent(eventType, func)
+    {
+        if (eventType in this.listeners.field)
+        {
+            this.fields[0].removeEventListener(eventType, this.listeners.field[eventType]);
+        }
+    }
+
+    removeLabelEvent(eventType, func)
+    {
+        if (eventType in this.listeners.label)
+        {
+            this.labels[0].removeEventListener(eventType, this.listeners.label[eventType]);
+        }
+    }
+
+    removeStatusEvent(eventType, func)
+    {
+        if (eventType in this.listeners.status)
+        {
+            this.statusPane.removeEventListener(eventType, this.listeners.status[eventType]);
+        }
+    }
+
+    setMin(num = 0)
+    {
+        if (this.type == "number" || this.type == "range" || this.type == "date" || this.type == "datetime-local" || this.type == "month" || this.type == "time" || this.type == "week")
+        {
+            this.fields[0].min = num;
+        }
+    }
+
+    setMax(num = 9)
+    {
+        if (this.type == "number" || this.type == "range" || this.type == "date" || this.type == "datetime-local" || this.type == "month" || this.type == "time" || this.type == "week")
+        {
+            this.fields[0].max = num;
+        }
+    }
+
+    showColon() // single-input only
+    {
+        if (this.colon != null)
+        {
+            this.colon.style.display = "initial";
+            this.colon.style.visibility = "visible";
+        }
+    }
+
+    hideColon() // single-input only
+    {
+        if (this.colon != null)
+        {
+            this.colon.style.display = "none";
+            this.colon.style.visibility = "hidden";
+        }
+    }
+
+    showColons() // for items only
+    {
+        this.inputExs.forEach((inputEx)=>{
+            inputEx.showColon();
+        });
+    }
+
+    hideColons() // for items only
+    {
+        this.inputExs.forEach((inputEx)=>{
+            inputEx.hideColon();
+        });
+    }
+
+    destroy()
+    {
+        this.container.remove();
+    }
+}
+
+/**
+ * Class FormEx
+ * @requires NO_NS
+ * @requires createElementEx
+ * @requires createSimpleElement
+ * @requires addText
+ * @requires isElement
+ * @requires InputEx
+ */
+class FormEx
+{
+    constructor(parentEl = null, id = "", useFormElement = true)
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (parentEl == null || isElement(parentEl) ? "" : (invalidArgsStr == "" ? "" : "; ") + "parentEl:" + parentEl);
+        invalidArgsStr += (typeof(id) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "id:" + id);
+        invalidArgsStr += (typeof(useFormElement) == "boolean" ? "" : (invalidArgsStr == "" ? "" : "; ") + "useFormElement:" + useFormElement);
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        id = id.trim();
+
+        this.container = createElementEx(NO_NS, "div", parentEl, null, "class", "form-ex", "style", "display: inline-block;");
+        this.container.style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
+        this.useFormElement = useFormElement; // will contain the input element with its label or other InputEx elements
+        this.fieldWrapper = createElementEx(NO_NS, (useFormElement ? "form" : "div"), this.container, null, "class", "form-ex-fields-wrapper", "style", "display: block;");
+        this.headers = [];
+        this.inputExs = [];
+        this.dbInputEx = {};
+        this.dbTableName = {};
+        this.divs = {};
+        this.statusPane = null; // a status pane for displaying success, error, or info messages.
+        this.func = {
+            submit: null,
+            afterSubmit: null,
+            reset: null,
+        };
+        this.id = id.trim();
+        this.statusMode = 1; // 0: not displayed; 1: marker displayed with tooltip ; 2: full status message displayed
+        this.statusTimer = null; // will store the timeout for auto-resetting status
+        this.statusTimeout = 5; // seconds; < 0 will disable the creation of statusTimer
+    }
+
+    setTitle(titleText = "", headingLevel = 1) // blank titleText removes the form title header
+    {
+        this.addHeader(titleText, headingLevel, "", true);
+    }
+    
+    getTitle()
+    {
+        if (this.headers.length > 0 && this.headers[0] != null)
+        {
+            return this.headers[0].innerHTML;
+        }
+
+        return "";
+    }
+
+    addHeader(headerText = "", headingLevel = 2, id = "", isTitle = false)
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (typeof(headerText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "headerText:" + headerText);
+        invalidArgsStr += (typeof(headingLevel) == "number" && Number.isInteger(headingLevel) && headingLevel > 0 && headingLevel <= 6 ? "" : (invalidArgsStr == "" ? "" : "; ") + "headingLevel:" + headingLevel);
+        invalidArgsStr += (typeof(id) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "id:" + id);
+        invalidArgsStr += (typeof(isTitle) == "boolean" ? "" : (invalidArgsStr == "" ? "" : "; ") + "isTitle:" + isTitle);
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        headerText = headerText.trim();
+        id = id.trim();
+
+        if (isTitle)
+        {
+            if (headerText == "")
+            {
+                if (this.headers.length > 0)
+                {
+                    this.headers[0].remove();
+                    this.headers[0] = null;
+                }
+            }
+            else
+            {
+                if (this.headers.length == 0)
+                {
+                    this.headers.push(createElementEx(NO_NS, "h" + headingLevel, this.container, this.fieldWrapper));
+                }
+    
+                this.headers[0].innerHTML = headerText;
+
+                return this.headers[0];
+            }
+        }
+        else if (headerText != "")
+        {
+            if (this.headers.length == 0)
+            {
+                this.headers.push(null); // reserve space for the title
+            }
+
+            this.headers.push(createElementEx(NO_NS, "h" + headingLevel, this.fieldWrapper));
+
+            this.headers[this.headers.length - 1].innerHTML = headerText;
+
+            if (id != "")
+            {
+                this.headers[this.headers.length - 1].id = id;
+            }
+
+            return this.headers[this.headers.length - 1];
+        }
+    }
+
+    addInputEx(labelText = "", type = "text", value = "", tooltip = "", dbColName = "", dbTableName = "") // should return a reference to the InputEx object created
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (typeof(labelText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "labelText:" + labelText);
+        invalidArgsStr += (typeof(type) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "type:" + type);
+        invalidArgsStr += (typeof(value) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "value:" + value);
+        invalidArgsStr += (typeof(tooltip) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "tooltip:" + tooltip);
+        invalidArgsStr += (typeof(dbColName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbColName:" + dbColName);
+        invalidArgsStr += (typeof(dbTableName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbTableName:" + dbTableName);
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        labelText = labelText.trim();
+        type = type.trim();
+        value = value.trim();
+        tooltip = tooltip.trim();
+        dbColName = dbColName.trim();
+        dbTableName = dbTableName.trim();
+
+        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), type));
+        
+        if (labelText != "")
+        {
+            this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+        }
+
+        if (tooltip != "")
+        {
+            this.inputExs[this.inputExs.length - 1].setTooltipText(tooltip);
+        }
+
+        if (dbColName != "")
+        {
+            this.dbInputEx[dbColName] = this.inputExs[this.inputExs.length - 1];
+        }
+
+        if (dbTableName != "")
+        {
+            this.dbTableName[dbColName] = dbTableName;
+        }
+
+        if (value != "")
+        {
+            this.inputExs[this.inputExs.length - 1].setValue(value);
+        }
+
+        // this.inputExs[this.inputExs.length - 1].spacer = document.createTextNode(" ");
+        // this.fieldWrapper.insertBefore(this.inputExs[this.inputExs.length - 1].spacer, this.inputEx[this.inputEx.length - 1].container);
+        return this.inputExs[this.inputExs.length - 1];
+    }
+
+    addFormButtonGrp(numOfBtns, useFieldSet = false) // inputEx buttons for submitting data, resetting the form, or any other custom function
+    {
+        if (!Number.isInteger(numOfBtns))
+        {
+            throw("Invalid arguments: numOfBtns:" + numOfBtns);
+        }
+
+        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), "buttonExs", useFieldSet));
+
+        for (var i = 0; i < numOfBtns; i++)
+        {
+            if (i > 0)
+            {
+                this.addSpacer(this.inputExs[this.inputExs.length - 1].fieldWrapper);
+            }
+            this.inputExs[this.inputExs.length - 1].addItem("Button " + i, "button" + i, "Button " + i);
+        }
+
+        return this.inputExs[this.inputExs.length - 1];
+    }
+
+    addDiv(name = "", parent = this.fieldWrapper)
+    {
+        if (typeof(name) == "string" && name.trim() != "")
+        {
+            if (isElement(parent))
+            {
+                this.divs[name] = createElementEx(NO_NS, "div", parent, null);
+                return this.divs[name];
+            }
+            else
+            {
+                throw("Invalid argument: parent:" + parent.toString());
+            }
+        }
+        else
+        {
+            throw("Invalid argument: name:" + name);
+        }
+    }
+
+    addStatusPane() // to be placed at the end of the form, after the button group
+    {
+        if (this.statusPane == null || this.statusPane == undefined)
+        {
+            this.statusPane = createSimpleElement(NO_NS, "div", "status-pane", this.fieldWrapper);
+            this.statusPane.style.fontSize = "0.8em";
+            this.statusPane.style.fontStyle = "italic";
+            this.statusPane.style.fontFamily = "serif";
+        }
+    }
+
+    removeStatusPane()
+    {
+        if (isElement(this.statusPane))
+        {
+            this.statusPane.remove();
+            this.statusPane = null;
+        }
+    }
+
+    setStatusMode(setting = 1)
+    {
+        if (Number.isInteger(setting) && (setting == 0 || setting == 1 || setting == 2))
+        {
+            this.statusMode = setting;
+        }
+        else
+        {
+            throw("Invalid argument: setting:" + setting);
+        }
+    }
+
+    getStatusMode()
+    {
+        return this.statusMode;
+    }
+
+    setStatusMessage(msg, status = "info")
+    {
+        if (typeof(msg) == "string" && msg.trim() != "")
+        {
+            if (this.statusPane == null || this.statusPane == undefined)
+            {
+                this.addStatusPane();
+            }
+            else
+            {
+                this.resetStatus();
+            }
+        
+            this.statusPane.innerHTML = "<span class=\"status-marker\" title=\"" + msg + "\">*</span> <span class=\"status-message\">" + msg + "</span>";
+
+            // clear any existing timers
+            clearTimeout(this.statusTimer);
+            this.statusTimer = null;
+
+            this.statusPane.classList.add(status);
+
+            this.statusPane.style.color = (status == "error" ? "red" : (status == "success" ? "green" : "blue"));
+
+            if (this.statusTimeout >= 0)
+            {
+                this.statusTimer = setTimeout(()=>{
+                    this.resetStatus();
+                }, this.statusTimeout * 1000);
+            }
+
+        }
+        else
+        {
+            throw("Invalid argument: msg:" + msg);
+        }
+    }
+
+    raiseError(errMsg) // red
+    {
+        this.setStatusMessage(errMsg, "error");
+    }
+
+    showSuccess(successMsg) // green
+    {
+        this.setStatusMessage(successMsg, "success");
+    }
+
+    showInfo(infoMsg) // blue
+    {
+        this.setStatusMessage(infoMsg, "info");
+    }
+
+    resetStatus()
+    {
+        if (this.statusPane != null && this.statusPane != undefined)
+        {
+            this.statusPane.innerHTML = "";
+            this.statusPane.classList.remove("success", "error", "info");
+            this.statusPane.style.color = null;
+        }
+    }
+    
+    getStatus()
+    {
+        if (this.statusPane == null || this.statusPane == undefined)
+        {
+            if (this.statusPane.classList.contains("success"))
+            {
+                return "success";
+            }
+            else if (this.statusPane.classList.contains("info"))
+            {
+                return "info";
+            }
+            else if (this.statusPane.classList.contains("error"))
+            {
+                return "error";
+            }
+        }
+        else
+        {
+            return "no status";
+        }
+    }
+
+    getStatusMessage()
+    {
+        if (this.statusPane == null || this.statusPane == undefined)
+        {
+            return "No Status";
+        }
+        else
+        {
+            return this.statusPane.innerHTML;
+        }
+    }
+
+    setStatusMsgTimeout(seconds)
+    {
+        if (typeof(seconds) == "number")
+        {
+            this.statusTimeout = seconds;
+        }
+    }
+
+    getStatusMsgTimeout()
+    {
+        return this.statusTimeout;
+    }
+
+    addSpacer(parent = this.fieldWrapper)
+    {
+        var spacer = document.createTextNode(" ");
+        
+        parent.appendChild(spacer);
+
+        return spacer;
+    }
+
+    addLineBreak(parent = this.fieldWrapper)
+    {
+        return createElementEx(NO_NS, "br", parent);
+    }
+
+    setFullWidth(setting = true)
+    {
+        if (typeof(setting) != "boolean")
+        {
+            throw("Invalid argument type: setting:" + setting);
+        }
+
+        var flex = (this.container.style.display.match(/flex/) > 0);
+
+        this.container.style.display = (setting ? (flex ? "flex" : "block") : "inline-" + (flex ? "flex" : "block"));
+    }
+
+    isFullWidth()
+    {
+        // return this.container.classList.contains("full-width");
+        return (this.container.style.display == "block" || this.container.style.display == "flex");
+    }
+
+    submitForm(url, query) // always post method
+    {}
+
+    resetForm()
+    {}
+}
+
+class DialogEx
+{
+    constructor(parent = null, id = "")
+    {
+        this.scrim = createElementEx(NO_NS, "div", parent, null, "class", "dialog-ex-scrim");
+        this.dialogBox = createElementEx(NO_NS, "div", this.scrim, null, "class", "dialog-ex");
+        this.closeBtn = createElementEx(NO_NS, "button", this.dialogBox, null, "type", "button", "class", "dialog-ex-closeBtn");
+        this.closeBtn.innerHTML = "<span class=\"material-icons-round\">close</span>";
+        this.closeBtn.addEventListener("click", (event)=>{
+            this.close();
+        });
+        this.formEx = null;
+        this.id = id;
+    }
+
+    addFormEx()
+    {
+        this.formEx = new FormEx(this.dialogBox, this.id + "-form-ex", false);
+
+        return this.formEx;
+    }
 
     close()
     {
@@ -859,6 +2308,146 @@ class MPASIS_App
                                 {
                                     this.mainSections[mainSectionId].innerHTML = "<h2>Applicant Data Entry</h2>";
                                 }
+
+                                var personalInfoForm = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "justify");
+                                
+                                addText("Personal Information", createElementEx(NO_NS, "h3", personalInfoForm));
+
+                                var givenName = new OldInputEx(personalInfoForm);
+                                givenName.setType("text");
+                                givenName.setId("given-name");
+                                givenName.setLabelText("Given Name");
+                                givenName.setVertical(true);
+                                givenName.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var middleName = new OldInputEx(personalInfoForm);
+                                middleName.setType("text");
+                                middleName.setId("middle-name");
+                                middleName.setLabelText("Middle Name");
+                                middleName.setVertical(true);
+                                middleName.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var familyName = new OldInputEx(personalInfoForm);
+                                familyName.setType("text");
+                                familyName.setId("family-name");
+                                familyName.setLabelText("Family Name");
+                                familyName.setVertical(true);
+                                familyName.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var spouseName = new OldInputEx(personalInfoForm);
+                                spouseName.setType("text");
+                                spouseName.setId("spouse-name");
+                                spouseName.setLabelText("Spouse's Name");
+                                spouseName.setVertical(true);
+                                spouseName.setTooltipText("For married women only");
+                                spouseName.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var extName = new OldInputEx(personalInfoForm);
+                                extName.setType("text");
+                                extName.setId("ext-name");
+                                extName.setLabelText("Ext. Name");
+                                extName.setVertical(true);
+                                extName.setWidth("5em");
+                                extName.hideColon();
+
+                                createElementEx(NO_NS, "br", personalInfoForm);
+                                createElementEx(NO_NS, "br", personalInfoForm);
+
+                                var address = new OldInputEx(personalInfoForm);
+                                address.setType("text");
+                                address.setId("address");
+                                address.setLabelText("Address");
+                                address.setVertical(true);
+                                address.setFullWidth(true);
+                                address.hideColon();
+
+                                createElementEx(NO_NS, "br", personalInfoForm);
+
+                                var age = new OldInputEx(personalInfoForm);
+                                age.setType("number");
+                                age.setId("age");
+                                age.setLabelText("Age");
+                                age.setMin(10);
+                                age.setMax(969);
+                                age.setValue(18);
+                                age.setVertical(true);
+                                age.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var sex = new OldInputEx(personalInfoForm); // should change to select input control
+                                sex.setType("text");
+                                sex.setId("sex");
+                                sex.setLabelText("Sex");
+                                sex.setVertical(true);
+                                sex.setWidth("5em");
+                                sex.hideColon();               
+                                
+                                addText(" ", personalInfoForm);
+
+                                var civilStatus = new OldInputEx(personalInfoForm);
+                                civilStatus.setType("text");
+                                civilStatus.setId("civil-status");
+                                civilStatus.setLabelText("Civil Status");
+                                civilStatus.setVertical(true);
+                                civilStatus.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var religion = new OldInputEx(personalInfoForm);
+                                religion.setType("text");
+                                religion.setId("religion");
+                                religion.setLabelText("Religion");
+                                religion.setVertical(true);
+                                religion.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var disability = new OldInputEx(personalInfoForm);
+                                disability.setType("text");
+                                disability.setId("disability");
+                                disability.setLabelText("Disability");
+                                disability.setVertical(true);
+                                disability.hideColon();
+                                
+                                addText(" ", personalInfoForm);
+
+                                var ethnicGroup = new OldInputEx(personalInfoForm);
+                                ethnicGroup.setType("text");
+                                ethnicGroup.setId("ethnic-group");
+                                ethnicGroup.setLabelText("Ethnic Group");
+                                ethnicGroup.setVertical(true);
+                                ethnicGroup.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var email = new OldInputEx(personalInfoForm);
+                                email.setType("email");
+                                email.setId("email");
+                                email.setLabelText("Email Address");
+                                email.setVertical(true);
+                                email.hideColon();
+
+                                addText(" ", personalInfoForm);
+
+                                var contactNo = new OldInputEx(personalInfoForm);
+                                contactNo.setType("text");
+                                contactNo.setId("contact-number");
+                                contactNo.setLabelText("Contact Number");
+                                contactNo.setVertical(true);
+                                contactNo.hideColon();
+
+                                addText("Educational Attainment", createElementEx(NO_NS, "h3", personalInfoForm));
+
+                                
                             });
                             break;
                         case 'applicant-data-search':
@@ -906,14 +2495,14 @@ class MPASIS_App
 
                                     var entryForm = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "job-data-entry-form");
 
-                                    var positionTitle = new InputEx(entryForm);
+                                    var positionTitle = new OldInputEx(entryForm);
                                     positionTitle.setType("text");
                                     positionTitle.setId("position-title");
                                     positionTitle.setLabelText("Position Title");
 
                                     createElementEx(NO_NS, "br", entryForm);
 
-                                    var parentheticalTitle = new InputEx(entryForm);
+                                    var parentheticalTitle = new OldInputEx(entryForm);
                                     parentheticalTitle.setType("text");
                                     parentheticalTitle.setId("parenthetical-title");
                                     parentheticalTitle.setLabelText("Parenthetical Position Title");
@@ -928,7 +2517,7 @@ class MPASIS_App
 
                                     createElementEx(NO_NS, "br", entryForm);
 
-                                    var salaryGrade = new InputEx(entryForm);
+                                    var salaryGrade = new OldInputEx(entryForm);
                                     salaryGrade.setType("number");
                                     salaryGrade.setId("salary-grade");
                                     salaryGrade.setLabelText("Salary Grade");
@@ -993,7 +2582,7 @@ class MPASIS_App
                                                 var categories = JSON.parse(response.content);
 
                                                 categories.forEach((category, index)=>{
-                                                    cat.push(new InputEx(container));
+                                                    cat.push(new OldInputEx(container));
                                                     cat[cat.length - 1].setType("radio");
                                                     cat[cat.length - 1].setId("cat" + index);
                                                     cat[cat.length - 1].setGroupName("cat");
@@ -1041,7 +2630,7 @@ class MPASIS_App
                                                 var educLevels = JSON.parse(response.content);
 
                                                 educLevels.forEach((educLevel, index, txtArr)=>{
-                                                    educ.push(new InputEx(container));
+                                                    educ.push(new OldInputEx(container));
                                                     educ[educ.length - 1].setType("radio");
                                                     educ[educ.length - 1].setId("educ" + index);
                                                     educ[educ.length - 1].setGroupName("educ");
@@ -1058,7 +2647,7 @@ class MPASIS_App
 
                                     createElementEx(NO_NS, "br", entryForm);
 
-                                    var requiresSpecEduc = new InputEx(entryForm);
+                                    var requiresSpecEduc = new OldInputEx(entryForm);
                                     requiresSpecEduc.setType("checkbox");
                                     requiresSpecEduc.setId("req-spec-educ");
                                     requiresSpecEduc.setLabelText("Position requires specific education");
@@ -1079,7 +2668,7 @@ class MPASIS_App
 
                                     addText("Training", createElementEx(NO_NS, "h4", entryForm));
 
-                                    var trainingHours = new InputEx(entryForm);
+                                    var trainingHours = new OldInputEx(entryForm);
                                     trainingHours.setType("number");
                                     trainingHours.setId("training-hours");
                                     trainingHours.setLabelText("Total hours of relevant training");
@@ -1090,7 +2679,7 @@ class MPASIS_App
                                     createElementEx(NO_NS, "br", entryForm);
                                     createElementEx(NO_NS, "br", entryForm);
 
-                                    var requiresSpecTraining = new InputEx(entryForm);
+                                    var requiresSpecTraining = new OldInputEx(entryForm);
                                     requiresSpecTraining.setType("checkbox");
                                     requiresSpecTraining.setId("req-spec-training");
                                     requiresSpecTraining.setLabelText("Position requires specific training");
@@ -1111,7 +2700,7 @@ class MPASIS_App
 
                                     addText("Work Experience", createElementEx(NO_NS, "h4", entryForm));
 
-                                    var expYears = new InputEx(entryForm);
+                                    var expYears = new OldInputEx(entryForm);
                                     expYears.setType("number");
                                     expYears.setId("exp-years");
                                     expYears.setLabelText("Total years of relevant training");
@@ -1122,7 +2711,7 @@ class MPASIS_App
                                     createElementEx(NO_NS, "br", entryForm);
                                     createElementEx(NO_NS, "br", entryForm);
 
-                                    var requiresSpecExp = new InputEx(entryForm);
+                                    var requiresSpecExp = new OldInputEx(entryForm);
                                     requiresSpecExp.setType("checkbox");
                                     requiresSpecExp.setId("req-spec-exp");
                                     requiresSpecExp.setLabelText("Position requires specific work experience");
@@ -1173,7 +2762,7 @@ class MPASIS_App
                                                     elig = [];
 
                                                     JSON.parse(response.content).forEach((eligibility, index, arr)=>{
-                                                        elig.push(new InputEx(container));
+                                                        elig.push(new OldInputEx(container));
                                                         elig[elig.length - 1].setType("checkbox");
                                                         elig[elig.length - 1].setId("eligibility" + eligibility['id']);
                                                         elig[elig.length - 1].setLabelText(eligibility['name']);
@@ -1186,7 +2775,7 @@ class MPASIS_App
                                                     [createElementEx(NO_NS, "button", container, null, "type", "button")].forEach((button, index, arr)=>{
                                                         addText("+Add Missing Eligibility", button);
                                                         button.addEventListener("click", (event)=>{
-                                                            var dialog = new DialogEx(fieldSet);
+                                                            var dialog = new OldDialogEx(fieldSet);
                                                             var eligText, descText;
                 
                                                             eligText = dialog.addTextBoxEx("eligText", "text", "new-eligibility", "Eligibility to be Added");
@@ -1242,7 +2831,7 @@ class MPASIS_App
 
                                     addText("Competency", createElementEx(NO_NS, "h4", entryForm));
 
-                                    var requiresCompetency = new InputEx(entryForm);
+                                    var requiresCompetency = new OldInputEx(entryForm);
                                     requiresCompetency.setType("checkbox");
                                     requiresCompetency.setId("req-competency");
                                     requiresCompetency.setLabelText("Position requires specific competency/competencies");
@@ -1462,7 +3051,7 @@ class MPASIS_App
                             });
                             break;
                         case 'other-account':
-                            link.addEventListener("click", ()=>{
+                            link.addEventListener("click", (event)=>{
                                 for (var id in this.mainSections)
                                 {
                                     this.mainSections[id].classList.toggle("hidden", (id != mainSectionId));
@@ -1470,206 +3059,154 @@ class MPASIS_App
 
                                 setCookie("current_view", value.id, 1);
 
-                                if (this.mainSections[mainSectionId].innerHTML.trim() == '')
+                                if (this.mainSections[mainSectionId].innerHTML.trim() == "")
                                 {
-                                    var el = null;
-                                    var searchBox = null;
-                                    var searchBtn = null;
-                                    var addBtn = null;
-                                    var errMsg = null;
-                                    var resultsBox = null;
+                                    var otherAccountFormEx = new FormEx(this.mainSections[mainSectionId], "other-account-form-ex", false);
 
-                                    this.mainSections[mainSectionId].innerHTML = "<h2>Other Account</h2>";
+                                    otherAccountFormEx.setTitle("Other Account", 2);
 
-                                    el = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "user-management-controls center", "title");
-                                    searchBox = createElementEx(NO_NS, "input", el, null, "type", "text", "name", "search-user", "id", "search-user", "value", "", "placeholder", "Enter the username to search.", "Enter a username or use * to return all users.");
-                                    addText(" ", el);
-                                    (el = createElementEx(NO_NS, "button", el, null, "type", "button")).addEventListener("click", (event)=>{
-                                        // console.log("[a=fetch&f=user&k=" + (searchBox.value.trim() == "" ? "all" : searchBox.value.trim()) + "]");
-                                        postData("/mpasis/php/process.php", "a=fetch&f=user&k=" + (searchBox.value.trim() == "" ? "all" : searchBox.value.trim()), function(){
+                                    var searchBox = otherAccountFormEx.addInputEx("", "text", "", "Wildcards:\n\n    % - zero, one, or more characters\n    _ - one character");
+                                    searchBox.setPlaceholderText("Enter the username to search");
+                                    searchBox.setWidth("75%");
+                                    searchBox.fieldWrapper.classList.add("center");
+                                    searchBox.setFullWidth();
+
+                                    otherAccountFormEx.addSpacer();
+
+                                    otherAccountFormEx.setFullWidth();
+
+                                    var btnGrp = otherAccountFormEx.addFormButtonGrp(2);
+                                    btnGrp.setFullWidth();
+                                    btnGrp.fieldWrapper.classList.add("center");
+                                    btnGrp.inputExs[0].setLabelText("Search Accounts");
+                                    btnGrp.inputExs[0].setTooltipText("");
+                                    btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                                        postData("/mpasis/php/process.php", "a=fetch&f=tempuser&k=" + searchBox.getValue() + "%", (event)=>{
                                             var response;
 
-                                            if (this.readyState == 4 && this.status == 200) {
-                                                response = JSON.parse(this.responseText);
-                                                
-                                                if (response.type == "Error") {
-                                                    errMsg.innerHTML = response.content;
+                                            if (event.target.readyState == 4 && event.target.status == 200)
+                                            {
+                                                response = JSON.parse(event.target.responseText);
+
+                                                if (response.type == "Error")
+                                                {
+                                                    otherAccountFormEx.raiseError(response.content);
                                                 }
-                                                else if (response.type == "Data") {
-                                                    resultsBox.innerHTML = JSON.parse(response.content)[0]["username"] + "<br>";
+                                                else if (response.type == "Data")
+                                                {
+                                                    var viewer = otherAccountFormEx.divs["list-users"];
+                                                    var data = JSON.parse(response.content);
+
+                                                    viewer.innerHTML = "";
+
+                                                    for (const row of data) {
+                                                        viewer.innerHTML += row["username"] + "<br>";
+                                                    }
                                                 }
-                                                // else
-                                                // {
-                                                //     resultsBox.innerHTML = response.content;
-                                                // }
                                             }
                                         });
                                     });
-                                    addText("Search Accounts", el);
-
-                                    addText(" ", el.parentElement);
-
-                                    (el = createElementEx(NO_NS, "button", el.parentElement, null, "type", "button")).addEventListener("click", (event)=>{
-                                        var dialog = {};
-                                        dialog['dialogScrim'] = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "dialog-scrim");
-                                        dialog['dialogBox'] = createElementEx(NO_NS, "div", dialog['dialogScrim'], null, "class", "dialog");
-                                        dialog['closeBtn'] = createElementEx(NO_NS, "button", dialog['dialogBox'], null, "type", "button", "class", "dialog-closeBtn");
-                                        dialog['closeBtn'].innerHTML = "<span class=\"material-icons-round\">close</span>";
-                                        dialog['closeBtn'].addEventListener("click", function(event){
-                                            dialog['dialogScrim'].remove();
-                                        });
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Given Name:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "given-name"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['givenName'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "text", "name", "given-name", "id", "given-name", "title", "Enter the applicant's given name.");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Middle Name:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "middle-name"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['middleName'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "text", "name", "middle-name", "id", "middle-name", "title", "Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none.");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Family Name:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "family-name"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['familyName'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "text", "name", "family-name", "id", "family-name", "title", "Enter the applicant's family name. For married women, please enter the maiden last name.");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Spouse's Name:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "spouse-name"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['spouseName'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "text", "name", "spouse-name", "id", "spouse-name", "title", "For married women, please enter the spouse's last name. Leave blank for none.");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Ext. Name:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "ext-name"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['extName'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "text", "name", "ext-name", "id", "ext-name", "title", "Enter the applicant's extension name. Leave blank for none.");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Username:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "username"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['userName'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "text", "name", "username", "id", "username", "title", "Please enter a usernme. Make sure to use only letters, digits, periods, and underscores.");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Password:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "password"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['password'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "password", "name", "password", "id", "password", "title", "Please enter a temporary password. Suggested: 1234", "value", "1234");
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-                                        addText(" ", dialog['dialogBox']);
-                                        addText("Access Level:", createElementEx(NO_NS, "label", dialog['dialogBox'], null, "for", "access-level"));
-                                        addText(" ", dialog['dialogBox']);
-                                        dialog['accessLevel'] = createElementEx(NO_NS, "input", dialog['dialogBox'], null, "type", "number", "min", 0, "max", 4, "name", "access-level", "id", "access-level", "title", "Please enter this user's access level. Default: 1", "value", 1);
-                                        createElementEx(NO_NS, "br", dialog['dialogBox']);
-
-                                        el = createElementEx(NO_NS, "div", dialog['dialogBox'], null, "class", "dialog-btn-grp")
-
-                                        dialog['submitBtn'] = createElementEx(NO_NS, "button", el, null, "type", "button", "class", "dialog-submitBtn");
-                                        dialog['submitBtn'].innerHTML = "Submit";
-                                        dialog['submitBtn'].addEventListener("click", function(event){
-                                            var givenName = dialog['givenName'].value.trim();
-                                            var middleName = dialog['middleName'].value.trim();
-                                            var familyName = dialog['familyName'].value.trim();
-                                            var spouseName = dialog['spouseName'].value.trim();
-                                            var extName = dialog['extName'].value.trim();
-                                            var userName = dialog['userName'].value.trim();
-                                            var password = dialog['password'].value.trim();
-                                            var accessLevel = dialog['accessLevel'].value.trim();
-                                            var personFieldStr = "";
-                                            var personValueStr = "";
-
+                                    btnGrp.inputExs[1].setLabelText("Add New Account");
+                                    btnGrp.inputExs[1].setTooltipText("");
+                                    btnGrp.inputExs[1].addEvent("click", (event)=>{
+                                        var addUserDialog = new DialogEx(otherAccountFormEx.container, "add-user");
+                                        var form = addUserDialog.addFormEx();
+                                        form.addInputEx("Given Name", "text", "", "Enter the applicant's given name.", "given_name", "Person");
+                                        form.addLineBreak();
+                                        form.addInputEx("Middle Name", "text", "", "Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none.", "middle_name", "Person");
+                                        form.addLineBreak();
+                                        form.addInputEx("Family Name", "text", "", "Enter the applicant's family name. For married women, please enter the maiden last name.", "family_name", "Person");
+                                        form.addLineBreak();
+                                        form.addInputEx("Spouse Name", "text", "", "For married women, please enter the spouse's last name. Leave blank for none.", "spouse_name", "Person");
+                                        form.addLineBreak();
+                                        form.addInputEx("Ext. Name", "text", "", "Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none.", "ext_name", "Person");
+                                        form.addLineBreak();
+                                        form.addLineBreak();
+                                        form.addInputEx("Username", "text", "", "Please enter a username. Make sure to use only letters, digits, periods, and underscores.", "username", "Temp_User");
+                                        form.addLineBreak();
+                                        form.addInputEx("Password", "password", "1234", "Please enter a temporary password. Default: 1234", "password", "Temp_User");
+                                        form.addLineBreak();
+                                        var input = form.addInputEx("Access Level", "number", "1", "Please enter this user's MPASIS access level. Default: 1", "mpasis_access_level", "Temp_User");
+                                        input.setMin(0);
+                                        input.setMax(4);
+                                        form.addLineBreak();
+                                        // form.addLineBreak();
+                                        var btnGrp = form.addFormButtonGrp(2);
+                                        btnGrp.setFullWidth();
+                                        btnGrp.fieldWrapper.classList.add("center");
+                                        form.addStatusPane();
+                                        btnGrp.inputExs[0].setLabelText("Save");
+                                        btnGrp.inputExs[0].setTooltipText("");
+                                        btnGrp.inputExs[0].addEvent("click", (event)=>{
                                             var person = {};
                                             var tempUser = {};
-                                            
-                                            if (givenName != "")
-                                            {
-                                                person["given_name"] = givenName;
-                                            }
-                                            else
-                                            {
-                                                dialog["errMsg"].innerHTML = "Given Name should not be blank.";
-                                                return;
-                                            }
+                                            var error = "";
 
-                                            if (middleName != "")
-                                            {
-                                                person["middle_name"] = middleName;
-                                            }
-
-                                            if (familyName != "")
-                                            {
-                                                person["family_name"] = familyName;
-                                            }
-
-                                            if (spouseName != "")
-                                            {
-                                                person["spouse_name"] = spouseName;
-                                            }
-
-                                            if (extName != "")
-                                            {
-                                                person["ext_name"] = extName;
-                                            }
-
-                                            if (userName != "")
-                                            {
-                                                tempUser["username"] = userName;
-                                            }
-                                            else
-                                            {
-                                                dialog["errMsg"].innerHTML = "Username should not be blank.";
-                                                return;
-                                            }
-                                            
-                                            if (password != "")
-                                            {
-                                                tempUser["password"] = password;
-                                            }
-                                            else
-                                            {
-                                                dialog["errMsg"].innerHTML = "Password should not be blank.";
-                                                return;
-                                            }
-
-                                            tempUser["mpasis_access_level"] = (accessLevel == "" ? 0 : accessLevel);
-
-                                            postData("/mpasis/php/process.php", "a=addTempUser&person=" + JSON.stringify(person) + "&tempUser=" + JSON.stringify(tempUser), function(){
-                                                var response;
-                                                var errMsg = document.getElementsByClassName("dialog")[0].querySelector(".error-message");
-
-                                                if (this.readyState == 4 && this.status == 200) {
-                                                    response = JSON.parse(this.responseText);
-                                                    
-                                                    if (response.type == "Error") {
-                                                        errMsg.innerHTML = response.content;
+                                            for (const dbColName in form.dbInputEx) {
+                                                var value = form.dbInputEx[dbColName].getValue();
+                                                if ((typeof(value) == "string" && value != "") || typeof(value) == "number")
+                                                {
+                                                    if (form.dbTableName[dbColName] == "Person")
+                                                    {
+                                                        person[dbColName] = value;
                                                     }
-                                                    else if (response.type == "Success") {
-                                                        errMsg.innerHTML = response.content;
+                                                    else
+                                                    {
+                                                        tempUser[dbColName] = value;
                                                     }
-                                                }                                                                            
-                                            });
+                                                }
+                                                else if (dbColName == "given_name")
+                                                {
+                                                    error += "Given Name should not be blank.<br>";
+                                                }
+                                                else if (dbColName == "username")
+                                                {
+                                                    error += "Username should not be blank.<br>";
+                                                }
+                                                else if (dbColName == "username")
+                                                {
+                                                    error += "Password should not be blank.<br>";
+                                                }
+                                            }
+
+                                            if (error != "")
+                                            {
+                                                form.raiseError(error);
+                                            }
+                                            else
+                                            {
+                                                postData("/mpasis/php/process.php", "a=addTempUser&person=" + JSON.stringify(person) + "&tempUser=" + JSON.stringify(tempUser), (event)=>{
+                                                    var response;
+
+                                                    if (event.target.readyState == 4 && event.target.status == 200)
+                                                    {
+                                                        response = JSON.parse(event.target.responseText);
+
+                                                        if (response.type == "Error")
+                                                        {
+                                                            form.raiseError(response.content);
+                                                        }
+                                                        else if (response.type == "Success")
+                                                        {
+                                                            form.showSuccess(response.content);
+                                                        }
+                                                    }
+                                                });
+                                            }
                                         });
-
-                                        addText(" ", el);
-
-                                        dialog['cancelBtn'] = createElementEx(NO_NS, "button", el, null, "type", "button", "class", "dialog-cancelBtn");
-                                        dialog['cancelBtn'].innerHTML = "Cancel";
-                                        dialog['cancelBtn'].addEventListener("click", function(event){
-                                            dialog['closeBtn'].click();
+                                        btnGrp.inputExs[1].setLabelText("Close");
+                                        btnGrp.inputExs[1].setTooltipText("");
+                                        btnGrp.inputExs[1].addEvent("click", (event)=>{
+                                            addUserDialog.close();
                                         });
-
-                                        addText(" ", dialog['dialogBox']);
-
-                                        dialog['errMsg'] = createElementEx(NO_NS, "div", dialog['dialogBox'], null, "class", "error-message");
                                     });
-                                    addText("Add New Account", el);
 
-                                    addText(" ", this.mainSections[mainSectionId]);
+                                    otherAccountFormEx.addStatusPane();
+                                    otherAccountFormEx.setStatusMsgTimeout(10);
+                                    
+                                    var div = otherAccountFormEx.addDiv("list-users");
 
-                                    errMsg = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "error-message");
-
-                                    addText(" ", this.mainSections[mainSectionId]);
-
-                                    resultsBox = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "query-results-users");
+                                    div.classList.add("query-results-users");
                                 }
                             });
                             break;

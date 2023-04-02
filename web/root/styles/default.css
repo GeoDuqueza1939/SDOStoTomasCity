@@ -83,17 +83,34 @@ body {
     text-align: center;
 }
 
-.input-ex.reversed {
-    display: flex;
+.old-input-ex.vertical {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.old-input-ex.reversed {
+    display: inline-flex;
     flex-direction: row-reverse;
     justify-content: start;
     align-items: baseline;
 }
 
-.input-ex.reversed > label {
+.old-input-ex.vertical.reversed {
+    flex-direction: column-reverse;
+}
+
+.old-input-ex.reversed > label {
     margin-left: 0.5em;
 }
 
-.input-ex label {
+.old-input-ex label {
     user-select: none;
+}
+
+.old-input-ex.full-width {
+    display: block;
+}
+
+.old-input-ex.full-width.vertical, .old-input-ex.full-width.reversed {
+    display: flex;
 }
