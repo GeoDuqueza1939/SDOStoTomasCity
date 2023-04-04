@@ -36,11 +36,7 @@ class ajaxResponse// implements JsonSerializable
 	// 	return $this->to_array();
     // }
 };
-
-$basedir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
-
-define('__FILE_ROOT__', $basedir);
-define('__WEB_ROOT__', "$basedir/root");
+require_once('../../path.php');
 
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
 require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
@@ -109,6 +105,66 @@ if (isset($_SESSION['user']))
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         break;
+                    case 'specEduc':
+                        $dbResults = $dbconn->select('Specific_Education', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    case 'civilStatus':
+                        $dbResults = $dbconn->select('ENUM_Civil_Status', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    case 'disability':
+                        $dbResults = $dbconn->select('Disability', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    case 'ethnicGroup':
+                        $dbResults = $dbconn->select('Ethnic_Group', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
+                    case 'religion':
+                        $dbResults = $dbconn->select('Religion', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        break;
                     case 'eligibilities':
                         $dbResults = $dbconn->select('Eligibility', '*', '');
     
@@ -140,7 +196,33 @@ if (isset($_SESSION['user']))
     
                     if (is_null($dbconn->lastException))
                     {
-                        echo(json_encode(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
+                        // echo(json_encode(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
+                        echo(json_encode(new ajaxResponse('Success', 'Eligibility successfully added')));
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                    }
+                    
+                }
+                if (isset($_REQUEST['specEducs']))
+                {
+                    $specEducs = json_decode($_REQUEST['specEducs'], true);
+                    
+                    $errMsg = '';
+                    $valueStr = '';
+                    
+                    foreach ($specEducs as $specEduc)
+                    {
+                        
+                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $specEduc['specific_education'] . '","' . $specEduc['description'] . '")';
+                    }
+    
+                    $dbconn->insert('Specific_Education', '(specific_education, description)', $valueStr);
+    
+                    if (is_null($dbconn->lastException))
+                    {
+                        echo(json_encode(new ajaxResponse('Success', 'Specific course/education successfully added')));
                     }
                     else
                     {

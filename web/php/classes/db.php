@@ -286,7 +286,7 @@ class DatabaseConnection
 		try
 		{
 			$this->connect();
-			
+
 			$query = $this->conn->prepare($sql);
 			$query->execute(); // VERIFY IF BEST ALTERNATIVE STATEMENT
 			$this->lastInsertId = $this->conn->lastInsertId();

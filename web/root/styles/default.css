@@ -114,3 +114,20 @@ body {
 .old-input-ex.full-width.vertical, .old-input-ex.full-width.reversed {
     display: flex;
 }
+
+.bordered {
+    border: 1px solid;
+}
+
+table.bordered {
+    /* width: 100%; */
+    /* border-collapse: collapse; */
+}
+
+table.bordered > thead > tr > th {
+    background-color: lightgray;
+}
+
+table.bordered > tr > *, table.bordered > * > tr > * {
+    border: 1px solid;
+}

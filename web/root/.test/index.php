@@ -85,11 +85,13 @@ function hashMyPassword()
 // testOther();
 // hashMyPassword();
 
-$baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
-require_once("$baseDir/php/classes/ajaxResponse.php");
-require_once("$baseDir/php/classes/db.php");
-require_once("$baseDir/sergs/php/db-ddl.php");
-require_once("$baseDir/sergs/.php/sergs-classes.php");
+require_once('../path.php');
+
+require_once(__FILE_ROOT__ . '/php/classes/ajaxResponse.php');
+require_once(__FILE_ROOT__ . '/php/classes/db.php');
+require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
+require_once(__FILE_ROOT__ . '/sergs/.php/sergs-classes.php');
+die();
 
 if (isset($_POST['query']))
 {

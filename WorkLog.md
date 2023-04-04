@@ -1,5 +1,13 @@
 # Work Log
 
+## 4/4/2023
+* 07:45AM-12:40PM   Resumed reimplementation of Applicant data entry form; started modifying InputEx for multiple options to allow for an extending list.
+* 12:55PM-05:00PM   Resumed coding Applicant data entry. Added entending data entry tables for training and work experience. Added extending list for eligibility.
+
+## 4/3/2023
+* 08:20AM-12:10PM   Resumed reimplementation of the Job data entry form.
+* 12:40PM-04:55PM   Experience and fixed issues with single quotes whenever string data with single quotes is packaged as JSON in transit to the server prior to storing/updating into the database. Fixed by replacing each single quote with 2 single quotes after packaging into JSON. SHOULD OBSERVE FOR ANY IMPACTS TO DATA. Also started reimplementing Applicant Data Entry form
+
 ## 4/2/2023
 * xx:xxXX   Finished most of the implements of InputEx, FormEx, and DialogEx classes after a while. Started to test their capabilities by reimplementing Other Accounts interface. Also considered reimplementing Job Data Entry form.
 

@@ -1,8 +1,9 @@
 <?php E_STRICT;
 session_start();
 
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/php/enums/pagetypes.php');
+require_once('path.php');
+
+require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 
 $requiresSignIn = false;
 $pageTitle = 'Department of Education | Sto. Tomas City SDO';
@@ -12,7 +13,7 @@ $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<?php require_once(__ROOT__ . '/php/snippets/html_head.php');?>
+<?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
 <body>
     <div class="app">
 <?php
@@ -20,14 +21,14 @@ if (isset($_SESSION['user']))
 {
     if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout' || !isset($_COOKIE['user']))
     {
-        require_once(__ROOT__ . '/php/secure/process_signout.php');
+        require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
     }
     else
     {
         // MODE: operation
         // User is signed in
         echo "OK<br>";
-        require_once(__ROOT__ . '/php/snippets/signout_interface.php');
+        require_once(__FILE_ROOT__ . '/php/snippets/signout_interface.php');
     }
 }
 else
@@ -55,7 +56,7 @@ else
         <li><a href="/mpasis">Merit Promotion and Selection Information System</a></li>
     </ul>
 <?php
-require_once(__ROOT__ . '/php/snippets/html_tail.php');
+require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 ?>
     </div>
 </body>

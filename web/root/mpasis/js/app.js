@@ -839,6 +839,10 @@ class InputEx
         this.statusPane = null; // a status pane for displaying success, error, or info messages.
         this.id = idStr.trim(); // use to set the id; will also set the name of a single field or a serve as a name prefix for field groups; SHOULDN'T BE CHANGED
         this.name = this.id;
+        this.inlineTextboxEx = null;
+        this.handleInlineTextboxExOnCheck = null; // function
+        this.defaultValue = null;
+        this.otherOptionEx = null;
         
         this.values = [];
         this.statusMode = 1; // 0: not displayed; 1: marker displayed with tooltip ; 2: full status message displayed
@@ -850,12 +854,14 @@ class InputEx
         this.isFilling = false;
         this.runAfterFilling = null; // function to run after filling items from server; should be assigned before running fillItemsFromServer
         this.spacer = ""; // a reference a single space textnode that shall come before this InputEx object
+        this.extendableList = false;
+        this.extendableListAddBtnEx = null;
         
         this.type = typeStr;
         switch(typeStr)
         {
-            case "radio-multiple": // group of radio buttons
-            case "checkbox-multiple": // group of check boxes
+            case "radio-select": // group of radio buttons
+            case "checkbox-select": // group of check boxes
             case "buttons": // a group of button inputs
             case "buttonExs": // a group of button elements
                 this.isMultipleInput = true;
@@ -903,7 +909,7 @@ class InputEx
 
         switch (this.type)
         {
-            case "radio-multiple":
+            case "radio-select":
                 for (const inputEx of this.inputExs) {
                     if (inputEx.getValue() == values[0])
                     {
@@ -911,7 +917,7 @@ class InputEx
                     }
                 }
                 break;
-            case "checkbox-multiple":
+            case "checkbox-select":
                 for (const inputEx of this.inputExs) {
                     if (values.includes(inputEx.getValue()))
                     {
@@ -937,7 +943,12 @@ class InputEx
     {
         switch (this.type)
         {
-            case "radio-multiple":
+            case "radio-select":
+                if (this.otherOptionEx != null && this.otherOptionEx.isChecked())
+                {
+                    return this.otherOptionEx.getValue();
+                }
+
                 for (const inputEx of this.inputExs) {
                     if (inputEx.isChecked())
                     {
@@ -945,16 +956,27 @@ class InputEx
                     }
                 }
                 break;
-            case "checkbox-multiple":
+            case "checkbox-select":
                 var values = [];
                 for (const inputEx of this.inputExs) {
-                    console.log(inputEx + "\n" + inputEx.isChecked() + inputEx.fields[0].checked);
+                    // console.log(inputEx + "\n" + inputEx.isChecked() + inputEx.fields[0].checked);
                     if (inputEx.isChecked())
                     {
                         values.push(inputEx.getValue());
                     }
                 }
                 return values;
+                break;
+            case "radio":
+            case "checkbox":
+                if (this.inlineTextboxEx != null && this.isChecked())
+                {
+                    return this.inlineTextboxEx.getValue();
+                }
+                else if (this.isChecked())
+                {
+                    return this.fields[0].value.trim();
+                }
                 break;
             case "buttons":
             case "buttonExs":
@@ -972,12 +994,131 @@ class InputEx
         return "";
     }
 
+    setDefaultValue(value)
+    {
+        this.defaultValue = value;
+    }
+
+    getDefaultValue()
+    {
+        return this.defaultValue;
+    }
+
+    /**
+     * Adds an inline textbox when the InputEx type is `radio` or `checkbox`
+     * @param {String} labelText (optional) Text displayed along with the textbox.
+     * @param {function} actionOnSelect (optional) A function with the signature that defines what to do with this InputEx when the parent InputEx changes value
+    */
+    addInlineTextboxEx(labelText = "", value = "", tooltip = "", actionOnSelect = null)
+    {
+        if (this.type == "radio" || this.type == "checkbox")
+        {
+            this.inlineTextboxEx = new InputEx(this.labels[0], this.id + "-inline-text-ex", "text");
+            this.inlineTextboxEx.setLabelText("&nbsp;" + labelText);
+            this.inlineTextboxEx.setValue(value);
+            this.inlineTextboxEx.setTooltipText(tooltip);
+
+            if (actionOnSelect != null)
+            {
+                this.handleInlineTextboxExOnCheck = actionOnSelect;
+                this.fields[0].addEventListener("change", this.handleInlineTextboxExOnCheck);
+                this.handleInlineTextboxExOnCheck();
+            }
+
+            return this.inlineTextboxEx;
+        }
+    }
+
+    addOtherOption(labelText, value, tooltipText, inlineLabel = "", selectHandler = null) // better to add this in runAfterFilling function
+    {
+        if (this.type == "radio-select" || this.type == "checkbox-select") // consider if this can be extended to other multiple InputEx option types
+        {
+            // this.timeIntervalAddOther = setInterval(()=>{
+            //     if (!this.isFilling)
+            //     {
+                    this.otherOptionEx = this.addItem(labelText, value, tooltipText);
+                    this.otherOptionEx.addInlineTextboxEx(inlineLabel, "", tooltipText, selectHandler);
+
+                    if (this.isReversed())
+                    {
+                        this.otherOptionEx.reverse();
+                    }
+
+                    // clearInterval(this.timeIntervalAddOther);
+                    // this.timeIntervalAddOther = undefined;
+                    // delete this.timeIntervalAddOther;
+            //     }
+            // }, 1000);
+
+            return this.otherOptionEx;
+        }
+    }
+
+    setAsExtendableList(setting = true, btnLabelText = "", clickFunc = null) // better to add this in runAfterFilling function
+    {
+        if ((this.type == "radio-select" || this.type == "checkbox-select") && setting)
+        {
+            if (this.extendableListAddBtnEx == null || this.extendableListAddBtnEx == undefined)
+            {
+                this.extendableListAddBtnEx = new InputEx(this.fieldWrapper, this.id + "-add-item-ex-btn", "buttonEx");
+                this.extendableListAddBtnEx.setLabelText(btnLabelText);
+                this.extendableListAddBtnEx.addEvent("click", clickFunc);
+            }
+            else
+            {
+                this.fieldWrapper.appendChild(this.extendableListAddBtnEx.container);
+            }
+            this.extendableList = setting;
+        }
+        else
+        {
+            
+        }
+    }
+
+    clearList()
+    {
+        if (this.isMultipleInput)
+        {
+            switch (this.type)
+            {
+                case 'radio-select':
+                case 'checkbox-select':
+                    while (this.inputExs.length > 0)
+                    {
+                        this.inputExs.pop().destroy();
+                    }
+                    if (this.otherOptionEx != null)
+                    {
+                        this.otherOptionEx.destroy();
+                        this.otherOptionEx = null;
+                    }
+                    if (this.extendableListAddBtnEx != null)
+                    {
+                        // this.extendableListAddBtnEx.destroy(); // do not throw reference away!!!!
+                    }
+                    this.dbInputEx = [];
+                    break;
+                case 'combo':
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     check(doCheck = true) // single input only
     {
         if (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox"))
         {
             // this.fields[0].toggleAttribute("checked", doCheck); // hard-coded HTML check attributes confuse the browser
             this.fields[0].checked = doCheck;
+
+            if (this.handleInlineTextboxExOnCheck != null || this.handleInlineTextboxExOnCheck != undefined)
+            {
+                this.handleInlineTextboxExOnCheck();
+            }
+
         }
     }
 
@@ -1024,6 +1165,7 @@ class InputEx
             this.fieldWrapper.insertBefore(document.createTextNode(" "), this.fields[0]);
             this.labels[0].innerHTML = labelText;
             this.labels[0].appendChild(this.colon = htmlToElement("<span class=\"colon hidden\">:</span>"));
+            this.labels[0].inputEx = this;
             // this.labels[0].style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
         }
     }
@@ -1253,7 +1395,7 @@ class InputEx
         return this.name;
     }
 
-    addItem(labelText, value = "", tooltipText = "") // only for combo (will add to datalist), radio-multiple, and multiple-single-select
+    addItem(labelText, value = "", tooltipText = "") // only for combo (will add to datalist), radio-select, and multiple-radio-select
     {
         var invalidArgsStr = "";
 
@@ -1271,7 +1413,7 @@ class InputEx
 
         switch (this.type)
         {
-            case "radio-multiple":
+            case "radio-select":
                 if (this.inputExs.length > 0)
                 {
                     this.fieldWrapper.appendChild(document.createTextNode(" "));
@@ -1294,8 +1436,20 @@ class InputEx
                     this.fieldWrapper.appendChild(this.statusPane);
                 }
 
+                this.inputExs[this.inputExs.length - 1].fields[0].addEventListener("change", (event)=>{
+                    for (const inputEx of this.inputExs)
+                    {
+                        if (inputEx.handleInlineTextboxExOnCheck != null)
+                        {
+                            inputEx.handleInlineTextboxExOnCheck();
+                        }
+                    }
+                });
+
+                return this.inputExs[this.inputExs.length - 1];
+
                 break;
-            case "checkbox-multiple":
+            case "checkbox-select":
                 if (this.inputExs.length > 0)
                 {
                     this.fieldWrapper.appendChild(document.createTextNode(" "));
@@ -1317,14 +1471,16 @@ class InputEx
                     this.fieldWrapper.appendChild(this.statusPane);
                 }
 
+                return this.inputExs[this.inputExs.length - 1];
+
                 break;
             case "combo":
-                [createElementEx(NO_NS, "option", this.datalist, null, "value", labelText, "data-value", value)].forEach(option=>{
-                    if (tooltipText != "")
-                    {
-                        option.title = tooltipText; // HAS NO EFFECT!!!
-                    }
-                });
+                var option = createElementEx(NO_NS, "option", this.datalist, null, "value", labelText, "data-value", value);
+                if (tooltipText != "")
+                {
+                    option.title = tooltipText; // HAS NO EFFECT!!!
+                }
+                return option;
                 break;
             case "buttons":
                 if (this.inputExs.length > 0)
@@ -1344,6 +1500,8 @@ class InputEx
                     this.fieldWrapper.appendChild(this.statusPane["spacer"]);
                     this.fieldWrapper.appendChild(this.statusPane);
                 }
+
+                return this.inputExs[this.inputExs.length - 1];
 
                 break;
             case "buttonExs":
@@ -1365,11 +1523,13 @@ class InputEx
                     this.fieldWrapper.appendChild(this.statusPane);
                 }
 
+                return this.inputExs[this.inputExs.length - 1];
+
                 break;
         }
     }
 
-    addItems(...labelStrs) // only for combo (will add to datalist), radio-multiple, and multiple-single-select; no tooltip
+    addItems(...labelStrs) // only for combo (will add to datalist), radio-select, and multiple-radio-select; no tooltip
     {
         labelStrs.forEach(labelText=>{
             this.addItem(labelText);
@@ -1378,6 +1538,8 @@ class InputEx
 
     fillItemsFromServer(url, postQueryString, labelColName = "", valueColName = "", tooltipColName = "")
     {
+        this.isFilling = true;
+
         postData(url, postQueryString, (event)=>{
             var response;
             var data = null;
@@ -1409,6 +1571,8 @@ class InputEx
                     {
                         this.runAfterFilling();
                     }
+
+                    this.isFilling = false;
                 }
             }
         });
@@ -1845,6 +2009,12 @@ class FormEx
             afterSubmit: null,
             reset: null,
         };
+        this.events = { // contain event listener functions that shall be automatically attached to each inputEx objects
+            click: null,
+            change: null,
+            keyup: null,
+            keypress: null // may automatically add more during run-time
+        }; 
         this.id = id.trim();
         this.statusMode = 1; // 0: not displayed; 1: marker displayed with tooltip ; 2: full status message displayed
         this.statusTimer = null; // will store the timeout for auto-resetting status
@@ -2030,6 +2200,8 @@ class FormEx
             this.statusPane.style.fontSize = "0.8em";
             this.statusPane.style.fontStyle = "italic";
             this.statusPane.style.fontFamily = "serif";
+
+            return this.statusPane;
         }
     }
 
@@ -2236,6 +2408,42 @@ class DialogEx
     }
 }
 
+class MsgBox extends DialogEx
+{
+    constructor(parent = null, message, type = "OK", yesFunc = null)
+    {
+        super(parent, "msgbox" + (new Date()).valueOf());
+        this.message = message;
+        this.messageContainer = createElementEx(NO_NS, "span", this.dialogBox);
+        this.messageContainer.innerHTML = message;
+        this.btnGrp = null;
+
+        switch (type)
+        {
+            case "YESNO":
+                this.btnGrp = new InputEx(this.dialogBox, "msgbox-btns" + (new Date()).valueOf(), "buttonExs");
+                this.btnGrp.setFullWidth();
+                this.btnGrp.fieldWrapper.classList.add("center");
+                this.btnGrp.addItems("Yes", "No");
+                this.btnGrp.fields[0].addEventListener("click", yesFunc);
+                this.btnGrp.fields[0].addEventListener("click", ()=>{
+                    this.close();
+                });
+                this.btnGrp.fields[1].addEventListener("click", ()=>{
+                    this.close();
+                });
+                break;
+            default: // OK
+                break;
+        }
+    }
+
+    sayYes()
+    {
+
+    }
+}
+
 class MPASIS_App
 {
     constructor(container)
@@ -2305,150 +2513,397 @@ class MPASIS_App
 
                                 setCookie("current_view", value.id, 1);
 
-                                if (this.mainSections[mainSectionId].innerHTML.trim() == '')
+                                if (this.mainSections[mainSectionId].innerHTML.trim() == "")
                                 {
-                                    this.mainSections[mainSectionId].innerHTML = "<h2>Applicant Data Entry</h2>";
+                                    var applicantDataForm = null, header = null, field = null;
+
+                                    applicantDataForm = new FormEx(this.mainSections[mainSectionId], "applicant-data-form-ex", true);
+                                    applicantDataForm.setFullWidth();
+
+                                    applicantDataForm.fieldWrapper.style.display = "grid";
+                                    applicantDataForm.fieldWrapper.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
+                                    applicantDataForm.fieldWrapper.style.gridAutoFlow = "column";
+                                    applicantDataForm.fieldWrapper.style.gridGap = "1em";
+                                    
+                                    header = applicantDataForm.setTitle("Applicant Data Entry", 2);
+
+                                    header = applicantDataForm.addHeader("Personal Information", 3);
+                                    header.style.gridColumn = "1 / span 12";
+                                    header.style.gridRow = "1";
+                                    header.style.marginBottom = "0";
+                                    
+                                    field = applicantDataForm.addInputEx("Given Name", "text", "", "First Name", "given_name", "Person");
+                                    field.container.style.gridColumn = "1 / span 4";
+                                    field.container.style.gridRow = "2";
+                                    field.setVertical();
+                                    
+                                    field = applicantDataForm.addInputEx("Middle Name", "text", "", "Middle Name", "middle_name", "Person");
+                                    field.container.style.gridColumn = "5 / span 4";
+                                    field.container.style.gridRow = "2";
+                                    field.setVertical();
+
+                                    field = applicantDataForm.addInputEx("Family Name", "text", "", "Last Name", "last_name", "Person");
+                                    field.container.style.gridColumn = "9 / span 4";
+                                    field.container.style.gridRow = "2";
+                                    field.setVertical();
+
+                                    field = applicantDataForm.addInputEx("Spouse's Name", "text", "", "Spouse's Name; for married woman", "spouse_name", "Person");
+                                    field.container.style.gridColumn = "1 / span 4";
+                                    field.setVertical();
+
+                                    field = applicantDataForm.addInputEx("Ext. Name", "text", "", "Extension Name (e.g., Jr., III, etc.)", "ext_name", "Person");
+                                    field.container.style.gridColumn = "9 / span 4";
+                                    field.setVertical();
+
+                                    field = applicantDataForm.addInputEx("Address", "textarea", "", "Address", "text", "Address");
+                                    field.container.style.gridColumn = "1 / span 12";
+                                    field.container.style.gridRow = "4";
+                                    field.setVertical();
+
+                                    field = applicantDataForm.addInputEx("Age", "number", "", "Age", "age", "Person");
+                                    field.container.style.gridColumn = "1 / span 4";
+                                    field.container.style.gridRow = "5";
+                                    field.setVertical();
+                                    field.setMin(10);
+                                    field.setMax(999);
+                                    field.setValue(18);
+
+                                    field = applicantDataForm.addInputEx("Sex", "combo", "", "Sex", "sex", "Person");
+                                    field.container.style.gridColumn = "5 / span 4";
+                                    field.container.style.gridRow = "5";
+                                    field.setVertical();
+                                    field.addItem("Male", "male");
+                                    field.addItem("Female", "female");
+
+                                    field = applicantDataForm.addInputEx("Civil Status", "combo", "", "Civil Status", "civil_status", "ENUM_Civil_Status");
+                                    field.container.style.gridColumn = "9 / span 4";
+                                    field.container.style.gridRow = "5";
+                                    field.setVertical();
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=civilStatus", "civil_status", "index", "description");
+
+                                    field = applicantDataForm.addInputEx("Religion", "combo", "", "Religious Affiliation", "religion", "Religion");
+                                    field.container.style.gridColumn = "1 / span 4";
+                                    field.container.style.gridRow = "6";
+                                    field.setVertical();
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=religion", "religion", "id", "description");
+
+                                    field = applicantDataForm.addInputEx("Disability", "combo", "", "Disability; if multiple, please separate with semi-colons", "disability", "Disability");
+                                    field.container.style.gridColumn = "5 / span 4";
+                                    field.container.style.gridRow = "6";
+                                    field.setVertical();
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=disability", "disability", "id", "description");
+
+                                    field = applicantDataForm.addInputEx("Ethnic Group", "combo", "", "Ethnic Group", "ethnic_group", "Ethnic_Group");
+                                    field.container.style.gridColumn = "9 / span 4";
+                                    field.container.style.gridRow = "6";
+                                    field.setVertical();
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=ethnicGroup", "ethnic_group", "id", "description");
+
+                                    field = applicantDataForm.addInputEx("Email Address", "email", "", "Email address", "email_address", "Person");
+                                    field.container.style.gridColumn = "1 / span 6";
+                                    field.setVertical();
+
+                                    field = applicantDataForm.addInputEx("Contact Number", "text", "", "Contact numbers; if multiple, please separate with semi-colons", "ext_name", "Person");
+                                    field.container.style.gridColumn = "7 / span 6";
+                                    field.setVertical();
+
+                                    header = applicantDataForm.addHeader("Educational Attainment", 3);
+                                    header.style.gridColumn = "1 / span 12";
+                                    header.style.gridRow = "8";
+                                    header.style.marginBottom = "0";
+
+                                    field = applicantDataForm.addInputEx("Please choose the highest level completed", "radio-select", "1", "Highest finished educational level", "educational_attainment", "Person", true);
+                                    field.container.style.gridColumn = "1 / span 6";
+                                    field.container.style.gridRow = "9 / span 3";
+                                    field.setVertical();
+                                    field.showColon();
+                                    field.reverse();
+                                    // field.runAfterFilling = function(){
+                                    //     this.addOtherOption("Other", "-1", "Please specify another level of education", "<i>(Please specify):</i>", function(event){
+                                    //         if (Object.prototype.toString.call(this) == "[object Object]")
+                                    //         {
+                                    //             this.inlineTextboxEx.enable(null, this.isChecked());
+                                    //         }
+                                    //         else if (Object.prototype.toString.call(this) == "[object HTMLInputElement]")
+                                    //         {
+                                    //             this.inputEx.inlineTextboxEx.enable(null, this.inputEx.isChecked());
+                                    //         }
+                                    //     });
+                                    // };
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=educLevel", "educational_attainment", "index", "description");
+
+                                    field = applicantDataForm.addInputEx("Post-Graduate Units", "number", "0", "Post-graduate units taken toward the completion of the next post-graduate degree", "postgraduate_units", "Person");
+                                    field.container.style.gridColumn = "7 / span 6";
+                                    field.container.style.gridRow = "9";
+                                    field.setVertical();
+                                    field.setMin(0);
+                                    field.setMax(999);
+                                    field.setValue(0);
+
+                                    field = applicantDataForm.addInputEx("Please choose all relevant specific courses/education taken by applicant", "checkbox-select", "1", "Specific courses/education taken", "specific_education", "Specific_Education", true);
+                                    field.container.style.gridColumn = "7 / span 6";
+                                    field.container.style.gridRow = "10 / span 2";
+                                    field.setVertical();
+                                    field.showColon();
+                                    field.reverse();
+                                    field.runAfterFilling = function(){
+                                        this.setAsExtendableList(true, "+Add other relevant education");
+                                        var parentEx = field;
+                                        this.extendableListAddBtnEx.addEvent("click", (clickEvent)=>{
+                                            var addEducDialog = new DialogEx(parentEx.fieldWrapper, "add-educ");
+                                            var addEducForm = addEducDialog.addFormEx();
+                                            
+                                            addEducForm.addInputEx("Education", "text", "", "Please enter the course to be added.", "specific_education", "Specific_Education");
+                                            addEducForm.addLineBreak();
+                                            addEducForm.addInputEx("Description", "text", "", "Description", "description", "Specific_Education");
+                                            addEducForm.addLineBreak();
+                                            var addEducBtnGrp = addEducForm.addFormButtonGrp(2);
+                                            addEducBtnGrp.setFullWidth();
+                                            addEducBtnGrp.fieldWrapper.classList.add("right");
+                                            addEducBtnGrp.inputExs[0].setLabelText("Add");
+                                            addEducBtnGrp.inputExs[0].setTooltipText("");
+                                            addEducBtnGrp.inputExs[0].addEvent("click", (clickEvent2)=>{
+                                                var specEduc = {};
+                                                for (const colName in addEducForm.dbInputEx)
+                                                {
+                                                    if (addEducForm.dbTableName[colName] == "Specific_Education")
+                                                    {
+                                                        specEduc[colName] = addEducForm.dbInputEx[colName].getValue();
+                                                    }
+                                                }
+
+                                                console.log(JSON.stringify([specEduc]).replace("'", "''"));
+
+                                                if  (specEduc["specific_education"].trim() != "")
+                                                {
+                                                    postData("/mpasis/php/process.php", "a=add&specEducs=" + JSON.stringify([specEduc]).replace("'", "''"), (htEvent)=>{
+                                                        var response;
+
+                                                        if (htEvent.target.readyState == 4 && htEvent.target.status == 200)
+                                                        {
+                                                            response = JSON.parse(htEvent.target.responseText);
+
+                                                            if (response.type == "Error")
+                                                            {
+                                                                addEducForm.raiseError(response.content);
+                                                            }
+                                                            else
+                                                            {
+                                                                addEducForm.showSuccess(response.content);
+                                                                parentEx.clearList();
+                                                                parentEx.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=specEduc", "specific_education", "id", "description");
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                            addEducBtnGrp.inputExs[1].setLabelText("Close");
+                                            addEducBtnGrp.inputExs[1].setTooltipText("");
+                                            addEducBtnGrp.inputExs[1].addEvent("click", (clickEvent2)=>{
+                                                addEducDialog.close();
+                                            });
+                                            addEducForm.addStatusPane();
+                                        })
+                                    };
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=specEduc", "specific_education", "id", "description");
+
+                                    header = applicantDataForm.addHeader("Training", 3);
+                                    header.style.gridColumn = "1 / span 12";
+                                    header.style.gridRow = "12";
+                                    header.style.marginBottom = "0";
+
+                                    var trainingDiv = createElementEx(NO_NS, "fieldset", applicantDataForm.fieldWrapper, null);
+                                    trainingDiv.style.gridColumn = "1 / span 12";
+                                    var trainingContainer = createElementEx(NO_NS, "table", trainingDiv, null, "style", "width: 100%; border-collapse: collapse;");
+                                    [createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", trainingContainer, null), null)].forEach(row=>{
+                                        addText("Training Name/Description", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
+                                        addText("Hours", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "width: 5em; background-color: lightgray;"));
+                                        createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "width: 0.5em; border: none;")
+                                    });
+                                    trainingContainer = createElementEx(NO_NS, "tbody", trainingContainer, null);
+
+                                    var addTrainingBtn = new InputEx(trainingDiv, "add-applicant-training", "buttonEx");
+                                    addTrainingBtn.setLabelText("+Add a row");
+                                    var trainingInputExs = [];
+                                    addTrainingBtn.addEvent("click", (event)=>{
+                                        [createElementEx(NO_NS, "tr", trainingContainer)].forEach((row, index)=>{
+                                            var timestamp = (new Date()).valueOf();
+                                            trainingInputExs.push({
+                                                "trainingInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "training-" + timestamp, "text"),
+                                                "trainingHoursInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "trainingHours-" + timestamp, "number")
+                                            });
+                                            [new InputEx(createElementEx(NO_NS, "td", row), "remove-row-" + (trainingInputExs.length - 1), "buttonEx")].forEach(removeRowBtn=>{
+                                                removeRowBtn.setLabelText("<b><span class=\"material-icons-round\" style=\"border-radius: 1em; color: red;\">close</span></b>");
+                                                removeRowBtn.fields[0].style.borderRadius = "1em";
+                                                removeRowBtn.fields[0].style.padding = 0;
+                                                removeRowBtn.fields[0].style.fontSize = "0.5em";
+                                                removeRowBtn["row"] = row;
+                                                removeRowBtn["rowData"] = trainingInputExs[trainingInputExs.length - 1];
+                                                removeRowBtn.addEvent("click", async function(removeClickEvent){
+                                                    var msg = new MsgBox(applicantDataForm.fieldWrapper, "Do you really want to delete this row?", "YESNO", (msgEvent)=>{
+                                                        trainingInputExs.splice(trainingInputExs.indexOf(this.inputEx.rowData), 1);
+                                                        this.inputEx.row.remove();
+                                                    });
+
+                                                });
+                                            });
+                                        });
+                                        trainingInputExs[trainingInputExs.length - 1].trainingInputEx.setFullWidth();
+                                        trainingInputExs[trainingInputExs.length - 1].trainingInputEx.setPlaceholderText("Enter a descriptive name for the training");
+                                        trainingInputExs[trainingInputExs.length - 1].trainingInputEx.fields[0].style.width = "100%";
+                                        trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setFullWidth();
+                                        trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setPlaceholderText("hours");
+                                        trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setMin(0);
+                                        trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setMax(999);
+                                        trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.fields[0].style.width = "100%";
+
+                                    });
+                                    var field = new InputEx(trainingDiv, "more-training", "checkbox");    
+                                    field.setLabelText("There are more training certificates and/or MOVs that were no longer included in this list for encoding.");
+                                    field.reverse();
+                                    
+                                    header = applicantDataForm.addHeader("Work Experience", 3);
+                                    header.style.gridColumn = "1 / span 12";
+                                    header.style.gridRow = "14";
+                                    header.style.marginBottom = "0";
+
+                                    var workExpDiv = createElementEx(NO_NS, "fieldset", applicantDataForm.fieldWrapper, null);
+                                    workExpDiv.style.gridColumn = "1 / span 12";
+                                    var workExpContainer = createElementEx(NO_NS, "table", workExpDiv, null, "style", "width: 100%; border-collapse: collapse;");
+                                    [createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", workExpContainer, null), null)].forEach(row=>{
+                                        addText("Work Experience Details", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
+                                        addText("Start Date", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "width: 8em; background-color: lightgray;"));
+                                        addText("End Date", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "width: 8em; background-color: lightgray;"));
+                                        createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "width: 0.5em; border: none;")
+                                    });
+                                    workExpContainer = createElementEx(NO_NS, "tbody", workExpContainer, null);
+
+                                    var addTrainingBtn = new InputEx(workExpDiv, "add-applicant-workExp", "buttonEx");
+                                    addTrainingBtn.setLabelText("+Add a row");
+                                    var workExpInputExs = [];
+                                    addTrainingBtn.addEvent("click", (event)=>{
+                                        [createElementEx(NO_NS, "tr", workExpContainer)].forEach((row, index)=>{
+                                            var timestamp = (new Date()).valueOf();
+                                            workExpInputExs.push({
+                                                "workExpInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExp-" + timestamp, "text"),
+                                                "workExpStartYearInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExpHours-" + timestamp, "date"),
+                                                "workExpEndYearInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExpHours-" + timestamp, "date")
+                                            });
+                                            [new InputEx(createElementEx(NO_NS, "td", row), "remove-row-" + (workExpInputExs.length - 1), "buttonEx")].forEach(removeRowBtn=>{
+                                                removeRowBtn.setLabelText("<b><span class=\"material-icons-round\" style=\"border-radius: 5em; color: red;\">close</span></b>");
+                                                removeRowBtn.fields[0].style.borderRadius = "1em";
+                                                removeRowBtn.fields[0].style.padding = 0;
+                                                removeRowBtn.fields[0].style.fontSize = "0.5em";
+                                                removeRowBtn["row"] = row;
+                                                removeRowBtn["rowData"] = workExpInputExs[workExpInputExs.length - 1];
+                                                removeRowBtn.addEvent("click", function(removeClickEvent){
+                                                    var msg = new MsgBox(applicantDataForm.fieldWrapper, "Do you really want to delete this row?", "YESNO", (msgEvent)=>{
+                                                        workExpInputExs.splice(workExpInputExs.indexOf(this.inputEx.rowData), 1);
+                                                        this.inputEx.row.remove();
+                                                    });                                                   
+                                                });
+                                            });
+                                        });
+                                        workExpInputExs[workExpInputExs.length - 1].workExpInputEx.setFullWidth();
+                                        workExpInputExs[workExpInputExs.length - 1].workExpInputEx.setPlaceholderText("Enter a descriptive name for the workExp");
+                                        workExpInputExs[workExpInputExs.length - 1].workExpInputEx.fields[0].style.width = "100%";
+                                        workExpInputExs[workExpInputExs.length - 1].workExpStartYearInputEx.setFullWidth();
+                                        workExpInputExs[workExpInputExs.length - 1].workExpStartYearInputEx.fields[0].style.width = "100%";
+                                        workExpInputExs[workExpInputExs.length - 1].workExpEndYearInputEx.setFullWidth();
+                                        workExpInputExs[workExpInputExs.length - 1].workExpEndYearInputEx.fields[0].style.width = "100%";
+
+                                    });
+                                    field = new InputEx(workExpDiv, "more-workExp", "checkbox");    
+                                    field.setLabelText("There are more work experience information that were no longer included in this list for encoding.");
+                                    field.reverse();
+
+                                    header = applicantDataForm.addHeader("Eligibility", 3);
+                                    header.style.gridColumn = "1 / span 12";
+                                    header.style.gridRow = "16";
+                                    header.style.marginBottom = "0";
+
+                                    field = applicantDataForm.addInputEx("Please select all the career service eligibility that the applicant possesses", "checkbox-select", "", "CS Eligibility", "eligibilityId", "Person", true);
+                                    field.container.style.gridColumn = "1 / span 12";
+                                    field.container.style.gridRow = "17";
+                                    field.setVertical();
+                                    field.showColon();
+                                    field.reverse();
+                                    field.runAfterFilling = function(){
+                                        this.setAsExtendableList(true, "+Add missing eligibility", (clickEvent)=>{
+                                            var addEligibilityBtn = clickEvent.target.inputEx;
+                                            var addEligDialog = new DialogEx(field.fieldWrapper, "add-eligibility-dialog-ex");
+                                            var addEligForm = addEligDialog.addFormEx();
+                                            var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
+                                            addEligForm.addLineBreak();
+                                            var descText = addEligForm.addInputEx("Description", "text", "");
+                                            addEligForm.addLineBreak();
+                                            var btnGrp = addEligForm.addFormButtonGrp(2);
+                                            btnGrp.inputExs[0].setLabelText("Save");
+                                            btnGrp.inputExs[0].setTooltipText("");
+                                            btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                                                var newElig = {};
+                                                newElig["name"] = newEligText.getValue().trim();
+                                                if (newElig["name"] == "")
+                                                {
+                                                    addEligForm.raiseError("Eligibility name should not be blank.");
+                                                }
+                                                else
+                                                {
+                                                    if (newElig["description"] != "")
+                                                    {
+                                                        newElig["description"] = descText.getValue().trim();
+                                                    }
+
+                                                    postData("/mpasis/php/process.php", "a=add&eligibilities=" + JSON.stringify([newElig]).replace("'", "''"), (event)=>{
+                                                        var response;
+
+                                                        if (event.target.readyState == 4 && event.target.status == 200)
+                                                        {
+                                                            response = JSON.parse(event.target.responseText);
+
+                                                            if (response.type == "Error")
+                                                            {
+                                                                addEligForm.raiseError(response.content);
+                                                            }
+                                                            else if (response.type = "Data")
+                                                            {
+                                                                addEligForm.showSuccess(response.content);
+
+                                                                var timeout = setTimeout(()=>{
+                                                                    
+                                                                    addEligDialog.close();
+                                                                    clearTimeout(timeout);
+                                                                    timeout = null;
+
+                                                                    while (field.inputExs.length > 0)
+                                                                    {
+                                                                        var last = field.inputExs.pop();
+
+                                                                        last.destroy();
+                                                                    }
+
+                                                                    addEligibilityBtn.destroy();
+
+                                                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=eligibilities", "name", "id", "description");
+                                                                    
+                                                                }, 5000);
+                                                            }
+                                                        }
+                                                    });
+                                                }
+
+                                            });
+                                            btnGrp.inputExs[1].setLabelText("Close");
+                                            btnGrp.inputExs[1].setTooltipText("");
+                                            btnGrp.inputExs[1].addEvent("click", (clickEvent)=>{
+                                                addEligDialog.close();
+                                            });
+                                            var stat = addEligForm.addStatusPane();
+                                            
+                                        });
+                                    };
+                                    field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=eligibilities", "name", "id", "description");
                                 }
-
-                                var personalInfoForm = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "justify");
-                                
-                                addText("Personal Information", createElementEx(NO_NS, "h3", personalInfoForm));
-
-                                var givenName = new OldInputEx(personalInfoForm);
-                                givenName.setType("text");
-                                givenName.setId("given-name");
-                                givenName.setLabelText("Given Name");
-                                givenName.setVertical(true);
-                                givenName.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var middleName = new OldInputEx(personalInfoForm);
-                                middleName.setType("text");
-                                middleName.setId("middle-name");
-                                middleName.setLabelText("Middle Name");
-                                middleName.setVertical(true);
-                                middleName.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var familyName = new OldInputEx(personalInfoForm);
-                                familyName.setType("text");
-                                familyName.setId("family-name");
-                                familyName.setLabelText("Family Name");
-                                familyName.setVertical(true);
-                                familyName.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var spouseName = new OldInputEx(personalInfoForm);
-                                spouseName.setType("text");
-                                spouseName.setId("spouse-name");
-                                spouseName.setLabelText("Spouse's Name");
-                                spouseName.setVertical(true);
-                                spouseName.setTooltipText("For married women only");
-                                spouseName.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var extName = new OldInputEx(personalInfoForm);
-                                extName.setType("text");
-                                extName.setId("ext-name");
-                                extName.setLabelText("Ext. Name");
-                                extName.setVertical(true);
-                                extName.setWidth("5em");
-                                extName.hideColon();
-
-                                createElementEx(NO_NS, "br", personalInfoForm);
-                                createElementEx(NO_NS, "br", personalInfoForm);
-
-                                var address = new OldInputEx(personalInfoForm);
-                                address.setType("text");
-                                address.setId("address");
-                                address.setLabelText("Address");
-                                address.setVertical(true);
-                                address.setFullWidth(true);
-                                address.hideColon();
-
-                                createElementEx(NO_NS, "br", personalInfoForm);
-
-                                var age = new OldInputEx(personalInfoForm);
-                                age.setType("number");
-                                age.setId("age");
-                                age.setLabelText("Age");
-                                age.setMin(10);
-                                age.setMax(969);
-                                age.setValue(18);
-                                age.setVertical(true);
-                                age.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var sex = new OldInputEx(personalInfoForm); // should change to select input control
-                                sex.setType("text");
-                                sex.setId("sex");
-                                sex.setLabelText("Sex");
-                                sex.setVertical(true);
-                                sex.setWidth("5em");
-                                sex.hideColon();               
-                                
-                                addText(" ", personalInfoForm);
-
-                                var civilStatus = new OldInputEx(personalInfoForm);
-                                civilStatus.setType("text");
-                                civilStatus.setId("civil-status");
-                                civilStatus.setLabelText("Civil Status");
-                                civilStatus.setVertical(true);
-                                civilStatus.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var religion = new OldInputEx(personalInfoForm);
-                                religion.setType("text");
-                                religion.setId("religion");
-                                religion.setLabelText("Religion");
-                                religion.setVertical(true);
-                                religion.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var disability = new OldInputEx(personalInfoForm);
-                                disability.setType("text");
-                                disability.setId("disability");
-                                disability.setLabelText("Disability");
-                                disability.setVertical(true);
-                                disability.hideColon();
-                                
-                                addText(" ", personalInfoForm);
-
-                                var ethnicGroup = new OldInputEx(personalInfoForm);
-                                ethnicGroup.setType("text");
-                                ethnicGroup.setId("ethnic-group");
-                                ethnicGroup.setLabelText("Ethnic Group");
-                                ethnicGroup.setVertical(true);
-                                ethnicGroup.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var email = new OldInputEx(personalInfoForm);
-                                email.setType("email");
-                                email.setId("email");
-                                email.setLabelText("Email Address");
-                                email.setVertical(true);
-                                email.hideColon();
-
-                                addText(" ", personalInfoForm);
-
-                                var contactNo = new OldInputEx(personalInfoForm);
-                                contactNo.setType("text");
-                                contactNo.setId("contact-number");
-                                contactNo.setLabelText("Contact Number");
-                                contactNo.setVertical(true);
-                                contactNo.hideColon();
-
-                                addText("Educational Attainment", createElementEx(NO_NS, "h3", personalInfoForm));
-
-                                
                             });
                             break;
                         case 'applicant-data-search':
@@ -2563,7 +3018,7 @@ class MPASIS_App
 
                                         jobDataForm.addSpacer();
 
-                                        field = jobDataForm.addInputEx("Please select the position category", "radio-multiple", "", "", "category", "Position", true);
+                                        field = jobDataForm.addInputEx("Please select the position category", "radio-select", "", "", "category", "Position", true);
                                         field.container.style.gridColumn = "1 / span 12";
                                         field.reverse();
                                         field.runAfterFilling = function(){
@@ -2580,7 +3035,7 @@ class MPASIS_App
                                         header = jobDataForm.addHeader("Education", 4);
                                         header.style.gridColumn = "1 / span 12";
 
-                                        field = jobDataForm.addInputEx("Please select the minimum required educational attainment", "radio-multiple", "", "", "required_educational_attainment", "Position", true);
+                                        field = jobDataForm.addInputEx("Please select the minimum required educational attainment", "radio-select", "", "", "required_educational_attainment", "Position", true);
                                         field.container.style.gridColumn = "1 / span 6";
                                         field.container.style.gridRow = "span 4";
                                         field.reverse();
@@ -2592,7 +3047,7 @@ class MPASIS_App
                                         
                                         // jobDataForm.addSpacer();
 
-                                        field = jobDataForm.addInputEx("Position requires specific education", "checkbox");
+                                        field = jobDataForm.addInputEx("Position requires specific education", "checkbox", "", "", "requires-spec-education");
                                         field.labels[0].style.fontWeight = "bold";
                                         field.reverse();
                                         field.container.style.gridColumn = "7 / span 6";
@@ -2621,7 +3076,7 @@ class MPASIS_App
                                         field.setMax(999);
                                         field.setFullWidth();
 
-                                        field = jobDataForm.addInputEx("Position requires specific training", "checkbox");
+                                        field = jobDataForm.addInputEx("Position requires specific training", "checkbox", "", "", "requires-spec-training");
                                         field.labels[0].style.fontWeight = "bold";
                                         field.reverse();
                                         field.container.style.gridColumn = "7 / span 6";
@@ -2650,12 +3105,12 @@ class MPASIS_App
                                         field.setMax(99);
                                         field.setFullWidth();
 
-                                        field = jobDataForm.addInputEx("Position requires specific work experience", "checkbox");
+                                        field = jobDataForm.addInputEx("Position requires specific work experience", "checkbox", "", "", "requires-spec-work-exp");
                                         field.labels[0].style.fontWeight = "bold";
                                         field.reverse();
                                         field.container.style.gridColumn = "7 / span 6";
                                         
-                                        var specExp = jobDataForm.addInputEx("Please enter a description of the required work experience. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_training_required", "Position");
+                                        var specExp = jobDataForm.addInputEx("Please enter a description of the required work experience. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_work_experience_required", "Position");
                                         specExp.container.style.gridColumn = "7 / span 6";
                                         specExp.container.style.gridRow = "span 2";
                                         specExp.fields[0].style.height = "4em";
@@ -2666,486 +3121,184 @@ class MPASIS_App
                                         field.addEvent("change", (event)=>{
                                             specExp.enable(0, event.target.inputEx.isChecked());
                                         });
-                                    }
-                                });
-                        case 'job-data-entry':
-                            link.addEventListener("click", ()=>{
-                                for (var id in this.mainSections)
-                                {
-                                    this.mainSections[id].classList.toggle("hidden", (id != mainSectionId));
-                                }
 
-                                setCookie("current_view", value.id, 1);
+                                        header = jobDataForm.addHeader("Career Service Eligibilities", 4);
+                                        header.style.gridColumn = "1 / span 12";
 
-                                if (this.mainSections[mainSectionId].innerHTML.trim() == '')
-                                {
-                                    this.mainSections[mainSectionId].innerHTML = "<h2>Job Data Entry</h2>";
+                                        var eligField = jobDataForm.addInputEx("Please select all the eligibilities required for this position", "checkbox-select", "", "", "required_eligibility", "Required_Eligibility", true);
+                                        eligField.container.style.gridColumn = "1 / span 12";
+                                        // eligField.container.style.gridRow = "span 4";
+                                        eligField.reverse();
+                                        eligField.setVertical();
+                                        eligField.runAfterFilling = function(){
+                                            // this.inputExs[0].check();
+                                            var addEligibilityBtn = null;
+                                            var eligField = this;
 
-                                    var entryForm = createElementEx(NO_NS, "div", this.mainSections[mainSectionId], null, "class", "job-data-entry-form");
-
-                                    var positionTitle = new OldInputEx(entryForm);
-                                    positionTitle.setType("text");
-                                    positionTitle.setId("position-title");
-                                    positionTitle.setLabelText("Position Title");
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var parentheticalTitle = new OldInputEx(entryForm);
-                                    parentheticalTitle.setType("text");
-                                    parentheticalTitle.setId("parenthetical-title");
-                                    parentheticalTitle.setLabelText("Parenthetical Position Title");
-                                    parentheticalTitle.setPlaceholderText("(optional)");                                    
-                                    parentheticalTitle.setTooltipText("Enter in cases of parenthetical position titles, \ne.g., in \"Administrative Assistant (Secretary)\", \n\"Secretary\" is a parenthetical title.");
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    createElementEx(NO_NS, "label", entryForm, null, "for", "plantilla-item-nos").innerHTML = "Plantilla Item Nos. (<i>enter in separate lines</i>):";
-                                    createElementEx(NO_NS, "br", entryForm);
-                                    var plantillaItemNos = createElementEx(NO_NS, "textarea", entryForm, null, "id", "plantilla-item-nos", "name", "plantilla-item-nos", "rows", 10, "style", "display: block; width: 100%;");
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var salaryGrade = new OldInputEx(entryForm);
-                                    salaryGrade.setType("number");
-                                    salaryGrade.setId("salary-grade");
-                                    salaryGrade.setLabelText("Salary Grade");
-                                    salaryGrade.setMin(0);
-                                    salaryGrade.setMax(33);
-                                    salaryGrade.setValue(1);
-                                    salaryGrade.setWidth("3em");
-                                    salaryGrade.addStatusPane();
-                                    salaryGrade.setStatusMsgTimeout(10);
-                                    salaryGrade.addEvent("change", (event)=>{
-                                        postData("/mpasis/php/process.php", "a=getSalaryFromSG&sg=" + event.target.inputEx.getValue(), function(){
-                                            var response;
-                                            var salaryGrade = document.getElementById("salary-grade").inputEx;
-
-                                            if (this.readyState == 4 && this.status == 200) {
-                                                response = JSON.parse(this.responseText);
-                                                
-                                                if (response.type == "Error") {
-                                                    salaryGrade.raiseError(response.content);
-                                                }
-                                                else if (response.type == "Salary") {
-                                                    if (response.content == null)
+                                            addEligibilityBtn = new InputEx(this.fieldWrapper, "add-eligibility-input-ex", "buttonEx", false);
+                                            addEligibilityBtn.setLabelText("+Add Missing Eligibility");
+                                            addEligibilityBtn.addEvent("click", (clickEvent)=>{
+                                                var addEligDialog = new DialogEx(this.fieldWrapper, "add-eligibility-dialog-ex");
+                                                var addEligForm = addEligDialog.addFormEx();
+                                                var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
+                                                addEligForm.addLineBreak();
+                                                var descText = addEligForm.addInputEx("Description", "text", "");
+                                                addEligForm.addLineBreak();
+                                                var btnGrp = addEligForm.addFormButtonGrp(2);
+                                                btnGrp.inputExs[0].setLabelText("Save");
+                                                btnGrp.inputExs[0].setTooltipText("");
+                                                btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                                                    var newElig = {};
+                                                    newElig["name"] = newEligText.getValue().trim();
+                                                    if (newElig["name"] == "")
                                                     {
-                                                        salaryGrade.resetStatus();
+                                                        addEligForm.raiseError("Eligibility name should not be blank.");
                                                     }
                                                     else
                                                     {
-                                                        salaryGrade.showInfo("<i>Monthly Salary: \u20b1" + parseFloat(response.content).toFixed(2) + "</i>");
-                                                    }
-                                                }
-                                            }
-                                        });
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var catFieldSet = createElementEx(NO_NS, "fieldset", entryForm, null, "id", "category");
-                                    addText("Please select the position category:", createElementEx(NO_NS, "legend", catFieldSet));
-
-                                    addText("Fetching categories...", createElementEx(NO_NS, "div", catFieldSet, null, "class", "categories-container"));
-
-                                    var cat = [];
-
-                                    postData("/mpasis/php/process.php", "a=fetch&f=positionCategory", (event)=>{
-                                        var response;
-
-                                        if (event.target.readyState == 4 && event.target.status == 200)
-                                        {
-                                            response = JSON.parse(event.target.responseText);
-
-                                            if (response.type == "Error")
-                                            {
-                                                alert("AJAX Error:" + response.content);
-                                            }
-                                            else if (response.type == "Data")
-                                            {
-                                                container = document.getElementsByClassName("categories-container")[0];
-
-                                                container.innerHTML = "";
-
-                                                var categories = JSON.parse(response.content);
-
-                                                categories.forEach((category, index)=>{
-                                                    cat.push(new OldInputEx(container));
-                                                    cat[cat.length - 1].setType("radio");
-                                                    cat[cat.length - 1].setId("cat" + index);
-                                                    cat[cat.length - 1].setGroupName("cat");
-                                                    cat[cat.length - 1].setLabelText(category["category"]);
-                                                    cat[cat.length - 1].setValue(category["id"]);
-                                                    cat[cat.length - 1].hideColon();
-                                                    cat[cat.length - 1].setReversed();
-                                                });
-            
-                                                cat[0].setChecked(true);
-                                            }
-                                        }
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    addText("Qualification Standards", createElementEx(NO_NS, "h3", entryForm));
-
-                                    addText("Education", createElementEx(NO_NS, "h4", entryForm));
-
-                                    var educFieldSet = createElementEx(NO_NS, "fieldset", entryForm, null, "id", "educational-attainment");
-                                    addText("Please select the minimum required educational attainment:", createElementEx(NO_NS, "legend", educFieldSet));
-
-                                    addText("Fetching education levels...", createElementEx(NO_NS, "div", educFieldSet, null, "class", "educ-container"));
-
-                                    var educ = [];
-
-                                    postData("/mpasis/php/process.php", "a=fetch&f=educLevel", (event)=>{
-                                        var response;
-
-                                        if (event.target.readyState == 4 && event.target.status == 200)
-                                        {
-                                            response = JSON.parse(event.target.responseText);
-
-                                            if (response.type == "Error")
-                                            {
-                                                console.log("AJAX Error:" + response.content);
-                                            }
-                                            else if (response.type == "Data")
-                                            {
-                                                container = document.getElementsByClassName("educ-container")[0];
-
-                                                container.innerHTML = "";
-
-                                                var educLevels = JSON.parse(response.content);
-
-                                                educLevels.forEach((educLevel, index, txtArr)=>{
-                                                    educ.push(new OldInputEx(container));
-                                                    educ[educ.length - 1].setType("radio");
-                                                    educ[educ.length - 1].setId("educ" + index);
-                                                    educ[educ.length - 1].setGroupName("educ");
-                                                    educ[educ.length - 1].setLabelText(educLevel["educational_attainment"]);
-                                                    educ[educ.length - 1].setValue(educLevel["index"]);
-                                                    educ[educ.length - 1].hideColon();
-                                                    educ[educ.length - 1].setReversed();
-                                                });
-            
-                                                educ[0].setChecked(true);
-                                            }
-                                        }
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var requiresSpecEduc = new OldInputEx(entryForm);
-                                    requiresSpecEduc.setType("checkbox");
-                                    requiresSpecEduc.setId("req-spec-educ");
-                                    requiresSpecEduc.setLabelText("Position requires specific education");
-                                    requiresSpecEduc.hideColon();
-                                    requiresSpecEduc.setReversed();
-                                    requiresSpecEduc.addEvent("change", (event)=>{
-                                        specEducContainer.classList.toggle("hidden", !event.target.checked);
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var specEducContainer = createElementEx(NO_NS, "div", entryForm, null, "class", "hidden");
-                                    createElementEx(NO_NS, "label", specEducContainer, null, "for", "spec-educ").innerHTML = "Please enter a description of the required education. This will guide evaluators in qualifying some applicants:";
-                                    createElementEx(NO_NS, "br", specEducContainer);
-                                    var specEduc = createElementEx(NO_NS, "textarea", specEducContainer, null, "id", "spec-educ", "name", "spec-educ", "rows", 3, "style", "display: block; width: 100%;");
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    addText("Training", createElementEx(NO_NS, "h4", entryForm));
-
-                                    var trainingHours = new OldInputEx(entryForm);
-                                    trainingHours.setType("number");
-                                    trainingHours.setId("training-hours");
-                                    trainingHours.setLabelText("Total hours of relevant training");
-                                    trainingHours.setMin(0);
-                                    trainingHours.setMax(999);
-                                    trainingHours.setValue(0);
-
-                                    createElementEx(NO_NS, "br", entryForm);
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var requiresSpecTraining = new OldInputEx(entryForm);
-                                    requiresSpecTraining.setType("checkbox");
-                                    requiresSpecTraining.setId("req-spec-training");
-                                    requiresSpecTraining.setLabelText("Position requires specific training");
-                                    requiresSpecTraining.hideColon();
-                                    requiresSpecTraining.setReversed();
-                                    requiresSpecTraining.addEvent("change", (event)=>{
-                                        specTrainingContainer.classList.toggle("hidden", !event.target.checked);
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var specTrainingContainer = createElementEx(NO_NS, "div", entryForm, null, "class", "hidden");
-                                    createElementEx(NO_NS, "label", specTrainingContainer, null, "for", "spec-training").innerHTML = "Please enter a description of the required training. This will guide evaluators in qualifying some applicants:";
-                                    createElementEx(NO_NS, "br", specTrainingContainer);
-                                    var specTraining = createElementEx(NO_NS, "textarea", specTrainingContainer, null, "id", "spec-training", "name", "spec-training", "rows", 3, "style", "display: block; width: 100%;");
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    addText("Work Experience", createElementEx(NO_NS, "h4", entryForm));
-
-                                    var expYears = new OldInputEx(entryForm);
-                                    expYears.setType("number");
-                                    expYears.setId("exp-years");
-                                    expYears.setLabelText("Total years of relevant training");
-                                    expYears.setMin(0);
-                                    expYears.setMax(99);
-                                    expYears.setValue(0);
-
-                                    createElementEx(NO_NS, "br", entryForm);
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var requiresSpecExp = new OldInputEx(entryForm);
-                                    requiresSpecExp.setType("checkbox");
-                                    requiresSpecExp.setId("req-spec-exp");
-                                    requiresSpecExp.setLabelText("Position requires specific work experience");
-                                    requiresSpecExp.hideColon();
-                                    requiresSpecExp.setReversed();
-                                    requiresSpecExp.addEvent("change", (event)=>{
-                                        specExpContainer.classList.toggle("hidden", !event.target.checked);
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var specExpContainer = createElementEx(NO_NS, "div", entryForm, null, "class", "hidden");
-                                    createElementEx(NO_NS, "label", specExpContainer, null, "for", "spec-exp").innerHTML = "Please enter a description of the required work experience. This will guide evaluators in qualifying some applicants:";
-                                    createElementEx(NO_NS, "br", specExpContainer);
-                                    var specExp = createElementEx(NO_NS, "textarea", specExpContainer, null, "id", "spec-exp", "name", "spec-exp", "rows", 3, "style", "display: block; width: 100%;");
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    addText("Career Service Eligibilities", createElementEx(NO_NS, "h4", entryForm));
-
-                                    var elig = [];
-                                    
-                                    [createElementEx(NO_NS, "fieldset", entryForm, null, "id", "eligibilities")].forEach((fieldSet, index, arr)=>{
-                                        addText("Please select all the eligibilities required for this position:", createElementEx(NO_NS, "legend", fieldSet));
-
-                                        addText("Fetching eligibilities...", createElementEx(NO_NS, "div", fieldSet, null, "class", "eligibility-container"));
-
-                                        var fetchEligFunc = function(){
-                                            var response;
-
-                                            var fieldSet = document.getElementById("eligibilities");
-                                            var container = fieldSet.querySelector(".eligibility-container");
-
-                                            if (this.readyState == 4 && this.status == 200) {
-                                                response = JSON.parse(this.responseText);
-                                                
-                                                if (response.type == "Error") {
-                                                    container.innerHTML = response.content;
-                                                }
-                                                else if (response.type == "Data") {
-                                                    container.innerHTML = "";
-
-                                                    if (JSON.parse(response.content).length == 0)
-                                                    {
-                                                        container.innerHTML = "No eligibilities fetched. Please add at least one.";
-                                                    }
-
-                                                    elig = [];
-
-                                                    JSON.parse(response.content).forEach((eligibility, index, arr)=>{
-                                                        elig.push(new OldInputEx(container));
-                                                        elig[elig.length - 1].setType("checkbox");
-                                                        elig[elig.length - 1].setId("eligibility" + eligibility['id']);
-                                                        elig[elig.length - 1].setLabelText(eligibility['name']);
-                                                        elig[elig.length - 1].setTooltipText(eligibility['description']);
-                                                        elig[elig.length - 1].setValue(eligibility['id']);
-                                                        elig[elig.length - 1].hideColon();
-                                                        elig[elig.length - 1].setReversed();
-                                                    });
-
-                                                    [createElementEx(NO_NS, "button", container, null, "type", "button")].forEach((button, index, arr)=>{
-                                                        addText("+Add Missing Eligibility", button);
-                                                        button.addEventListener("click", (event)=>{
-                                                            var dialog = new OldDialogEx(fieldSet);
-                                                            var eligText, descText;
-                
-                                                            eligText = dialog.addTextBoxEx("eligText", "text", "new-eligibility", "Eligibility to be Added");
-                                                            eligText.setLabelWidth("auto");
-                
-                                                            dialog.addLineBreak();
-                
-                                                            descText = dialog.addTextBoxEx("descText", "text", "description", "Description (optional)");
-                                                            descText.setLabelWidth("auto");
-                
-                                                            dialog.addButtonGrp(2, "control-buttons");
-                
-                                                            dialog.getBtnGrp("control-buttons").forEach((btn, i)=>{
-                                                                btn.innerHTML = (i == 0 ? "Save" : "Cancel");
-                                                                
-                                                                btn.addEventListener("click", (i == 0 ? (event)=>{
-                                                                    var eligibility = eligText.getValue();
-                                                                    var description = descText.getValue();
-                
-                                                                    postData("/mpasis/php/process.php", "a=add&eligibilities=" + JSON.stringify([{"name":eligibility,"description":description}]), (event)=>{
-                                                                        var response;
+                                                        if (newElig["description"] != "")
+                                                        {
+                                                            newElig["description"] = descText.getValue().trim();
+                                                        }
+    
+                                                        postData("/mpasis/php/process.php", "a=add&eligibilities=" + JSON.stringify([newElig]).replace("'", "''"), (event)=>{
+                                                            var response;
+    
+                                                            if (event.target.readyState == 4 && event.target.status == 200)
+                                                            {
+                                                                response = JSON.parse(event.target.responseText);
+    
+                                                                if (response.type == "Error")
+                                                                {
+                                                                    addEligForm.raiseError(response.content);
+                                                                }
+                                                                else if (response.type = "Data")
+                                                                {
+                                                                    addEligForm.showSuccess(response.content);
+    
+                                                                    var timeout = setTimeout(()=>{
                                                                         
-                                                                        if (event.target.readyState == 4 && event.target.status == 200) {
-                                                                            response = JSON.parse(event.target.responseText);
-                                                                            
-                                                                            if (response.type == "Error") {
-                                                                                console.log("AJAX Error: " + response.content);
-                                                                            }
-                                                                            else if (response.type == "Success") {
-                                                                                console.log("Info: " + response.content);
-                                                                                dialog.close();
-                
-                                                                                postData("/mpasis/php/process.php", "a=fetch&f=eligibilities", fetchEligFunc);
-                                                                            }
+                                                                        addEligDialog.close();
+                                                                        clearTimeout(timeout);
+                                                                        timeout = null;
+
+                                                                        while (eligField.inputExs.length > 0)
+                                                                        {
+                                                                            var last = eligField.inputExs.pop();
+
+                                                                            last.destroy();
                                                                         }
-                                                                    });
-                
-                                                                } : (event)=>{
-                                                                    dialog.close();
-                                                                }));
-                                                            });
-                                                            
+
+                                                                        addEligibilityBtn.destroy();
+
+                                                                        eligField.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=eligibilities", "name", "id", "description");
+                                                                        
+                                                                    }, 5000);
+                                                                }
+                                                            }
                                                         });
-                                                    });
-                                                }
-                                            }
+                                                    }
+
+                                                });
+                                                btnGrp.inputExs[1].setLabelText("Close");
+                                                btnGrp.inputExs[1].setTooltipText("");
+                                                btnGrp.inputExs[1].addEvent("click", (clickEvent)=>{
+                                                    addEligDialog.close();
+                                                });
+                                                var stat = addEligForm.addStatusPane();
+                                                
+                                            });
                                         };
+                                        eligField.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=eligibilities", "name", "id", "description");
 
-                                        postData("/mpasis/php/process.php", "a=fetch&f=eligibilities", fetchEligFunc);
-                                    });
+                                        header = jobDataForm.addHeader("Competency", 4);
+                                        header.style.gridColumn = "1 / span 12";
 
-                                    createElementEx(NO_NS, "br", entryForm);
+                                        field = jobDataForm.addInputEx("Position requires specific competency/competencies", "checkbox", "", "", "requires-competency");
+                                        field.labels[0].style.fontWeight = "bold";
+                                        field.reverse();
+                                        field.container.style.gridColumn = "1 / span 12";
+                                        
+                                        var competency = jobDataForm.addInputEx("Please enter a description of the required competencies, if applicable. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "competency", "Position");
+                                        competency.container.style.gridColumn = "1 / span 12";
+                                        competency.container.style.gridRow = "span 2";
+                                        competency.fields[0].style.height = "4em";
+                                        competency.setVertical();
+                                        competency.showColon();
+                                        competency.disable();
 
-                                    addText("Competency", createElementEx(NO_NS, "h4", entryForm));
+                                        field.addEvent("change", (event)=>{
+                                            competency.enable(0, event.target.inputEx.isChecked());
+                                        });
 
-                                    var requiresCompetency = new OldInputEx(entryForm);
-                                    requiresCompetency.setType("checkbox");
-                                    requiresCompetency.setId("req-competency");
-                                    requiresCompetency.setLabelText("Position requires specific competency/competencies");
-                                    requiresCompetency.hideColon();
-                                    requiresCompetency.setReversed();
-                                    requiresCompetency.addEvent("change", (event)=>{
-                                        competencyContainer.classList.toggle("hidden", !event.target.checked);
-                                    });
-
-                                    createElementEx(NO_NS, "br", entryForm);
-
-                                    var competencyContainer = createElementEx(NO_NS, "div", entryForm, null, "class", "hidden");
-                                    createElementEx(NO_NS, "label", competencyContainer, null, "for", "competency").innerHTML = "Please enter a description of the required competencies, if applicable. This will guide evaluators in qualifying some applicants:";
-                                    createElementEx(NO_NS, "br", competencyContainer);
-                                    var competency = createElementEx(NO_NS, "textarea", competencyContainer, null, "id", "competency", "name", "competency", "rows", 3, "style", "display: block; width: 100%;");
-
-                                    var submitBtn, clearBtn;
-
-                                    [createElementEx(NO_NS, "div", entryForm, null, "class", "right")].forEach((btnContainer)=>{
-                                        submitBtn = createElementEx(NO_NS, "button", btnContainer, null, "type", "button");
-                                        submitBtn.innerHTML = "Submit";
-                                        submitBtn.addEventListener("click", (event)=>{
-                                            var plantillaItems = plantillaItemNos.value.replace("\r","").split("\n");
+                                        var jobDataBtnGrp = jobDataForm.addFormButtonGrp(2);
+                                        jobDataBtnGrp.setFullWidth();
+                                        jobDataBtnGrp.container.style.gridColumn = "1 / span 12";
+                                        jobDataBtnGrp.inputExs[0].setLabelText("Save");
+                                        jobDataBtnGrp.inputExs[0].setTooltipText("");
+                                        jobDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                                            var plantillaItems = jobDataForm.dbInputEx["plantilla_item_number"].getValue().replace("\r","").split("\n");
                                             plantillaItems = plantillaItems.map((value)=>{
                                                 return value.trim();
                                             });
 
-                                            plantillaItems = (plantillaItemNos.value.trim() == "" ? [] : plantillaItems);
+                                            plantillaItems = (jobDataForm.dbInputEx["plantilla_item_number"].getValue().trim() == "" ? [] : plantillaItems);
 
                                             var positions = [];
+                                            var position = null;
 
                                             plantillaItems.forEach((plantillaItem)=>{
-                                                var position = {};
-                                                position["required_eligibility"] = [];
-                                                
-                                                position["plantilla_item_number"] = plantillaItem;
-                                                position["position_title"] = positionTitle.getValue();
-                                                position["parenthetical_title"] = parentheticalTitle.getValue();
-                                                position["salary_grade"] = salaryGrade.getValue();
-                                                for (var i = 0; i < cat.length; i++)
-                                                {
-                                                    if (cat[i].isChecked())
-                                                    {
-                                                        position["category"] = cat[i].getValue();
-                                                        break;
-                                                    }
-                                                }                                                
-                                                for (var i = 0; i < educ.length; i++)
-                                                {
-                                                    if (educ[i].isChecked())
-                                                    {
-                                                        position["required_educational_attainment"] = educ[i].getValue();
-                                                        break;
-                                                    }
-                                                }
-                                                if (requiresSpecEduc.isChecked())
-                                                {
-                                                    position["specific_education_required"] = specEduc.value.trim();
-                                                }
-                                                position["required_training_hours"] = trainingHours.getValue();
-                                                if (requiresSpecTraining.isChecked())
-                                                {
-                                                    position["specific_training_required"] = specTraining.value.trim();
-                                                }
-                                                position["required_training_hours"] = expYears.getValue();
-                                                if (requiresSpecExp.isChecked())
-                                                {
-                                                    position["specific_work_experience_required"] = specExp.value.trim();
-                                                }
-                                                for (var i = 0; i < elig.length; i++)
-                                                {
-                                                    if (elig[i].isChecked())
-                                                    {
-                                                        position["required_eligibility"].push(elig[i].getValue());
-                                                    }
-                                                }
-                                                if (requiresCompetency.isChecked())
-                                                {
-                                                    position["competency"] = competency.value.trim();
-                                                }
+                                                position = {};
 
+                                                // console.log(jobDataForm.dbInputEx);
+
+                                                for (const key in jobDataForm.dbInputEx) {
+                                                    if (key == "plantilla_item_number")
+                                                    {
+                                                        position[key] = plantillaItem;
+                                                    }
+                                                    else if (key == "requires-spec-education" || key == "requires-spec-training" || key == "requires-spec-work-exp" || key == "requires-competency" || (key == "specific_education_required" && !jobDataForm.dbInputEx["requires-spec-education"].isChecked()) || (key == "specific_training_required" && !jobDataForm.dbInputEx["requires-spec-training"].isChecked()) || (key == "specific_work_experience_required" && !jobDataForm.dbInputEx["requires-spec-work-exp"].isChecked()) || (key == "competency" && !jobDataForm.dbInputEx["requires-competency"].isChecked()))
+                                                    {}
+                                                    else
+                                                    {
+                                                        position[key] = jobDataForm.dbInputEx[key].getValue();
+                                                    }
+                                                }
+                                                
                                                 positions.push(position);
                                             });
                                             
-                                            postData("/mpasis/php/process.php", "a=add&positions=" + JSON.stringify(positions), function(){
+                                            // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
+                                            postData("/mpasis/php/process.php", "a=add&positions=" + JSON.stringify(positions).replace("'", "''"), (event)=>{
                                                 var response;
+    
+                                                if (event.target.readyState == 4 && event.target.status == 200)
+                                                {
+                                                    response = JSON.parse(event.target.responseText);
+    
+                                                    if (response.type == "Error")
+                                                    {
+                                                        jobDataForm.raiseError(response.content);
+                                                    }
+                                                    else if (response.type == "Success")
+                                                    {
+                                                        jobDataForm.showSuccess(response.content);
+                                                    }
+                                                }
+                                            });
+                                            // console.log(positions);
+                                        });
+                                        jobDataBtnGrp.inputExs[1].setLabelText("Reset");
+                                        jobDataBtnGrp.inputExs[1].setTooltipText("");
+                                        jobDataBtnGrp.inputExs[1].addEvent("click", (event)=>{}); // TO IMPLEMENT IN FORMEX/INPUTEX
+                                        jobDataBtnGrp.container.style.gridColumn = "8 / span 5";
+                                        jobDataBtnGrp.setStatusMsgTimeout(20);
 
-                                                if (this.readyState == 4 && this.status == 200) {
-                                                    response = JSON.parse(this.responseText);
-                                                    
-                                                    if (response.type == "Error") {
-                                                        alert(response.content);
-                                                    }
-                                                    else if (response.type == "Success") {
-                                                        alert(response.content);
-                                                    }
-                                                }                                                                            
-                                            });
-                                        });
-                                        btnContainer.appendChild(document.createTextNode(" "));
-                                        clearBtn = createElementEx(NO_NS, "button", btnContainer, null, "type", "button");
-                                        clearBtn.innerHTML = "Clear";
-                                        clearBtn.addEventListener("click", (event)=>{
-                                            plantillaItemNos.value = "";
-                                            positionTitle.setValue("");
-                                            parentheticalTitle.setValue("");
-                                            salaryGrade.setValue("");
-                                            educ[0].setChecked(true);
-                                            requiresSpecEduc.uncheck();
-                                            specEduc.value = "";
-                                            trainingHours.setValue(0);
-                                            requiresSpecTraining.uncheck();
-                                            specTraining.value = "";
-                                            expYears.setValue(0);
-                                            requiresSpecExp.uncheck();
-                                            specExp.value = "";
-                                            elig.forEach((checkbox)=>{
-                                                checkbox.setChecked(false);
-                                            });
-                                            requiresCompetency.uncheck();
-                                            competency.value = "";
-                                        });
-                                    });
-                                }
-                            });
-                            break;
+
+                                        var status = jobDataForm.addStatusPane();
+                                        status.style.gridColumn = "1 / span 7";
+                                    }
+                                });
                         case 'job-data-search':
                             link.addEventListener("click", ()=>{
                                 for (var id in this.mainSections)
@@ -3363,7 +3516,7 @@ class MPASIS_App
                                             }
                                             else
                                             {
-                                                postData("/mpasis/php/process.php", "a=addTempUser&person=" + JSON.stringify(person) + "&tempUser=" + JSON.stringify(tempUser), (event)=>{
+                                                postData("/mpasis/php/process.php", "a=addTempUser&person=" + JSON.stringify(person).replace("'", "''") + "&tempUser=" + JSON.stringify(tempUser).replace("'", "''"), (event)=>{
                                                     var response;
 
                                                     if (event.target.readyState == 4 && event.target.status == 200)

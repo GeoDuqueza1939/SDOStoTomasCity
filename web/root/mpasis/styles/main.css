@@ -4,6 +4,7 @@ body, .app > main {
 
 .app > main {
     padding: 2em;
+    margin-bottom: 1em;
 }
 
 [class^=query-results-] {

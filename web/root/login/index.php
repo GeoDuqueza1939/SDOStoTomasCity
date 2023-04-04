@@ -1,9 +1,10 @@
 <?php E_STRICT;
 session_start();
 
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/php/enums/pagetypes.php');
-require_once(__ROOT__ . '/php/secure/validateUser.php');
+require_once('../path.php');
+
+require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
+require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 $requiresSignIn = true;
 $pageTitle = 'Sign-in to SDO Services | Sto. Tomas City SDO';
@@ -12,7 +13,7 @@ $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<?php require_once(__ROOT__ . '/php/snippets/html_head.php');?>
+<?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
 <body>
 <?php
 if (isset($_SESSION['user']))
@@ -29,22 +30,22 @@ else
 
         if (isset($_POST['unm']) && isset($_POST['pwd']) && !is_null($userInfo))
         {
-            require_once(__ROOT__ . '/php/secure/process_signin.php');
+            require_once(__FILE_ROOT__ . '/php/secure/process_signin.php');
         }
         else
         {
             // MODE: sign in form (sign-in error)
-            require(__ROOT__ . '/php/snippets/signin_form.php');
+            require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
             echo "Invalid credentials";
         }
     }
     else
     {
         // MODE: sign in form
-        require(__ROOT__ . '/php/snippets/signin_form.php');
+        require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
     }
 }
-require_once(__ROOT__ . '/php/snippets/html_tail.php');
+require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 ?>
 </body>
 </html>
