@@ -21,6 +21,11 @@ function postData(procUrl, data, func)
     xmlhttp.send(data);
 }
 
+function packageData(objData)
+{
+    return JSON.stringify(objData).replace(/'/g, /''/);
+}
+
 const NO_NS = "NO NAMESPACE";
 
 /**
@@ -2209,11 +2214,11 @@ class MPASIS_App
                                 }
                             }
 
-                            console.log(JSON.stringify([specEduc]).replace("'", "''"));
+                            console.log(packageData([specEduc]));
 
                             if  (specEduc["specific_education"].trim() != "")
                             {
-                                postData("/mpasis/php/process.php", "a=add&specEducs=" + JSON.stringify([specEduc]).replace("'", "''"), (htEvent)=>{
+                                postData("/mpasis/php/process.php", "a=add&specEducs=" + packageData([specEduc]), (htEvent)=>{
                                     var response;
 
                                     if (htEvent.target.readyState == 4 && htEvent.target.status == 200)
@@ -2394,7 +2399,7 @@ class MPASIS_App
                                     newElig["description"] = descText.getValue().trim();
                                 }
 
-                                postData("/mpasis/php/process.php", "a=add&eligibilities=" + JSON.stringify([newElig]).replace("'", "''"), (event)=>{
+                                postData("/mpasis/php/process.php", "a=add&eligibilities=" + packageData([newElig]), (event)=>{
                                     var response;
 
                                     if (event.target.readyState == 4 && event.target.status == 200)
@@ -2666,7 +2671,7 @@ class MPASIS_App
                                     newElig["description"] = descText.getValue().trim();
                                 }
 
-                                postData("/mpasis/php/process.php", "a=add&eligibilities=" + JSON.stringify([newElig]).replace("'", "''"), (event)=>{
+                                postData("/mpasis/php/process.php", "a=add&eligibilities=" + packageData([newElig]), (event)=>{
                                     var response;
 
                                     if (event.target.readyState == 4 && event.target.status == 200)
@@ -2742,7 +2747,7 @@ class MPASIS_App
                 jobDataBtnGrp.inputExs[0].setLabelText("Save");
                 jobDataBtnGrp.inputExs[0].setTooltipText("");
                 jobDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                    var plantillaItems = jobDataForm.dbInputEx["plantilla_item_number"].getValue().replace("\r","").split("\n");
+                    var plantillaItems = jobDataForm.dbInputEx["plantilla_item_number"].getValue().replace(/\r/g,"").split("\n");
                     plantillaItems = plantillaItems.map((value)=>{
                         return value.trim();
                     });
@@ -2774,7 +2779,7 @@ class MPASIS_App
                     });
                     
                     // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-                    postData("/mpasis/php/process.php", "a=add&positions=" + JSON.stringify(positions).replace("'", "''"), (event)=>{
+                    postData("/mpasis/php/process.php", "a=add&positions=" + packageData(positions), (event)=>{
                         var response;
 
                         if (event.target.readyState == 4 && event.target.status == 200)
@@ -2783,7 +2788,8 @@ class MPASIS_App
 
                             if (response.type == "Error")
                             {
-                                jobDataForm.raiseError(response.content);
+                                // jobDataForm.raiseError(response.content);
+                                new MsgBox(jobDataForm.container, response.content, "OK");
                             }
                             else if (response.type == "Success")
                             {
@@ -2936,7 +2942,7 @@ class MPASIS_App
                         }
                         else
                         {
-                            postData("/mpasis/php/process.php", "a=addTempUser&person=" + JSON.stringify(person).replace("'", "''") + "&tempUser=" + JSON.stringify(tempUser).replace("'", "''"), (event)=>{
+                            postData("/mpasis/php/process.php", "a=addTempUser&person=" + packageData(person) + "&tempUser=" + packageData(tempUser), (event)=>{
                                 var response;
 
                                 if (event.target.readyState == 4 && event.target.status == 200)
