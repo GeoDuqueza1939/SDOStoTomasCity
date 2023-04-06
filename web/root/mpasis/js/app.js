@@ -877,6 +877,7 @@ class InputEx
                 this.fields[0].inputEx = this;
                 break;
             case "combo": // input with a datalist
+                this.isMultipleInput = true;
                 nextSibling = this.datalist = createElementEx(NO_NS, "datalist", this.fieldWrapper, null, "id", idStr + "-datalist", "name", idStr + "-datalist");
                 typeStr = "text";
             default:
@@ -1100,6 +1101,10 @@ class InputEx
                     this.dbInputEx = [];
                     break;
                 case 'combo':
+                    // this.datalist.innerHTML = "";
+                    Array.from(this.datalist.children).forEach((option)=>{
+                        option.remove();
+                    });
                     break;
                 default:
                     break;
@@ -1197,7 +1202,7 @@ class InputEx
 
         placeholderText = placeholderText.trim();
 
-        if (!this.isMultipleInput && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
+        if (!this.isMultipleInput || this.type == "combo" && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
         {
             this.fields[0].placeholder = placeholderText;
         }
@@ -1865,7 +1870,7 @@ class InputEx
 
     addEvent(eventType, func) // single input only
     {
-        if (!this.isMultipleInput)
+        if (!this.isMultipleInput || this.type == "combo")
         {
             this.listeners.field[eventType] = func;
             this.fields[0].addEventListener(eventType, this.listeners.field[eventType]);
@@ -2019,6 +2024,7 @@ class FormEx
         this.statusMode = 1; // 0: not displayed; 1: marker displayed with tooltip ; 2: full status message displayed
         this.statusTimer = null; // will store the timeout for auto-resetting status
         this.statusTimeout = 5; // seconds; < 0 will disable the creation of statusTimer
+        this.formMode = 0; // 0: Adding/Creating Record; 1: Editing
     }
 
     setTitle(titleText = "", headingLevel = 1) // blank titleText removes the form title header
@@ -2433,8 +2439,15 @@ class MsgBox extends DialogEx
                     this.close();
                 });
                 break;
-            default: // OK
-                break;
+        default: // OK
+            this.btnGrp = new InputEx(this.dialogBox, "msgbox-btns" + (new Date()).valueOf(), "buttonExs");
+            this.btnGrp.setFullWidth();
+            this.btnGrp.fieldWrapper.classList.add("center");
+            this.btnGrp.addItems("OK");
+            this.btnGrp.fields[0].addEventListener("click", ()=>{
+                this.close();
+            });
+            break;
         }
     }
 
@@ -2505,7 +2518,7 @@ class MPASIS_App
                             });
                             break;
                         case 'applicant-data-entry':
-                            link.addEventListener("click", ()=>{
+                            link.addEventListener("click", async (clickEvent0)=>{
                                 for (var id in this.mainSections)
                                 {
                                     this.mainSections[id].classList.toggle("hidden", (id != mainSectionId));
@@ -2515,10 +2528,32 @@ class MPASIS_App
 
                                 if (this.mainSections[mainSectionId].innerHTML.trim() == "")
                                 {
-                                    var applicantDataForm = null, header = null, field = null;
+                                    var applicantDataForm = null, header = null, field = null, applicant = null, searchedApplicants = null;
+                                    document.positions = [];
 
                                     applicantDataForm = new FormEx(this.mainSections[mainSectionId], "applicant-data-form-ex", true);
                                     applicantDataForm.setFullWidth();
+
+                                    postData("/mpasis/php/process.php", "a=fetch&f=positions", (postEvent)=>{
+                                        var response;
+
+                                        if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
+                                        {
+                                            response = JSON.parse(postEvent.target.responseText);
+
+                                            if (response.type == "Error")
+                                            {
+                                                new MsgBox(applicantDataForm.container, "Error: " + response.content, "OK");
+                                                // console.log(response.content);
+                                            }
+                                            else if (response.type == "Data")
+                                            {
+                                                document.positions = JSON.parse(response.content);
+
+                                                console.log(document.positions);
+                                            }
+                                        }
+                                    });
 
                                     applicantDataForm.fieldWrapper.style.display = "grid";
                                     applicantDataForm.fieldWrapper.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
@@ -2527,42 +2562,141 @@ class MPASIS_App
                                     
                                     header = applicantDataForm.setTitle("Applicant Data Entry", 2);
 
-                                    header = applicantDataForm.addHeader("Personal Information", 3);
+                                    header = applicantDataForm.addHeader("Position Applied", 3);
                                     header.style.gridColumn = "1 / span 12";
                                     header.style.gridRow = "1";
+                                    header.style.marginBottom = "0";
+
+                                    var positionField = applicantDataForm.addInputEx("Position Title", "combo", "", "Please select the position title from the drop-down menu. You may type on the text box to filter the positions.", "position_title", "Position");
+                                    positionField.container.style.gridColumn = "1 / span 4";
+                                    positionField.container.style.gridRow = "2";
+                                    positionField.setVertical();
+                                    positionField.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=positionTitles", "position_title", "", "");
+                                    positionField.addEvent("change", async (event)=>{
+                                        parenField.setValue("");
+                                        await parenField.clearList();
+                                        await parenField.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=parenTitles&positionTitle=" + positionField.getValue(), "parenthetical_title", "", "");
+                                        
+                                        plantillaField.setValue("");
+                                        await plantillaField.clearList();
+                                        await plantillaField.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
+                                        plantillaField.addItem("ANY");
+                                    });
+                                    
+                                    var parenField = applicantDataForm.addInputEx("Parenthetical Title", "combo", "", "Please select the parenthetical position titles available from the drop-down menu. You may type on the text box to filter the entries.", "parenthetical_title", "Position");
+                                    parenField.setPlaceholderText("(optional)");
+                                    parenField.container.style.gridColumn = "5 / span 4";
+                                    parenField.container.style.gridRow = "2";
+                                    parenField.setVertical();
+                                    parenField.addEvent("change", async (event)=>{
+                                        plantillaField.setValue("");
+                                        await plantillaField.clearList();
+                                        await plantillaField.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
+                                        plantillaField.addItem("ANY");
+                                    });
+
+                                    var plantillaField = applicantDataForm.addInputEx("Plantilla Item Number", "combo", "", "Please select the plantilla item numbers available from the drop-down menu or select ANY instead. You may type on the text box to filter the entries.", "plantilla_item_number", "Position");
+                                    plantillaField.container.style.gridColumn = "9 / span 4";
+                                    plantillaField.container.style.gridRow = "2";
+                                    plantillaField.setVertical();
+
+                                    var searchExistingApplicant = applicantDataForm.addInputEx("Search for existing applicants", "combo", "", "Type some names to search for possible matches", "", "");
+                                    searchExistingApplicant.container.style = "grid-column: 1 / span 12; grid-row: 3";
+                                    searchExistingApplicant.addStatusPane();
+                                    searchExistingApplicant.showColon();
+                                    searchExistingApplicant.addEvent("input", (event)=>{
+                                        for (const option of Array.from(event.target.inputEx.datalist.children)) {
+                                            if (option.value == event.target.inputEx.getValue())
+                                            {
+                                                alert(option.value.match(/^\d+/)[0]);
+                                                applicant = searchedApplicants[option.value.match(/^\d+/)[0]];
+                                                console.log(applicant);
+                                            }
+                                        }
+                                    });
+
+                                    var searchApplicant = function(changeEvent){
+                                        changeEvent.target.inputEx.showInfo("Searching . . .");
+
+                                        postData("/mpasis/php/process.php", "a=fetch&f=searchApplicationByName&name=" + this.inputEx.getValue(), (postEvent)=>{
+                                            var response;
+
+                                            if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
+                                            {
+                                                response = JSON.parse(postEvent.target.responseText);
+
+                                                if (response.type == "Error")
+                                                {
+                                                    changeEvent.target.inputEx.raiseError(response.content);
+                                                }
+                                                else if (response.type == "Data")
+                                                {
+                                                    var results = JSON.parse(response.content);
+                                                    var option = null;
+                                                    
+                                                    changeEvent.target.inputEx.resetStatus();
+                                                    changeEvent.target.inputEx.clearList();
+
+                                                    searchedApplicants = results;
+
+                                                    if (results.length == 0)
+                                                    {
+                                                        // changeEvent.target.inputEx.showSuccess("No results found");
+                                                    }
+                                                    else
+                                                    {
+                                                        for (const key in results) {
+                                                            var label = results[key]["application_code"] + " " + results[key]["given_name"] + (results[key]["middle_name"] == null || results[key]["middle_name"].trim() == "" ? "" : " " + results[key]["middle_name"]) + (results[key]["family_name"] == null || results[key]["family_name"].trim() == "" ? "" : " " + results[key]["family_name"]) + (results[key]["spouse_name"] == null || results[key]["spouse_name"].trim() == "" ? "" : " " + results[key]["spouse_name"]) + (results[key]["ext_name"] == null || results[key]["ext_name"].trim() == "" ? "" : ", " + results[key]["ext_name"]);
+                                                            option = changeEvent.target.inputEx.addItem(label);
+                                                        }
+                                                    }
+                                                    // console.log(results);
+                                                }
+                                            }
+                                        });
+                                    };
+
+                                    searchExistingApplicant.addEvent("change", searchApplicant);
+                                    searchExistingApplicant.addEvent("keydown", searchApplicant);
+
+                                    header = applicantDataForm.addHeader("Personal Information", 3);
+                                    header.style.gridColumn = "1 / span 12";
+                                    header.style.gridRow = "4";
                                     header.style.marginBottom = "0";
                                     
                                     field = applicantDataForm.addInputEx("Given Name", "text", "", "First Name", "given_name", "Person");
                                     field.container.style.gridColumn = "1 / span 4";
-                                    field.container.style.gridRow = "2";
+                                    field.container.style.gridRow = "5";
                                     field.setVertical();
                                     
                                     field = applicantDataForm.addInputEx("Middle Name", "text", "", "Middle Name", "middle_name", "Person");
                                     field.container.style.gridColumn = "5 / span 4";
-                                    field.container.style.gridRow = "2";
+                                    field.container.style.gridRow = "5";
                                     field.setVertical();
 
                                     field = applicantDataForm.addInputEx("Family Name", "text", "", "Last Name", "last_name", "Person");
                                     field.container.style.gridColumn = "9 / span 4";
-                                    field.container.style.gridRow = "2";
+                                    field.container.style.gridRow = "5";
                                     field.setVertical();
 
                                     field = applicantDataForm.addInputEx("Spouse's Name", "text", "", "Spouse's Name; for married woman", "spouse_name", "Person");
                                     field.container.style.gridColumn = "1 / span 4";
+                                    field.container.style.gridRow = "6";
                                     field.setVertical();
 
                                     field = applicantDataForm.addInputEx("Ext. Name", "text", "", "Extension Name (e.g., Jr., III, etc.)", "ext_name", "Person");
                                     field.container.style.gridColumn = "9 / span 4";
+                                    field.container.style.gridRow = "6";
                                     field.setVertical();
 
                                     field = applicantDataForm.addInputEx("Address", "textarea", "", "Address", "text", "Address");
                                     field.container.style.gridColumn = "1 / span 12";
-                                    field.container.style.gridRow = "4";
+                                    field.container.style.gridRow = "7";
                                     field.setVertical();
 
                                     field = applicantDataForm.addInputEx("Age", "number", "", "Age", "age", "Person");
                                     field.container.style.gridColumn = "1 / span 4";
-                                    field.container.style.gridRow = "5";
+                                    field.container.style.gridRow = "8";
                                     field.setVertical();
                                     field.setMin(10);
                                     field.setMax(999);
@@ -2570,51 +2704,53 @@ class MPASIS_App
 
                                     field = applicantDataForm.addInputEx("Sex", "combo", "", "Sex", "sex", "Person");
                                     field.container.style.gridColumn = "5 / span 4";
-                                    field.container.style.gridRow = "5";
+                                    field.container.style.gridRow = "8";
                                     field.setVertical();
                                     field.addItem("Male", "male");
                                     field.addItem("Female", "female");
 
                                     field = applicantDataForm.addInputEx("Civil Status", "combo", "", "Civil Status", "civil_status", "ENUM_Civil_Status");
                                     field.container.style.gridColumn = "9 / span 4";
-                                    field.container.style.gridRow = "5";
+                                    field.container.style.gridRow = "8";
                                     field.setVertical();
                                     field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=civilStatus", "civil_status", "index", "description");
 
                                     field = applicantDataForm.addInputEx("Religion", "combo", "", "Religious Affiliation", "religion", "Religion");
                                     field.container.style.gridColumn = "1 / span 4";
-                                    field.container.style.gridRow = "6";
+                                    field.container.style.gridRow = "9";
                                     field.setVertical();
                                     field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=religion", "religion", "id", "description");
 
                                     field = applicantDataForm.addInputEx("Disability", "combo", "", "Disability; if multiple, please separate with semi-colons", "disability", "Disability");
                                     field.container.style.gridColumn = "5 / span 4";
-                                    field.container.style.gridRow = "6";
+                                    field.container.style.gridRow = "9";
                                     field.setVertical();
                                     field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=disability", "disability", "id", "description");
 
                                     field = applicantDataForm.addInputEx("Ethnic Group", "combo", "", "Ethnic Group", "ethnic_group", "Ethnic_Group");
                                     field.container.style.gridColumn = "9 / span 4";
-                                    field.container.style.gridRow = "6";
+                                    field.container.style.gridRow = "9";
                                     field.setVertical();
                                     field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=ethnicGroup", "ethnic_group", "id", "description");
 
                                     field = applicantDataForm.addInputEx("Email Address", "email", "", "Email address", "email_address", "Person");
                                     field.container.style.gridColumn = "1 / span 6";
+                                    field.container.style.gridRow = "10";
                                     field.setVertical();
 
                                     field = applicantDataForm.addInputEx("Contact Number", "text", "", "Contact numbers; if multiple, please separate with semi-colons", "ext_name", "Person");
                                     field.container.style.gridColumn = "7 / span 6";
+                                    field.container.style.gridRow = "10";
                                     field.setVertical();
 
                                     header = applicantDataForm.addHeader("Educational Attainment", 3);
                                     header.style.gridColumn = "1 / span 12";
-                                    header.style.gridRow = "8";
+                                    header.style.gridRow = "11";
                                     header.style.marginBottom = "0";
 
                                     field = applicantDataForm.addInputEx("Please choose the highest level completed", "radio-select", "1", "Highest finished educational level", "educational_attainment", "Person", true);
                                     field.container.style.gridColumn = "1 / span 6";
-                                    field.container.style.gridRow = "9 / span 3";
+                                    field.container.style.gridRow = "12 / span 3";
                                     field.setVertical();
                                     field.showColon();
                                     field.reverse();
@@ -2634,7 +2770,7 @@ class MPASIS_App
 
                                     field = applicantDataForm.addInputEx("Post-Graduate Units", "number", "0", "Post-graduate units taken toward the completion of the next post-graduate degree", "postgraduate_units", "Person");
                                     field.container.style.gridColumn = "7 / span 6";
-                                    field.container.style.gridRow = "9";
+                                    field.container.style.gridRow = "12";
                                     field.setVertical();
                                     field.setMin(0);
                                     field.setMax(999);
@@ -2642,7 +2778,7 @@ class MPASIS_App
 
                                     field = applicantDataForm.addInputEx("Please choose all relevant specific courses/education taken by applicant", "checkbox-select", "1", "Specific courses/education taken", "specific_education", "Specific_Education", true);
                                     field.container.style.gridColumn = "7 / span 6";
-                                    field.container.style.gridRow = "10 / span 2";
+                                    field.container.style.gridRow = "13 / span 2";
                                     field.setVertical();
                                     field.showColon();
                                     field.reverse();
@@ -2703,17 +2839,19 @@ class MPASIS_App
                                                 addEducDialog.close();
                                             });
                                             addEducForm.addStatusPane();
+                                            addEducForm.dbInputEx["specific_education"].fields[0].focus();
                                         })
                                     };
                                     field.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=specEduc", "specific_education", "id", "description");
 
                                     header = applicantDataForm.addHeader("Training", 3);
                                     header.style.gridColumn = "1 / span 12";
-                                    header.style.gridRow = "12";
+                                    header.style.gridRow = "15";
                                     header.style.marginBottom = "0";
 
                                     var trainingDiv = createElementEx(NO_NS, "fieldset", applicantDataForm.fieldWrapper, null);
                                     trainingDiv.style.gridColumn = "1 / span 12";
+                                    trainingDiv.style.gridRow = "16";
                                     var trainingContainer = createElementEx(NO_NS, "table", trainingDiv, null, "style", "width: 100%; border-collapse: collapse;");
                                     [createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", trainingContainer, null), null)].forEach(row=>{
                                         addText("Training Name/Description", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
@@ -2764,11 +2902,12 @@ class MPASIS_App
                                     
                                     header = applicantDataForm.addHeader("Work Experience", 3);
                                     header.style.gridColumn = "1 / span 12";
-                                    header.style.gridRow = "14";
+                                    header.style.gridRow = "17";
                                     header.style.marginBottom = "0";
 
                                     var workExpDiv = createElementEx(NO_NS, "fieldset", applicantDataForm.fieldWrapper, null);
                                     workExpDiv.style.gridColumn = "1 / span 12";
+                                    workExpDiv.style.gridRow = "18";
                                     var workExpContainer = createElementEx(NO_NS, "table", workExpDiv, null, "style", "width: 100%; border-collapse: collapse;");
                                     [createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", workExpContainer, null), null)].forEach(row=>{
                                         addText("Work Experience Details", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
@@ -2819,12 +2958,12 @@ class MPASIS_App
 
                                     header = applicantDataForm.addHeader("Eligibility", 3);
                                     header.style.gridColumn = "1 / span 12";
-                                    header.style.gridRow = "16";
+                                    header.style.gridRow = "19";
                                     header.style.marginBottom = "0";
 
                                     field = applicantDataForm.addInputEx("Please select all the career service eligibility that the applicant possesses", "checkbox-select", "", "CS Eligibility", "eligibilityId", "Person", true);
                                     field.container.style.gridColumn = "1 / span 12";
-                                    field.container.style.gridRow = "17";
+                                    field.container.style.gridRow = "20";
                                     field.setVertical();
                                     field.showColon();
                                     field.reverse();

@@ -1,5 +1,9 @@
 # Work Log
 
+## 4/5/2023
+* 07:35AM-12:00PM   Forgot to add fields for the position title and the plantilla item number to the applicant data entry form, so added them today. Had trouble filtering data for the available position
+* xx:xxXX   Modified paths to requires and includes to prepare for setup of web server.
+
 ## 4/4/2023
 * 07:45AM-12:40PM   Resumed reimplementation of Applicant data entry form; started modifying InputEx for multiple options to allow for an extending list.
 * 12:55PM-05:00PM   Resumed coding Applicant data entry. Added entending data entry tables for training and work experience. Added extending list for eligibility.

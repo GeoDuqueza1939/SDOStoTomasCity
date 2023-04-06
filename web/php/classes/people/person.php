@@ -1,7 +1,5 @@
 <?php
-// require_once('../../../root/path.php');
 require_once(__FILE_ROOT__ . '/php/classes/dbObject.php');
-// die(__FILE_ROOT__);
 
 class Person extends dbObject
 {

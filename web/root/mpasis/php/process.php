@@ -1,10 +1,10 @@
 <?php E_STRICT;
 session_start();
 
-class ajaxResponse// implements JsonSerializable
+class ajaxResponse implements JsonSerializable
 {
-	// private $type; // possible values: "Success", "Info", "Error", "Text", "Username", "JSON", "DataRows", "DataRow", "User", "Entries", "Entry"
-	// private $content;
+	private $type; // possible values: "Success", "Info", "Error", "Text", "Username", "JSON", "DataRows", "DataRow", "User", "Entries", "Entry"
+	private $content;
 	
 	public function __construct($type, $content)
 	{
@@ -12,29 +12,29 @@ class ajaxResponse// implements JsonSerializable
 		$this->content = $content;
 	}
 	
-	// public function get_type()
-	// {
-	// 	return $this->type;
-	// }
+	public function get_type()
+	{
+		return $this->type;
+	}
 	
-	// public function get_content()
-	// {
-	// 	return $this->content;
-	// }
+	public function get_content()
+	{
+		return $this->content;
+	}
 	
-	// public function to_array()
-	// {
-    //     return array(
-    //         "type"=>$this->type,
-    //         "content"=>$this->content
-    //     );
-	// }
+	public function to_array()
+	{
+        return array(
+            "type"=>$this->type,
+            "content"=>$this->content
+        );
+	}
 	
-	// // override to allow json_encode() to convert an instance of this class
-	// public function jsonSerialize ()
-	// { 
-	// 	return $this->to_array();
-    // }
+	// override to allow json_encode() to convert an instance of this class
+	public function jsonSerialize ()
+	{ 
+		return $this->to_array();
+    }
 };
 require_once('../../path.php');
 
@@ -45,6 +45,7 @@ require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 if (isset($_REQUEST['test']))
 {
     echo(json_encode(new ajaxResponse('Info','test reply')));
+    return;
 }
 // TEST ONLY !!!!!!!!!!!!!
 
@@ -53,12 +54,14 @@ if (isset($_SESSION['user']))
     if ($_REQUEST['q'] == 'login') // UNUSED
     {
         echo json_encode(new ajaxResponse('User', json_encode(array('Username'=>$_SESSION['user'], 'UserId'=>1 * $_SESSION['user_id']))));
+        return;
 	}
     elseif ($_REQUEST['a'] == 'logout') // UNUSED
     {
         session_unset();
 		session_destroy();
 		echo json_encode(new ajaxResponse('Success', 'Signed out.'));
+        return;
     }
     elseif (isset($_REQUEST['a']))
     {
@@ -80,6 +83,83 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
+                        break;
+                    case 'searchApplicationByName':
+                        $dbResults = $dbconn->executeQuery('SELECT * FROM SDOStoTomas.Person INNER JOIN SDOStoTomas.Job_Application ON Person.id=Job_Application.personId WHERE Person.given_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.family_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.spouse_name LIKE "%' . $_REQUEST['name'] . '%"');
+                        $results = [];
+
+                        foreach ($dbResults as $dbResult)
+                        {
+                            $results[$dbResult['application_code']] = $dbResult;
+                        }
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($results))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
+                        break;
+                    case 'positions':
+                        $dbResults = $dbconn->select('Position', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
+                        break;
+                    case 'positionTitles':
+                        $dbResults = $dbconn->select('Position', 'position_title', 'GROUP BY position_title');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
+                        break;
+                    case 'parenTitles':
+                        $where = (isset($_REQUEST['positionTitle']) ? 'WHERE position_title="' . $_REQUEST['positionTitle'] . '"' : '');
+
+                        $dbResults = $dbconn->select('Position', 'parenthetical_title, position_title', ($where == '' ? '' : $where));
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
+                        break;
+                    case 'plantilla':
+                        $where = (isset($_REQUEST['positionTitle']) ? 'WHERE position_title="' . $_REQUEST['positionTitle'] . '"' : '');
+                        $where .= (isset($_REQUEST['parenTitle']) ? ($where == '' ? 'WHERE' : 'AND') . ' parenthetical_title="' . $_REQUEST['parenTitle'] . '"' : '');
+
+                        $dbResults = $dbconn->select('Position', 'plantilla_item_number', ($where == '' ? '' : $where));
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
                         break;
                     case 'positionCategory':
                         $dbResults = $dbconn->select('Position_Category', '*', '');
@@ -92,6 +172,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'educLevel':
                         $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', '');
@@ -104,6 +185,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'specEduc':
                         $dbResults = $dbconn->select('Specific_Education', '*', '');
@@ -116,6 +198,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'civilStatus':
                         $dbResults = $dbconn->select('ENUM_Civil_Status', '*', '');
@@ -128,6 +211,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'disability':
                         $dbResults = $dbconn->select('Disability', '*', '');
@@ -140,6 +224,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'ethnicGroup':
                         $dbResults = $dbconn->select('Ethnic_Group', '*', '');
@@ -152,6 +237,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'religion':
                         $dbResults = $dbconn->select('Religion', '*', '');
@@ -164,6 +250,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     case 'eligibilities':
                         $dbResults = $dbconn->select('Eligibility', '*', '');
@@ -176,6 +263,7 @@ if (isset($_SESSION['user']))
                         {
                             echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
+                        return;
                         break;
                     }
                 break;
@@ -204,6 +292,7 @@ if (isset($_SESSION['user']))
                         echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                     }
                     
+                    return;
                 }
                 if (isset($_REQUEST['specEducs']))
                 {
@@ -229,6 +318,7 @@ if (isset($_SESSION['user']))
                         echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                     }
                     
+                    return;
                 }
                 elseif (isset($_REQUEST['positions']))
                 {
@@ -360,14 +450,19 @@ if (isset($_SESSION['user']))
                 if (is_null($dbconn->lastException))
                 {
                     echo(json_encode(new ajaxResponse('Salary', $dbResults[0]['salary'])));
+                    return;
                 }
                 else
                 {
                     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                    return;
                 }
 
                 break;
         }
     }
+
+    echo(json_encode(new ajaxResponse('Error', 'Unknown query.<br>')));
+    var_dump($_REQUEST);
 }
 ?>

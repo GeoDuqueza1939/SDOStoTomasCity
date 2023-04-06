@@ -1,4 +1,6 @@
 <?php
+require_once('../path.php');
+
 function testOther()
 {
     $addressText = "Block 19 Lot 15 Phase IV Mt. Claire Village, Sta. Anastacia, Sto. Tomas City, Batangas";
@@ -12,11 +14,10 @@ function testOther()
     var_dump($new);
     exit;
     
-    $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
-    require_once("$baseDir/php/classes/ajaxResponse.php");
-    require_once("$baseDir/php/classes/db.php");
-    require_once("$baseDir/sergs/php/db-ddl.php");
-    require_once("$baseDir/sergs/.php/sergs-classes.php");
+    require_once(__FILE_ROOT__ . '/php/classes/ajaxResponse.php');
+    require_once(__FILE_ROOT__ . '/php/classes/db.php');
+    require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
+    require_once(__FILE_ROOT__ . '/sergs/.php/sergs-classes.php');
     
     // DEBUG
     $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
@@ -57,9 +58,8 @@ function testOther()
 
 function hashMyPassword()
 {   
-    $baseDir = '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web';
-    require_once("$baseDir/php/classes/db.php");
-    require_once("$baseDir/sergs/php/db-ddl.php");
+    require_once(__FILE_ROOT__ . '/php/classes/db.php');
+    require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
 
     $dbconn = new DatabaseConnection("mysql", "localhost", "root", "admin", "SDOStoTomas", $ddl);
 
@@ -85,13 +85,11 @@ function hashMyPassword()
 // testOther();
 // hashMyPassword();
 
-require_once('../path.php');
-
 require_once(__FILE_ROOT__ . '/php/classes/ajaxResponse.php');
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
 require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
 require_once(__FILE_ROOT__ . '/sergs/.php/sergs-classes.php');
-die();
+// die();
 
 if (isset($_POST['query']))
 {
