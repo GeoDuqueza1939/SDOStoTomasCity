@@ -30,9 +30,9 @@ class MPASIS_App extends App
     public function run()
     {
         $requiresSignIn = true;
-        $pageTitle = 'Department of Education | Sto. Tomas City SDO';
+        $pageTitle = $this->getName() . ' | Department of Education | Sto. Tomas City SDO';
         $pageType = PageType::MPASIS;
-        // $addDebug = true;  
+        // $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">

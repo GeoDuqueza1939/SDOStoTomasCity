@@ -1,12 +1,11 @@
 <?php E_STRICT;
 
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/php/classes/db.php');
+require_once(__FILE_ROOT__ . '/php/classes/db.php');
 
 function getValidCredentials(string $username, string $password)
 {
-    require_once(__ROOT__ . '/sergs/php/db-ddl.php');
-    require_once(__ROOT__ . '/php/secure/dbcreds.php');
+    require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
+    require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 
     $dbconn = new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl);
 

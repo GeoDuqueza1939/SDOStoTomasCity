@@ -4,7 +4,6 @@
 </header> -->
 <header>
 <?php
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/opms/php/snippets/header.php');
+require_once(__FILE_ROOT__ . '/opms/php/snippets/header.php');
 ?>
 </header>

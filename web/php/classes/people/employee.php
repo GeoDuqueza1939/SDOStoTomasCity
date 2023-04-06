@@ -1,6 +1,5 @@
 <?php
-define('__ROOT__', '/home/geovaniduqueza1939/Code/GitHub/SDOStoTomasCity/web');
-require_once(__ROOT__ . '/php/classes/people/person.php');
+require_once(__FILE_ROOT__ . '/php/classes/people/person.php');
 
 class Employee extends Person
 {
