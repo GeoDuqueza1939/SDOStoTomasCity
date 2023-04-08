@@ -104,6 +104,81 @@ if (isset($_SESSION['user']))
                         }
                         return;
                         break;
+                    case 'applicant-data-entry-initial':
+                        $positions = $dbconn->select('Position', '*', '');
+
+                        if (is_null($dbconn->lastException))
+                        {
+                            $requiredEligibilities = $dbconn->executeQuery(
+                                'SELECT
+                                    re2.id as id,
+                                    plantilla_item_number,
+                                    eligibilityId,
+                                    eligibility,
+                                    eligibilityId2,
+                                    eligibility2,
+                                    eligibilityId3,
+                                    e3.name as eligibility3
+                                FROM
+                                    (SELECT
+                                        re.id as id,
+                                        plantilla_item_number,
+                                        eligibilityId,
+                                        eligibility,
+                                        eligibilityId2,
+                                        e2.name as eligibility2,
+                                        eligibilityId3
+                                    FROM 
+                                        (SELECT
+                                            Required_Eligibility.id as id,
+                                            plantilla_item_number,
+                                            eligibilityId,
+                                            Eligibility.name as eligibility,
+                                            eligibilityId2,
+                                            eligibilityId3
+                                        FROM Required_Eligibility
+                                        INNER JOIN Eligibility ON Required_Eligibility.eligibilityId = Eligibility.id) re
+                                    LEFT JOIN Eligibility e2 ON re.eligibilityId2 = e2.id) re2
+                                LEFT JOIN Eligibility e3 on re2.eligibilityId3 = e3.id
+                                ;'
+                            );
+
+                            if (is_null($dbconn->lastException))
+                            {
+                                for ($i = 0; $i < count($positions); $i++) {
+                                    $positions[$i]['required_eligibility'] = [];
+
+                                    foreach ($requiredEligibilities as $requiredEligibility)
+                                    {
+                                        if ($requiredEligibility['plantilla_item_number'] == $positions[$i]['plantilla_item_number'])
+                                        {
+                                            array_push($positions[$i]['required_eligibility'], $requiredEligibility);
+                                        }
+                                    }
+                                }
+
+                                $educIncrementTable = $dbconn->select('MPS_Increment_Table_Education', '*', '');
+
+                                if (is_null($dbconn->lastException))
+                                {
+                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'mps_increment_table_education'=>$educIncrementTable]))));
+                                }
+                                else
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                }
+                            }
+                            else
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            }
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
+                        break;
                     case 'positions':
                         $dbResults = $dbconn->select('Position', '*', '');
     
