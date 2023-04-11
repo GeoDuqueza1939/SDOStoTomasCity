@@ -19,7 +19,7 @@ $addDebug = true;
 if (isset($_SESSION['user']))
 {
     // MODE: operation; should redirect to source URL, if available, or to the root directory
-    header('Location: ' . (isset($_REQUEST['src']) ? $_REQUEST['src'] : '/'));
+    header('Location: ' . (isset($_REQUEST['src']) ? $_REQUEST['src'] : '/') . (isset($_REQUEST['app']) ? '?app=' . $_REQUEST['app'] : ''));
 }
 else
 {

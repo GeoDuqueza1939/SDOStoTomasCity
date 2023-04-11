@@ -6,11 +6,11 @@
     {
         foreach($dbResults as $navItem)
         {
-            $id = $navItem['id'];
+            $id = $navItem['nav_itemId'];
             $icon = $navItem['icon_tag'];
-            $text = trim($navItem['text']);
+            $text = trim($navItem['nav_text']);
             $url = trim($navItem['url']);
-            $navId = trim($navItem['nav_id']);
+            $navId = trim($navItem['nav_html_id']);
 
             echo('<li' . (isset($navId) && $navId != '' ? " id = $navId" : '') . '>');
             echo((isset($url) && $url != '' ? "<a href=\"$url\">" : ''));
@@ -25,10 +25,10 @@
                 <ul>');
                 foreach($dbResults2 as $navItem2)
                 {
-                    $id = $navItem2['id'];
-                    $text = trim($navItem2['text']);
+                    $id = $navItem2['nav_itemId'];
+                    $text = trim($navItem2['nav_text']);
                     $url = trim($navItem2['url']);
-                    $navId = trim($navItem2['nav_id']);
+                    $navId = trim($navItem2['nav_html_id']);
 
                     echo('<li' . (isset($navId) && $navId != '' ? " id = $navId" : '') . '>');
                     echo((isset($url) && $url != '' ? "<a href=\"$url\">" : ''));

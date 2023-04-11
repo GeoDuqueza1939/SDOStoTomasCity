@@ -1,8 +1,18 @@
 # Work Log
 
+## 4/10/2023
+I have done a lot of code optimization and fixing some minor bugs here and there. Eligibility validation has been completed. The code for adding items to `radio-select` and `checkbox-select`, along with `buttons` and `buttonExs` has been reduced and optimized, introducing and fixing a bug and fixing a bug along the way. The bug in the code for computing the difference between two dates, which causes duration of days to exceed the previous months maximum, has been fixed and invalid dates are now being dealt with, although invalid date processing in the increment computation still needs to be added. The code for extracting the selected position has been recoded for reusability. The only feature left to implement is the Competency validation which will not be implemented as of this time as it will not be used for the time being.
+
+I have also begun implementing history logs, at least for MPaSIS. As such, I further modified both front-end and back-end to always indicate the web app being used. I did break a lot of things in the process, but it can't be helped as the feature is important for auditing actions and checking accountabilities in the system, so I took the time to fix them again.
+
+## 4/9/2023
+After workng for the past three-to-four days, I had finally been able to finish refactoring the code and removing most of the page-building code from the MPASIS_App class constructor and placed them on a separate class. I also even further separated the applicant data entry page/form building code into its own class, which I also plan to do to the other forms, as well (I will do so on future updates). After remodularizing the code, I was also able to further improve the messy and very confusing spaghetti-code-like scope nesting that once resulted from all the nested anonymous callback functions and occasionally caused some backlogs in my development work. I would have to remember not to be carried away to much with all the nested callbacks, especially when trying to beat deadlines, as these tend to make development work somewhat more tedious, if not difficult. Likewise, I had also been able to work out the increment-computing feature on the applicant data entry form after introducing a new DisplayEx class which I designed to only display data. I would most probably try to reuse some of these code in the application status views which I would implement in the next few days.
+
+As a side note, I have also decided to reformat my work log, as the narrative format is able to provide more flexibility in recording my work than the time-based log, especially when I need to incorporate details into my records/logs.
+
 ## 4/5/2023
 * 07:35AM-12:00PM   Forgot to add fields for the position title and the plantilla item number to the applicant data entry form, so added them today. Had trouble filtering data for the available position
-* xx:xxXX   Modified paths to requires and includes to prepare for setup of web server.
+* xx:xxXX   Modified paths to `requires` and `includes` to prepare for setup of web server.
 
 ## 4/4/2023
 * 07:45AM-12:40PM   Resumed reimplementation of Applicant data entry form; started modifying InputEx for multiple options to allow for an extending list.

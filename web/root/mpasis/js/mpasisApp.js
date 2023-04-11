@@ -666,6 +666,21 @@ class InputEx
         return "";
     }
 
+    getDataValue()
+    {
+        var textValue = this.getValue();
+
+        if (this.type == "combo" && textValue != "")
+        {
+            for (const option of Array.from(this.datalist.children)) {
+                if (option.value == textValue)
+                {
+                    return option.getAttribute("data-value");
+                }
+            }
+        }
+    }
+
     setDefaultValue(value)
     {
         this.defaultValue = value;
@@ -1071,7 +1086,7 @@ class InputEx
         return this.name;
     }
 
-    addItem(labelText, value = "", tooltipText = "") // only for combo (will add to datalist), radio-select, and multiple-radio-select
+    addItem(labelText, value = "", tooltipText = "") // only for combo (will add to datalist), radio-select, multiple-radio-select, buttons, and buttonExs
     {
         var invalidArgsStr = "";
 
@@ -1089,73 +1104,6 @@ class InputEx
 
         switch (this.type)
         {
-            case "radio-select":
-                if (this.inputExs.length > 0)
-                {
-                    this.fieldWrapper.appendChild(document.createTextNode(" "));
-                }
-                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "radio"));
-                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
-                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
-                if (value != "")
-                {
-                    this.inputExs[this.inputExs.length - 1].setValue(value);
-                }
-                this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
-                // this.inputExs[this.inputExs.length - 1].setFullWidth();
-                if (tooltipText != "")
-                {
-                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
-                }
-                this.inputExs[this.inputExs.length - 1].setGroupName(this.id);
-
-                if (this.statusPane != null)
-                {
-                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
-                    this.fieldWrapper.appendChild(this.statusPane);
-                }
-
-                this.inputExs[this.inputExs.length - 1].fields[0].addEventListener("change", (event)=>{
-                    for (const inputEx of this.inputExs)
-                    {
-                        if (inputEx.handleInlineTextboxExOnCheck != null)
-                        {
-                            inputEx.handleInlineTextboxExOnCheck();
-                        }
-                    }
-                });
-
-                return this.inputExs[this.inputExs.length - 1];
-
-                break;
-            case "checkbox-select":
-                if (this.inputExs.length > 0)
-                {
-                    this.fieldWrapper.appendChild(document.createTextNode(" "));
-                }
-                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "checkbox"));
-                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
-                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
-                if (value != "")
-                {
-                    this.inputExs[this.inputExs.length - 1].setValue(value);
-                }
-                this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
-                // this.inputExs[this.inputExs.length - 1].setFullWidth();
-                if (tooltipText != "")
-                {
-                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
-                }
-
-                if (this.statusPane != null)
-                {
-                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
-                    this.fieldWrapper.appendChild(this.statusPane);
-                }
-
-                return this.inputExs[this.inputExs.length - 1];
-
-                break;
             case "combo":
                 var option = createElementEx(NO_NS, "option", this.datalist, null, "value", labelText, "data-value", value);
                 if (tooltipText != "")
@@ -1164,36 +1112,26 @@ class InputEx
                 }
                 return option;
                 break;
+            case "radio-select":
+            case "checkbox-select":
             case "buttons":
-                if (this.inputExs.length > 0)
-                {
-                    this.fieldWrapper.appendChild(document.createTextNode(" "));
-                }
-                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "button"));
-                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
-                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
-                if (tooltipText != "")
-                {
-                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
-                }
-
-                if (this.statusPane != null)
-                {
-                    this.fieldWrapper.appendChild(this.statusPane["spacer"]);
-                    this.fieldWrapper.appendChild(this.statusPane);
-                }
-
-                return this.inputExs[this.inputExs.length - 1];
-
-                break;
             case "buttonExs":
                 if (this.inputExs.length > 0)
                 {
-                    this.fieldWrapper.appendChild(document.createTextNode(" "));
+                    this.fieldWrapper.appendChild(document.createTextNode(" ")); // CONSIDER ADDING A REFERENCE TO THIS AS A "SPACER" JUST LIKE THE STATUSPANE SPACER BELOW
                 }
-                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + this.inputExs.length, "buttonEx"));
+                this.inputExs.push(new InputEx(this.fieldWrapper, this.id + (this.type.indexOf("-select") >= 0 ? this.inputExs.length : ""), (this.type.indexOf("-select") >= 0 ? this.type.slice(0, this.type.indexOf("-")) : this.type.slice(0, this.type.indexOf("s")))));
                 this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
                 this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+                if (this.type.indexOf("-select") >= 0)
+                {
+                    if (value != "")
+                    {
+                        this.inputExs[this.inputExs.length - 1].setValue(value);  // MAY CAUSE ISSUES IF DEVELOPER DOESN'T TRACK THE NUMBER OF ITEMS WITHOUT LABELS THAT WERE MIXED WITH LABELED ITEMS
+                    }
+                    this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
+                    // this.inputExs[this.inputExs.length - 1].setFullWidth();
+                }
                 if (tooltipText != "")
                 {
                     this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
@@ -1205,17 +1143,63 @@ class InputEx
                     this.fieldWrapper.appendChild(this.statusPane);
                 }
 
-                return this.inputExs[this.inputExs.length - 1];
+                if (this.type == "radio-select")
+                {
+                    this.setGroupName(this.id);
+                    this.inputExs[this.inputExs.length - 1].fields[0].addEventListener("change", (event)=>{
+                        for (const inputEx of this.inputExs)
+                        {
+                            if (inputEx.handleInlineTextboxExOnCheck != null)
+                            {
+                                inputEx.handleInlineTextboxExOnCheck();
+                            }
+                        }
+                    });
+                }
 
+                return this.inputExs[this.inputExs.length - 1];
                 break;
         }
     }
 
-    addItems(...labelStrs) // only for combo (will add to datalist), radio-select, and multiple-radio-select; no tooltip
+    addItems(...labelStrs) // only for combo (will add to datalist), radio-select, multiple-radio-select, buttons, and buttonExs; no tooltip
     {
         labelStrs.forEach(labelText=>{
             this.addItem(labelText);
         });
+    }
+
+    removeItemAt(index = 0)
+    {
+        if (Number.isInteger(index) && index >= 0 && index < this.inputExs.length)
+        {
+            switch (this.type)
+            {
+                case "radio-select":
+                case "checkbox-select":
+                case "buttons":
+                case "buttonExs":
+                    var inputEx = this.inputExs[index];
+                    var spacer = inputEx.container.previousSibling;
+        
+                    if (this.inputExs.length > 1 && index > 0 && spacer != null && spacer != undefined && spacer.nodeName == "#text" && spacer.nodeType == 3 && spacer.textContent.trim() == "")
+                    {
+                        spacer.remove();
+                    }
+        
+                    this.inputExs.splice(index, 1);
+                    this.fields.splice(index, 1);
+
+                    if (inputEx.labels.length == 1)
+                    {
+                        this.labels.splice(this.labels.findIndex(label=>label == inputEx.labels[0]), 1);
+                    }
+
+                    inputEx.container.remove();
+
+                    break;
+            }    
+        }
     }
 
     fillItemsFromServer(url, postQueryString, labelColName = "", valueColName = "", tooltipColName = "")
@@ -2208,7 +2192,7 @@ class MPASIS_App
                 window.location = "/";
                 break;
             case "signout":
-                postData(window.location.href, "a=logout", (postEvent)=>{
+                postData(window.location.href, "app=mpasis&a=logout", (postEvent)=>{
                     this.setCookie("current_view", "", -1);
                     window.location.reload(true);
                 });
@@ -2256,357 +2240,7 @@ class MPASIS_App
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
                 break;
             case "job-data-entry":
-                var jobDataForm = null;
-                var field = null;
-                var header = null;
-
-                jobDataForm = new FormEx(this.mainSections["main-" + viewId], "job-data-form");
-                jobDataForm.fieldWrapper.style.display = "grid";
-                jobDataForm.fieldWrapper.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
-                jobDataForm.fieldWrapper.style.gridAutoFlow = "column";
-                jobDataForm.fieldWrapper.style.gridGap = "1em";
-
-                jobDataForm.setFullWidth();
-                jobDataForm.setTitle("Job Data Entry", 2);
-
-                field = jobDataForm.addInputEx("Position Title", "text", "", "", "position_title", "Position");
-                field.container.style.gridColumn = "1 / span 6";
-                field.setVertical();
-                field.showColon();
-
-                jobDataForm.addSpacer();
-
-                field = jobDataForm.addInputEx("Parenthetical Position Title", "text", "", "Enter in cases of parenthetical position titles, \ne.g., in \"Administrative Assistant (Secretary)\", \n\"Secretary\" is a parenthetical title.", "parenthetical_title", "Position");
-                field.container.style.gridColumn = "7 / span 6";
-                field.setPlaceholderText("(optional");
-                field.setVertical();
-                field.showColon();
-
-                jobDataForm.addSpacer();
-
-                field = jobDataForm.addInputEx("Salary Grade", "number", "1", "", "salary_grade", "Position");
-                field.container.style.gridColumn = "1 / span 3";
-                field.setVertical();
-                field.showColon();
-                field.setMin(0);
-                field.setMax(33);
-                field.addStatusPane();
-                field.setStatusMsgTimeout(20);
-                field.addEvent("change", (changeEvent)=>{
-                    postData(this.processURL, "a=getSalaryFromSG&sg=" + changeEvent.target.inputEx.getValue(), (event)=>{
-                        var response;
-                        var sgField = changeEvent.target.inputEx;
-
-                        if (event.target.readyState == 4 && event.target.status == 200) {
-                            response = JSON.parse(event.target.responseText);
-                            
-                            if (response.type == "Error") {
-                                sgField.raiseError(response.content);
-                            }
-                            else if (response.type == "Salary") {
-                                if (response.content == null)
-                                {
-                                    sgField.resetStatus();
-                                }
-                                else
-                                {
-                                    sgField.showInfo("<i>Monthly Salary: \u20b1" + parseFloat(response.content).toFixed(2) + "</i>");
-                                }
-                            }
-                        }
-                    });
-                });
-
-                jobDataForm.addSpacer();
-
-                field = jobDataForm.addInputEx("Plantilla Item No.", "textarea", "", "", "plantilla_item_number", "Position");
-                field.container.style.gridColumn = "4 / span 9";
-                field.setFullWidth(false);
-                field.setVertical();
-                field.showColon();
-
-                jobDataForm.addSpacer();
-
-                field = jobDataForm.addInputEx("Please select the position category", "radio-select", "", "", "category", "Position", true);
-                field.container.style.gridColumn = "1 / span 12";
-                field.reverse();
-                field.runAfterFilling = function(){
-                    this.inputExs[0].check();
-                };
-                field.fillItemsFromServer(this.processURL, "a=fetch&f=positionCategory", "category", "id", "description");
-                
-                jobDataForm.addSpacer();
-                
-                header = jobDataForm.addHeader("Qualification Standards", 3);
-                header.style.marginBottom = "0";
-                header.style.gridColumn = "1 / span 12";
-
-                header = jobDataForm.addHeader("Education", 4);
-                header.style.gridColumn = "1 / span 12";
-
-                field = jobDataForm.addInputEx("Please select the minimum required educational attainment", "radio-select", "", "", "required_educational_attainment", "Position", true);
-                field.container.style.gridColumn = "1 / span 6";
-                field.container.style.gridRow = "span 4";
-                field.reverse();
-                field.setVertical();
-                field.runAfterFilling = function(){
-                    this.inputExs[0].check();
-                };
-                field.fillItemsFromServer(this.processURL, "a=fetch&f=educLevel", "educational_attainment", "index", "description");
-                
-                // jobDataForm.addSpacer();
-
-                field = jobDataForm.addInputEx("Position requires specific education", "checkbox", "", "", "requires-spec-education");
-                field.labels[0].style.fontWeight = "bold";
-                field.reverse();
-                field.container.style.gridColumn = "7 / span 6";
-                
-                var specEduc = jobDataForm.addInputEx("Please enter a description of the required education. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_education_required", "Position");
-                specEduc.container.style.gridColumn = "7 / span 6";
-                specEduc.container.style.gridRow = "span 3";
-                specEduc.fields[0].style.height = "7em";
-                specEduc.setVertical();
-                specEduc.showColon();
-                specEduc.disable();
-
-                field.addEvent("change", (event)=>{
-                    specEduc.enable(0, event.target.inputEx.isChecked());
-                });
-
-                header = jobDataForm.addHeader("Training", 4);
-                header.style.gridColumn = "1 / span 12";
-                
-                field = jobDataForm.addInputEx("Total hours of relevant training", "number", "0", "", "required_training_hours", "Position");
-                field.container.style.gridColumn = "1 / span 6";
-                field.container.style.gridRow = "span 3";
-                // field.setVertical();
-                field.showColon();
-                field.setMin(0);
-                field.setMax(999);
-                field.setFullWidth();
-
-                field = jobDataForm.addInputEx("Position requires specific training", "checkbox", "", "", "requires-spec-training");
-                field.labels[0].style.fontWeight = "bold";
-                field.reverse();
-                field.container.style.gridColumn = "7 / span 6";
-                
-                var specTraining = jobDataForm.addInputEx("Please enter a description of the required training. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_training_required", "Position");
-                specTraining.container.style.gridColumn = "7 / span 6";
-                specTraining.container.style.gridRow = "span 2";
-                specTraining.fields[0].style.height = "4em";
-                specTraining.setVertical();
-                specTraining.showColon();
-                specTraining.disable();
-
-                field.addEvent("change", (event)=>{
-                    specTraining.enable(0, event.target.inputEx.isChecked());
-                });
-
-                header = jobDataForm.addHeader("Work Experience", 4);
-                header.style.gridColumn = "1 / span 12";
-                
-                field = jobDataForm.addInputEx("Total years of relevant work experience", "number", "0", "", "required_work_experience_years", "Position");
-                field.container.style.gridColumn = "1 / span 6";
-                field.container.style.gridRow = "span 3";
-                // field.setVertical();
-                field.showColon();
-                field.setMin(0);
-                field.setMax(99);
-                field.setFullWidth();
-
-                field = jobDataForm.addInputEx("Position requires specific work experience", "checkbox", "", "", "requires-spec-work-exp");
-                field.labels[0].style.fontWeight = "bold";
-                field.reverse();
-                field.container.style.gridColumn = "7 / span 6";
-                
-                var specExp = jobDataForm.addInputEx("Please enter a description of the required work experience. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_work_experience_required", "Position");
-                specExp.container.style.gridColumn = "7 / span 6";
-                specExp.container.style.gridRow = "span 2";
-                specExp.fields[0].style.height = "4em";
-                specExp.setVertical();
-                specExp.showColon();
-                specExp.disable();
-
-                field.addEvent("change", (event)=>{
-                    specExp.enable(0, event.target.inputEx.isChecked());
-                });
-
-                header = jobDataForm.addHeader("Career Service Eligibilities", 4);
-                header.style.gridColumn = "1 / span 12";
-
-                var eligField = jobDataForm.addInputEx("Please select all the eligibilities required for this position", "checkbox-select", "", "", "required_eligibility", "Required_Eligibility", true);
-                eligField.container.style.gridColumn = "1 / span 12";
-                // eligField.container.style.gridRow = "span 4";
-                eligField.reverse();
-                eligField.setVertical();
-                eligField.runAfterFilling = function(){
-                    // this.inputExs[0].check();
-                    var addEligibilityBtn = null;
-                    var eligField = this;
-
-                    addEligibilityBtn = new InputEx(this.fieldWrapper, "add-eligibility-input-ex", "buttonEx", false);
-                    addEligibilityBtn.setLabelText("+Add Missing Eligibility");
-                    addEligibilityBtn.addEvent("click", (clickEvent)=>{
-                        var addEligDialog = new DialogEx(this.fieldWrapper, "add-eligibility-dialog-ex");
-                        var addEligForm = addEligDialog.addFormEx();
-                        var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
-                        addEligForm.addLineBreak();
-                        var descText = addEligForm.addInputEx("Description", "text", "");
-                        addEligForm.addLineBreak();
-                        var btnGrp = addEligForm.addFormButtonGrp(2);
-                        btnGrp.inputExs[0].setLabelText("Save");
-                        btnGrp.inputExs[0].setTooltipText("");
-                        btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                            var newElig = {};
-                            newElig["name"] = newEligText.getValue().trim();
-                            if (newElig["name"] == "")
-                            {
-                                addEligForm.raiseError("Eligibility name should not be blank.");
-                            }
-                            else
-                            {
-                                if (newElig["description"] != "")
-                                {
-                                    newElig["description"] = descText.getValue().trim();
-                                }
-
-                                postData(this.processURL, "a=add&eligibilities=" + packageData([newElig]), (event)=>{
-                                    var response;
-
-                                    if (event.target.readyState == 4 && event.target.status == 200)
-                                    {
-                                        response = JSON.parse(event.target.responseText);
-
-                                        if (response.type == "Error")
-                                        {
-                                            addEligForm.raiseError(response.content);
-                                        }
-                                        else if (response.type = "Data")
-                                        {
-                                            addEligForm.showSuccess(response.content);
-
-                                            var timeout = setTimeout(()=>{
-                                                
-                                                addEligDialog.close();
-                                                clearTimeout(timeout);
-                                                timeout = null;
-
-                                                while (eligField.inputExs.length > 0)
-                                                {
-                                                    var last = eligField.inputExs.pop();
-
-                                                    last.destroy();
-                                                }
-
-                                                addEligibilityBtn.destroy();
-
-                                                eligField.fillItemsFromServer(this.processURL, "a=fetch&f=eligibilities", "name", "id", "description");
-                                                
-                                            }, 5000);
-                                        }
-                                    }
-                                });
-                            }
-
-                        });
-                        btnGrp.inputExs[1].setLabelText("Close");
-                        btnGrp.inputExs[1].setTooltipText("");
-                        btnGrp.inputExs[1].addEvent("click", (clickEvent)=>{
-                            addEligDialog.close();
-                        });
-                        var stat = addEligForm.addStatusPane();
-                        
-                    });
-                };
-                eligField.fillItemsFromServer(this.processURL, "a=fetch&f=eligibilities", "name", "id", "description");
-
-                header = jobDataForm.addHeader("Competency", 4);
-                header.style.gridColumn = "1 / span 12";
-
-                field = jobDataForm.addInputEx("Position requires specific competency/competencies", "checkbox", "", "", "requires-competency");
-                field.labels[0].style.fontWeight = "bold";
-                field.reverse();
-                field.container.style.gridColumn = "1 / span 12";
-                
-                var competency = jobDataForm.addInputEx("Please enter a description of the required competencies, if applicable. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "competency", "Position");
-                competency.container.style.gridColumn = "1 / span 12";
-                competency.container.style.gridRow = "span 2";
-                competency.fields[0].style.height = "4em";
-                competency.setVertical();
-                competency.showColon();
-                competency.disable();
-
-                field.addEvent("change", (event)=>{
-                    competency.enable(0, event.target.inputEx.isChecked());
-                });
-
-                var jobDataBtnGrp = jobDataForm.addFormButtonGrp(2);
-                jobDataBtnGrp.setFullWidth();
-                jobDataBtnGrp.container.style.gridColumn = "1 / span 12";
-                jobDataBtnGrp.inputExs[0].setLabelText("Save");
-                jobDataBtnGrp.inputExs[0].setTooltipText("");
-                jobDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                    var plantillaItems = jobDataForm.dbInputEx["plantilla_item_number"].getValue().replace(/\r/g,"").split("\n");
-                    plantillaItems = plantillaItems.map((value)=>{
-                        return value.trim();
-                    });
-
-                    plantillaItems = (jobDataForm.dbInputEx["plantilla_item_number"].getValue().trim() == "" ? [] : plantillaItems);
-
-                    var positions = [];
-                    var position = null;
-
-                    plantillaItems.forEach((plantillaItem)=>{
-                        position = {};
-
-                        // console.log(jobDataForm.dbInputEx);
-
-                        for (const key in jobDataForm.dbInputEx) {
-                            if (key == "plantilla_item_number")
-                            {
-                                position[key] = plantillaItem;
-                            }
-                            else if (key == "requires-spec-education" || key == "requires-spec-training" || key == "requires-spec-work-exp" || key == "requires-competency" || (key == "specific_education_required" && !jobDataForm.dbInputEx["requires-spec-education"].isChecked()) || (key == "specific_training_required" && !jobDataForm.dbInputEx["requires-spec-training"].isChecked()) || (key == "specific_work_experience_required" && !jobDataForm.dbInputEx["requires-spec-work-exp"].isChecked()) || (key == "competency" && !jobDataForm.dbInputEx["requires-competency"].isChecked()))
-                            {}
-                            else
-                            {
-                                position[key] = jobDataForm.dbInputEx[key].getValue();
-                            }
-                        }
-                        
-                        positions.push(position);
-                    });
-                    
-                    // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-                    postData(this.processURL, "a=add&positions=" + packageData(positions), (event)=>{
-                        var response;
-
-                        if (event.target.readyState == 4 && event.target.status == 200)
-                        {
-                            response = JSON.parse(event.target.responseText);
-
-                            if (response.type == "Error")
-                            {
-                                // jobDataForm.raiseError(response.content);
-                                new MsgBox(jobDataForm.container, response.content, "OK");
-                            }
-                            else if (response.type == "Success")
-                            {
-                                jobDataForm.showSuccess(response.content);
-                            }
-                        }
-                    });
-                    // console.log(positions);
-                });
-                jobDataBtnGrp.inputExs[1].setLabelText("Reset");
-                jobDataBtnGrp.inputExs[1].setTooltipText("");
-                jobDataBtnGrp.inputExs[1].addEvent("click", (event)=>{}); // TO IMPLEMENT IN FORMEX/INPUTEX
-                jobDataBtnGrp.container.style.gridColumn = "8 / span 5";
-                jobDataBtnGrp.setStatusMsgTimeout(20);
-
-                var status = jobDataForm.addStatusPane();
-                status.style.gridColumn = "1 / span 7";
-
+                this.constructJobDataForm();
                 break;
             case "job-data-search":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Search</h2>";
@@ -2647,7 +2281,7 @@ class MPASIS_App
                 btnGrp.inputExs[0].setLabelText("Search Accounts");
                 btnGrp.inputExs[0].setTooltipText("");
                 btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                    postData(this.processURL, "a=fetch&f=tempuser&k=" + searchBox.getValue() + "%", (event)=>{
+                    postData(this.processURL, "app=mpasis&a=fetch&f=tempuser&k=" + searchBox.getValue() + "%", (event)=>{
                         var response;
 
                         if (event.target.readyState == 4 && event.target.status == 200)
@@ -2741,7 +2375,7 @@ class MPASIS_App
                         }
                         else
                         {
-                            postData(this.processURL, "a=addTempUser&person=" + packageData(person) + "&tempUser=" + packageData(tempUser), (event)=>{
+                            postData(this.processURL, "app=mpasis&a=addTempUser&person=" + packageData(person) + "&tempUser=" + packageData(tempUser), (event)=>{
                                 var response;
 
                                 if (event.target.readyState == 4 && event.target.status == 200)
@@ -2783,11 +2417,368 @@ class MPASIS_App
         }
     }
 
+    constructJobDataForm()
+    {
+        this.forms["jobData"] = null;
+        var field = null;
+        var header = null;
+
+        this.forms["jobData"] = new FormEx(this.mainSections["main-job-data-entry"], "job-data-form");
+        this.forms["jobData"].fieldWrapper.style.display = "grid";
+        this.forms["jobData"].fieldWrapper.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
+        this.forms["jobData"].fieldWrapper.style.gridAutoFlow = "column";
+        this.forms["jobData"].fieldWrapper.style.gridGap = "1em";
+
+        this.forms["jobData"].setFullWidth();
+        this.forms["jobData"].setTitle("Job Data Entry", 2);
+
+        field = this.forms["jobData"].addInputEx("Position Title", "text", "", "", "position_title", "Position");
+        field.container.style.gridColumn = "1 / span 6";
+        field.setVertical();
+        field.showColon();
+
+        this.forms["jobData"].addSpacer();
+
+        field = this.forms["jobData"].addInputEx("Parenthetical Position Title", "text", "", "Enter in cases of parenthetical position titles, \ne.g., in \"Administrative Assistant (Secretary)\", \n\"Secretary\" is a parenthetical title.", "parenthetical_title", "Position");
+        field.container.style.gridColumn = "7 / span 6";
+        field.setPlaceholderText("(optional");
+        field.setVertical();
+        field.showColon();
+
+        this.forms["jobData"].addSpacer();
+
+        field = this.forms["jobData"].addInputEx("Salary Grade", "number", "1", "", "salary_grade", "Position");
+        field.container.style.gridColumn = "1 / span 3";
+        field.setVertical();
+        field.showColon();
+        field.setMin(0);
+        field.setMax(33);
+        field.addStatusPane();
+        field.setStatusMsgTimeout(20);
+        field.addEvent("change", (changeEvent)=>{
+            postData(this.processURL, "app=mpasis&a=getSalaryFromSG&sg=" + changeEvent.target.inputEx.getValue(), (event)=>{
+                var response;
+                var sgField = changeEvent.target.inputEx;
+
+                if (event.target.readyState == 4 && event.target.status == 200) {
+                    response = JSON.parse(event.target.responseText);
+                    
+                    if (response.type == "Error") {
+                        sgField.raiseError(response.content);
+                    }
+                    else if (response.type == "Salary") {
+                        if (response.content == null)
+                        {
+                            sgField.resetStatus();
+                        }
+                        else
+                        {
+                            sgField.showInfo("<i>Monthly Salary: \u20b1" + parseFloat(response.content).toFixed(2) + "</i>");
+                        }
+                    }
+                }
+            });
+        });
+
+        this.forms["jobData"].addSpacer();
+
+        field = this.forms["jobData"].addInputEx("Plantilla Item No.", "textarea", "", "", "plantilla_item_number", "Position");
+        field.container.style.gridColumn = "4 / span 9";
+        field.setFullWidth(false);
+        field.setVertical();
+        field.showColon();
+
+        this.forms["jobData"].addSpacer();
+
+        field = this.forms["jobData"].addInputEx("Please select the position category", "radio-select", "", "", "position_categoryId", "Position", true);
+        field.container.style.gridColumn = "1 / span 12";
+        field.reverse();
+        field.runAfterFilling = function(){
+            this.inputExs[0].check();
+        };
+        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=positionCategory", "position_category", "position_categoryId", "description");
+        
+        this.forms["jobData"].addSpacer();
+        
+        header = this.forms["jobData"].addHeader("Qualification Standards", 3);
+        header.style.marginBottom = "0";
+        header.style.gridColumn = "1 / span 12";
+
+        header = this.forms["jobData"].addHeader("Education", 4);
+        header.style.gridColumn = "1 / span 12";
+
+        field = this.forms["jobData"].addInputEx("Please select the minimum required educational attainment", "radio-select", "", "", "required_educational_attainment", "Position", true);
+        field.container.style.gridColumn = "1 / span 6";
+        field.container.style.gridRow = "span 4";
+        field.reverse();
+        field.setVertical();
+        field.runAfterFilling = function(){
+            this.inputExs[0].check();
+        };
+        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
+        
+        // this.forms["jobData"].addSpacer();
+
+        field = this.forms["jobData"].addInputEx("Position requires specific education", "checkbox", "", "", "requires-spec-education");
+        field.labels[0].style.fontWeight = "bold";
+        field.reverse();
+        field.container.style.gridColumn = "7 / span 6";
+        
+        var specEduc = this.forms["jobData"].addInputEx("Please enter a description of the required education. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_education_required", "Position");
+        specEduc.container.style.gridColumn = "7 / span 6";
+        specEduc.container.style.gridRow = "span 3";
+        specEduc.fields[0].style.height = "7em";
+        specEduc.setVertical();
+        specEduc.showColon();
+        specEduc.disable();
+
+        field.addEvent("change", (event)=>{
+            specEduc.enable(0, event.target.inputEx.isChecked());
+        });
+
+        header = this.forms["jobData"].addHeader("Training", 4);
+        header.style.gridColumn = "1 / span 12";
+        
+        field = this.forms["jobData"].addInputEx("Total hours of relevant training", "number", "0", "", "required_training_hours", "Position");
+        field.container.style.gridColumn = "1 / span 6";
+        field.container.style.gridRow = "span 3";
+        // field.setVertical();
+        field.showColon();
+        field.setMin(0);
+        field.setMax(999);
+        field.setFullWidth();
+
+        field = this.forms["jobData"].addInputEx("Position requires specific training", "checkbox", "", "", "requires-spec-training");
+        field.labels[0].style.fontWeight = "bold";
+        field.reverse();
+        field.container.style.gridColumn = "7 / span 6";
+        
+        var specTraining = this.forms["jobData"].addInputEx("Please enter a description of the required training. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_training_required", "Position");
+        specTraining.container.style.gridColumn = "7 / span 6";
+        specTraining.container.style.gridRow = "span 2";
+        specTraining.fields[0].style.height = "4em";
+        specTraining.setVertical();
+        specTraining.showColon();
+        specTraining.disable();
+
+        field.addEvent("change", (event)=>{
+            specTraining.enable(0, event.target.inputEx.isChecked());
+        });
+
+        header = this.forms["jobData"].addHeader("Work Experience", 4);
+        header.style.gridColumn = "1 / span 12";
+        
+        field = this.forms["jobData"].addInputEx("Total years of relevant work experience", "number", "0", "", "required_work_experience_years", "Position");
+        field.container.style.gridColumn = "1 / span 6";
+        field.container.style.gridRow = "span 3";
+        // field.setVertical();
+        field.showColon();
+        field.setMin(0);
+        field.setMax(99);
+        field.setFullWidth();
+
+        field = this.forms["jobData"].addInputEx("Position requires specific work experience", "checkbox", "", "", "requires-spec-work-exp");
+        field.labels[0].style.fontWeight = "bold";
+        field.reverse();
+        field.container.style.gridColumn = "7 / span 6";
+        
+        var specExp = this.forms["jobData"].addInputEx("Please enter a description of the required work experience. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "specific_work_experience_required", "Position");
+        specExp.container.style.gridColumn = "7 / span 6";
+        specExp.container.style.gridRow = "span 2";
+        specExp.fields[0].style.height = "4em";
+        specExp.setVertical();
+        specExp.showColon();
+        specExp.disable();
+
+        field.addEvent("change", (event)=>{
+            specExp.enable(0, event.target.inputEx.isChecked());
+        });
+
+        header = this.forms["jobData"].addHeader("Career Service Eligibilities", 4);
+        header.style.gridColumn = "1 / span 12";
+
+        var eligField = this.forms["jobData"].addInputEx("Please select all the eligibilities required for this position", "checkbox-select", "", "", "required_eligibility", "Required_Eligibility", true);
+        eligField.container.style.gridColumn = "1 / span 12";
+        // eligField.container.style.gridRow = "span 4";
+        eligField.reverse();
+        eligField.setVertical();
+        eligField.runAfterFilling = function(){
+            // this.inputExs[0].check();
+            var addEligibilityBtn = null;
+            var eligField = this;
+
+            addEligibilityBtn = new InputEx(this.fieldWrapper, "add-eligibility-input-ex", "buttonEx", false);
+            addEligibilityBtn.setLabelText("+Add Missing Eligibility");
+            addEligibilityBtn.addEvent("click", (clickEvent)=>{
+                var addEligDialog = new DialogEx(this.fieldWrapper, "add-eligibility-dialog-ex");
+                var addEligForm = addEligDialog.addFormEx();
+                var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
+                addEligForm.addLineBreak();
+                var descText = addEligForm.addInputEx("Description", "text", "");
+                addEligForm.addLineBreak();
+                var btnGrp = addEligForm.addFormButtonGrp(2);
+                btnGrp.inputExs[0].setLabelText("Save");
+                btnGrp.inputExs[0].setTooltipText("");
+                btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                    var newElig = {};
+                    newElig["eligibility"] = newEligText.getValue().trim();
+                    if (newElig["eligibility"] == "")
+                    {
+                        addEligForm.raiseError("Eligibility name should not be blank.");
+                    }
+                    else
+                    {
+                        if (newElig["description"] != "")
+                        {
+                            newElig["description"] = descText.getValue().trim();
+                        }
+
+                        postData(this.processURL, "app=mpasis&a=add&eligibilities=" + packageData([newElig]), (event)=>{
+                            var response;
+
+                            if (event.target.readyState == 4 && event.target.status == 200)
+                            {
+                                response = JSON.parse(event.target.responseText);
+
+                                if (response.type == "Error")
+                                {
+                                    addEligForm.raiseError(response.content);
+                                }
+                                else if (response.type = "Data")
+                                {
+                                    addEligForm.showSuccess(response.content);
+
+                                    var timeout = setTimeout(()=>{
+                                        
+                                        addEligDialog.close();
+                                        clearTimeout(timeout);
+                                        timeout = null;
+
+                                        while (eligField.inputExs.length > 0)
+                                        {
+                                            var last = eligField.inputExs.pop();
+
+                                            last.destroy();
+                                        }
+
+                                        addEligibilityBtn.destroy();
+
+                                        eligField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
+                                        
+                                    }, 5000);
+                                }
+                            }
+                        });
+                    }
+
+                });
+                btnGrp.inputExs[1].setLabelText("Close");
+                btnGrp.inputExs[1].setTooltipText("");
+                btnGrp.inputExs[1].addEvent("click", (clickEvent)=>{
+                    addEligDialog.close();
+                });
+                var stat = addEligForm.addStatusPane();
+                
+            });
+        };
+        eligField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
+
+        header = this.forms["jobData"].addHeader("Competency", 4);
+        header.style.gridColumn = "1 / span 12";
+
+        field = this.forms["jobData"].addInputEx("Position requires specific competency/competencies", "checkbox", "", "", "requires-competency");
+        field.labels[0].style.fontWeight = "bold";
+        field.reverse();
+        field.container.style.gridColumn = "1 / span 12";
+        
+        var competency = this.forms["jobData"].addInputEx("Please enter a description of the required competencies, if applicable. This will guide evaluators in qualifying some applicants.", "textarea", "", "", "competency", "Position");
+        competency.container.style.gridColumn = "1 / span 12";
+        competency.container.style.gridRow = "span 2";
+        competency.fields[0].style.height = "4em";
+        competency.setVertical();
+        competency.showColon();
+        competency.disable();
+
+        field.addEvent("change", (event)=>{
+            competency.enable(0, event.target.inputEx.isChecked());
+        });
+
+        var jobDataBtnGrp = this.forms["jobData"].addFormButtonGrp(2);
+        jobDataBtnGrp.setFullWidth();
+        jobDataBtnGrp.container.style.gridColumn = "1 / span 12";
+        jobDataBtnGrp.inputExs[0].setLabelText("Save");
+        jobDataBtnGrp.inputExs[0].setTooltipText("");
+        jobDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+            var plantillaItems = this.forms["jobData"].dbInputEx["plantilla_item_number"].getValue().replace(/\r/g,"").split("\n");
+            plantillaItems = plantillaItems.map((value)=>{
+                return value.trim();
+            });
+
+            plantillaItems = (this.forms["jobData"].dbInputEx["plantilla_item_number"].getValue().trim() == "" ? [] : plantillaItems);
+
+            var positions = [];
+            var position = null;
+
+            plantillaItems.forEach((plantillaItem)=>{
+                position = {};
+
+                // console.log(this.forms["jobData"].dbInputEx);
+
+                for (const key in this.forms["jobData"].dbInputEx) {
+                    if (key == "plantilla_item_number")
+                    {
+                        position[key] = plantillaItem;
+                    }
+                    else if (key == "requires-spec-education" || key == "requires-spec-training" || key == "requires-spec-work-exp" || key == "requires-competency" || (key == "specific_education_required" && !this.forms["jobData"].dbInputEx["requires-spec-education"].isChecked()) || (key == "specific_training_required" && !this.forms["jobData"].dbInputEx["requires-spec-training"].isChecked()) || (key == "specific_work_experience_required" && !this.forms["jobData"].dbInputEx["requires-spec-work-exp"].isChecked()) || (key == "competency" && !this.forms["jobData"].dbInputEx["requires-competency"].isChecked()))
+                    {}
+                    else
+                    {
+                        position[key] = this.forms["jobData"].dbInputEx[key].getValue();
+                    }
+                }
+                
+                positions.push(position);
+            });
+            
+            // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
+            postData(this.processURL, "app=mpasis&a=add&positions=" + packageData(positions), (event)=>{
+                var response;
+
+                if (event.target.readyState == 4 && event.target.status == 200)
+                {
+                    response = JSON.parse(event.target.responseText);
+
+                    if (response.type == "Error")
+                    {
+                        // this.forms["jobData"].raiseError(response.content);
+                        new MsgBox(this.forms["jobData"].container, response.content, "OK");
+                    }
+                    else if (response.type == "Success")
+                    {
+                        // this.forms["jobData"].showSuccess(response.content);
+                        new MsgBox(this.forms["jobData"].container, response.content, "OK");
+                    }
+                }
+            });
+            // console.log(positions);
+        });
+        jobDataBtnGrp.inputExs[1].setLabelText("Reset");
+        jobDataBtnGrp.inputExs[1].setTooltipText("");
+        jobDataBtnGrp.inputExs[1].addEvent("click", (event)=>{}); // TO IMPLEMENT IN FORMEX/INPUTEX
+        jobDataBtnGrp.container.style.gridColumn = "8 / span 5";
+        jobDataBtnGrp.setStatusMsgTimeout(20);
+
+        var status = this.forms["jobData"].addStatusPane();
+        status.style.gridColumn = "1 / span 7";
+
+        return this.forms["jobData"];
+    }
+
     constructApplicantDataForm()
     {
         if (!("applicantData" in this.forms))
         {
-            var header = null, field = null, applicant = null, searchedApplicants = null, row = null;
+            var header = null, field = null, applicant = null, searchedApplicants = null, row = null, getAppliedPosition;
             document.positions = [];
             document.mpsEducIncrement = [];
 
@@ -2807,35 +2798,39 @@ class MPASIS_App
 
             header = this.forms["applicantData"].addHeader("Position Applied", 3);
             header.style.gridColumn = "1 / span 12";
-            // header.style.gridRow = "1";
             header.style.marginBottom = "0";
 
-            var positionField = this.forms["applicantData"].addInputEx("Position Title", "combo", "", "Please select the position title from the drop-down menu. You may type on the text box to filter the positions.", "position_title", "Position");
+            var positionField = this.forms["applicantData"].addInputEx("Position Title", "combo", "", "Please select the position title from the drop-down menu. You may type on the text box to filter the positions.", "position_title_applied", "Job_Application");
             positionField.container.style.gridColumn = "1 / span 4";
-            // positionField.container.style.gridRow = "2";
             positionField.setVertical();
             
-            var parenField = this.forms["applicantData"].addInputEx("Parenthetical Title", "combo", "", "Please select the parenthetical position titles available from the drop-down menu. You may type on the text box to filter the entries.", "parenthetical_title", "Position");
+            var parenField = this.forms["applicantData"].addInputEx("Parenthetical Title", "combo", "", "Please select the parenthetical position titles available from the drop-down menu. You may type on the text box to filter the entries.", "parenthetical_title_applied", "Job_Application");
             parenField.setPlaceholderText("(optional)");
             parenField.container.style.gridColumn = "5 / span 4";
-            // parenField.container.style.gridRow = "2";
             parenField.setVertical();
 
-            var plantillaField = this.forms["applicantData"].addInputEx("Plantilla Item Number", "combo", "", "Please select the plantilla item numbers available from the drop-down menu or select ANY instead. You may type on the text box to filter the entries.", "plantilla_item_number", "Position");
+            var plantillaField = this.forms["applicantData"].addInputEx("Plantilla Item Number", "combo", "", "Please select the plantilla item numbers available from the drop-down menu or select ANY instead. You may type on the text box to filter the entries.", "plantilla_item_number_applied", "Job_Application");
             plantillaField.container.style.gridColumn = "9 / span 4";
-            // plantillaField.container.style.gridRow = "2";
             plantillaField.setVertical();
+
+            getAppliedPosition = function(positionsArray, positionField, parenField, plantillaField){
+                if (plantillaField.getValue() == "ANY")
+                {
+                    return positionsArray.find(position=>position["position_title"] == positionField.getValue());
+                }
+                else if (plantillaField.getValue() != "")
+                {
+                    return positionsArray.find(position=>position["plantilla_item_number"] == plantillaField.getValue());
+                }
+            }
 
             header = this.forms["applicantData"].addHeader("Personal Information", 3);
             header.style.gridColumn = "1 / span 12";
-            // header.style.gridRow = "3";
             header.style.marginBottom = "0";
             
             var searchExistingApplicant = this.forms["applicantData"].addInputEx("Search for existing applicants", "combo", "", "Type some names to search for possible matches", "", "");
-            // searchExistingApplicant.container.style = "grid-column: 1 / span 12; grid-row: 4";
             searchExistingApplicant.container.classList.add("right");
             searchExistingApplicant.container.style.gridColumn = "1 / span 12";
-            // searchExistingApplicant.container.style.gridRow = "4";
             searchExistingApplicant.addStatusPane();
             searchExistingApplicant.statusPane.style.display = "block";
             searchExistingApplicant.statusPane.style.height = "1.5em";
@@ -2843,46 +2838,37 @@ class MPASIS_App
 
             field = this.forms["applicantData"].addInputEx("Given Name", "text", "", "First Name", "given_name", "Person");
             field.container.style.gridColumn = "1 / span 4";
-            // field.container.style.gridRow = "5";
             field.setVertical();
             
             field = this.forms["applicantData"].addInputEx("Middle Name", "text", "", "Middle Name", "middle_name", "Person");
             field.setPlaceholderText("(optional)");
             field.container.style.gridColumn = "5 / span 4";
-            // field.container.style.gridRow = "5";
             field.setVertical();
 
-            field = this.forms["applicantData"].addInputEx("Family Name", "text", "", "Last Name", "last_name", "Person");
+            field = this.forms["applicantData"].addInputEx("Family Name", "text", "", "Last Name", "family_name", "Person");
             field.container.style.gridColumn = "9 / span 4";
-            // field.container.style.gridRow = "5";
             field.setVertical();
 
             field = this.forms["applicantData"].addInputEx("Spouse's Name", "text", "", "Spouse's Name; for married women", "spouse_name", "Person");
             field.setPlaceholderText("(optional)");
             field.container.style.gridColumn = "1 / span 4";
-            // field.container.style.gridRow = "6";
             field.setVertical();
 
-            field = new DisplayEx(this.forms["applicantData"].fieldWrapper, "span", "", " ");
+            field = new DisplayEx(this.forms["applicantData"].fieldWrapper, "span", "", " "); // A sort of make-shift spacer
             field.container.style.gridColumn = "5 / span 4";
-            // field.container.style.gridRow = "6";
-            // field.setVertical();
 
 
             field = this.forms["applicantData"].addInputEx("Ext. Name", "text", "", "Extension Name (e.g., Jr., III, etc.)", "ext_name", "Person");
             field.setPlaceholderText("(optional)");
             field.container.style.gridColumn = "9 / span 4";
-            // field.container.style.gridRow = "6";
             field.setVertical();
 
-            field = this.forms["applicantData"].addInputEx("Address", "textarea", "", "Address", "text", "Address");
+            field = this.forms["applicantData"].addInputEx("Address", "textarea", "", "Present/Permanent Address", "address", "Address"); // use present address for now; prefer localization
             field.container.style.gridColumn = "1 / span 12";
-            // field.container.style.gridRow = "7";
             field.setVertical();
 
             field = this.forms["applicantData"].addInputEx("Age", "number", "", "Age", "age", "Person");
             field.container.style.gridColumn = "1 / span 4";
-            // field.container.style.gridRow = "8";
             field.setVertical();
             field.setMin(10);
             field.setMax(999);
@@ -2890,53 +2876,44 @@ class MPASIS_App
 
             field = this.forms["applicantData"].addInputEx("Sex", "combo", "", "Sex", "sex", "Person");
             field.container.style.gridColumn = "5 / span 4";
-            // field.container.style.gridRow = "8";
             field.setVertical();
-            field.addItem("Male", "male");
-            field.addItem("Female", "female");
+            field.addItem("Male");
+            field.addItem("Female");
 
-            field = this.forms["applicantData"].addInputEx("Civil Status", "combo", "", "Civil Status", "civil_status", "ENUM_Civil_Status");
+            field = this.forms["applicantData"].addInputEx("Civil Status", "combo", "", "Civil Status", "civil_status", "Person"); // Cross-reference
             field.container.style.gridColumn = "9 / span 4";
-            // field.container.style.gridRow = "8";
             field.setVertical();
-            field.fillItemsFromServer(this.processURL, "a=fetch&f=civilStatus", "civil_status", "index", "description");
+            field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=civilStatus", "civil_status", "index", "description");
 
-            field = this.forms["applicantData"].addInputEx("Religion", "combo", "", "Religious Affiliation", "religion", "Religion");
+            field = this.forms["applicantData"].addInputEx("Religion", "combo", "", "Religious Affiliation", "religion", "Person"); // Cross-reference; Allow adding new
             field.container.style.gridColumn = "1 / span 4";
-            // field.container.style.gridRow = "9";
             field.setVertical();
-            field.fillItemsFromServer(this.processURL, "a=fetch&f=religion", "religion", "id", "description");
+            field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=religion", "religion", "religionId", "description");
 
-            field = this.forms["applicantData"].addInputEx("Disability", "combo", "", "Disability; if multiple, please separate with semi-colons", "disability", "Disability");
+            field = this.forms["applicantData"].addInputEx("Disability", "combo", "", "Disability; if multiple, please separate with semi-colons", "disability", "Person_Disability"); // Multiple cross-reference; Allow adding new
             field.container.style.gridColumn = "5 / span 4";
-            // field.container.style.gridRow = "9";
             field.setVertical();
-            field.fillItemsFromServer(this.processURL, "a=fetch&f=disability", "disability", "id", "description");
+            field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=disability", "disability", "disabilityId", "description");
 
-            field = this.forms["applicantData"].addInputEx("Ethnic Group", "combo", "", "Ethnic Group", "ethnic_group", "Ethnic_Group");
+            field = this.forms["applicantData"].addInputEx("Ethnic Group", "combo", "", "Ethnic Group", "ethnicity", "Person"); // Cross-reference; Allow adding new
             field.container.style.gridColumn = "9 / span 4";
-            // field.container.style.gridRow = "9";
             field.setVertical();
-            field.fillItemsFromServer(this.processURL, "a=fetch&f=ethnicGroup", "ethnic_group", "id", "description");
+            field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=ethnicGroup", "ethnic_group", "ethnicityId", "description");
 
-            field = this.forms["applicantData"].addInputEx("Email Address", "email", "", "Email address", "email_address", "Person");
+            field = this.forms["applicantData"].addInputEx("Email Address", "email", "", "Email address; if multiple, please separate with semi-colons", "email_address", "Email_Address"); // Multiple cross-reference; Allow adding new
             field.container.style.gridColumn = "1 / span 6";
-            // field.container.style.gridRow = "10";
             field.setVertical();
 
-            field = this.forms["applicantData"].addInputEx("Contact Number", "text", "", "Contact numbers; if multiple, please separate with semi-colons", "ext_name", "Person");
+            field = this.forms["applicantData"].addInputEx("Contact Number", "text", "", "Contact numbers; if multiple, please separate with semi-colons", "contact_number", "Contact_Number");
             field.container.style.gridColumn = "7 / span 6";
-            // field.container.style.gridRow = "10";
             field.setVertical();
 
             header = this.forms["applicantData"].addHeader("Educational Attainment", 3);
             header.style.gridColumn = "1 / span 12";
-            // header.style.gridRow = "11";
             header.style.marginBottom = "0";
 
             var educField = this.forms["applicantData"].addInputEx("Please choose the highest level completed", "radio-select", "1", "Highest finished educational level", "educational_attainment", "Person", true);
             educField.container.style.gridColumn = "1 / span 6";
-            // educField.container.style.gridRow = "12 / span 3";
             educField.container.style.gridRow = "span 3";
             educField.setVertical();
             educField.showColon();
@@ -2944,29 +2921,25 @@ class MPASIS_App
 
             var postGradUnitsField = this.forms["applicantData"].addInputEx("Post-Graduate Units", "number", "0", "Post-graduate units taken toward the completion of the next post-graduate degree", "postgraduate_units", "Person");
             postGradUnitsField.container.style.gridColumn = "7 / span 6";
-            // postGradUnitsField.container.style.gridRow = "12";
             postGradUnitsField.setVertical();
             postGradUnitsField.setMin(0);
             postGradUnitsField.setMax(999);
             postGradUnitsField.setValue(0);
             postGradUnitsField.disable();
 
-            var completeAcadReqField = this.forms["applicantData"].addInputEx("Complete Academic Requirements completed towards a post-graduate degree", "checkbox", "", "Mark this if applicant has completed all academic requirements but has not yet received the post-graduate degree.");
+            var completeAcadReqField = this.forms["applicantData"].addInputEx("Complete Academic Requirements completed towards a post-graduate degree", "checkbox", "", "Mark this if applicant has completed all academic requirements but has not yet received the post-graduate degree.", "complete_academic_requirements", "Person");
             completeAcadReqField.container.style.gridColumn = "7 / span 6";
             completeAcadReqField.reverse();
             completeAcadReqField.disable();
 
             var displaySpecEduc = new DisplayEx(this.forms["applicantData"].fieldWrapper, "fieldset", "", "", "Specific Educational Requirements of the Position", "The position applied requires this specific educational attainment.");
             displaySpecEduc.container.style.gridColumn = "7 / span 6";
-            // field.container.style.gridRow = "13";
-            // field.container.style.gridRow = "span 2";
             var reqSpecEduc = createElementEx(NO_NS, "span", null, null, "class", "req-spec-educ", "style", "font-weight: bold;");
             addText("NONE", reqSpecEduc);
             displaySpecEduc.addContent(reqSpecEduc);
             displaySpecEduc.addLineBreak(2);
-            var specEducAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific educational requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required education.", "spec-educ-attained");
+            var specEducAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific educational requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required education.", "has_specific_education_required", "Job_Application");
             displaySpecEduc.addContent(specEducAttained.container);
-            // specEducAttained.setLabelText("Applicant possesses this required educational attainment");
             specEducAttained.reverse();
             specEducAttained.disable();
 
@@ -2993,6 +2966,7 @@ class MPASIS_App
                 var educAttainment = educField.getValue();
                 var postGradUnits = (postGradUnitsField.isDisabled() || educAttainment <= 5 || educAttainment >= 8 ? null : postGradUnitsField.getValue());
                 var completeAcadReq = (!completeAcadReqField.isDisabled() && completeAcadReqField.isChecked() ? 1 : 0);
+                var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
 
                 var incrementObj = document.mpsEducIncrement.filter(increment=>(
                     increment["baseline_educational_attainment"] == educAttainment
@@ -3004,9 +2978,9 @@ class MPASIS_App
                 // console.log([educAttainment, postGradUnits, completeAcadReq]);                
                 // console.log(incrementObj[incrementObj.length - 1]);
                 
-                var increment = (incrementObj.length > 0 ? incrementObj[incrementObj.length - 1]["increment_level"] : -1);
+                var increment = (incrementObj.length > 0 ? incrementObj[incrementObj.length - 1]["education_increment_level"] : -1);
             
-                if (increment >= Number.parseInt(requiredEducIncrement.innerHTML) && (specEducAttained.isDisabled() || specEducAttained.isChecked()))
+                if (appliedPosition != null && increment >= Number.parseInt(requiredEducIncrement.innerHTML) && (specEducAttained.isDisabled() || specEducAttained.isChecked()))
                 {
                     remarkEduc.innerHTML = "(Qualified)";
                     remarkEduc.style.color = "green";
@@ -3066,86 +3040,14 @@ class MPASIS_App
                 });
 */
             };
-            educField.fillItemsFromServer(this.processURL, "a=fetch&f=educLevel", "educational_attainment", "index", "description");
+            educField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
 
-/*
-            field = this.forms["applicantData"].addInputEx("Please choose all relevant specific courses/education taken by applicant", "checkbox-select", "1", "Specific courses/education taken", "specific_education", "Specific_Education", true);
-            field.container.style.gridColumn = "7 / span 6";
-            field.container.style.gridRow = "13 / span 2";
-            field.setVertical();
-            field.showColon();
-            field.reverse();
-            field.runAfterFilling = function(){
-                this.setAsExtendableList(true, "+Add other relevant education");
-                var parentEx = field;
-                this.extendableListAddBtnEx.addEvent("click", (clickEvent)=>{
-                    var addEducDialog = new DialogEx(parentEx.fieldWrapper, "add-educ");
-                    var addEducForm = addEducDialog.addFormEx();
-                    
-                    addEducForm.addInputEx("Education", "text", "", "Please enter the course to be added.", "specific_education", "Specific_Education");
-                    addEducForm.addLineBreak();
-                    addEducForm.addInputEx("Description", "text", "", "Description", "description", "Specific_Education");
-                    addEducForm.addLineBreak();
-                    var addEducBtnGrp = addEducForm.addFormButtonGrp(2);
-                    addEducBtnGrp.setFullWidth();
-                    addEducBtnGrp.fieldWrapper.classList.add("right");
-                    addEducBtnGrp.inputExs[0].setLabelText("Add");
-                    addEducBtnGrp.inputExs[0].setTooltipText("");
-                    addEducBtnGrp.inputExs[0].addEvent("click", (clickEvent2)=>{
-                        var specEduc = {};
-                        for (const colName in addEducForm.dbInputEx)
-                        {
-                            if (addEducForm.dbTableName[colName] == "Specific_Education")
-                            {
-                                specEduc[colName] = addEducForm.dbInputEx[colName].getValue();
-                            }
-                        }
-
-                        console.log(packageData([specEduc]));
-
-                        if  (specEduc["specific_education"].trim() != "")
-                        {
-                            postData(this.processURL, "a=add&specEducs=" + packageData([specEduc]), (htEvent)=>{
-                                var response;
-
-                                if (htEvent.target.readyState == 4 && htEvent.target.status == 200)
-                                {
-                                    response = JSON.parse(htEvent.target.responseText);
-
-                                    if (response.type == "Error")
-                                    {
-                                        addEducForm.raiseError(response.content);
-                                    }
-                                    else
-                                    {
-                                        addEducForm.showSuccess(response.content);
-                                        parentEx.clearList();
-                                        parentEx.fillItemsFromServer(this.processURL, "a=fetch&f=specEduc", "specific_education", "id", "description");
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    addEducBtnGrp.inputExs[1].setLabelText("Close");
-                    addEducBtnGrp.inputExs[1].setTooltipText("");
-                    addEducBtnGrp.inputExs[1].addEvent("click", (clickEvent2)=>{
-                        addEducDialog.close();
-                    });
-                    addEducForm.addStatusPane();
-                    addEducForm.dbInputEx["specific_education"].fields[0].focus();
-                })
-            };
-            field.fillItemsFromServer(this.processURL, "a=fetch&f=specEduc", "specific_education", "id", "description");
-*/
-            
             header = this.forms["applicantData"].addHeader("Training", 3);
             header.style.gridColumn = "1 / span 12";
-            // header.style.gridRow = "15";
             header.style.marginBottom = "0";
 
             var trainingDiv = createElementEx(NO_NS, "fieldset", this.forms["applicantData"].fieldWrapper, null);
             trainingDiv.style.gridColumn = "1 / span 12";
-            // trainingDiv.style.gridRow = "16";
             var trainingContainer = createElementEx(NO_NS, "table", trainingDiv, null, "style", "width: 100%; border-collapse: collapse;");
             row = createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", trainingContainer, null), null, "style", "font-size: 0.8em;");
             addText("Training Name/Description", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
@@ -3162,9 +3064,9 @@ class MPASIS_App
             addTrainingBtn.setLabelText("+Add a row");
             var trainingInputExs = [];
 
-            var field = new InputEx(trainingDiv, "more-training", "checkbox");    
-            field.setLabelText("There are more training certificates and/or MOVs presented for this application that were no longer included in this list for encoding.");
-            field.reverse();
+            var moreTraining = new InputEx(trainingDiv, "has_more_unrecorded_training", "checkbox");    
+            moreTraining.setLabelText("There are more training certificates and/or MOVs presented for this application that were no longer included in this list for encoding.");
+            moreTraining.reverse();
 
             var displaySpecTraining = new DisplayEx(this.forms["applicantData"].fieldWrapper, "fieldset", "", "", "Specific Training Requirements of the Position", "The position applied requires this specific training.");
             displaySpecTraining.container.style.gridColumn = "1 / span 12";
@@ -3172,7 +3074,7 @@ class MPASIS_App
             addText("NONE", reqSpecTraining);
             displaySpecTraining.addContent(reqSpecTraining);
             displaySpecTraining.addLineBreak(2);
-            var specTrainingAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific training requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required training.", "spec-training-attained");
+            var specTrainingAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific training requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required training.", "has_specific_training", "Job_Application");
             displaySpecTraining.addContent(specTrainingAttained.container);
             specTrainingAttained.reverse();
             specTrainingAttained.disable();
@@ -3189,15 +3091,7 @@ class MPASIS_App
 
                 increment = (increment > 31 ? 31 : increment);
 
-                var appliedPosition = null;
-                if (plantillaField.getValue() == "ANY")
-                {
-                    appliedPosition = document.positions.find(position=>position["position_title"] == positionField.getValue());
-                }
-                else if (plantillaField.getValue() != "")
-                {
-                    appliedPosition = document.positions.find(position=>position["plantilla_item_number"] == plantillaField.getValue());
-                }
+                var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
 
                 if (appliedPosition != null && appliedPosition["required_training_hours"] <= total && increment >= Number.parseInt(requiredTrainingIncrement.innerHTML) && (specTrainingAttained.isDisabled() || specTrainingAttained.isChecked()))
                 {
@@ -3278,12 +3172,10 @@ class MPASIS_App
             
             header = this.forms["applicantData"].addHeader("Work Experience", 3);
             header.style.gridColumn = "1 / span 12";
-            // header.style.gridRow = "17";
             header.style.marginBottom = "0";
 
             var workExpDiv = createElementEx(NO_NS, "fieldset", this.forms["applicantData"].fieldWrapper, null);
             workExpDiv.style.gridColumn = "1 / span 12";
-            // workExpDiv.style.gridRow = "18";
             var workExpContainer = createElementEx(NO_NS, "table", workExpDiv, null, "style", "width: 100%; border-collapse: collapse;");
             row = createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", workExpContainer, null), null, "style", "font-size: 0.8em;");
             addText("Work Experience Details", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
@@ -3302,9 +3194,9 @@ class MPASIS_App
             addWorkExpBtn.setLabelText("+Add a row");
             var workExpInputExs = [];
 
-            field = new InputEx(workExpDiv, "more-workExp", "checkbox");    
-            field.setLabelText("There are more work experience information that were no longer included in this list for encoding.");
-            field.reverse();
+            var moreWorkExp = new InputEx(workExpDiv, "has_more_unrecorded_work_experience", "checkbox");    
+            moreWorkExp.setLabelText("There are more work experience information that were no longer included in this list for encoding.");
+            moreWorkExp.reverse();
 
             var displaySpecWorkExp = new DisplayEx(this.forms["applicantData"].fieldWrapper, "fieldset", "", "", "Specific Work Experience Requirements of the Position", "The position applied requires this specific work experience.");
             displaySpecWorkExp.container.style.gridColumn = "1 / span 12";
@@ -3312,7 +3204,7 @@ class MPASIS_App
             addText("NONE", reqSpecWorkExp);
             displaySpecWorkExp.addContent(reqSpecWorkExp);
             displaySpecWorkExp.addLineBreak(2);
-            var specWorkExpAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific work experience requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required work experience.", "spec-work-exp-attained");
+            var specWorkExpAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific work experience requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required work experience.", "has_specific_work_experience", "Job_Application");
             displaySpecWorkExp.addContent(specWorkExpAttained.container);
             specWorkExpAttained.reverse();
             specWorkExpAttained.disable();
@@ -3344,13 +3236,13 @@ class MPASIS_App
                 var years, months, days, leapCount;
 
                 [years, months, days] = [end.y - start.y, end.m - start.m, end.d - start.d + 1];
-                leapCount = Math.trunc(years / 4) + (years < 4 && (start.y % 4 == 0 || end.y % 4 < start.y % 4) ? 1 : 0);
+                // leapCount = Math.trunc(years / 4) + (years < 4 && (start.y % 4 == 0 || end.y % 4 < start.y % 4) ? 1 : 0);
                 const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
                 if (days <= 0)
                 {
                     months--;
-                    days += daysPerMonth[end.m - 1 + (end.m < 1 ? 12 : 0)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0);
+                    days += daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0); // also adjust for leap years
                 }
 
                 if (months < 0)
@@ -3367,20 +3259,32 @@ class MPASIS_App
                     years = 0;
                 }
 
+                if (days >= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0))
+                {
+                    days -= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0);
+                    months++;
+
+                    if (months >= 12)
+                    {
+                        months -= 12;
+                        years++;
+                    }
+                }
+
                 return {y:years, m:months, d:days};
             };
 
             var computeWorkExpIncrement = ()=>{ // APPROXIMATION ONLY!!!
                 var totals = workExpInputExs.map(workExp=>{
                     var defaultEnd = "2023-04-04";// (new Date()).toLocaleDateString();
-                    var start = workExp["workExpStartYearInputEx"].getValue();
-                    var end = workExp["workExpEndYearInputEx"].getValue();
+                    var start = workExp["workExpStartDateInputEx"].getValue();
+                    var end = workExp["workExpEndDateInputEx"].getValue();
                     end = (end == "" ? defaultEnd : end);
 
                     // var duration = Date.parse(end) - Date.parse(start);
                     var dur = diffDate(start, end);
 
-                    workExp["workExpDuration"].setHTMLContent((dur.y > 0 ? dur.y + "&nbsp;year" + (dur.y == 1 ? "" : "s") : "") + (dur.m > 0 ? (dur.y > 0 ? ", " : "") + dur.m + "&nbsp;month" + (dur.m == 1 ? "" : "s") : "") + (dur.y + dur.m > 0 && dur.d != 0 ? ", " : "") + (dur.y + dur.m > 0 && dur.d == 0 ? "" : dur.d + "&nbsp;day" + (dur.d == 1 ? "" : "s")));
+                    workExp["workExpDuration"].setHTMLContent((isNaN(dur.y) || isNaN(dur.m) || isNaN(dur.d) ? "Invalid date(s)" : (dur.y > 0 ? dur.y + "&nbsp;year" + (dur.y == 1 ? "" : "s") : "") + (dur.m > 0 ? (dur.y > 0 ? ", " : "") + dur.m + "&nbsp;month" + (dur.m == 1 ? "" : "s") : "") + (dur.y + dur.m > 0 && dur.d != 0 ? ", " : "") + (dur.y + dur.m > 0 && dur.d == 0 ? "" : dur.d + "&nbsp;day" + (dur.d == 1 ? "" : "s"))));
 
                     return dur;
                 });
@@ -3416,23 +3320,23 @@ class MPASIS_App
                 return increment;
             };
 
-            addWorkExpBtn.addEvent("click", (clickEvent)=>{
+            addWorkExpBtn.addEvent("click", clickEvent=>{
                 row = createElementEx(NO_NS, "tr", workExpContainer);
 
                 var timestamp = (new Date()).valueOf();
                 workExpInputExs.push({
                     "workExpInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExp-" + timestamp, "text"),
-                    "workExpStartYearInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExpStart-" + timestamp, "date"),
-                    "workExpEndYearInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExpEnd-" + timestamp, "date"),
+                    "workExpStartDateInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExpStart-" + timestamp, "date"),
+                    "workExpEndDateInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "workExpEnd-" + timestamp, "date"),
                     "workExpDuration": new DisplayEx(createElementEx(NO_NS, "td", row, null, "class", "bordered right", "style", "font-size: 0.8em;"), "div", "workExpDuration-" + timestamp, "0 days")
                 });
 
-                workExpInputExs[workExpInputExs.length - 1]["workExpEndYearInputEx"].setTooltipText("Leave blank if still employed");
+                workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].setTooltipText("Leave blank if still employed");
 
-                workExpInputExs[workExpInputExs.length - 1]["workExpStartYearInputEx"].addEvent("change", changeEvent=>{
+                workExpInputExs[workExpInputExs.length - 1]["workExpStartDateInputEx"].addEvent("change", changeEvent=>{
                     attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
                 });
-                workExpInputExs[workExpInputExs.length - 1]["workExpEndYearInputEx"].addEvent("change", changeEvent=>{
+                workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].addEvent("change", changeEvent=>{
                     attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
                 });
                 
@@ -3454,10 +3358,10 @@ class MPASIS_App
                 workExpInputExs[workExpInputExs.length - 1].workExpInputEx.setFullWidth();
                 workExpInputExs[workExpInputExs.length - 1].workExpInputEx.setPlaceholderText("Enter a descriptive name for the work experience");
                 workExpInputExs[workExpInputExs.length - 1].workExpInputEx.fields[0].style.width = "100%";
-                workExpInputExs[workExpInputExs.length - 1].workExpStartYearInputEx.setFullWidth();
-                workExpInputExs[workExpInputExs.length - 1].workExpStartYearInputEx.fields[0].style.width = "100%";
-                workExpInputExs[workExpInputExs.length - 1].workExpEndYearInputEx.setFullWidth();
-                workExpInputExs[workExpInputExs.length - 1].workExpEndYearInputEx.fields[0].style.width = "100%";
+                workExpInputExs[workExpInputExs.length - 1].workExpStartDateInputEx.setFullWidth();
+                workExpInputExs[workExpInputExs.length - 1].workExpStartDateInputEx.fields[0].style.width = "100%";
+                workExpInputExs[workExpInputExs.length - 1].workExpEndDateInputEx.setFullWidth();
+                workExpInputExs[workExpInputExs.length - 1].workExpEndDateInputEx.fields[0].style.width = "100%";
 
             });
 
@@ -3467,31 +3371,95 @@ class MPASIS_App
 
             header = this.forms["applicantData"].addHeader("Eligibility", 3);
             header.style.gridColumn = "1 / span 12";
-            // header.style.gridRow = "19";
             header.style.marginBottom = "0";
 
             field = this.forms["applicantData"].addInputEx("Please select all the career service eligibility that the applicant possesses", "checkbox-select", "", "CS Eligibility", "eligibilityId", "Person", true);
             field.container.style.gridColumn = "1 / span 12";
-            // field.container.style.gridRow = "20";
             field.setVertical();
             field.showColon();
             field.reverse();
+
+            var displayEligQualification = new DisplayEx(this.forms["applicantData"].fieldWrapper, "div", "eligibility-qualification-display-ex", "", "Eligibility", "The applicant's qualification according to possessed eligibility");
+            displayEligQualification.container.style.gridColumn = "1 / span 12";
+            displayEligQualification.container.style.fontSize = "1.2em";
+            displayEligQualification.container.style.fontStyle = "italic";
+            displayEligQualification.container.classList.add("right");
+            displayEligQualification.label.style.fontWeight = "bold";
+            displayEligQualification.showColon();
+            var remarkElig = createElementEx(NO_NS, "span", null, null, "class", "remark");
+            addText("Not Required", remarkElig);
+            displayEligQualification.addContent(remarkElig);
+
+            var validateEligibility = (eligibilities = [], requiredEligibilities = [[]])=>{
+                var isEligibleInAll = [];
+
+                for (const requiredEligibilitySet of requiredEligibilities) {
+                    var isEligibleInOne = false;
+
+                    for (const eligibility of eligibilities)
+                    {
+                        for (const requiredEligibility of requiredEligibilitySet) {
+                            if (!isEligibleInOne && requiredEligibility == 1) // CS Sub-Pro
+                            {
+                                isEligibleInOne = true;
+                            }
+
+                            if (!isEligibleInOne && requiredEligibility == 2 && eligibility >= 2) // CS Pro
+                            {
+                                isEligibleInOne = true;
+                            }
+
+                            if (!isEligibleInOne && requiredEligibility == 3 && eligibility > 3) // Any PRC License
+                            {
+                                isEligibleInOne = true;
+                            }
+
+                            if (!isEligibleInOne && requiredEligibility == eligibility) // exact PRC License
+                            {
+                                isEligibleInOne = true;
+                            }
+                            
+                            if (isEligibleInOne)
+                            {
+                                break;
+                            }
+                        }
+                        
+                        if (isEligibleInOne)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    isEligibleInAll.push(isEligibleInOne);
+                }
+
+                return (isEligibleInAll.length == 0 ? "Not Required" : (isEligibleInAll.reduce((eligValue, nextEligValue)=>(eligValue && nextEligValue)) ? "" : "Not ") + "Qualified");
+            };
+
             field.runAfterFilling = function(){
-                this.setAsExtendableList(true, "+Add missing eligibility", (clickEvent)=>{
+                var parentEx = this;
+
+                this.removeItemAt(this.inputExs.findIndex(inputEx=>Number.parseInt(inputEx.fields[0].value) == 3)); // Remove RA 1080 entry which is only used as a general/umbrella requirement for positions
+
+                this.setAsExtendableList(true, "+Add missing eligibility", clickEvent=>{
                     var addEligibilityBtn = clickEvent.target.inputEx;
                     var addEligDialog = new DialogEx(field.fieldWrapper, "add-eligibility-dialog-ex");
                     var addEligForm = addEligDialog.addFormEx();
+
                     var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
                     addEligForm.addLineBreak();
                     var descText = addEligForm.addInputEx("Description", "text", "");
                     addEligForm.addLineBreak();
                     var btnGrp = addEligForm.addFormButtonGrp(2);
+                    btnGrp.setFullWidth();
+                    btnGrp.fieldWrapper.classList.add("right");
                     btnGrp.inputExs[0].setLabelText("Save");
                     btnGrp.inputExs[0].setTooltipText("");
                     btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
                         var newElig = {};
-                        newElig["name"] = newEligText.getValue().trim();
-                        if (newElig["name"] == "")
+                        newElig["eligibility"] = newEligText.getValue().trim();
+                        if (newElig["eligibility"] == "")
                         {
                             addEligForm.raiseError("Eligibility name should not be blank.");
                         }
@@ -3502,7 +3470,7 @@ class MPASIS_App
                                 newElig["description"] = descText.getValue().trim();
                             }
 
-                            postData(this.processURL, "a=add&eligibilities=" + packageData([newElig]), (event)=>{
+                            postData(this.processURL, "app=mpasis&a=add&eligibilities=" + packageData([newElig]), (event)=>{
                                 var response;
 
                                 if (event.target.readyState == 4 && event.target.status == 200)
@@ -3532,7 +3500,7 @@ class MPASIS_App
 
                                             addEligibilityBtn.destroy();
 
-                                            field.fillItemsFromServer(this.processURL, "a=fetch&f=eligibilities", "name", "id", "description");
+                                            field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
                                             
                                         }, 5000);
                                     }
@@ -3547,21 +3515,39 @@ class MPASIS_App
                         addEligDialog.close();
                     });
                     var stat = addEligForm.addStatusPane();
-                    
                 });
-            };
-            field.fillItemsFromServer(this.processURL, "a=fetch&f=eligibilities", "name", "id", "description");
+                
+                for (const inputEx of parentEx.inputExs) {
+                    inputEx.addEvent("change", changeEvent=>{
+                        var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
+                        var requiredEligibilities = [];
+                        
+                        if (appliedPosition != null)
+                        {
+                            for (const reqElig of appliedPosition["required_eligibility"]) {
+                                requiredEligibilities.push([]);
+                                var requiredEligibility = requiredEligibilities[requiredEligibilities.length - 1];
+                                requiredEligibility.push(reqElig["eligibilityId"]);
+                                if (reqElig["eligibilityId2"] != null && reqElig["eligibilityId2"] != undefined && (typeof(reqElig["eligibilityId2"]) == "string" && reqElig["eligibilityId2"].trim() != ""))
+                                {
+                                    requiredEligibility.push(reqElig["eligibilityId2"]);
+                                }
+                                if (reqElig["eligibilityId3"] != null && reqElig["eligibilityId3"] != undefined && (typeof(reqElig["eligibilityId3"]) == "string" && reqElig["eligibilityId3"].trim() != ""))
+                                {
+                                    requiredEligibility.push(reqElig["eligibilityId3"]);
+                                }
+                            }
+                        }
 
-            var displayEligQualification = new DisplayEx(this.forms["applicantData"].fieldWrapper, "div", "eligibility-qualification-display-ex", "", "Eligibility", "The applicant's qualification according to possessed eligibility");
-            displayEligQualification.container.style.gridColumn = "1 / span 12";
-            displayEligQualification.container.style.fontSize = "1.2em";
-            displayEligQualification.container.style.fontStyle = "italic";
-            displayEligQualification.container.classList.add("right");
-            displayEligQualification.label.style.fontWeight = "bold";
-            displayEligQualification.showColon();
-            var remarkElig = createElementEx(NO_NS, "span", null, null, "class", "remark");
-            addText("Not Required", remarkElig);
-            displayEligQualification.addContent(remarkElig);
+                        var validElig = validateEligibility(parentEx.getValue(), requiredEligibilities);
+        
+                        remarkElig.innerHTML = validateEligibility(parentEx.getValue(), requiredEligibilities);
+                        remarkElig.style.color = (validElig == "Qualified" ? "green" : (validElig == "Not Qualified" ? "red" : null));
+                    });
+                }
+                
+            };
+            field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
 
             header = this.forms["applicantData"].addHeader("Competency", 3);
             header.style.gridColumn = "1 / span 12";
@@ -3573,7 +3559,7 @@ class MPASIS_App
             addText("NONE", reqCompetency);
             displayCompetency.addContent(reqCompetency);
             displayCompetency.addLineBreak(2);
-            var competencyAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific competency requirement", "checkbox", "", "Mark this checkbox if applicant has possesses this competency.", "competency-attained");
+            var competencyAttained = this.forms["applicantData"].addInputEx("Applicant possesses this specific competency requirement", "checkbox", "", "Mark this checkbox if applicant possesses this competency.", "has_specific_competency_required", "Job_Application");
             displayCompetency.addContent(competencyAttained.container);
             competencyAttained.reverse();
             competencyAttained.disable();
@@ -3592,7 +3578,7 @@ class MPASIS_App
             var searchApplicant = (searchEvent)=>{
                 searchEvent.target.inputEx.showInfo("Searching . . .");
 
-                postData(this.processURL, "a=fetch&f=searchApplicationByName&name=" + searchEvent.target.inputEx.getValue(), (postEvent)=>{
+                postData(this.processURL, "app=mpasis&a=fetch&f=searchApplicationByName&name=" + searchEvent.target.inputEx.getValue(), (postEvent)=>{
                     var response;
 
                     if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -3643,7 +3629,7 @@ class MPASIS_App
                 }
             });
 
-            postData(this.processURL, "a=fetch&f=applicant-data-entry-initial", (postEvent)=>{
+            postData(this.processURL, "app=mpasis&a=fetch&f=applicant-data-entry-initial", (postEvent)=>{
                 var response;
 
                 if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -3671,38 +3657,29 @@ class MPASIS_App
                 }
             });
 
-            // positionField.fillItemsFromServer(this.processURL, "a=fetch&f=positionTitles", "position_title", "", "");
             positionField.addEvent("change", (changeEvent)=>{
                 parenField.setValue("");
                 parenField.clearList();
-            //     await parenField.fillItemsFromServer(this.processURL, "a=fetch&f=parenTitles&positionTitle=" + positionField.getValue(), "parenthetical_title", "", "");
+            //     await parenField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=parenTitles&positionTitle=" + positionField.getValue(), "parenthetical_title", "", "");
                 parenField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue())), "parenthetical_title", "", "");
                 
                 plantillaField.setValue("");
                 plantillaField.clearList();
-            //     await plantillaField.fillItemsFromServer(this.processURL, "a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
+            //     await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
                 plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] == parenField.getValue())), "plantilla_item_number", "", "");
                 var option = plantillaField.addItem("ANY");
                 option.parentElement.insertBefore(option, option.parentElement.children[0]);
             });
-            parenField.addEvent("change", (changeEvent)=>{
+            parenField.addEvent("change", changeEvent=>{
                 plantillaField.setValue("");
                 plantillaField.clearList();
-                // await plantillaField.fillItemsFromServer(this.processURL, "a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
+                // await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
                 plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] == parenField.getValue())), "plantilla_item_number", "", "");
                 var option = plantillaField.addItem("ANY");
                 option.parentElement.insertBefore(option, option.parentElement.children[0]);
             });
             plantillaField.addEvent("change", changeEvent=>{
-                var appliedPosition;
-                if (plantillaField.getValue() == "ANY")
-                {
-                    appliedPosition = document.positions.find(position=>position["position_title"] == positionField.getValue());
-                }
-                else if (plantillaField.getValue() != "")
-                {
-                    appliedPosition = document.positions.find(position=>position["plantilla_item_number"] == plantillaField.getValue());
-                }
+                var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
 
                 if (appliedPosition["required_educational_attainment"] == 0)
                 {
@@ -3744,6 +3721,16 @@ class MPASIS_App
                     reqSpecTraining.innerHTML = "NONE";
                     specTrainingAttained.disable();
                 }
+                if (appliedPosition["required_work_experience_years"] == 0)
+                {
+                    remarkWorkExp.innerHTML = "(Not Required)"
+                    remarkWorkExp.style.color = null;
+                }
+                else
+                {
+                    remarkWorkExp.innerHTML = "(Not Qualified)";
+                    remarkWorkExp.style.color = "red";
+                }
                 if (appliedPosition["specific_work_experience_required"] != null && appliedPosition["specific_work_experience_required"] != "")
                 {
                     reqSpecWorkExp.innerHTML = appliedPosition["specific_work_experience_required"];
@@ -3764,14 +3751,230 @@ class MPASIS_App
                     reqCompetency.innerHTML = "NONE";
                     competencyAttained.disable();
                 }
-                requiredEducIncrement.innerHTML = document.mpsEducIncrement.find(increment=>increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"])["increment_level"];
+                requiredEducIncrement.innerHTML = document.mpsEducIncrement.find(increment=>increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"])["education_increment_level"];
                 requiredTrainingIncrement.innerHTML = Math.trunc(appliedPosition["required_training_hours"] / 8) + 1;
                 requiredWorkExpIncrement.innerHTML = Math.trunc(appliedPosition["required_work_experience_years"] * 12 / 6) + 1;
-                remarkElig.innerHTML = (appliedPosition["required_eligibility"].length == 0 ? "Not Required" : "");
+                remarkElig.innerHTML = (appliedPosition["required_eligibility"].length == 0 ? "Not Required" : "Not Qualified");
+                remarkElig.style.color = (appliedPosition["required_eligibility"].length == 0 ? null : "red");
 
             });
         }
+
+        var inlineScoreSheet = new FormEx(this.forms["applicantData"].fieldWrapper, "inline-score-sheet");
+        inlineScoreSheet.container.style.gridColumn = "1 / span 12";
         
+
+        header = inlineScoreSheet.addHeader("Score Sheet", 2);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Education", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Training", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Experience", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Performance", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Outstanding Accomplishments", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("1. Awards and Recognition", 4);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("a. Citation and Commendation", 5);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("b. Academic or Inter-School Awards MOVs", 5);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("c. Outstanding Employee Award MOVs", 5);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("2. Research and Innovation", 4);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+        
+        header = inlineScoreSheet.addHeader("3. Subject Matter Expert/Membership in National TWGs or Committees", 4);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+        
+        header = inlineScoreSheet.addHeader("4. Resource Speakership/Learning Facilitation", 4);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+        
+        header = inlineScoreSheet.addHeader("5. NEAP Accredited Learning Facilitator", 4);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+        
+        header = inlineScoreSheet.addHeader("Application of Education", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+        
+        header = inlineScoreSheet.addHeader("Application of Learning and Development", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Potential", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        header = inlineScoreSheet.addHeader("Psychosocial Attributes", 3);
+        header.style.gridColumn = "1 / span 12";
+        header.style.marginBottom = "0";
+
+        
+        var applicantDataBtnGrp = this.forms["applicantData"].addFormButtonGrp(2);
+        applicantDataBtnGrp.setFullWidth();
+        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+        applicantDataBtnGrp.inputExs[0].setLabelText("Save");
+        applicantDataBtnGrp.inputExs[0].setTooltipText("");
+        applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+            var applicantDataForm = this.forms["applicantData"];
+
+            if (this.forms["applicantData"].dbInputEx["position_title_applied"].getValue().trim() == "" || this.forms["applicantData"].dbInputEx["plantilla_item_number_applied"].getValue().trim() == "" || this.forms["applicantData"].dbInputEx["given_name"].getValue().trim() == "")
+            {
+                new MsgBox(this.forms["applicantData"].container, "Please fill out some of the fields before submission");
+                return;
+            }
+
+            var jobApplication = {};
+            jobApplication["personalInfo"] = {};
+            jobApplication["personalInfo"]["addresses"] = [];
+            jobApplication["personalInfo"]["disabilities"] = [];
+            jobApplication["personalInfo"]["email_addresses"] = [];
+            jobApplication["personalInfo"]["contact_numbers"] = [];
+            jobApplication["relevantTraining"] = [];
+            jobApplication["relevantWorkExp"] = [];
+            jobApplication["relevantEligibility"] = [];
+
+            // console.log(colName);
+            for (const colName in this.forms["applicantData"].dbInputEx) {
+                var tableName = this.forms["applicantData"].dbTableName[colName];
+                var dbInputEx = this.forms["applicantData"].dbInputEx[colName];
+                
+                if (tableName == "Person")
+                {
+                    if (colName == "civil_status")
+                    {
+                        jobApplication["personalInfo"][colName] = dbInputEx.getDataValue();
+                    }
+                    else if (colName == "ethnicity")
+                    {
+                        jobApplication["personalInfo"][colName] = dbInputEx.getValue();
+                        // jobApplication["personalInfo"][colName] = {
+                        //     "ethnicityId":(dbInputEx.getDataValue() ?? null),
+                        //     "ethnic_group":dbInputEx.getValue()
+                        // };
+                    }
+                    else if (colName == "eligibilityId" || colName == "postgraduate_units" && dbInputEx.isDisabled())
+                    {
+                        // do nothing
+                    }
+                    else if (colName == "complete_academic_requirements" && !dbInputEx.isDisabled())
+                    {
+                        jobApplication["personalInfo"][colName] = (dbInputEx.isChecked() ? 1 : 0);
+                    }
+                    else if (dbInputEx.getValue().trim() != "")
+                    {
+                        jobApplication["personalInfo"][colName] = dbInputEx.getValue();
+                    }
+                }
+                else if (tableName == "Address")
+                {
+                    jobApplication["personalInfo"]["addresses"] = [dbInputEx.getValue()];
+                }
+                else if (tableName == "Person_Disability")
+                {
+                    jobApplication["personalInfo"]["disabilities"] = dbInputEx.getValue().split(";").map(disability=>disability.trim()).filter(disability=>disability!="");
+                }
+                else if (tableName == "Email_Address")
+                {
+                    jobApplication["personalInfo"]["email_addresses"] = dbInputEx.getValue().split(";").map(email_address=>email_address.trim()).filter(email_address=>email_address!="");
+                }
+                else if (tableName == "Contact_Number")
+                {
+                    jobApplication["personalInfo"]["contact_numbers"] = dbInputEx.getValue().split(";").map(contact_number=>contact_number.trim()).filter(contact_number=>contact_number!="");
+                }
+                else // if (tableName == "Job_Application")
+                {
+                    if (colName.indexOf("has_specific_") == 0 && !dbInputEx.isDisabled())
+                    {
+                        jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
+                    }
+                    else if (colName == "plantilla_item_number_applied" && dbInputEx.getValue() == "ANY")
+                    {
+                        // do nothing
+                    }
+                    else if (dbInputEx.getValue().trim() != "")
+                    {   
+                        jobApplication[colName] = dbInputEx.getValue();
+                    }
+                }
+            }
+            jobApplication["relevantEligibility"] = this.forms["applicantData"].dbInputEx["eligibilityId"].getValue();
+            for (const training of trainingInputExs)
+            {
+                jobApplication["relevantTraining"].push({"descriptive_name":training["trainingInputEx"].getValue(), "hours":training["trainingHoursInputEx"].getValue()});
+            }
+            for (const workExp of workExpInputExs)
+            {
+                jobApplication["relevantWorkExp"].push({"descriptive_name":workExp["workExpInputEx"].getValue(), "start_date":workExp["workExpStartDateInputEx"].getValue(), "end_date":workExp["workExpEndDateInputEx"].getValue()});
+            }
+
+            if (!moreTraining.isDisabled())
+            {
+                jobApplication["has_more_unrecorded_training"] = (moreTraining.isChecked() ? 1 : 0);
+            }
+
+            if (!moreWorkExp.isDisabled())
+            {
+                jobApplication["has_more_unrecorded_work_experience"] = (moreWorkExp.isChecked() ? 1 : 0);
+            }
+
+            console.log(jobApplication);
+            // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
+            postData(this.processURL, "app=mpasis&a=add&jobApplication=" + packageData(jobApplication), (event)=>{
+                var response;
+
+                if (event.target.readyState == 4 && event.target.status == 200)
+                {
+                    response = JSON.parse(event.target.responseText);
+
+                    if (response.type == "Error")
+                    {
+                        new MsgBox(applicantDataForm.container, response.content, "OK");
+                    }
+                    else if (response.type == "Success")
+                    {
+                        new MsgBox(applicantDataForm.container, response.content, "OK");
+                    }
+                }
+            });
+        });
+        applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
+        applicantDataBtnGrp.inputExs[1].setTooltipText("");
+        applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{}); // TO IMPLEMENT IN FORMEX/INPUTEX
+        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+        applicantDataBtnGrp.fieldWrapper.classList.add("right");
+        applicantDataBtnGrp.setStatusMsgTimeout(20);
+
+        var status = this.forms["applicantData"].addStatusPane();
+        status.style.gridColumn = "1 / span 7";
+
         return this.forms["applicantData"];
     }
 

@@ -271,7 +271,7 @@ function executeQuery(event) {
 document.getElementById("query").addEventListener("keyup", function(event) {
     if (document.getElementById("auto-query").checked)
     {
-        executeQuery();
+        executeQuery(event);
     }
 });
 

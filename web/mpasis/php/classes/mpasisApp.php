@@ -2,6 +2,7 @@
 
 require_once(__FILE_ROOT__ . '/php/classes/app.php');
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
+require_once(__FILE_ROOT__ . '/php/audit/log.php');
 
 class MPASIS_App extends App
 {
@@ -44,6 +45,9 @@ if (isset($_SESSION['user']))
 {
     if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout' || !isset($_COOKIE['user']))
     {
+        logAction('mpasis', 24, array(
+            ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username']
+        ));
         require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
     }
     // elseif (isset($_COOKIE['user']))
@@ -57,7 +61,7 @@ else
 
     if ($requiresSignIn)
     {
-        header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+        header('Location: /login?app=mpasis&src=' . $_SERVER['PHP_SELF']);
     }
 }
 

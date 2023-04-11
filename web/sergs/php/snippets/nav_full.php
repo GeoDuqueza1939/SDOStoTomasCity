@@ -32,7 +32,7 @@
     </ul>
 </nav> -->
 <nav id="navbar">
-    <button id="nav-toggle"><span class="material-icons-rounded">menu</span></button>
+    <button id="nav-toggle"><span class="material-icons-round">menu</span></button>
     <ul id="nav">
         <li id="home"><a href="/sergs/"><span class="material-icons-round">home</span> Home</a></li>
         <li id="dashboard"><a href="/sergs/dashboard/"><span class="material-icons-round">dashboard</span> Dashboard</a></li>

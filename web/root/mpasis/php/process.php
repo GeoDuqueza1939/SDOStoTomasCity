@@ -40,6 +40,7 @@ require_once('../../path.php');
 
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
 require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
+require_once(__FILE_ROOT__ . '/php/audit/log.php');
 
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
@@ -73,7 +74,21 @@ if (isset($_SESSION['user']))
                 switch($_REQUEST['f'])
                 {
                     case 'tempuser':
-                        $dbResults = $dbconn->executeQuery('SELECT given_name, middle_name, family_name, spouse_name, ext_name, username, sergs_access_level, opms_access_level, mpasis_access_level FROM SDOStoTomas.Person INNER JOIN SDOStoTomas.Temp_User ON Person.id=Temp_User.personId' . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE Temp_User.username LIKE "' . trim($_REQUEST['k']) . '";'));
+                        $dbResults = $dbconn->executeQuery(
+                            'SELECT 
+                                given_name,
+                                middle_name,
+                                family_name,
+                                spouse_name,
+                                ext_name,
+                                username,
+                                sergs_access_level,
+                                opms_access_level,
+                                mpasis_access_level
+                            FROM SDOStoTomas.Person
+                            INNER JOIN SDOStoTomas.Temp_User
+                            ON Person.personId=Temp_User.personId' . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE Temp_User.username LIKE "' . trim($_REQUEST['k']) . '";')
+                        );
     
                         if (is_null($dbconn->lastException))
                         {
@@ -86,7 +101,14 @@ if (isset($_SESSION['user']))
                         return;
                         break;
                     case 'searchApplicationByName':
-                        $dbResults = $dbconn->executeQuery('SELECT * FROM SDOStoTomas.Person INNER JOIN SDOStoTomas.Job_Application ON Person.id=Job_Application.personId WHERE Person.given_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.family_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.spouse_name LIKE "%' . $_REQUEST['name'] . '%"');
+                        $dbResults = $dbconn->executeQuery(
+                            'SELECT
+                                *
+                            FROM SDOStoTomas.Person
+                            INNER JOIN SDOStoTomas.Job_Application
+                            ON Person.personId=Job_Application.personId
+                            WHERE Person.given_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.family_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.spouse_name LIKE "%' . $_REQUEST['name'] . '%"'
+                        );
                         $results = [];
 
                         foreach ($dbResults as $dbResult)
@@ -111,35 +133,35 @@ if (isset($_SESSION['user']))
                         {
                             $requiredEligibilities = $dbconn->executeQuery(
                                 'SELECT
-                                    re2.id as id,
+                                    required_eligibilityId,
                                     plantilla_item_number,
-                                    eligibilityId,
-                                    eligibility,
+                                    re2.eligibilityId,
+                                    re2.eligibility,
                                     eligibilityId2,
                                     eligibility2,
                                     eligibilityId3,
-                                    e3.name as eligibility3
+                                    e3.eligibility as eligibility3
                                 FROM
                                     (SELECT
-                                        re.id as id,
+                                        required_eligibilityId,
                                         plantilla_item_number,
-                                        eligibilityId,
-                                        eligibility,
+                                        re.eligibilityId,
+                                        re.eligibility,
                                         eligibilityId2,
-                                        e2.name as eligibility2,
+                                        e2.eligibility as eligibility2,
                                         eligibilityId3
                                     FROM 
                                         (SELECT
-                                            Required_Eligibility.id as id,
+                                            required_eligibilityId,
                                             plantilla_item_number,
-                                            eligibilityId,
-                                            Eligibility.name as eligibility,
+                                            Required_Eligibility.eligibilityId,
+                                            eligibility,
                                             eligibilityId2,
                                             eligibilityId3
                                         FROM Required_Eligibility
-                                        INNER JOIN Eligibility ON Required_Eligibility.eligibilityId = Eligibility.id) re
-                                    LEFT JOIN Eligibility e2 ON re.eligibilityId2 = e2.id) re2
-                                LEFT JOIN Eligibility e3 on re2.eligibilityId3 = e3.id
+                                        INNER JOIN Eligibility ON Required_Eligibility.eligibilityId = Eligibility.eligibilityId) re
+                                    LEFT JOIN Eligibility e2 ON re.eligibilityId2 = e2.eligibilityId) re2
+                                LEFT JOIN Eligibility e3 on re2.eligibilityId3 = e3.eligibilityId
                                 ;'
                             );
 
@@ -302,7 +324,7 @@ if (isset($_SESSION['user']))
                         return;
                         break;
                     case 'ethnicGroup':
-                        $dbResults = $dbconn->select('Ethnic_Group', '*', '');
+                        $dbResults = $dbconn->select('Ethnicity', '*', '');
     
                         if (is_null($dbconn->lastException))
                         {
@@ -352,10 +374,10 @@ if (isset($_SESSION['user']))
     
                     foreach ($eligibilities as $eligibility)
                     {
-                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $eligibility['name'] . '","' . $eligibility['description'] . '")';
+                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $eligibility['eligibility'] . '","' . $eligibility['description'] . '")';
                     }
     
-                    $dbconn->insert('Eligibility', '(name, description)', $valueStr);
+                    $dbconn->insert('Eligibility', '(eligibility, description)', $valueStr);
     
                     if (is_null($dbconn->lastException))
                     {
@@ -369,7 +391,7 @@ if (isset($_SESSION['user']))
                     
                     return;
                 }
-                if (isset($_REQUEST['specEducs']))
+                elseif (isset($_REQUEST['specEducs'])) // THIS SECTION NEEDS TO BE MODIFIED IF EVER IT IS TO BE USED AGAIN; SPECIFIC_EDUCATION REQUIRES A JOB_APPLICATION
                 {
                     $specEducs = json_decode($_REQUEST['specEducs'], true);
                     
@@ -448,6 +470,359 @@ if (isset($_SESSION['user']))
                     
                     return;
                 }
+                elseif (isset($_REQUEST['jobApplication']))
+                {
+                    $jobApplication = json_decode($_REQUEST['jobApplication'], true);
+
+                    $personalInfo = $jobApplication["personalInfo"];
+
+                    $fieldStr = '';
+                    $valueStr = '';
+
+                    $addressIds = [];
+
+                    if (isset($personalInfo["addresses"]) && count($personalInfo["addresses"]) > 0)
+                    {
+                        foreach ($personalInfo["addresses"] as $address) {
+                            $fieldStr = '(address)';
+                            $valueStr = "('$address')";
+
+                            $dbconn->insert('Address', $fieldStr, $valueStr);
+    
+                            if (is_null($dbconn->lastException))
+                            {
+                                array_push($addressIds, $dbconn->lastInsertId);
+                            }
+                            else
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }    
+                        }
+                    } // $addressIds[0]: present; $addressIds[1]: permanent;
+
+                    if (isset($personalInfo["religion"]))
+                    {
+                        $religion = $personalInfo["religion"];
+                        $fieldStr = '(religion)';
+                        $valueStr = "('$religion')";
+
+                        $dbResults = $dbconn->select('Religion', 'religionId', "WHERE religion='" . $religion . "'");
+
+                        if (is_null($dbconn->lastException) && count($dbResults) > 0)
+                        {
+                            $religionId = $dbResults[0]['religionId'];
+                        }
+                        else
+                        {
+                            $dbconn->insert('Religion', $fieldStr, $valueStr);
+    
+                            if (is_null($dbconn->lastException))
+                            {
+                                $religionId = $dbconn->lastInsertId;
+                            }
+                            else
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }    
+                        }
+                    }
+
+                    if (isset($personalInfo["ethnicity"]))
+                    {
+                        $ethnicity = $personalInfo["ethnicity"];
+                        $fieldStr = '(ethnic_group)';
+                        $valueStr = "('$ethnicity')";
+
+                        $dbResults = $dbconn->select('Ethnicity', 'ethnicityId', "WHERE ethnic_group='" . $ethnicity . "'");
+
+                        if (is_null($dbconn->lastException) && count($dbResults) > 0)
+                        {
+                            $ethnicityId = $dbResults[0]['ethnicityId'];
+                        }
+                        else
+                        {
+                            $dbconn->insert('Ethnicity', $fieldStr, $valueStr);
+    
+                            if (is_null($dbconn->lastException))
+                            {
+                                $ethnicityId = $dbconn->lastInsertId;
+                            }
+                            else
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }    
+                        }
+                    }
+
+                    if (isset($personalInfo["disabilities"]) && count($personalInfo["disabilities"]) > 0)
+                    {
+                        $disabilityIds = [];
+
+                        foreach ($personalInfo["disabilities"] as $disability)
+                        {
+                            $fieldStr = '(disability)';
+                            $valueStr = "('$disability')";
+
+                            $dbResults = $dbconn->select('Disability', 'disabilityId', "WHERE disability='" . $disability . "'");
+    
+                            if (is_null($dbconn->lastException) && count($dbResults) > 0)
+                            {
+                                array_push($disabilityIds, $dbResults[0]['disabilityId']);
+                            }
+                            else
+                            {
+                                $dbconn->insert('Disability', $fieldStr, $valueStr);
+        
+                                if (is_null($dbconn->lastException))
+                                {
+                                    array_push($disabilityIds, $dbconn->lastInsertId);
+                                }
+                                else
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                    return;
+                                }    
+                            }
+                        }
+                    }
+
+                    $fieldStr = '';
+                    $valueStr = '';
+
+                    foreach($personalInfo as $key => $value)
+                    {
+                        if ($key != "addresses" && $key != "religion" && $key != "disabilities" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers")
+                        {
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                        }
+                    }
+
+                    for ($i = 0; $i < count($addressIds); $i++)
+                    {
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$addressIds[$i]'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . ($i == 0 ? 'present' : 'permanent') . '_addressId';
+                    }
+
+                    if (isset($religionId))
+                    {
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$religionId'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'religionId';
+                    }
+
+                    if (isset($ethnicityId))
+                    {
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$ethnicityId'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'ethnicityId';
+                    }
+
+                    $fieldStr = '(' . $fieldStr . ')';
+                    $valueStr = '(' . $valueStr . ')';
+
+                    $dbconn->insert('Person', $fieldStr, $valueStr);
+
+                    if (is_null($dbconn->lastException))
+                    {
+                        $personId = $dbconn->lastInsertId;
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                        return;
+                    }
+
+                    if (isset($personalInfo["email_addresses"]) && count($personalInfo["email_addresses"]) > 0)
+                    {
+                        foreach ($personalInfo["email_addresses"] as $email_address)
+                        {
+                            $fieldStr = '(email_address, personId)';
+                            $valueStr = "('$email_address', '$personId')";
+
+                            $dbResults = $dbconn->select('Email_Address', 'personId', "WHERE email_address='" . $email_address . "'");
+
+                            if (is_null($dbconn->lastException))
+                            {
+                                if (count($dbResults) == 0)
+                                {
+                                    $dbconn->insert('Email_Address', $fieldStr, $valueStr);
+    
+                                    if (!is_null($dbconn->lastException))
+                                    {
+                                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                        return;
+                                    }    
+                                }
+                            }
+                            else
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }    
+                        }
+                    }
+
+                    if (isset($personalInfo["contact_numbers"]) && count($personalInfo["contact_numbers"]) > 0)
+                    {
+                        foreach ($personalInfo["contact_numbers"] as $contact_number)
+                        {
+                            $fieldStr = '(contact_number, personId)';
+                            $valueStr = "('$contact_number', '$personId')";
+
+                            $dbconn->insert('Contact_Number', $fieldStr, $valueStr);
+    
+                            if (!is_null($dbconn->lastException))
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }    
+                        }
+                    }
+
+                    if (isset($disabilityIds))
+                    {
+                        foreach ($disabilityIds as $disabilityId)
+                        {
+                            $fieldStr = '(disabilityId, personId)';
+                            $valueStr = "('$disabilityId', '$personId')";
+
+                            $dbconn->insert('Person_Disability', $fieldStr, $valueStr);
+    
+                            if (!is_null($dbconn->lastException))
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }
+                        }
+                    }
+
+                    $fieldStr = '';
+                    $valueStr = '';
+                    
+                    foreach ($jobApplication as $key => $value) {
+                        if ($key != "personalInfo" && $key != "relevantEligibility" && $key != "relevantTraining" && $key != "relevantWorkExp")
+                        {
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                        }
+
+                    }
+                    
+                    $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$personId'";
+                    $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'personId';
+
+                    $fieldStr = '(' . $fieldStr . ')';
+                    $valueStr = '(' . $valueStr . ')';
+
+                    $dbconn->insert('Job_Application', $fieldStr, $valueStr);
+    
+                    if (is_null($dbconn->lastException))
+                    {
+                        $applicationCode = $dbconn->lastInsertId;
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                        return;
+                    }
+
+                    $fieldStr = '';
+                    $valueStr = '';
+                    
+                    foreach ($jobApplication["relevantTraining"] as $relevantTraining) {
+                        foreach ($relevantTraining as $key => $value) {
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                        }
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
+
+                        $fieldStr = '(' . $fieldStr . ')';
+                        $valueStr = '(' . $valueStr . ')';
+    
+                        $dbconn->insert('Relevant_Training', $fieldStr, $valueStr);
+        
+                        if (!is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            return;
+                        }
+                    }
+
+                    $fieldStr = '';
+                    $valueStr = '';
+                    
+                    foreach ($jobApplication["relevantWorkExp"] as $relevantWorkExp) {
+                        foreach ($relevantWorkExp as $key => $value) {
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                        }
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
+
+                        $fieldStr = '(' . $fieldStr . ')';
+                        $valueStr = '(' . $valueStr . ')';
+
+                        $dbconn->insert('Relevant_Work_Experience', $fieldStr, $valueStr);
+        
+                        if (!is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            return;
+                        }
+                    }
+
+                    
+                    foreach ($jobApplication["relevantEligibility"] as $value) {
+                        $fieldStr = '';
+                        $valueStr = '';
+
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'eligibilityId';
+    
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
+                        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
+    
+                        $fieldStr = '(' . $fieldStr . ')';
+                        $valueStr = '(' . $valueStr . ')';
+    
+                        $dbconn->insert('Relevant_Eligibility', $fieldStr, $valueStr);
+
+                        if (!is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            return;
+                        }
+                    }
+    
+                    $param = [];
+                    if (isset($_SESSION['user']['username']))
+                    {
+                        $param[($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'] = $_SESSION['user']['username'];
+                    }
+                    
+                    if (isset($applicationCode))
+                    {
+                        $param['application_code'] = $applicationCode;
+                    }
+
+                    if (isset($jobApplication['position_title_applied']))
+                    {
+                        $param['position_title'] = $jobApplication['position_title_applied'];
+                    }
+
+                    if (isset($jobApplication['plantilla_item_number_applied']))
+                    {
+                        $param['plantilla_item_number'] = $jobApplication['plantilla_item_number_applied'];
+                    }
+
+                    logAction("mpasis", 6, $param);
+                    
+                    echo(json_encode(new ajaxResponse('Success', 'Application has been successfully saved with <b>Application Code: ' . $applicationCode . '</b>.')));
+                    return;
+                }
                 break;
             case 'addTempUser':
                 $person = json_decode($_REQUEST['person'], true);
@@ -489,12 +864,16 @@ if (isset($_SESSION['user']))
 
                             if (is_null($dbconn->lastException))
                             {
-                                echo(json_encode(new ajaxResponse('Success', 'User successfully created')));
+                                logAction('mpasis', 16, array(
+                                    ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+                                    "temp_username_op"=>$tempUser['username']
+                                ));
+                                echo(json_encode(new ajaxResponse('Success', 'Temporary User successfully created')));
                                 return;
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting user details')));
+                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting temporary user details')));
                                 return;
                             }
                         }
