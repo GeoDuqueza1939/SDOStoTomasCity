@@ -3,7 +3,7 @@
         <div>
             <div>
                 <span class="header-logo">
-                    <img src="/images/logo-depedstotomas.svg" alt="Logo (DEPED-Sto. Tomas City SDO)" />
+                    <img src="/images/logo-depedstotomas.webp" alt="Logo (DEPED-Sto. Tomas City SDO)" />
                 </span>
                 <span class="header-text">
                     <span class="header-text-deped">Department of Education</span>

@@ -282,6 +282,7 @@ class DatabaseConnection
 	public function executeStatement($sql)
 	{
 		$keepException = false;
+		$results = null;
 
 		try
 		{

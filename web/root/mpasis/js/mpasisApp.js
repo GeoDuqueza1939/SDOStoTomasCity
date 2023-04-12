@@ -344,24 +344,27 @@ class DisplayEx
 
     setVertical(vertical = true)
     {
-        if (this.label != null)
+        if (vertical)
         {
-            if (vertical)
+            this.container.style.display = (this.fullWidth ? "" : "inline-") + "flex";
+            this.content.style.display = "block";
+            if (this.label != null)
             {
-                this.container.style.display = (this.fullWidth ? "" : "inline-") + "flex";
-                this.content.style.display = "block";
                 this.label.style.display = "block";
-                this.container.style.flexDirection = "column";
             }
-            else
-            {
-                this.container.style.display = (this.fullWidth ? "" : "inline-") + "block";
-                this.content.style.display = "inline-block";
-                this.label.style.display = "inline-block";
-                this.container.style.flexDirection = null;
-            }
-            this.vertical = vertical;
+            this.container.style.flexDirection = "column";
         }
+        else
+        {
+            this.container.style.display = (this.fullWidth ? "" : "inline-") + "block";
+            this.content.style.display = "inline-block";
+            if (this.label != null)
+            {
+                this.label.style.display = "inline-block";
+            }
+            this.container.style.flexDirection = null;
+        }
+        this.vertical = vertical;
     }
 
     isVertical()
@@ -527,6 +530,7 @@ class InputEx
         this.spacer = ""; // a reference a single space textnode that shall come before this InputEx object
         this.extendableList = false;
         this.extendableListAddBtnEx = null;
+        this.hiddenDisplay = null;
         
         this.type = typeStr;
         switch(typeStr)
@@ -564,6 +568,9 @@ class InputEx
                 this.fields[0].inputEx = this;
                 break;
         }
+
+        this.dataToFill = null;
+        this.blankStyle = false;
     }
 
     setValue(...values) // ALWAYS USE STRING VALUES IN CHECKBOX MULTIPLE
@@ -1216,14 +1223,23 @@ class InputEx
 
                 if (response.type == "Error")
                 {
+                    this.resetStatus();
                     this.raiseError("AJAX Error: " + response.content);
+                }
+                else if (response.type == "Info")
+                {
+                    this.resetStatus();
+                    this.showInfo(response.content);
                 }
                 else if (response.type == "Data")
                 {
+                    this.resetStatus();
                     data = JSON.parse(response.content);
 
+                    this.data = data;
+
                     data.forEach(dataRow=>{
-                        var label = dataRow[labelColName].toString();
+                        var label = (labelColName in dataRow ? dataRow[labelColName].toString() : "");
                         var value = (dataRow[valueColName] ?? "").toString();
                         var tooltip = (dataRow[tooltipColName] ?? "").toString();
                         this.addItem(label, value, tooltip);
@@ -1239,6 +1255,12 @@ class InputEx
                     }
 
                     this.isFilling = false;
+                }
+                else if (response.type == "Debug")
+                {
+                    this.resetStatus();
+                    console.log("DEBUG: " + response.content);
+                    new MsgBox(this.fieldWrapper, "DEBUG: " + response.content, "OK");
                 }
             }
         });
@@ -1269,7 +1291,7 @@ class InputEx
 
         width = width.trim();
 
-        if (this.isMultipleInput)
+        if (this.isMultipleInput && this.type != "combo")
         {
             this.inputExs.forEach(inputEx=>{
                 inputEx.setWidth(width);
@@ -1394,6 +1416,28 @@ class InputEx
     isReversed() // single-input element types only
     {
         return this.reversed;
+    }
+
+    setBlankStyle()
+    {
+        switch (this.type)
+        {
+            case "checkbox":
+            case "radio":
+            case "checkbox-select":
+            case "radio-select":
+            case "button":
+            case "buttonEx":
+            case "buttons":
+            case "buttonExs":
+                break;
+            default:
+                this.fields[0].style.borderTop = "0 none";
+                this.fields[0].style.borderLeft = "0 none";
+                this.fields[0].style.borderRight = "0 none";
+                this.fields[0].style.borderBottomWidth = "3px";
+                break;
+        }
     }
 
     addStatusPane()
@@ -1612,6 +1656,14 @@ class InputEx
         }
     }
 
+    setStep(num = 1)
+    {
+        if (this.type == "number" || this.type == "range" || this.type == "date" || this.type == "datetime-local" || this.type == "month" || this.type == "time" || this.type == "week")
+        {
+            this.fields[0].step = num;
+        }
+    }
+
     showColon() // single-input only
     {
         if (this.colon != null)
@@ -1642,6 +1694,24 @@ class InputEx
         this.inputExs.forEach((inputEx)=>{
             inputEx.hideColon();
         });
+    }
+
+    hide(doHide = true)
+    {
+        this.container.classList.toggle("hidden", doHide);
+        var display = this.hiddenDisplay;
+        this.hiddenDisplay = (doHide ? this.container.style.display : null);
+        this.container.style.display = (doHide ? null : display);
+    }
+
+    show()
+    {
+        this.hide(false);
+    }
+
+    isHidden()
+    {
+        this.container.classList.contains("hidden");
     }
 
     destroy()
@@ -2056,11 +2126,16 @@ class FormEx
         return (this.container.style.display == "block" || this.container.style.display == "flex");
     }
 
-    submitForm(url, query) // always post method
-    {}
+    // submitForm(url, query) // always post method
+    // {}
 
     resetForm()
-    {}
+    {
+        if (this.func.reset != null || this.func.reset != undefined)
+        {
+            this.func.reset();
+        }
+    }
 }
 
 class DialogEx
@@ -2069,13 +2144,17 @@ class DialogEx
     {
         this.scrim = createElementEx(NO_NS, "div", parent, null, "class", "dialog-ex-scrim", "style", "z-index: 10;");
         this.dialogBox = createElementEx(NO_NS, "div", this.scrim, null, "class", "dialog-ex");
-        this.closeBtn = createElementEx(NO_NS, "button", this.dialogBox, null, "type", "button", "class", "dialog-ex-closeBtn");
-        this.closeBtn.innerHTML = "<span class=\"material-icons-round\">close</span>";
+        this.closeBtn = createElementEx(NO_NS, "button", this.dialogBox, null, "type", "button", "class", "dialog-ex-closeBtn", "title", "Close");
+        this.closeBtn.innerHTML = "<span class=\"material-icons-round\" style=\"font-size: 1em; padding: 0; margin: 0;\">close</span>";
         this.closeBtn.addEventListener("click", (event)=>{
             this.close();
         });
         this.formEx = null;
         this.id = id;
+
+        this.scrim.style = "position: fixed; top: 0; left: 0; bottom: 0; right: 0; background-color: #0008; display: flex; overflow: hidden; align-items: center; justify-content: center; font-size: 0.86em;";
+        this.dialogBox.style = "border: 2px outset;  background-color: lightgray;  max-height: 50em;  max-width: 80%;  padding: 2em;  line-height: 2;";
+        this.closeBtn.style = "break-after: always; float: right; padding: 0; margin:-2em -2em 0 0;";
     }
 
     addFormEx()
@@ -2083,6 +2162,20 @@ class DialogEx
         this.formEx = new FormEx(this.dialogBox, this.id + "-form-ex", false);
 
         return this.formEx;
+    }
+
+    gridDisplay(enable = true, gridTemplateColumns = "auto auto")
+    {
+        if (enable)
+        {
+            this.dialogBox.style.display = "grid";
+            this.dialogBox.style.gridTemplateColumns = gridTemplateColumns;
+        }
+        else
+        {
+            this.dialogBox.style.display = null;
+            this.dialogBox.style.gridTemplateColumns = null;
+        }
     }
 
     close()
@@ -2233,8 +2326,8 @@ class MPASIS_App
             case "applicant-data-entry":
                 this.constructApplicantDataForm();
                 break;
-            case "applicant-data-search":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>Applicant Search</h2>";
+            case "applicant-scoresheet":
+                this.constructScoreSheet();
                 break;
             case "job":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
@@ -3782,7 +3875,13 @@ class MPASIS_App
 
         header = inlineScoreSheet.addHeader("Performance", 3);
         header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
+        // header.style.marginBottom = "0";
+
+        field = inlineScoreSheet.addInputEx("Applicant's most recent performance rating", "text", "", "Please enter the applicant's most recent performance rating.", "performance_rating", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
+        field.setWidth("4em");
+        field.setFullWidth();
+        field.showColon();
 
         header = inlineScoreSheet.addHeader("Outstanding Accomplishments", 3);
         header.style.gridColumn = "1 / span 12";
@@ -3794,15 +3893,38 @@ class MPASIS_App
 
         header = inlineScoreSheet.addHeader("a. Citation and Commendation", 5);
         header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
+        // header.style.marginBottom = "0";
+
+        field = inlineScoreSheet.addInputEx("Number of citation and/or commendation letters presented by applicant", "number", "0", "Enter the number of letters of citation and commendation presented by the applicant.", "number_of_citations", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
+        field.setWidth("3em");
+        field.setFullWidth();
+        field.fields[0].classList.add("right");
+        field.setMin(0);
+        field.setMax(500);
+        field.showColon();
 
         header = inlineScoreSheet.addHeader("b. Academic or Inter-School Awards MOVs", 5);
         header.style.gridColumn = "1 / span 12";
         header.style.marginBottom = "0";
 
+        field = inlineScoreSheet.addInputEx("Number of academic or inter school awards MOVs presented", "number", "0", "Enter the number of academic or inter-school awards presented by the applicant.", "number_of_awards", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
+        field.setWidth("3em");
+        field.setFullWidth();
+        field.fields[0].classList.add("right");
+        field.setMin(0);
+        field.setMax(500);
+        field.showColon();
+
         header = inlineScoreSheet.addHeader("c. Outstanding Employee Award MOVs", 5);
         header.style.gridColumn = "1 / span 12";
         header.style.marginBottom = "0";
+
+        field = inlineScoreSheet.addInputEx("Choose the category of the applicant", "combo", "", "Select the category of the applicate to view more appropriate options on the awards", "outstanding_employee_award", "Job_Applicant");
+        field.addItems("Applicants from external institution", "Applicants from the Central Office", "Applicants from the Regional Office", "Applicants from the SDO", "Applicants from Schools");
+        field.setWidth("20em");
+        field.showColon();
 
         header = inlineScoreSheet.addHeader("2. Research and Innovation", 4);
         header.style.gridColumn = "1 / span 12";
@@ -3976,6 +4098,296 @@ class MPASIS_App
         status.style.gridColumn = "1 / span 7";
 
         return this.forms["applicantData"];
+    }
+
+    constructScoreSheet()
+    {
+        var field = null, div = null;
+
+        if (this.forms["scoreSheet"] != null && this.forms["scoreSheet"] != undefined)
+        {
+
+            return this.forms["scoreSheet"];
+        }
+
+        var scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-applicant-scoresheet"], "scoresheet");
+        scoreSheet.setFullWidth();
+        scoreSheet["displayExs"] = [];
+        scoreSheet.addDisplayEx = function(typeText = "div", id = "", contentText = "", labelText = "", tooltip = ""){
+            var newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
+            if (typeof(id) == "string" && id != "")
+            {
+                this.displayExs[id] = newDisplayEx;
+            }
+            else
+            {
+                this.displayExs.push(new DisplayEx(this.fieldWrapper, typeText, this.id + this.displayExs.length, contentText, labelText, tooltip));
+            }
+            return newDisplayEx;
+        };
+
+        scoreSheet.loadedApplicant = null;
+
+        scoreSheet.addHeader("Score Sheet", 2, "scoresheet-title", true);
+
+        var loadApplicant = scoreSheet.addInputEx("Load Applicant", "buttonEx");
+        loadApplicant.setFullWidth();
+        loadApplicant.fieldWrapper.classList.add("right");
+
+        var applicantInfo = scoreSheet.addDisplayEx("div", "applicantInfo");
+        applicantInfo.setFullWidth();
+        applicantInfo.content.style.display = "grid";
+        applicantInfo.content.style.gridTemplateColumns = "auto auto";
+        applicantInfo.content.style.gridGap = "0.5em";
+
+        var applicantName = scoreSheet.addInputEx("Applicant's Name", "text");
+        var school = scoreSheet.addInputEx("School", "text", "");
+        var presentPosition = scoreSheet.addInputEx("Present Position", "text");
+        var designation = scoreSheet.addInputEx("Designation", "text");
+        var district = scoreSheet.addInputEx("District", "text");
+        var positionApplied = scoreSheet.addInputEx("Position Applied For", "text");
+
+        [applicantName, school, presentPosition, designation, district, positionApplied].forEach(inputEx=>{
+            inputEx.setVertical();
+            applicantInfo.addContent(inputEx.container);
+            inputEx.container.style.gridColumn = "span 1";
+            inputEx.disable();
+            inputEx.fields[0].style.color = "black";
+        });
+
+        [
+            {divId:"educ", text:"Education"},
+            {divId:"train", text:"Training"},
+            {divId:"exp", text:"Experience"},
+            {divId:"perf", text:"Performance"},
+            {divId:"accompl", text:"Outstanding Accomplishments"},
+            {divId:"appEduc", text:"Application of Education"},
+            {divId:"appTrain", text:"Application of Learning and Development"},
+            {divId:"potent", text:"Potential"},
+            {divId:"psych", text:"Psychosocial Attributes"}
+        ].forEach(header=>{
+            var mainDisplayEx = scoreSheet.addDisplayEx("div", header.divId)
+            mainDisplayEx.addContent(scoreSheet.addHeader(header.text, 3));
+            scoreSheet.headers[scoreSheet.headers.length - 1].style.marginTop = 0;
+            scoreSheet.headers[scoreSheet.headers.length - 1].style.borderBottom = "1px solid";
+            mainDisplayEx.displays = [];
+            mainDisplayEx.fields = [];
+        });
+
+        for (const key in scoreSheet.displayExs) {
+            var displayEx = scoreSheet.displayExs[key];
+            if (key !== "applicantInfo")
+            {
+                displayEx.setFullWidth();
+                displayEx.setVertical();
+                // displayEx.content.style.display = "grid";
+                // displayEx.content.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
+                // displayEx.content.style.gridGap = "0.5em";
+                displayEx.content.style.border = "0.15em solid gray";
+                displayEx.content.style.borderRadius = "1em";
+                displayEx.content.style.margin = "1em 0";
+                displayEx.content.style.padding = "1em";
+            }
+        }
+
+        div = scoreSheet.displayExs.educ;
+
+        [
+            "Highest level of education attained",
+            "Units taken towards the completion of a Postgraduate Degree",
+            "Has taken education required for the position",
+            "",
+            "Number of increments above the Qualification Standard"
+        ].forEach(label=>{
+            if (label == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            var displayEx = new DisplayEx(div.content, "span", "educAttained", "", label);
+            displayEx.showColon();
+            displayEx.setFullWidth();
+            div.displays.push(displayEx);
+        });
+
+        div = scoreSheet.displayExs.train;
+
+        [
+            "Total number of relevant training hours",
+            "Number of relevant trainings considered",
+            "Has undergone required training for the position",
+            "Has unconsidered trainings",
+            "",
+            "Number of Increments above the Qualification Standard"
+        ].forEach(label=>{
+            var displayEx = new DisplayEx(div.content, "span", "trainAttained", "", label);
+            displayEx.showColon();
+            displayEx.setFullWidth();
+            div.displays.push(displayEx);
+        });
+
+        div = scoreSheet.displayExs.exp;
+
+        [
+            "Total number of years of relevant work experience",
+            "Number of relevant employment considered",
+            "Has the required work experience for the position",
+            "Has unconsidered employment",
+            "",
+            "Number of Increments above the Qualification Standard"
+        ].forEach(label=>{
+            var displayEx = new DisplayEx(div.content, "span", "trainAttained", "", label);
+            displayEx.showColon();
+            displayEx.setFullWidth();
+            div.displays.push(displayEx);
+        });
+
+        div = scoreSheet.displayExs.perf;
+
+        field = scoreSheet.addInputEx("Most recent relevant 1-year Performance Rating attained", "number", "3");
+        field.showColon();
+        field.setBlankStyle();
+        field.setMin(1);
+        field.setMax(5);
+        field.setStep(0.01);
+        field.setWidth("3.5em");
+        field.fields[0].classList.add("right");
+        div.addContent(field.container);
+
+        div = scoreSheet.displayExs.accompl;
+
+        div.addContent(scoreSheet.addHeader("1. Awards and Recognition", 4));
+        div.addContent(scoreSheet.addHeader("a. Citation and Commendation", 5));
+
+        field = scoreSheet.addInputEx("Number of letters of citation/commendation presented by applicant", "number", "0");
+        field.showColon();
+        field.setBlankStyle();
+        field.setMin(0);
+        field.setMax(999);
+        field.setWidth("4em");
+        field.fields[0].classList.add("right");
+        div.addContent(field.container);
+
+        div.addContent(scoreSheet.addHeader("b. Academic or Inter-School Award MOVs", 5));
+
+        field = scoreSheet.addInputEx("Number of award certificates/MOVs presented by applicant", "number", "0");
+        field.showColon();
+        field.setBlankStyle();
+        field.setMin(0);
+        field.setMax(999);
+        field.setWidth("4em");
+        field.fields[0].classList.add("right");
+        div.addContent(field.container);
+
+        div.addContent(scoreSheet.addHeader("c. Outstanding Employee Award", 5));
+
+        var awardCategoryfield = scoreSheet.addInputEx("", "combo");
+        awardCategoryfield.showColon();
+        awardCategoryfield.setBlankStyle();
+        awardCategoryfield.setPlaceholderText("Choose the applicant's category");
+        awardCategoryfield.setTooltipText("Select a category to see more options");
+        awardCategoryfield.setWidth("20em");
+        awardCategoryfield.addItem("Applicant from an external institution", "1");
+        awardCategoryfield.addItem("Applicant from the Central Office", "2");
+        awardCategoryfield.addItem("Applicant from the Regional Office", "3");
+        awardCategoryfield.addItem("Applicant from the SDO", "4");
+        awardCategoryfield.addItem("Applicant from School", "5");
+        div.addContent(awardCategoryfield.container);
+
+        awardCategoryfield.addEvent("change", awarderChangeEvent=>{
+            
+        });
+
+        // Add total points line
+        for (const key in scoreSheet.displayExs) {
+            if (key !== "applicantInfo")
+            {
+                var displayEx = new DisplayEx(scoreSheet.displayExs[key].content, "span", "", "", "Total Points");
+                displayEx.showColon();
+                displayEx.setFullWidth();
+                displayEx.setHTMLContent("0");
+                displayEx.container.classList.add("right");
+                displayEx.container.style.marginTop = "1em";
+                displayEx.container.style.borderTop = "1px solid";
+                displayEx.container.style.fontSize = "1.1em";
+                displayEx.container.style.fontStyle = "italic";
+                displayEx.content.style.fontWeight = "bold";
+
+                scoreSheet.displayExs[key].setPoints = (pointValue, runAfter = null, params = null)=>{
+                    displayEx.setHTMLContent(pointValue);
+                    if (typeof(runAfter) && runAfter != null)
+                    {
+                        runAfter(params);
+                    }
+                };
+
+                scoreSheet.displayExs[key].getPoints = ()=>{
+                    displayEx.getContent();
+                };
+
+                scoreSheet.displayExs[key].displays.push(displayEx);
+            }
+        }
+
+        loadApplicant.addEvent("click", loadApplicantClickEvent=>{
+            var retrieveApplicantDialog = null;
+            if (loadApplicantClickEvent.target.innerHTML == "Load Applicant")
+            {
+                retrieveApplicantDialog = new DialogEx(scoreSheet.fieldWrapper, "scoresheet-load-applicant");
+                var form = retrieveApplicantDialog.addFormEx();
+                
+                var searchBox = form.addInputEx("Enter an applicant name or code", "text", "", "Type to populate list");
+                searchBox.setFullWidth();
+                searchBox.showColon();
+
+                var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
+                searchResult.setFullWidth();
+                searchResult.setVertical();
+                searchResult.reverse();
+                searchResult.hide();
+
+                var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(2);
+                retrieveApplicantDialogBtnGrp.setFullWidth();
+                retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
+                retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("Load");
+                retrieveApplicantDialogBtnGrp.inputExs[0].setTooltipText("Load Selected");
+                retrieveApplicantDialogBtnGrp.inputExs[0].disable();
+
+                retrieveApplicantDialogBtnGrp.inputExs[1].setLabelText("Cancel");
+                retrieveApplicantDialogBtnGrp.inputExs[1].setTooltipText("");
+                retrieveApplicantDialogBtnGrp.inputExs[1].addEvent("click", cancelRetrieveDialogClickEvent=>{
+                    retrieveApplicantDialog.close();
+                });
+
+                searchResult.runAfterFilling = function(){
+                    // alert(JSON.stringify(this.data));
+                    // alert.log(this.data[0]);
+                };
+
+                searchBox.addEvent("keyup", keyupEvent=>{
+                    searchResult.clearList();
+
+                    searchResult.show();
+                    retrieveApplicantDialogBtnGrp.inputExs[0].enable();
+
+                    searchResult.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=applicantionsByApplicantOrCode&srcStr=" + searchBox.getValue(), "applicant_option_label", "application_code");
+                });
+
+                // clickEvent.target.innerHTML = "Reset Form";
+            }
+            else if (clickEvent.target.innerHTML == "Reset Form")
+            {
+                scoreSheet.resetForm();
+
+                clickEvent.target.innerHTML = "Load Applicant";
+            }
+        });
+
+        scoreSheet.func["reset"] = function(){
+            
+        };
+
+        return scoreSheet;
     }
 
     setCookie(cname, cvalue, exdays) {

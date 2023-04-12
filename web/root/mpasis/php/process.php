@@ -42,6 +42,12 @@ require_once(__FILE_ROOT__ . '/php/classes/db.php');
 require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 require_once(__FILE_ROOT__ . '/php/audit/log.php');
 
+function sendDebug($data)
+{
+    echo(json_encode(new ajaxResponse('Debug', json_encode($data))));
+    exit;
+}
+
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
@@ -362,7 +368,58 @@ if (isset($_SESSION['user']))
                         }
                         return;
                         break;
-                    }
+                    case 'applicantionsByApplicantOrCode':
+                        $srcStr = (isset($_REQUEST['srcStr']) ? $_REQUEST['srcStr'] : "");
+                        if ($srcStr == '')
+                        {
+                            echo(json_encode(new ajaxResponse('Info', 'Blank search string')));
+                            return;
+                        }
+
+                        $dbResults = $dbconn->executeQuery(
+                            "SELECT
+                                *
+                            FROM SDOStoTomas.Person
+                            INNER JOIN SDOStoTomas.Job_Application
+                            ON Job_Application.personId = Person.personId
+                            WHERE given_name LIKE '%$srcStr%'
+                                OR middle_name LIKE '%$srcStr%'
+                                OR family_name LIKE '%$srcStr%'
+                                OR spouse_name LIKE '%$srcStr%'
+                                OR ext_name LIKE '%$srcStr%'
+                                OR application_code LIKE '%$srcStr%'
+                            LIMIT 100;
+                        ");
+
+                        if (is_null($dbconn->lastException))
+                        {
+                            for ($i = 0; $i < count($dbResults); $i++)
+                            {
+                                $dbResult = $dbResults[$i];
+
+                                $fullName = (is_string($dbResult['spouse_name']) && $dbResult['spouse_name'] != '' ? $dbResult['spouse_name'] . ', ' : (is_string($dbResult['family_name']) && $dbResult['family_name'] != '' ? $dbResult['family_name'] . ', ' : ''));
+                                $fullName .= $dbResult['given_name'];
+                                $fullName .= ($fullName == '' ? '' : ' ') . (is_string($dbResult['middle_name']) && $dbResult['middle_name'] != "" ? $dbResult['middle_name'] : '');
+                                $fullName = trim($fullName);
+                                $fullName .= (is_string($dbResult['spouse_name']) && $dbResult['spouse_name'] != '' ? ' ' . $dbResult['family_name'] : '');
+                                $fullName = trim($fullName);
+
+                                $dbResults[$i]['applicant_name'] = $fullName;
+                                $dbResults[$i]['applicant_option_label'] = $dbResult['application_code'] . " &ndash; $fullName &ndash; " . $dbResult['position_title_applied'];
+                            }
+
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            return;
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            return;
+                        }
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case 'add':
                 if (isset($_REQUEST['eligibilities']))

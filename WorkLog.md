@@ -1,5 +1,31 @@
 # Work Log
 
+## 4/12/2023
+Today, I have decided to implement the scoresheet on another page/view different from the applicant data form. I have made a few changes on some of the -Ex classes to accommodate some of the features of the page, although I mostly made a few "hacks" on the code whenever I'm feeling lazy on the design of the code. <u class="to-do">I would probably optimize in a few days</u> after I get to work most of MPASIS. I have also added a new style on the fields that make a textbox display only the bottom border. I also used the DisplayEx class as a sort of frame to group some fields and display elements together. I am taking a bit of inspiration from the looks of Google Forms, as those fields are looking quite nice, each one surrounded by boxes with rounded corners. I have finished almost half of the scoresheet form and I am still thinking of where to put most of the other elements left to implement. Just so I can track my own work, here are some of the things I have changed/added:
+
+* DisplayEx.setVertical() now works even if there is no label
+* Added InputEx.setBlankStyle() to implement a textbox with only the bottom border
+* Tried adding `Info` and `Debug` scenarios in the InputEx.fillItemsFromServer() method. This helped quite a lot in debugging a few bugs, particularly in misformed/malformed JSON data structures
+* InputEx.setWidth() now also works properly for `combo` type
+* Added InputEx.setStep() for number and range type
+* Added hide(), show(), and isHidden() methods to InputEx
+* Recoded the stub function for resetting a FormEx; <u class="to-do">this shall be improved later on when I have more time</u>
+* Hard-coded some DialogEx styles and disabled DialogEx-related CSS entries; <u class="to-do">these shall be reinstated and the hard-coded ones removed</u> once I have the time for further code-optimization
+* Added DialogEx.gridDisplay() for better layouts
+* Renamed Applicant Search to Applicant Score Sheet in the MPaSIS UI
+
+Likewise, the following are to-do:
+
+* Setup of the -Ex classes using JSON instead of manually calling the methods to set them up
+* Reorganization and recoding of -Ex classes for better consistency and better code maintainability
+* Adding the `select` InputEx type which features a non-editable drop-down list.
+* Adding of search pages in MPaSIS
+
+## 4/11/2023
+I have finally finished the applicant data entry form and it is now able to save data to the database. It also now records the user who was signed in when the record was saved to the database. However, I was advised by Ms. Cathy that implementing the scoresheet online is also equally, if not more, important, so I tried to design the scoresheet as an addendum to the applicant data form. This doesn't seem to be working, however, as the scoresheet doesn't really fit into the applicant data form. I merely finished just the headings and a few fields but I am a bit stumped on the form design.
+
+On the side, I also tried to make the Apache server on Ms. Jen's PC work for the MPASIS web app. However, the server kept on showing syntax errors in places where no errors were raised when it MPASIS was hosted on my PC. The XAMPP server seems to have stricter settings for the PHP that makes all these error appear, <u class="to-do">so I might look into it some other time.</u> Mr. Rey said he would bring a computer tomorrow that might help in temporarily hosting the web app.
+
 ## 4/10/2023
 I have done a lot of code optimization and fixing some minor bugs here and there. Eligibility validation has been completed. The code for adding items to `radio-select` and `checkbox-select`, along with `buttons` and `buttonExs` has been reduced and optimized, introducing and fixing a bug and fixing a bug along the way. The bug in the code for computing the difference between two dates, which causes duration of days to exceed the previous months maximum, has been fixed and invalid dates are now being dealt with, although invalid date processing in the increment computation still needs to be added. The code for extracting the selected position has been recoded for reusability. The only feature left to implement is the Competency validation which will not be implemented as of this time as it will not be used for the time being.
 
