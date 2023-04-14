@@ -378,10 +378,40 @@ if (isset($_SESSION['user']))
 
                         $dbResults = $dbconn->executeQuery(
                             "SELECT
-                                *
-                            FROM SDOStoTomas.Person
-                            INNER JOIN SDOStoTomas.Job_Application
-                            ON Job_Application.personId = Person.personId
+                                pe.personId as personId,
+                                given_name,
+                                middle_name,
+                                family_name,
+                                spouse_name,
+                                ext_name,
+                                birth_date,
+                                birth_place,
+                                sex,
+                                age,
+                                ecs.index as civil_statusIndex,
+                                ecs.civil_status as civil_status,
+                                religionId,
+                                ethnicityId,
+                                permanent_addressId,
+                                present_addressId,
+                                eea.index as educational_attainmentIndex,
+                                eea.educational_attainment as educational_attainment,
+                                postgraduate_units,
+                                complete_academic_requirements,
+                                application_code,
+                                position_title_applied,
+                                parenthetical_title_applied,
+                                plantilla_item_number_applied,
+                                has_specific_education_required,
+                                has_specific_training,
+                                has_more_unrecorded_training,
+                                has_specific_work_experience,
+                                has_more_unrecorded_work_experience,
+                                has_specific_competency_required
+                            FROM SDOStoTomas.Person pe
+                            INNER JOIN SDOStoTomas.Job_Application ja ON ja.personId = pe.personId
+                            LEFT JOIN SDOStoTomas.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
+                            LEFT JOIN SDOStoTomas.ENUM_Civil_Status ecs ON pe.civil_status = ecs.index
                             WHERE given_name LIKE '%$srcStr%'
                                 OR middle_name LIKE '%$srcStr%'
                                 OR family_name LIKE '%$srcStr%'
@@ -406,6 +436,30 @@ if (isset($_SESSION['user']))
 
                                 $dbResults[$i]['applicant_name'] = $fullName;
                                 $dbResults[$i]['applicant_option_label'] = $dbResult['application_code'] . " &ndash; $fullName &ndash; " . $dbResult['position_title_applied'];
+
+                                $dbResults2 = $dbconn->select("Relevant_Training", "relevant_trainingId, descriptive_name, hours", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+    
+                                if (is_null($dbconn->lastException))
+                                {
+                                    $dbResults[$i]['relevant_trainings'] = $dbResults2;
+                                }
+                                else
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
+
+                                $dbResults2 = $dbconn->select("Relevant_Work_Experience", "relevant_work_experienceId, descriptive_name, start_date, end_date", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+    
+                                if (is_null($dbconn->lastException))
+                                {
+                                    $dbResults[$i]['relevant_work_experience'] = $dbResults2;
+                                }
+                                else
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
                             }
 
                             echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));

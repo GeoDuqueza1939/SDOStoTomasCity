@@ -569,7 +569,7 @@ class InputEx
                 break;
         }
 
-        this.dataToFill = null;
+        this.data = null;
         this.blankStyle = false;
     }
 
@@ -1589,12 +1589,22 @@ class InputEx
         return this.statusTimeout;
     }
 
-    addEvent(eventType, func) // single input only
+    addEvent(eventType, func, index = -1) // single and multiple inputs except for buttons and buttonExs
     {
         if (!this.isMultipleInput || this.type == "combo")
         {
             this.listeners.field[eventType] = func;
             this.fields[0].addEventListener(eventType, this.listeners.field[eventType]);
+        }
+        else if (this.type != "buttons" && this.type != "buttonExs" && (index == null || index == undefined || index == -1))
+        {
+            for (const inputEx of this.inputExs) {
+                inputEx.addEvent(eventType, func);
+            }
+        }
+        else if (typeof(index) == "number" && Number.parseInt(index) >= 0)
+        {
+            this.inputExs[index].addEvent(eventType, func);
         }
     }
 
@@ -2247,6 +2257,7 @@ class MPASIS_App
         this.mainSections = {};
         this.mainSections["main-dashboard"] = document.getElementById("main-dashboard");
         this.processURL = "/mpasis/php/process.php";
+        this.defaultEndDate = "2023-04-04";// (new Date()).toLocaleDateString();
 
         this.forms = {};
 
@@ -3321,79 +3332,21 @@ class MPASIS_App
             addText("(Not Required)", remarkWorkExp);
             displayWorkExpIncrement.addContent(remarkWorkExp);
 
-            var diffDate = (startDate, endDate)=>{
-                [startDate, endDate] = [new Date(startDate), new Date(endDate)];
-                var start = {m:startDate.getMonth(), d:startDate.getDate(), y:startDate.getFullYear()};
-                var end = {m:endDate.getMonth(), d:endDate.getDate(), y:endDate.getFullYear()};
-
-                var years, months, days, leapCount;
-
-                [years, months, days] = [end.y - start.y, end.m - start.m, end.d - start.d + 1];
-                // leapCount = Math.trunc(years / 4) + (years < 4 && (start.y % 4 == 0 || end.y % 4 < start.y % 4) ? 1 : 0);
-                const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-                if (days <= 0)
-                {
-                    months--;
-                    days += daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0); // also adjust for leap years
-                }
-
-                if (months < 0)
-                {
-                    years--;
-                    months += 12;
-                }
-
-                if (years < 0)
-                {
-                    days = Math.trunc((endDate - startDate) / 1000 / 60 / 60 / 24);
-                    days -= (days == 0 ? 1 : 0);
-                    months = 0;
-                    years = 0;
-                }
-
-                if (days >= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0))
-                {
-                    days -= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0);
-                    months++;
-
-                    if (months >= 12)
-                    {
-                        months -= 12;
-                        years++;
-                    }
-                }
-
-                return {y:years, m:months, d:days};
-            };
-
             var computeWorkExpIncrement = ()=>{ // APPROXIMATION ONLY!!!
                 var totals = workExpInputExs.map(workExp=>{
-                    var defaultEnd = "2023-04-04";// (new Date()).toLocaleDateString();
                     var start = workExp["workExpStartDateInputEx"].getValue();
                     var end = workExp["workExpEndDateInputEx"].getValue();
-                    end = (end == "" ? defaultEnd : end);
+                    end = (end == "" ? this.defaultEndDate : end);
 
                     // var duration = Date.parse(end) - Date.parse(start);
-                    var dur = diffDate(start, end);
+                    var dur = this.getDuration(start, end);
 
-                    workExp["workExpDuration"].setHTMLContent((isNaN(dur.y) || isNaN(dur.m) || isNaN(dur.d) ? "Invalid date(s)" : (dur.y > 0 ? dur.y + "&nbsp;year" + (dur.y == 1 ? "" : "s") : "") + (dur.m > 0 ? (dur.y > 0 ? ", " : "") + dur.m + "&nbsp;month" + (dur.m == 1 ? "" : "s") : "") + (dur.y + dur.m > 0 && dur.d != 0 ? ", " : "") + (dur.y + dur.m > 0 && dur.d == 0 ? "" : dur.d + "&nbsp;day" + (dur.d == 1 ? "" : "s"))));
+                    workExp["workExpDuration"].setHTMLContent(this.convertDurationToString);
 
                     return dur;
                 });
 
-                var total = (totals.length > 0 ? totals.reduce((totalDuration, duration)=>{
-                    var years, months, days;
-                    [years, months, days] = [totalDuration.y + duration.y, totalDuration.m + duration.m, totalDuration.d + duration.d];
-
-                    months += Math.trunc(days / 30);
-                    days %= 30;
-
-                    years += Math.trunc(months / 12);
-                    months %= 12;
-
-                    return {y:years, m:months, d:days};
-                }) : {y:0, m:0, d:0});
+                var total = (totals.length > 0 ? totals.reduce(this.addDuration) : {y:0, m:0, d:0});
                 
                 totalWorkExpDuration.innerHTML = (total.y > 0 ? total.y + "&nbsp;year" + (total.y == 1 ? "" : "s") : "") + (total.m > 0 ? (total.y > 0 ? ", " : "") + total.m + "&nbsp;month" + (total.m == 1 ? "" : "s") : "") + (total.y + total.m > 0 && total.d != 0 ? ", " : "") + (total.y + total.m > 0 && total.d == 0 ? "" : total.d + "&nbsp;day" + (total.d == 1 ? "" : "s"));
 
@@ -3852,112 +3805,6 @@ class MPASIS_App
 
             });
         }
-
-        var inlineScoreSheet = new FormEx(this.forms["applicantData"].fieldWrapper, "inline-score-sheet");
-        inlineScoreSheet.container.style.gridColumn = "1 / span 12";
-        
-
-        header = inlineScoreSheet.addHeader("Score Sheet", 2);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("Education", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("Training", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("Experience", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("Performance", 3);
-        header.style.gridColumn = "1 / span 12";
-        // header.style.marginBottom = "0";
-
-        field = inlineScoreSheet.addInputEx("Applicant's most recent performance rating", "text", "", "Please enter the applicant's most recent performance rating.", "performance_rating", "Job_Application");
-        field.container.style.gridColumn = "1 / span 12";
-        field.setWidth("4em");
-        field.setFullWidth();
-        field.showColon();
-
-        header = inlineScoreSheet.addHeader("Outstanding Accomplishments", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("1. Awards and Recognition", 4);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("a. Citation and Commendation", 5);
-        header.style.gridColumn = "1 / span 12";
-        // header.style.marginBottom = "0";
-
-        field = inlineScoreSheet.addInputEx("Number of citation and/or commendation letters presented by applicant", "number", "0", "Enter the number of letters of citation and commendation presented by the applicant.", "number_of_citations", "Job_Application");
-        field.container.style.gridColumn = "1 / span 12";
-        field.setWidth("3em");
-        field.setFullWidth();
-        field.fields[0].classList.add("right");
-        field.setMin(0);
-        field.setMax(500);
-        field.showColon();
-
-        header = inlineScoreSheet.addHeader("b. Academic or Inter-School Awards MOVs", 5);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        field = inlineScoreSheet.addInputEx("Number of academic or inter school awards MOVs presented", "number", "0", "Enter the number of academic or inter-school awards presented by the applicant.", "number_of_awards", "Job_Application");
-        field.container.style.gridColumn = "1 / span 12";
-        field.setWidth("3em");
-        field.setFullWidth();
-        field.fields[0].classList.add("right");
-        field.setMin(0);
-        field.setMax(500);
-        field.showColon();
-
-        header = inlineScoreSheet.addHeader("c. Outstanding Employee Award MOVs", 5);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        field = inlineScoreSheet.addInputEx("Choose the category of the applicant", "combo", "", "Select the category of the applicate to view more appropriate options on the awards", "outstanding_employee_award", "Job_Applicant");
-        field.addItems("Applicants from external institution", "Applicants from the Central Office", "Applicants from the Regional Office", "Applicants from the SDO", "Applicants from Schools");
-        field.setWidth("20em");
-        field.showColon();
-
-        header = inlineScoreSheet.addHeader("2. Research and Innovation", 4);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-        
-        header = inlineScoreSheet.addHeader("3. Subject Matter Expert/Membership in National TWGs or Committees", 4);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-        
-        header = inlineScoreSheet.addHeader("4. Resource Speakership/Learning Facilitation", 4);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-        
-        header = inlineScoreSheet.addHeader("5. NEAP Accredited Learning Facilitator", 4);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-        
-        header = inlineScoreSheet.addHeader("Application of Education", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-        
-        header = inlineScoreSheet.addHeader("Application of Learning and Development", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("Potential", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
-        header = inlineScoreSheet.addHeader("Psychosocial Attributes", 3);
-        header.style.gridColumn = "1 / span 12";
-        header.style.marginBottom = "0";
-
         
         var applicantDataBtnGrp = this.forms["applicantData"].addFormButtonGrp(2);
         applicantDataBtnGrp.setFullWidth();
@@ -4102,17 +3949,153 @@ class MPASIS_App
 
     constructScoreSheet()
     {
-        var field = null, div = null;
+        var scoreSheet = null, field = null, div = null, subDiv = null, weights = {};
+
+        weights["education"] = 5; // equivalents after computing increments
+        weights["training"] = 10; // equivalents after computing increments
+        weights["experience"] = 15; // equivalents after computing increments
+        weights["performance"] = 20; // computed from standard rating
+        weights["accomplishments"] = 10; // rubrics; maximum cap
+        weights["educationApp"] = 10; // rubrics; maximum cap
+        weights["trainingApp"] = 10; // rubrics; maximum cap
+        weights["potentialExam"] = 15; // computed from rating
+        weights["potentialSkillTest"] = 15; // computed from rating
+        weights["potentialBEI"] = 5; // rubrics
 
         if (this.forms["scoreSheet"] != null && this.forms["scoreSheet"] != undefined)
         {
-
             return this.forms["scoreSheet"];
         }
 
-        var scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-applicant-scoresheet"], "scoresheet");
+        scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-applicant-scoresheet"], "scoresheet");
         scoreSheet.setFullWidth();
         scoreSheet["displayExs"] = [];
+        scoreSheet["data"] = [];
+        scoreSheet["dataLoaded"] = null;
+
+        scoreSheet.criteria = {
+            education:{
+                type:"regular",
+                name:"Education",
+                weight:5,
+                raw:false
+            },
+            training:{
+                type:"regular",
+                name:"Training",
+                weight:10,
+                raw:false
+            },
+            experience:{
+                type:"regular",
+                name:"Experience",
+                weight:15,
+                raw:false
+            },
+            performance:{
+                type:"regular",
+                name:"Performance",
+                weight:20,
+                raw:true
+            },
+            accomplishments:{
+                type:"category",
+                name:"Outstanding Accomplishments",
+                weight:10, // maximum
+                raw:false,
+                subcriteria:{
+                    awards:{
+                        type:"category",
+                        name:"Awards and Recognition",
+                        weight:4,
+                        raw:false,
+                        subcriteria:{
+                            citation:{
+                                type:"regular",
+                                name:"Citation or Commendation",
+                                weight:4,
+                                raw:false
+                            },    
+                            academicAward:{
+                                type:"regular",
+                                name:"Academic or Inter-School Award MOVs",
+                                weight:4,
+                                raw:false
+                            },   
+                            outstandingEmployee:{
+                                type:"regular",
+                                name:"Outstanding Employee Award MOVs",
+                                weight:4,
+                                raw:false
+                            }    
+                        }
+                    },
+                    research:{
+                        type:"regular",
+                        name:"Research and Innovation",
+                        weight:4,
+                        raw:false
+                    },
+                    smetwg:{
+                        type:"regular",
+                        name:"Subject Matter Expert/Membership in National Technical Working Groups (TWGs) or Committees",
+                        weight:3,
+                        raw:false
+                    },
+                    speakership:{
+                        type:"regular",
+                        name:"Resource Speakership/Learning Facilitation",
+                        weight:2,
+                        raw:false
+                    },
+                    neap:{
+                        type:"regular",
+                        name:"NEAP Accredited Learning Facilitator",
+                        weight:2,
+                        raw:false
+                    }
+                }
+            },
+            educationApp:{
+                type:"regular",
+                name:"Application of Education",
+                weight:10,
+                raw:false // true for position with no experience requirement
+            },
+            trainingApp:{
+                type:"regular",
+                name:"Application of Learning and Development",
+                weight:10,
+                raw:false
+            },
+            potential:{
+                type:"category",
+                name:"Potential",
+                weight:20,
+                raw:false,
+                subcriteria:{
+                    exam:{
+                        type:"regular",
+                        name:"Writtem Examination",
+                        weight:5,
+                        raw:true
+                    },
+                    skillTest:{
+                        type:"regular",
+                        name:"Skills or Work Sample Tests",
+                        weight:10,
+                        raw:true
+                    },
+                    bei:{
+                        type:"regular",
+                        name:"Behavioral Events Interview",
+                        weight:5,
+                        raw:false
+                    }
+                }
+            }
+        };
+
         scoreSheet.addDisplayEx = function(typeText = "div", id = "", contentText = "", labelText = "", tooltip = ""){
             var newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
             if (typeof(id) == "string" && id != "")
@@ -4130,7 +4113,7 @@ class MPASIS_App
 
         scoreSheet.addHeader("Score Sheet", 2, "scoresheet-title", true);
 
-        var loadApplicant = scoreSheet.addInputEx("Load Applicant", "buttonEx");
+        var loadApplicant = scoreSheet.addInputEx("Load Application", "buttonEx");
         loadApplicant.setFullWidth();
         loadApplicant.fieldWrapper.classList.add("right");
 
@@ -4140,41 +4123,41 @@ class MPASIS_App
         applicantInfo.content.style.gridTemplateColumns = "auto auto";
         applicantInfo.content.style.gridGap = "0.5em";
 
-        var applicantName = scoreSheet.addInputEx("Applicant's Name", "text");
-        var school = scoreSheet.addInputEx("School", "text", "");
-        var presentPosition = scoreSheet.addInputEx("Present Position", "text");
-        var designation = scoreSheet.addInputEx("Designation", "text");
-        var district = scoreSheet.addInputEx("District", "text");
-        var positionApplied = scoreSheet.addInputEx("Position Applied For", "text");
-
-        [applicantName, school, presentPosition, designation, district, positionApplied].forEach(inputEx=>{
+        [
+            {colName:"application_code", label:"Application Code"},
+            "",
+            {colName:"applicant_name", label:"Applicant's Name"},
+            {colName:"applicant_school", label:"School"},
+            {colName:"present_position", label:"Present Position"},
+            {colName:"present_designation", label:"Designation"},
+            {colName:"district", label:"District"},
+            {colName:"position_title_applied", label:"Position Applied For"}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                applicantInfo.addLineBreak();
+                return;
+            }
+            var inputEx = scoreSheet.addInputEx(obj.label, "text", "", "", obj.colName);
             inputEx.setVertical();
             applicantInfo.addContent(inputEx.container);
-            inputEx.container.style.gridColumn = "span 1";
-            inputEx.disable();
+            // inputEx.container.style.gridColumn = "span 1";
+            inputEx.enable(null, inputEx != scoreSheet.dbInputEx["application_code"] && inputEx != scoreSheet.dbInputEx["applicant_name"] && inputEx != scoreSheet.dbInputEx["position_title_applied"]);
             inputEx.fields[0].style.color = "black";
         });
 
-        [
-            {divId:"educ", text:"Education"},
-            {divId:"train", text:"Training"},
-            {divId:"exp", text:"Experience"},
-            {divId:"perf", text:"Performance"},
-            {divId:"accompl", text:"Outstanding Accomplishments"},
-            {divId:"appEduc", text:"Application of Education"},
-            {divId:"appTrain", text:"Application of Learning and Development"},
-            {divId:"potent", text:"Potential"},
-            {divId:"psych", text:"Psychosocial Attributes"}
-        ].forEach(header=>{
-            var mainDisplayEx = scoreSheet.addDisplayEx("div", header.divId)
-            mainDisplayEx.addContent(scoreSheet.addHeader(header.text, 3));
+        for (const key in scoreSheet.criteria)
+        {
+            var mainDisplayEx = scoreSheet.addDisplayEx("div", key)
+            mainDisplayEx.addContent(scoreSheet.addHeader(scoreSheet.criteria[key].name + " <i>(" + scoreSheet.criteria[key].weight + " points)</i>", 3));
             scoreSheet.headers[scoreSheet.headers.length - 1].style.marginTop = 0;
             scoreSheet.headers[scoreSheet.headers.length - 1].style.borderBottom = "1px solid";
             mainDisplayEx.displays = [];
             mainDisplayEx.fields = [];
-        });
+        }
 
-        for (const key in scoreSheet.displayExs) {
+        for (const key in scoreSheet.displayExs)
+        {
             var displayEx = scoreSheet.displayExs[key];
             if (key !== "applicantInfo")
             {
@@ -4190,119 +4173,624 @@ class MPASIS_App
             }
         }
 
-        div = scoreSheet.displayExs.educ;
+        div = scoreSheet.displayExs.education;
 
         [
-            "Highest level of education attained",
-            "Units taken towards the completion of a Postgraduate Degree",
-            "Has taken education required for the position",
+            {colName:"educational_attainment", label:"Highest level of education attained"},
+            {colName:"postgraduate_units", label:"Units taken towards the completion of a Postgraduate Degree"},
+            {colName:"has_specific_education_required", label:"Has taken education required for the position"},
             "",
-            "Number of increments above the Qualification Standard"
-        ].forEach(label=>{
-            if (label == "")
+            {colName:"educIncrements", label:"Number of increments above the Qualification Standard"}
+        ].forEach(obj=>{
+            if (obj == "")
             {
                 div.addLineBreak();
                 return;
             }
-            var displayEx = new DisplayEx(div.content, "span", "educAttained", "", label);
+            var displayEx = new DisplayEx(div.content, "span", "education", "", obj.label);
             displayEx.showColon();
             displayEx.setFullWidth();
-            div.displays.push(displayEx);
+            // div.displays.push(displayEx);
+            div.displays[obj.colName] = displayEx;
         });
 
-        div = scoreSheet.displayExs.train;
+        div = scoreSheet.displayExs.training;
 
         [
-            "Total number of relevant training hours",
-            "Number of relevant trainings considered",
-            "Has undergone required training for the position",
-            "Has unconsidered trainings",
+            {colName:"relevant_training_hours", label:"Total number of relevant training hours"},
+            {colName:"relevant_training_count", label:"Number of relevant trainings considered"},
+            {colName:"has_specific_training", label:"Has undergone required training for the position"},
+            {colName:"has_more_unrecorded_training", label:"Has unconsidered trainings"},
             "",
-            "Number of Increments above the Qualification Standard"
-        ].forEach(label=>{
-            var displayEx = new DisplayEx(div.content, "span", "trainAttained", "", label);
+            {colName:"trainIncrements", label:"Number of Increments above the Qualification Standard"}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            var displayEx = new DisplayEx(div.content, "span", "training", "", obj.label);
             displayEx.showColon();
             displayEx.setFullWidth();
-            div.displays.push(displayEx);
+            // div.displays.push(displayEx);
+            div.displays[obj.colName] = displayEx;
         });
 
-        div = scoreSheet.displayExs.exp;
+        div = scoreSheet.displayExs.experience;
 
         [
-            "Total number of years of relevant work experience",
-            "Number of relevant employment considered",
-            "Has the required work experience for the position",
-            "Has unconsidered employment",
+            {colName:"relevant_work_experience_years", label:"Total number of years of relevant work experience"},
+            {colName:"relevant_work_experience_count", label:"Number of relevant employment considered"},
+            {colName:"has_specific_work_experience", label:"Has the required work experience for the position"},
+            {colName:"has_more_unrecorded_work_experience", label:"Has unconsidered employment"},
             "",
-            "Number of Increments above the Qualification Standard"
-        ].forEach(label=>{
-            var displayEx = new DisplayEx(div.content, "span", "trainAttained", "", label);
+            {colName:"expIncrements", label:"Number of Increments above the Qualification Standard"}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            var displayEx = new DisplayEx(div.content, "span", "experience", "", obj.label);
             displayEx.showColon();
             displayEx.setFullWidth();
-            div.displays.push(displayEx);
+            // div.displays.push(displayEx);
+            div.displays[obj.colName] = displayEx;
         });
 
-        div = scoreSheet.displayExs.perf;
+        div = scoreSheet.displayExs.performance;
 
-        field = scoreSheet.addInputEx("Most recent relevant 1-year Performance Rating attained", "number", "3");
+        field = scoreSheet.addInputEx("Most recent relevant 1-year Performance Rating attained", "number", "1", "", "most_recent_performance_rating");
         field.showColon();
         field.setBlankStyle();
         field.setMin(1);
         field.setMax(5);
-        field.setStep(0.01);
+        field.setStep(0.1);
         field.setWidth("3.5em");
         field.fields[0].classList.add("right");
+        // div.fields.push(field);
+        div.fields["most_recent_performance_rating"] = field;
         div.addContent(field.container);
 
-        div = scoreSheet.displayExs.accompl;
+        field.addEvent("change", changeEvent=>{
+            var values = [];
+
+            values.push(scoreSheet.displayExs["performance"].fields["most_recent_performance_rating"].getValue() / 5 * scoreSheet.criteria["performance"].weight);
+
+            var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
+
+            scoreSheet.displayExs["performance"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
+        });
+
+        div = scoreSheet.displayExs.accomplishments;
 
         div.addContent(scoreSheet.addHeader("1. Awards and Recognition", 4));
         div.addContent(scoreSheet.addHeader("a. Citation and Commendation", 5));
 
-        field = scoreSheet.addInputEx("Number of letters of citation/commendation presented by applicant", "number", "0");
+        field = scoreSheet.addInputEx("Number of letters of citation/commendation presented by applicant", "number", "0", "", "number_of_citation_movs");
+        field.setFullWidth();
         field.showColon();
         field.setBlankStyle();
         field.setMin(0);
         field.setMax(999);
         field.setWidth("4em");
         field.fields[0].classList.add("right");
+        div.fields["number_of_citation_movs"] = field;
         div.addContent(field.container);
 
         div.addContent(scoreSheet.addHeader("b. Academic or Inter-School Award MOVs", 5));
 
-        field = scoreSheet.addInputEx("Number of award certificates/MOVs presented by applicant", "number", "0");
+        field = scoreSheet.addInputEx("Number of award certificates/MOVs presented by applicant", "number", "0", "", "number_of_academic_award_movs");
+        field.setFullWidth();
         field.showColon();
         field.setBlankStyle();
         field.setMin(0);
         field.setMax(999);
         field.setWidth("4em");
         field.fields[0].classList.add("right");
+        div.fields["number_of_academic_award_movs"] = field;
         div.addContent(field.container);
 
-        div.addContent(scoreSheet.addHeader("c. Outstanding Employee Award", 5));
+        div.addContent(scoreSheet.addHeader("c. Outstanding Employee Award MOVs", 5));
 
-        var awardCategoryfield = scoreSheet.addInputEx("", "combo");
-        awardCategoryfield.showColon();
-        awardCategoryfield.setBlankStyle();
-        awardCategoryfield.setPlaceholderText("Choose the applicant's category");
-        awardCategoryfield.setTooltipText("Select a category to see more options");
-        awardCategoryfield.setWidth("20em");
-        awardCategoryfield.addItem("Applicant from an external institution", "1");
-        awardCategoryfield.addItem("Applicant from the Central Office", "2");
-        awardCategoryfield.addItem("Applicant from the Regional Office", "3");
-        awardCategoryfield.addItem("Applicant from the SDO", "4");
-        awardCategoryfield.addItem("Applicant from School", "5");
-        div.addContent(awardCategoryfield.container);
+        // MAY NEED TO ADD MULTIPLE AWARDS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        // var awardCategoryfield = scoreSheet.addInputEx("", "combo", "", "", "applicant_category_outstanding_employee_movs");
+        // awardCategoryfield.showColon();
+        // awardCategoryfield.setBlankStyle();
+        // awardCategoryfield.setPlaceholderText("Choose the applicant's category");
+        // awardCategoryfield.setTooltipText("Select a category to see more options");
+        // awardCategoryfield.setWidth("20em");
+        // awardCategoryfield.setFullWidth();
+        // awardCategoryfield.addItem("Applicant from an external institution", "1");
+        // awardCategoryfield.addItem("Applicant from the Central Office", "2");
+        // awardCategoryfield.addItem("Applicant from the Regional Office", "3");
+        // awardCategoryfield.addItem("Applicant from the SDO", "4");
+        // awardCategoryfield.addItem("Applicant from School", "5");
+        // div.addContent(awardCategoryfield.container);
 
-        awardCategoryfield.addEvent("change", awarderChangeEvent=>{
-            
+        // var awardTypeField = scoreSheet.addInputEx("", "radio-select");
+        // awardTypeField.addItem("low", "2");
+        // awardTypeField.addItem("high", "4");
+        // awardTypeField.setVertical();
+        // awardTypeField.reverse();
+        // awardTypeField.hide();
+        // div.addContent(awardTypeField.container);
+
+        // awardCategoryfield.addEvent("change", awarderChangeEvent=>{
+        //     var category = awardCategoryfield.getDataValue();
+        //     var [a, b] = [awardTypeField.fields[0].inputEx, awardTypeField.fields[1].inputEx];
+        //     if (category != null && category != undefined)
+        //     {
+        //         a.setLabelText(category == 1 ? "Local Office Search" : (category == 2 ? "Central Office Search" : (category == 3 ? "Regional Office Search" : (category == 4 ? "Division/Provincial/City Level Search" : "School/Municipality/District Level Search"))));
+        //         b.setLabelText(category == 1 ? "Organizational Level Search or Higher" : (category < 5 ? "National Level Search or Higher" : "Division Level Search or Higher"));
+        //         awardTypeField.show();
+        //     }
+        //     else
+        //     {
+        //         awardTypeField.hide();
+        //     }
+        // });
+
+        [
+            "Number of awards from external institution",
+            {colName:"number_of_awards_external_office_search", label:"Local office search", weight:2},
+            {colName:"number_of_awards_external_org_level_search", label:"Organization-level search or higher", weight:4},
+            "Number of awards from the Central Office",
+            {colName:"number_of_awards_central_co_level_search", label:"Central Office search", weight:2},
+            {colName:"number_of_awards_central_national_search", label:"National-level search or higher", weight:4},
+            "Number of awards from the Regional Office",
+            {colName:"number_of_awards_regional_ro_level_search", label:"Regional Office search", weight:2},
+            {colName:"number_of_awards_regional_national_search", label:"National-level search or higher", weight:4},
+            "Number of awards from the Schools Division Office",
+            {colName:"number_of_awards_division_sdo_level_search", label:"Division-/provincial-/city-level search", weight:2},
+            {colName:"number_of_awards_division_national_search", label:"National-level search or higher", weight:4},
+            "Number of awards from schools",
+            {colName:"number_of_awards_school_school_level_search", label:"School-/municipality-/district-level search", weight:2},
+            {colName:"number_of_awards_school_sdo_level_search", label:"Division-level search or higher", weight:4}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            else if (typeof(obj) == "string")
+            {
+                div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
+                return;
+            }
+            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
+            field.showColon();
+            field.setFullWidth();
+            field.setMin(0);
+            field.setMax(999);
+            field.setWidth("3em");
+            field.setLabelWidth("20em");
+            field.setBlankStyle();
+            field.fields[0].classList.add("right");
+            field["weight"] = obj.weight;
+            div.addContent(field.container);
+            div.fields[obj.colName] = field;
         });
+
+        div.addContent(scoreSheet.addHeader("2. Research and Innovation", 4));
+
+        // MAY NEED TO ADD MULTIPLE PAPERS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        // var researchField = scoreSheet.addInputEx("", "checkbox-select");
+        // researchField.addItem("Proposal", "A");
+        // researchField.addItem("Accomplishment Report", "B");
+        // researchField.addItem("Certification of Utilization", "C");
+        // researchField.addItem("Certification of Adoption", "D");
+        // researchField.addItem("Proof of Citation by Other Researchers", "E");
+        // researchField.setVertical();
+        // researchField.reverse();
+        // div.addContent(researchField.container);
+
+        subDiv = scoreSheet.addDisplayEx("div", "researchCriteriaGuide");
+
+        div.addContent(scoreSheet.addHeader("Guide:", 6));
+
+        var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
+
+        div.addContent(list);
+
+        [
+            "Proposal",
+            "Accomplishment Report",
+            "Certification of Utilization",
+            "Certification of Adoption",
+            "Proof of Citation by Other Researchers"
+        ].forEach(text=>{
+            addText(text, createElementEx(NO_NS, "li", list));
+        });
+
+        [
+            {colName:"number_of_research_proposal_only", label:"A only", weight:1},
+            {colName:"number_of_research_proposal_ar", label:"A and B", weight:2},
+            {colName:"number_of_research_proposal_ar_util", label:"A, B, and C", weight:3},
+            {colName:"number_of_research_proposal_ar_util_adopt", label:"A, B, C, and D", weight:4},
+            {colName:"number_of_research_proposal_ar_util_cite", label:"A, B, C, and E", weight:4},
+        ].forEach(obj=>{
+            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
+            field.setFullWidth();
+            field.showColon();
+            field.setBlankStyle();
+            field.setMin(0);
+            field.setMax(999);
+            field.setWidth("3em");
+            field.setLabelWidth("9em");
+            field.fields[0].classList.add("right");
+            field["weight"] = obj.weight;
+            div.fields[obj.colName] = field;
+            div.addContent(field.container);
+        });
+
+        div.addContent(scoreSheet.addHeader("3. Subject Matter Expert/Membership in National TWGs or Committees", 4));
+
+        // // MAY NEED TO ADD MULTIPLE MEMBERSHIP OR EXPERTISE ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        // var smeTwgField = scoreSheet.addInputEx("", "checkbox-select");
+        // smeTwgField.addItem("Issuance/Memorandum", "A");
+        // smeTwgField.addItem("Certificate", "B");
+        // smeTwgField.addItem("Output/Adoption by the Organization", "C");
+        // smeTwgField.setVertical();
+        // smeTwgField.reverse();
+        // div.addContent(smeTwgField.container);
+
+        // subDiv = scoreSheet.addDisplayEx("div", "smeTwgCriteriaGuide");
+
+        div.addContent(scoreSheet.addHeader("Guide:", 6));
+
+        var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
+
+        div.addContent(list);
+
+        [
+            "Issuance/Memorandum",
+            "Certificate",
+            "Output/Adoption by the organization"
+        ].forEach(text=>{
+            addText(text, createElementEx(NO_NS, "li", list));
+        });
+
+        [
+            {colName:"number_of_smetwg_issuance_cert", label:"A and B only", weight:2},
+            {colName:"number_of_smetwg_issuance_cert_output", label:"All MOVs", weight:3}
+        ].forEach(obj=>{
+            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
+            field.setFullWidth();
+            field.showColon();
+            field.setBlankStyle();
+            field.setMin(0);
+            field.setMax(999);
+            field.setWidth("3em");
+            field.setLabelWidth("9em");
+            field.fields[0].classList.add("right");
+            field["weight"] = obj.weight;
+            div.fields[obj.colName] = field;
+            div.addContent(field.container);
+        });
+
+        div.addContent(scoreSheet.addHeader("4. Resource Speakership/Learning Facilitation", 4));
+
+        // // MAY NEED TO ADD MULTIPLE SPEAKERSHIP ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        // var speakershipCategoryfield = scoreSheet.addInputEx("", "combo");
+        // speakershipCategoryfield.showColon();
+        // speakershipCategoryfield.setBlankStyle();
+        // speakershipCategoryfield.setPlaceholderText("Choose the applicant's category");
+        // speakershipCategoryfield.setTooltipText("Select a category to see more options");
+        // speakershipCategoryfield.setWidth("20em");
+        // speakershipCategoryfield.setFullWidth();
+        // speakershipCategoryfield.addItem("Applicant from an external institution", "1");
+        // speakershipCategoryfield.addItem("Applicant from the Central Office", "2");
+        // speakershipCategoryfield.addItem("Applicant from the Regional Office", "3");
+        // speakershipCategoryfield.addItem("Applicant from the SDO", "4");
+        // div.addContent(speakershipCategoryfield.container);
+
+        // var speakershipTypeField = scoreSheet.addInputEx("", "radio-select");
+        // speakershipTypeField.addItem("low", "1");
+        // speakershipTypeField.addItem("high", "2");
+        // speakershipTypeField.setVertical();
+        // speakershipTypeField.reverse();
+        // speakershipTypeField.hide();
+        // div.addContent(speakershipTypeField.container);
+
+        // speakershipCategoryfield.addEvent("change", speakershipChangeEvent=>{
+        //     var category = speakershipCategoryfield.getDataValue();
+        //     var [a, b] = [speakershipTypeField.fields[0].inputEx, speakershipTypeField.fields[1].inputEx];
+        //     if (category != null && category != undefined)
+        //     {
+        //         a.setLabelText(category == 1 ? "Local Office" : (category == 2 ? "Central Office Level" : (category == 3 ? "Regional Office Level" : "School/Municipal/District Level")));
+        //         b.setLabelText(category == 1 ? "Organizational Level" : (category < 4 ? "National Level or Higher" : "Division Level or Higher"));
+        //         speakershipTypeField.show();
+        //     }
+        //     else
+        //     {
+        //         speakershipTypeField.hide();
+        //     }
+        // });
+
+        [
+            "Number of resource speakership/learning facilitation from external institution",
+            {colName:"number_of_speakership_external_office_search", label:"Local office-level", weight:1},
+            {colName:"number_of_speakership_external_org_level_search", label:"Organization-level", weight:2},
+            "Number of resource speakership/learning facilitation from the Central Office",
+            {colName:"number_of_speakership_central_co_level_search", label:"Central Office-level", weight:1},
+            {colName:"number_of_speakership_central_national_search", label:"National-level or higher", weight:2},
+            "Number of resource speakership/learning facilitation from the Regional Office",
+            {colName:"number_of_speakership_regional_ro_level_search", label:"Regional Office level", weight:1},
+            {colName:"number_of_speakership_regional_national_search", label:"National-level or higher", weight:2},
+            "Number of resource speakership/learning facilitation from the Schools Division Office",
+            {colName:"number_of_speakership_division_sdo_level_search", label:"School/municipal/district", weight:1},
+            {colName:"number_of_speakership_division_national_search", label:"Division-level or higher", weight:2}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            else if (typeof(obj) == "string")
+            {
+                div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
+                return;
+            }
+            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
+            field.showColon();
+            field.setFullWidth();
+            field.setMin(0);
+            field.setMax(999);
+            field.setWidth("3em");
+            field.setLabelWidth("13.5em");
+            field.setBlankStyle();
+            field.fields[0].classList.add("right");
+            field["weight"] = obj.weight;
+            div.addContent(field.container);
+            div.fields[obj.colName] = field;
+        });
+        
+        div.addContent(scoreSheet.addHeader("5. NEAP-Accredited Learning Facilitator", 4));
+        
+        // MAY NEED TO ADD MULTIPLE FACILITATOR INSTANCES ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        field = scoreSheet.addInputEx("Please select the applicant's highest level of accreditation as NEAP Learning Facilitator", "radio-select", "", "", "neap_facilitator_accreditation");
+        field.addItem("None", "0");
+        field.addItem("Accredited by Regional Trainer", "1");
+        field.addItem("Accredited by National Trainer", "1.5");
+        field.addItem("Accredited by National Assessor", "2");
+        field.setVertical();
+        field.reverse();
+        div.addContent(field.container);
+        div.fields["neap_facilitator_accreditation"] = field;
+
+        for (const colName in scoreSheet.displayExs["accomplishments"].fields) {
+            div.fields[colName].addEvent("change", changeEvent=>{
+                var total = 0, fields = scoreSheet.displayExs["accomplishments"].fields;
+    
+                for (const key in fields) {
+                    var value = Number.parseFloat(fields[key].getValue());
+                    var weight = Number.parseFloat(fields[key].weight);
+
+                    // console.log([key, value, weight]);
+                    switch (key)
+                    {
+                        case "number_of_citation_movs":
+                        case "number_of_academic_award_movs":
+                            value = (value > 3 ? 4 : (value < 1 ? 0 : value + 1));
+                            break;
+                        case "neap_facilitator_accreditation":
+                            // do nothing
+                            break;
+                        default:
+                            value *= weight;
+                            break;
+                    }
+    
+                    total += value;
+    
+                    if (total >= 10)
+                    {
+                        total = 10;
+                        break;
+                    }
+                }
+    
+                scoreSheet.displayExs["accomplishments"].totalPoints.setHTMLContent(total.toString());
+            });
+        }
+
+        div = scoreSheet.displayExs.educationApp;
+
+        // // MAY NEED TO ADD MULTIPLE PROJECTS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        // var appEducWithExp = scoreSheet.addInputEx("Please select the Application of Education MOVs presented by the applicant", "checkbox-select");
+        // appEducWithExp.addItem("Action Plan approved by the Head of Office", "A", "Application of Education MOVs for Positions with Experience Requirement");
+        // appEducWithExp.addItem("Accomplishment Report verified by the Head of Office", "B", "Application of Education MOVs for Positions with Experience Requirement");
+        // appEducWithExp.addItem("Certification of Utilization/Adoption signed by the Head of Office", "C", "Application of Education MOVs for Positions with Experience Requirement");
+        // appEducWithExp.setTooltipText("Application of Education MOVs for Positions with Experience Requirement");
+        // appEducWithExp.setVertical();
+        // appEducWithExp.reverse();
+        // appEducWithExp.showColon();
+        // appEducWithExp.hide();
+        // div.addContent(appEducWithExp.container);
+
+        // var appEducWithNoExp = scoreSheet.addInputEx("Applicant's GWA in the highest academic earned TOR", "number", "1");
+        // appEducWithNoExp.setTooltipText("Application of Education MOV for Positions with No Experience Requirement");
+        // appEducWithNoExp.setBlankStyle();
+        // appEducWithNoExp.setFullWidth();
+        // appEducWithNoExp.setMin(1);
+        // appEducWithNoExp.setMax(5);
+        // appEducWithNoExp.setStep(0.1);
+        // appEducWithNoExp.setWidth("3.5em");
+        // appEducWithNoExp.fields[0].classList.add("right");
+        // appEducWithNoExp.showColon();
+        // appEducWithNoExp.hide();
+        // div.addContent(appEducWithNoExp.container);
+
+        div = scoreSheet.displayExs.trainingApp;
+
+        div.addContent(scoreSheet.addHeader("Guide:", 6));
+
+        var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
+
+        div.addContent(list);
+
+        [
+            "Certificate of Training",
+            "Action Plan/Re-entry Action Plan/Job Embedded Learning/Impact Project signed by Head of Office",
+            "Accomplishment Report adopted by local level",
+            "Accomplisment Report adopted by different local level/higher level"
+        ].forEach(text=>{
+            addText(text, createElementEx(NO_NS, "li", list));
+        });
+
+        [
+            "Relevant",
+            {colName:"number_of_app_train_relevant_cert_ap", label:"A and B"},
+            {colName:"number_of_app_train_relevant_cert_ap_arlocal", label:"A, B, and C"},
+            {colName:"number_of_app_train_relevant_cert_ap_arlocal_arother", label:"All MOVs"},
+            "Not Relevant",
+            {colName:"number_of_app_train_not_relevant_cert_ap", label:"A and B"},
+            {colName:"number_of_app_train_not_relevant_cert_ap_arlocal", label:"A, B, and C"},
+            {colName:"number_of_app_train_not_relevant_cert_ap_arlocal_arother", label:"All MOVs"}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            else if (typeof(obj) == "string")
+            {
+                div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
+                return;
+            }
+            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
+            field.setFullWidth();
+            field.showColon();
+            field.setBlankStyle();
+            field.setMin(0);
+            field.setMax(999);
+            field.setWidth("3em");
+            field.setLabelWidth("7em");
+            field.fields[0].classList.add("right");
+            div.fields[obj.colName] = field;
+            div.addContent(field.container);
+
+            div.fields[obj.colName].addEvent("change", changeEvent=>{
+                var total = scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_relevant_cert_ap"].getValue() * 5
+                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_relevant_cert_ap_arlocal"].getValue() * 7
+                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_relevant_cert_ap_arlocal_arother"].getValue() * 10
+                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_not_relevant_cert_ap"].getValue() * 1
+                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_not_relevant_cert_ap_arlocal"].getValue() * 3
+                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_not_relevant_cert_ap_arlocal_arother"].getValue() * 5;
+
+                scoreSheet.displayExs["trainingApp"].totalPoints.setHTMLContent((total > scoreSheet.criteria["educationApp"].weight ? 10 : total).toString());
+            });
+        });
+
+        // // MAY NEED TO ADD MULTIPLE TRAININGS WITH RELATED PROJECTS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
+        // var appEducWithExp = scoreSheet.addInputEx("Please select the Application of L & D MOVs presented by the applicant", "checkbox-select", "", "Application of Learning and Development MOVs for Positions with Experience Requirement");
+        // appEducWithExp.addItem("Action Plan approved by the Head of Office", "A", "Application of Learning and Development MOVs for Positions with Experience Requirement");
+        // appEducWithExp.addItem("Accomplishment Report verified by the Head of Office", "B", "Application of Learning and Development MOVs for Positions with Experience Requirement");
+        // appEducWithExp.addItem("Certification of Utilization/Adoption signed by the Head of Office", "C", "Application of Learning and Development MOVs for Positions with Experience Requirement");
+        // appEducWithExp.setVertical();
+        // appEducWithExp.reverse();
+        // appEducWithExp.showColon();
+        // div.addContent(appEducWithExp.container);
+
+        div = scoreSheet.displayExs.potential;
+
+        [
+            {colName:"score_exam", label:"Written Examination", tooltip:"Score in the written examination"},
+            "",
+            {colName:"score_skill", label:"Skills or Work Sample Test", tooltip:"Score in the skills test"},
+            "",
+            {colName:"score_bei", label:"Behavioral Events Interview", tooltip:"Score in the interview"}
+        ].forEach(obj=>{
+            if (obj == "")
+            {
+                div.addLineBreak();
+                return;
+            }
+            var field = scoreSheet.addInputEx(obj.label, "number", "0", obj.tooltip, obj.colName);
+            field.setFullWidth();
+            field.setBlankStyle();
+            field.setMin(0);
+            field.setMax(obj.colName == "score_bei" ? scoreSheet.criteria["potential"].subcriteria.bei.weight : 100);
+            field.setStep(0.1);
+            field.setWidth("3.5em");
+            field.setLabelWidth("15em");
+            field.fields[0].classList.add("right");
+            field.showColon();
+            div.fields.push(field);
+            div.addContent(field.container);
+
+            field.addEvent("change", changeEvent=>{
+                var values = [];
+
+                values.push(scoreSheet.displayExs["potential"].fields[0].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.exam.weight);
+                values.push(scoreSheet.displayExs["potential"].fields[1].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.skillTest.weight);
+                values.push(scoreSheet.displayExs["potential"].fields[2].getValue());
+
+                var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
+
+                scoreSheet.displayExs["potential"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
+            });
+        });
+
+        // div = scoreSheet.displayExs.psych;
+
+        // field = scoreSheet.addInputEx("Please select the psychosocial attributes observed in the applicant", "checkbox-select", "", "Psychosocial Attributes");
+        // field.addItem("Human Relations", "2");
+        // field.addItem("Decisiveness", "2");
+        // field.addItem("Stress Tolerance", "1");
+        // field.setVertical();
+        // field.reverse();
+        // field.showColon();
+        // div.fields.push(field);
+        // div.addContent(field.container);
+
+        for (const key in scoreSheet.displayExs["performance"].fields)
+        {
+            var field = scoreSheet.displayExs["performance"].fields[key];
+            field.addEvent("change", changeEvent=>{
+                var values = [];
+
+                values.push(scoreSheet.displayExs["performance"].fields[key].getValue() / 5 * scoreSheet.criteria["performance"].weight);
+
+                var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
+
+                scoreSheet.displayExs["performance"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
+            });
+        }
+
+        // for (const field of scoreSheet.displayExs["potential"].fields)
+        // {
+        //     field.addEvent("change", changeEvent=>{
+        //         var values = [];
+
+        //         values.push(scoreSheet.displayExs["potential"].fields[0].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.exam.weight);
+        //         values.push(scoreSheet.displayExs["potential"].fields[1].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.skillTest.weight);
+        //         values.push(scoreSheet.displayExs["potential"].fields[2].getValue());
+
+        //         var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
+
+        //         scoreSheet.displayExs["potential"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
+        //     });
+        // }
+
+        // for (const field of scoreSheet.displayExs["psych"].fields)
+        // {
+        //     field.addEvent("change", changeEvent=>{
+        //         var values = field.getValue();
+                
+        //         var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseInt(total) + Number.parseInt(nextValue); }) : 0);
+    
+        //         scoreSheet.displayExs["psych"].totalPoints.setHTMLContent(value.toString());
+        //     });
+        // }
 
         // Add total points line
         for (const key in scoreSheet.displayExs) {
-            if (key !== "applicantInfo")
+            if (key != "applicantInfo" && key != "researchCriteriaGuide" && key != "smeTwgCriteriaGuide")
             {
-                var displayEx = new DisplayEx(scoreSheet.displayExs[key].content, "span", "", "", "Total Points");
+                scoreSheet.displayExs[key]["totalPoints"] = new DisplayEx(scoreSheet.displayExs[key].content, "span", "", "", "Total Points");
+                var displayEx = scoreSheet.displayExs[key]["totalPoints"];
                 displayEx.showColon();
                 displayEx.setFullWidth();
                 displayEx.setHTMLContent("0");
@@ -4331,7 +4819,7 @@ class MPASIS_App
 
         loadApplicant.addEvent("click", loadApplicantClickEvent=>{
             var retrieveApplicantDialog = null;
-            if (loadApplicantClickEvent.target.innerHTML == "Load Applicant")
+            if (loadApplicantClickEvent.target.innerHTML == "Load Application")
             {
                 retrieveApplicantDialog = new DialogEx(scoreSheet.fieldWrapper, "scoresheet-load-applicant");
                 var form = retrieveApplicantDialog.addFormEx();
@@ -4359,11 +4847,160 @@ class MPASIS_App
                     retrieveApplicantDialog.close();
                 });
 
-                searchResult.runAfterFilling = function(){
-                    // alert(JSON.stringify(this.data));
-                    // alert.log(this.data[0]);
-                };
+                searchResult.runAfterFilling = ()=>{
+                    retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
+                        if (searchResult.getValue().trim() == "")
+                        {
+                            retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
+                            return;
+                        }
+                        
+                        // Education
+                        scoreSheet.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
+                        scoreSheet.dbInputEx["application_code"].setValue(scoreSheet.dataLoaded["application_code"]);
+                        scoreSheet.dbInputEx["applicant_name"].setValue(scoreSheet.dataLoaded["applicant_name"]);
+                        scoreSheet.dbInputEx["position_title_applied"].setValue(scoreSheet.dataLoaded["position_title_applied"]);
+                        
+                        var educAttainment = scoreSheet.dataLoaded["educational_attainmentIndex"];
+                        var postGradUnits = (scoreSheet.dataLoaded["postgraduate_units"] == "" ? 0 : scoreSheet.dataLoaded["postgraduate_units"]);
+                        var completeAcadReq = (educAttainment > 5 && scoreSheet.dataLoaded["complete_academic_requirements"] ? 1 : 0);
+                        var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.dataLoaded["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.dataLoaded["plantilla_item_number_applied"])[0];
+                        var hasSpecEduc = (scoreSheet.dataLoaded["has_specific_education_required"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_education_required"] == 1 ? "Yes" : "No"));
+                        
+                        var incrementObj = document.mpsEducIncrement.filter(increment=>(
+                            increment["baseline_educational_attainment"] == educAttainment
+                            && (postGradUnits == null
+                            || (postGradUnits != null && increment["baseline_postgraduate_units"] <= postGradUnits))
+                            && increment["complete_academic_requirements"] == completeAcadReq
+                        ));
+                        var applicantEducIncrement = incrementObj[0]["education_increment_level"];
+                        incrementObj = document.mpsEducIncrement.filter(increment=>(
+                            increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"]
+                        ));
+                        var requiredEducIncrement = incrementObj[0]["education_increment_level"];
+                        var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
 
+                        scoreSheet.displayExs["education"].displays["educational_attainment"].setHTMLContent(scoreSheet.dataLoaded["educational_attainment"]);
+                        scoreSheet.displayExs["education"].displays["postgraduate_units"].setHTMLContent(postGradUnits == null ? "none" : postGradUnits.toString());
+                        scoreSheet.displayExs["education"].displays["has_specific_education_required"].setHTMLContent(hasSpecEduc);
+                        scoreSheet.displayExs["education"].displays["educIncrements"].setHTMLContent(educIncrementAboveQS.toString());
+
+                        scoreSheet.displayExs["education"].totalPoints.setHTMLContent(this.getEducScore(educIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+
+                        // Training
+                        var relevantTrainings = scoreSheet.dataLoaded["relevant_trainings"];
+                        var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
+                        var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
+                        var hasSpecTraining = (scoreSheet.dataLoaded["has_specific_training"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_training"] == 1 ? "Yes" : "No"));
+                        var hasMoreTraining = (scoreSheet.dataLoaded["has_more_unrecorded_training"] == null ? "n/a" : (scoreSheet.dataLoaded["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
+                        var requiredTrainingHours = appliedPosition["required_training_hours"];
+                        var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
+                        var trainingIncrementAboveQS = applicantTrainingIncrement - requiredTrainingIncrement;
+                        
+                        scoreSheet.displayExs["training"].displays["relevant_training_hours"].setHTMLContent(relevantTrainingHours.toString());
+                        scoreSheet.displayExs["training"].displays["relevant_training_count"].setHTMLContent(relevantTrainings.length.toString());
+                        scoreSheet.displayExs["training"].displays["has_specific_training"].setHTMLContent(hasSpecTraining);
+                        scoreSheet.displayExs["training"].displays["has_more_unrecorded_training"].setHTMLContent(hasMoreTraining);
+                        scoreSheet.displayExs["training"].displays["trainIncrements"].setHTMLContent(trainingIncrementAboveQS.toString());
+
+                        scoreSheet.displayExs["training"].totalPoints.setHTMLContent(this.getTrainingScore(trainingIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+                        
+                        // Experience
+                        var relevantWorkExp = scoreSheet.dataLoaded["relevant_work_experience"];
+                        var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>this.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? this.defaultEndDate : workExp["end_date"]))).reduce(this.addDuration): {y:0, m:0, d:0});
+                        var applicantWorkExpIncrement = Math.trunc(this.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
+                        var hasSpecWorkExp = (scoreSheet.dataLoaded["has_specific_work_experience"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_work_experience"] == 1 ? "Yes" : "No"));
+                        var hasMoreWorkExp = (scoreSheet.dataLoaded["has_more_unrecorded_work_experience"] == null ? "n/a" : (scoreSheet.dataLoaded["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
+                        var requiredWorkExpYears = appliedPosition["required_work_experience_years"];
+                        var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
+                        var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
+                        
+                        scoreSheet.displayExs["experience"].displays["relevant_work_experience_years"].setHTMLContent(this.convertDurationToString(relevantWorkExpDuration));
+                        scoreSheet.displayExs["experience"].displays["relevant_work_experience_count"].setHTMLContent(relevantWorkExp.length.toString());
+                        scoreSheet.displayExs["experience"].displays["has_specific_work_experience"].setHTMLContent(hasSpecWorkExp);
+                        scoreSheet.displayExs["experience"].displays["has_more_unrecorded_work_experience"].setHTMLContent(hasMoreWorkExp);
+                        scoreSheet.displayExs["experience"].displays["expIncrements"].setHTMLContent(workExpIncrementAboveQS.toString());
+
+                        scoreSheet.displayExs["experience"].totalPoints.setHTMLContent(this.getTrainingScore(workExpIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+
+                        var div = scoreSheet.displayExs["educationApp"];
+
+                        var divHeader = div.content.children[0];
+                        
+                        div.container.appendChild(divHeader);
+                        div.container.appendChild(div.totalPoints.container);
+                        div.content.innerHTML = "";
+                        div.content.appendChild(divHeader);
+                        div.totalPoints.setHTMLContent("0");
+                        div.fields = [];
+
+                        if (appliedPosition["required_work_experience_years"] != null && appliedPosition["required_work_experience_years"] != 0 || appliedPosition["specific_work_experience_required"] != null)
+                        {
+                            div.addContent(scoreSheet.addHeader("Guide (for positions with experience requirement):", 6));
+
+                            var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
+                    
+                            div.addContent(list);
+                    
+                            [
+                                "Action Plan approved by the Head of Office",
+                                "Accomplishment Report verified by the Head of Office",
+                                "Certification of utilization/adoption signed by the Head of Office"
+                            ].forEach(text=>{
+                                addText(text, createElementEx(NO_NS, "li", list));
+                            });
+                    
+                            [
+                                {colName:"number_of_app_educ_actionplan", label:"A only"},
+                                {colName:"number_of_app_educ_actionplan_ar", label:"A and B"},
+                                {colName:"number_of_app_educ_actionplan_ar_adoption", label:"All MOVs"}
+                            ].forEach(obj=>{
+                                var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
+                                field.setFullWidth();
+                                field.showColon();
+                                field.setBlankStyle();
+                                field.setMin(0);
+                                field.setMax(999);
+                                field.setWidth("3em");
+                                field.setLabelWidth("9em");
+                                field.fields[0].classList.add("right");
+                                div.fields[obj.colName] = field;
+                                div.addContent(field.container);
+
+                                div.fields[obj.colName].addEvent("change", changeEvent=>{
+                                    var total = scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_actionplan"].getValue() * 1
+                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_actionplan_ar"].getValue() * 3
+                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_actionplan_ar_adoption"].getValue() * 5;
+
+                                    scoreSheet.displayExs["educationApp"].totalPoints.setHTMLContent((total > scoreSheet.criteria["educationApp"].weight ? 10 : total).toString());
+                                });
+                            });
+                        }
+                        else
+                        {
+                            var field = scoreSheet.addInputEx("GWA in the highest academic level earned", "number", "1", "", "app_educ_gwa");
+                            field.showColon();
+                            field.setBlankStyle();
+                            field.setMin(1);
+                            field.setMax(100);
+                            field.setStep(0.1);
+                            field.setWidth("3.5em");
+                            field.fields[0].classList.add("right");
+                            // div.fields.push(field);
+                            div.fields["app_educ_gwa"] = field;
+                            div.addContent(field.container);                   
+                            
+                            div.fields["app_educ_gwa"].addEvent("change", changeEvent=>{
+                                scoreSheet.displayExs["educationApp"].totalPoints.setHTMLContent((Math.round(div.fields["app_educ_gwa"].getValue() / 100 * scoreSheet.criteria["educationApp"].weight * 100) / 100).toString());
+                            });
+                        }
+
+                        div.addContent(div.totalPoints.container);
+
+                        retrieveApplicantDialog.close();
+                    });
+                };
+                
                 searchBox.addEvent("keyup", keyupEvent=>{
                     searchResult.clearList();
 
@@ -4379,7 +5016,32 @@ class MPASIS_App
             {
                 scoreSheet.resetForm();
 
-                clickEvent.target.innerHTML = "Load Applicant";
+                clickEvent.target.innerHTML = "Load Application";
+            }
+        });
+
+        document.scrim = new ScrimEx(this.main);
+
+        postData(this.processURL, "app=mpasis&a=fetch&f=applicant-data-entry-initial", (postEvent)=>{
+            var response;
+
+            if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
+            {
+                response = JSON.parse(postEvent.target.responseText);
+
+                if (response.type == "Error")
+                {
+                    new MsgBox(this.forms["applicantData"].container, "Error: " + response.content, "CLOSE");
+                }
+                else if (response.type == "Data")
+                {
+                    var data = JSON.parse(response.content);
+                    // console.log(data);
+                    document.positions = data["positions"];
+                    document.mpsEducIncrement = data["mps_increment_table_education"];
+                    
+                    document.scrim.destroy();
+                }
             }
         });
 
@@ -4390,14 +5052,16 @@ class MPASIS_App
         return scoreSheet;
     }
 
-    setCookie(cname, cvalue, exdays) {
+    setCookie(cname, cvalue, exdays)
+    {
         const d = new Date();
         d.setTime(d.getTime() + (exdays*24*60*60*1000));
         let expires = "expires="+ d.toUTCString();
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
     }
     
-    getCookie(cname) {
+    getCookie(cname)
+    {
         let name = cname + "=";
         let decodedCookie = decodeURIComponent(document.cookie);
         let ca = decodedCookie.split(';');
@@ -4411,6 +5075,151 @@ class MPASIS_App
           }
         }
         return "";
+    }
+
+    getDuration(startDate, endDate)
+    {
+        [startDate, endDate] = [new Date(startDate), new Date(endDate)];
+        var start = {m:startDate.getMonth(), d:startDate.getDate(), y:startDate.getFullYear()};
+        var end = {m:endDate.getMonth(), d:endDate.getDate(), y:endDate.getFullYear()};
+
+        var years, months, days, leapCount;
+
+        [years, months, days] = [end.y - start.y, end.m - start.m, end.d - start.d + 1];
+        // leapCount = Math.trunc(years / 4) + (years < 4 && (start.y % 4 == 0 || end.y % 4 < start.y % 4) ? 1 : 0);
+        const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        if (days <= 0)
+        {
+            months--;
+            days += daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0); // also adjust for leap years
+        }
+
+        if (months < 0)
+        {
+            years--;
+            months += 12;
+        }
+
+        if (years < 0)
+        {
+            days = Math.trunc((endDate - startDate) / 1000 / 60 / 60 / 24);
+            days -= (days == 0 ? 1 : 0);
+            months = 0;
+            years = 0;
+        }
+
+        if (days >= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0))
+        {
+            days -= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0);
+            months++;
+
+            if (months >= 12)
+            {
+                months -= 12;
+                years++;
+            }
+        }
+
+        return {y:years, m:months, d:days};
+    }
+
+    addDuration(duration1, duration2)
+    {
+        var years, months, days;
+        [years, months, days] = [duration1.y + duration2.y, duration1.m + duration2.m, duration1.d + duration2.d];
+
+        months += Math.trunc(days / 30);
+        days %= 30;
+
+        years += Math.trunc(months / 12);
+        months %= 12;
+
+        return {y:years, m:months, d:days};
+    }
+
+    convertDurationToNum(duration)
+    {
+        return duration.y + duration.m / 12 + duration.d / 365.25;
+    }
+
+    convertDurationToString(duration)
+    {
+        return (isNaN(duration.y) || isNaN(duration.m) || isNaN(duration.d) ? "Invalid date(s)" : (duration.y > 0 ? duration.y + "&nbsp;year" + (duration.y == 1 ? "" : "s") : "") + (duration.m > 0 ? (duration.y > 0 ? ", " : "") + duration.m + "&nbsp;month" + (duration.m == 1 ? "" : "s") : "") + (duration.y + duration.m > 0 && duration.d != 0 ? ", " : "") + (duration.y + duration.m > 0 && duration.d == 0 ? "" : duration.d + "&nbsp;day" + (duration.d == 1 ? "" : "s")));
+    }
+
+    getEducScore(incrementAboveQS, positionCategory, salaryGrade)
+    {
+        var uBoundsExclusive = [2, 4, 6, 8, 10], scores = [0, 1, 2, 3, 4, 5];
+        if (positionCategory < 4)
+        {
+            uBoundsExclusive = [2, 4, 6, 8];
+            scores = [0, 4, 6, 8, 10];
+        }
+        else if (positionCategory > 4)
+        {
+            uBoundsExclusive = [1, 2, 3, 4, 5];
+        }
+        else if (salaryGrade == 24)
+        {
+            uBoundsExclusive = [4, 6, 8, 9, 10];
+            scores = [0, 2, 4, 6, 8, 10];
+        }
+
+        var i = 0;
+
+        while (uBoundsExclusive[i] < incrementAboveQS)
+        {
+            i++;
+        }
+
+        return scores[i];
+    }
+
+    getTrainingScore(incrementAboveQS, positionCategory, salaryGrade)
+    {
+        var uBoundsExclusive = [1, 2, 3, 4, 5], scores = [0, 1, 2, 3, 4, 5];
+        if (positionCategory < 4)
+        {
+            uBoundsExclusive = [2, 4, 6, 8];
+            scores = [0, 4, 6, 8, 10];
+        }
+        else if (salaryGrade >= 10 && salaryGrade <= 22 || salaryGrade == 27)
+        {
+            uBoundsExclusive = [2, 4, 6, 8, 10];
+        }
+
+        var i = 0;
+
+        while (uBoundsExclusive[i] < incrementAboveQS)
+        {
+            i++;
+        }
+
+        return scores[i];
+    }
+
+    getWorkExpScore(incrementAboveQS, positionCategory, salaryGrade)
+    {
+        var uBoundsExclusive = [2, 4, 6, 8, 10], scores = [0, 3, 6, 9, 12, 15];
+        if (positionCategory < 4)
+        {
+            uBoundsExclusive.pop();
+            scores = [0, 4, 6, 8, 10];
+        }
+        else if (positionCategory > 4 || salaryGrade < 10)
+        {
+            scores = [0, 4, 8, 12, 16, 20];
+        }
+
+        var i = 0;
+
+        while (uBoundsExclusive[i] < incrementAboveQS)
+        {
+            i++;
+        }
+
+        return scores[i];
     }
 }
 

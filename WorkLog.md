@@ -1,7 +1,13 @@
 # Work Log
 
+## 4/14/2023
+After resting the whole night, I have tried to create another function that computes for the work experience score using the increment, which was put to good use later on. I then recoded some parts of the score sheet UI, redefining some of the procedure in constructing it. I eventually finished the score sheet UI, with its autoscoring feature which I will need to adapt for other positions, as well. <u title="to-do">What's left is to complete the RUD parts of the CRUD system in the score sheet, applicant data, and job data forms.</u> Likewise, I will also have to generalize the search feature for many kinds of data/data sets. I will also need to optimize and cleanup some of the PHP code, for easier maintenance and debugging later on.
+
+## 4/13/2023
+At dawn, I tried to complete most of the scoresheet UI. I continued it in the office. I started to add to the data structure returned when the MPaSIS load application dialog queries for the initial data sets (list of matching applications and positions), though adding more joins proved to be a bit tedious. I was able to create up to 3 joins for the job applications,joining Person with Job_Application, ENUM_Educational_Attainment, and ENUM_Civil_Status. I will continue the joins later on. Likewise, as I tried to fill-in the education and training DisplayEx's in the score sheet, I was able to create two functions that simplified the computation of education and training final scores. I would have created it if there was still enough time. Also, these cold symptoms that worsened a bit in the afternoon slowed my progress significantly. I hope to finish more tomorrow.
+
 ## 4/12/2023
-Today, I have decided to implement the scoresheet on another page/view different from the applicant data form. I have made a few changes on some of the -Ex classes to accommodate some of the features of the page, although I mostly made a few "hacks" on the code whenever I'm feeling lazy on the design of the code. <u class="to-do">I would probably optimize in a few days</u> after I get to work most of MPASIS. I have also added a new style on the fields that make a textbox display only the bottom border. I also used the DisplayEx class as a sort of frame to group some fields and display elements together. I am taking a bit of inspiration from the looks of Google Forms, as those fields are looking quite nice, each one surrounded by boxes with rounded corners. I have finished almost half of the scoresheet form and I am still thinking of where to put most of the other elements left to implement. Just so I can track my own work, here are some of the things I have changed/added:
+Today, I have decided to implement the scoresheet on another page/view different from the applicant data form. I have made a few changes on some of the -Ex classes to accommodate some of the features of the page, although I mostly made a few "hacks" on the code whenever I'm feeling lazy on the design of the code. <u title="to-do">I would probably optimize in a few days</u> after I get to work most of MPASIS. I have also added a new style on the fields that make a textbox display only the bottom border. I also used the DisplayEx class as a sort of frame to group some fields and display elements together. I am taking a bit of inspiration from the looks of Google Forms, as those fields are looking quite nice, each one surrounded by boxes with rounded corners. I have finished almost half of the scoresheet form and I am still thinking of where to put most of the other elements left to implement. Just so I can track my own work, here are some of the things I have changed/added:
 
 * DisplayEx.setVertical() now works even if there is no label
 * Added InputEx.setBlankStyle() to implement a textbox with only the bottom border
@@ -9,22 +15,22 @@ Today, I have decided to implement the scoresheet on another page/view different
 * InputEx.setWidth() now also works properly for `combo` type
 * Added InputEx.setStep() for number and range type
 * Added hide(), show(), and isHidden() methods to InputEx
-* Recoded the stub function for resetting a FormEx; <u class="to-do">this shall be improved later on when I have more time</u>
-* Hard-coded some DialogEx styles and disabled DialogEx-related CSS entries; <u class="to-do">these shall be reinstated and the hard-coded ones removed</u> once I have the time for further code-optimization
+* Recoded the stub function for resetting a FormEx; <u title="to-do">this shall be improved later on when I have more time</u>
+* Hard-coded some DialogEx styles and disabled DialogEx-related CSS entries; <u title="to-do">these shall be reinstated and the hard-coded ones removed</u> once I have the time for further code-optimization
 * Added DialogEx.gridDisplay() for better layouts
 * Renamed Applicant Search to Applicant Score Sheet in the MPaSIS UI
 
 Likewise, the following are to-do:
 
-* Setup of the -Ex classes using JSON instead of manually calling the methods to set them up
-* Reorganization and recoding of -Ex classes for better consistency and better code maintainability
-* Adding the `select` InputEx type which features a non-editable drop-down list.
-* Adding of search pages in MPaSIS
+* <u title="to-do">Setup of the -Ex classes using JSON instead of manually calling the methods to set them up</u>
+* <u title="to-do">Reorganization and recoding of -Ex classes for better consistency and better code maintainability</u>
+* <u title="to-do">Adding the `select` InputEx type which features a non-editable drop-down list</u>
+* <u title="to-do">Adding of search pages in MPaSIS</u>
 
 ## 4/11/2023
 I have finally finished the applicant data entry form and it is now able to save data to the database. It also now records the user who was signed in when the record was saved to the database. However, I was advised by Ms. Cathy that implementing the scoresheet online is also equally, if not more, important, so I tried to design the scoresheet as an addendum to the applicant data form. This doesn't seem to be working, however, as the scoresheet doesn't really fit into the applicant data form. I merely finished just the headings and a few fields but I am a bit stumped on the form design.
 
-On the side, I also tried to make the Apache server on Ms. Jen's PC work for the MPASIS web app. However, the server kept on showing syntax errors in places where no errors were raised when it MPASIS was hosted on my PC. The XAMPP server seems to have stricter settings for the PHP that makes all these error appear, <u class="to-do">so I might look into it some other time.</u> Mr. Rey said he would bring a computer tomorrow that might help in temporarily hosting the web app.
+On the side, I also tried to make the Apache server on Ms. Jen's PC work for the MPASIS web app. However, the server kept on showing syntax errors in places where no errors were raised when it MPASIS was hosted on my PC. The XAMPP server seems to have stricter settings for the PHP that makes all these error appear, <u title="to-do">so I might look into it some other time.</u> Mr. Rey said he would bring a computer tomorrow that might help in temporarily hosting the web app.
 
 ## 4/10/2023
 I have done a lot of code optimization and fixing some minor bugs here and there. Eligibility validation has been completed. The code for adding items to `radio-select` and `checkbox-select`, along with `buttons` and `buttonExs` has been reduced and optimized, introducing and fixing a bug and fixing a bug along the way. The bug in the code for computing the difference between two dates, which causes duration of days to exceed the previous months maximum, has been fixed and invalid dates are now being dealt with, although invalid date processing in the increment computation still needs to be added. The code for extracting the selected position has been recoded for reusability. The only feature left to implement is the Competency validation which will not be implemented as of this time as it will not be used for the time being.
