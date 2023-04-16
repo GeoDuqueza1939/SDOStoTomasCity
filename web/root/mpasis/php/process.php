@@ -187,9 +187,17 @@ if (isset($_SESSION['user']))
 
                                 $educIncrementTable = $dbconn->select('MPS_Increment_Table_Education', '*', '');
 
+                                if (!is_null($dbconn->lastException))
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
+
+                                $enumEducAttainment = $dbconn->select('ENUM_Educational_Attainment', '*', '');
+
                                 if (is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'mps_increment_table_education'=>$educIncrementTable]))));
+                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment]))));
                                 }
                                 else
                                 {
@@ -279,6 +287,19 @@ if (isset($_SESSION['user']))
                         break;
                     case 'educLevel':
                         $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', '');
+    
+                        if (is_null($dbconn->lastException))
+                        {
+                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        }
+                        return;
+                        break;
+                    case 'univEducLevel':
+                        $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', 'WHERE `index` > 5');
     
                         if (is_null($dbconn->lastException))
                         {

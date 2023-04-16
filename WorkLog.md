@@ -1,7 +1,17 @@
 # Work Log
 
+## 4/15/2023
+Today, I shall initiate the implementation of the following:
+
+* [x] The `InputEx` type `select`
+* [x] The `InputEx` type <code title="This type will use span elements styled as table elements">`table`</code>
+* [ ] Adding `Degrees` into the applicant data and score sheet forms
+* [ ] Reorganizing of the `process.php` code
+* [ ] Saving/updating of score sheet data into the database
+* [ ] Moving the -Ex styles out of the classes and into CSS files
+
 ## 4/14/2023
-After resting the whole night, I have tried to create another function that computes for the work experience score using the increment, which was put to good use later on. I then recoded some parts of the score sheet UI, redefining some of the procedure in constructing it. I eventually finished the score sheet UI, with its autoscoring feature which I will need to adapt for other positions, as well. <u title="to-do">What's left is to complete the RUD parts of the CRUD system in the score sheet, applicant data, and job data forms.</u> Likewise, I will also have to generalize the search feature for many kinds of data/data sets. I will also need to optimize and cleanup some of the PHP code, for easier maintenance and debugging later on.
+After resting the whole night, I have tried to create another function that computes for the work experience score using the increment, which was put to good use later on. I then recoded some parts of the score sheet UI, redefining some of the procedure in constructing it. I eventually finished the score sheet UI, with its autoscoring feature which I will need to adapt for other positions, as well. <u title="to-do">What's left is to complete the RUD parts of the CRUD system in the score sheet, applicant data, and job data forms.</u> Likewise, <u title="to-do">I will also have to generalize the search feature for many kinds of data/data sets.</u> <u title="to-do">I will also need to optimize and cleanup some of the PHP code, for easier maintenance and debugging later on.</u>
 
 ## 4/13/2023
 At dawn, I tried to complete most of the scoresheet UI. I continued it in the office. I started to add to the data structure returned when the MPaSIS load application dialog queries for the initial data sets (list of matching applications and positions), though adding more joins proved to be a bit tedious. I was able to create up to 3 joins for the job applications,joining Person with Job_Application, ENUM_Educational_Attainment, and ENUM_Civil_Status. I will continue the joins later on. Likewise, as I tried to fill-in the education and training DisplayEx's in the score sheet, I was able to create two functions that simplified the computation of education and training final scores. I would have created it if there was still enough time. Also, these cold symptoms that worsened a bit in the afternoon slowed my progress significantly. I hope to finish more tomorrow.

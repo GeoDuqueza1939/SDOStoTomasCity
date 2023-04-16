@@ -1,4 +1,6 @@
-.login-page {}
+.login-page {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
 
 .login-page > header {
     background-color: var(--bg1);
@@ -33,7 +35,7 @@
 }
 
 .login-page .header-logo > img {
-    max-width: 7em;
+    max-width: 6em;
 }
 
 .login-page .header-text {
@@ -44,18 +46,22 @@
     /* align-items: start; */
     /* justify-items: center; */
     /* flex-direction: column; */
+    color: beige;
+    text-shadow: 0.05em 0.05em black;
 }
 
 .login-page .header-text-deped {
     display: block;
     font-family: 'Old English Text MT', 'Times New Roman', serif;
     font-weight: bold;
-    text-shadow: 0.03em 0.025em gray;
-    color: var(--hlt);
+    /* text-shadow: 0.03em 0.025em gray; */
+    /* color: var(--hlt); */
 }
 
 .login-page .header-text-sdo {
     display: block;
+    font-family: 'Bookman Old Style', 'Book Antiqua', 'Times New Roman', Times, serif;
+    font-weight: bold;
 }
 
 .login-page > section {
@@ -70,8 +76,8 @@
     border: 1px solid blue;
     border-radius: 0.5em;
     margin: 2em;
-    padding: 2em 2em 1em;
-    width: 25em;
+    padding: 1.5em 2em 1em;
+    width: 23em;
 }
 
 .login-page form > fieldset > legend {
@@ -89,6 +95,7 @@
 }
 
 .login-page form > fieldset .textbox > input {
+    font-size: 1.2em;
     width: 15em;
 }
 

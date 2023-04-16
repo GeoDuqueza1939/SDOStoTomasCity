@@ -162,7 +162,7 @@ function addText(text, container, nextSibling = null)
  *      source: https://stackoverflow.com/a/35385518
  */
 function htmlToElement(html) {
-    var template = document.createElement('template');
+    var template = document.createElement("template");
     html = html.trim(); // Never return a text node of whitespace as the result
     template.innerHTML = html;
     return template.content.firstChild;
@@ -174,7 +174,7 @@ function htmlToElement(html) {
  *      source: https://stackoverflow.com/a/35385518
  */
 function htmlToElements(html) {
-    var template = document.createElement('template');
+    var template = document.createElement("template");
     template.innerHTML = html;
     return template.content.childNodes;
 }
@@ -496,10 +496,14 @@ class InputEx
         }
 
         this.container = createElementEx(NO_NS, "span", parentEl, null, "class", "input-ex");
-        this.container.style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
+        // this.container.style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
         this.setFullWidth(false);
         this.useFieldSet = useFieldSet; // will contain the input element with its label or other InputEx elements
         this.fieldWrapper = createElementEx(NO_NS, (useFieldSet ? "fieldset" : "span"), this.container, null, "class", "input-ex-fields-wrapper", "style", "display: block;");
+        this.parentDialogEx = null;
+        this.parentFormEx = null;
+        this.parentDisplayEx = null;
+        this.parentInputEx = null;
         this.inputExs = []; // references to multiple InputEx chhildren (for multiple input types)
         this.fields = []; // groups of input element; index 0 will point to single input types
         this.labels = []; // label elements for input elements; legend element for fieldset
@@ -522,19 +526,42 @@ class InputEx
         this.statusMode = 1; // 0: not displayed; 1: marker displayed with tooltip ; 2: full status message displayed
         this.statusTimer = null; // will store the timeout for auto-resetting status
         this.statusTimeout = 5; // seconds; < 0 will disable the creation of statusTimer
+
         this.isMultipleInput = false;
         this.reversed = false;
         this.disabled = false;
         this.isFilling = false;
         this.runAfterFilling = null; // function to run after filling items from server; should be assigned before running fillItemsFromServer
-        this.spacer = ""; // a reference a single space textnode that shall come before this InputEx object
+        this.spacer = null; // a reference to a single space textnode that shall come before this InputEx object
         this.extendableList = false;
         this.extendableListAddBtnEx = null;
         this.hiddenDisplay = null;
+
+        this.table = null;
+        this.thead = null; // the headers list shall be appended with an empty header, which shall contain the column for the delete buttons
+        this.tbody = null;
+        this.tableTypes = []; // InputEx types for each column; if table headers and tableTypes don't match in lengths, defaults shall be used to compensate ("" for table headers and "text" for tableTypes)
+        this.tableDBColNames = []; // names that define the column the data are to be stored in
+        this.tableDefaultValues = []; // mismatched default values to types might result to undefined behavior!
+        this.tableInitFunctions = []; // if not null, each function is run after a table field is created
+        this.removeRowOverride = false;
+        this.addRowButtonEx = null;
+        this.tableDBKeyName = ""; // may or may not be a member of tableDBColNames
         
         this.type = typeStr;
         switch(typeStr)
         {
+            case "table":
+                this.isMultipleInput = true;
+                this.table = createElementEx(NO_NS, "span", this.fieldWrapper, nextSibling, "class", "input-ex-table", "style", "display: table; border-collapse: collapse; width: 100%;");
+                this.tbody = createElementEx(NO_NS, "span", this.table, nextSibling, "class", "input-ex-tbody", "style", "display: table-row-group;");
+                break;
+            case "select":
+                this.fields.push(createElementEx(NO_NS, "select", this.fieldWrapper, nextSibling, "id", idStr, "name", idStr));
+                this.fields[0].style.fontSize = "inherit";
+                this.fields[0].inputEx = this;
+                addText("", createElementEx(NO_NS, "option", this.fields[0], nextSibling));
+                break;
             case "radio-select": // group of radio buttons
             case "checkbox-select": // group of check boxes
             case "buttons": // a group of button inputs
@@ -542,18 +569,17 @@ class InputEx
                 this.isMultipleInput = true;
                 break;
             case "buttonEx": // button element
-                this.fields.push(createElementEx(NO_NS, "button", this.fieldWrapper, null, "id", idStr, "name", idStr, "type", "button"));
+                this.fields.push(createElementEx(NO_NS, "button", this.fieldWrapper, nextSibling, "id", idStr, "name", idStr, "type", "button"));
                 this.fields[0].inputEx = this;
                 break;
             case "textarea":
-                this.fields.push(createElementEx(NO_NS, "textarea", this.fieldWrapper, null, "id", idStr, "name", idStr, "style", "display: block; width: 100%;"));
+                this.fields.push(createElementEx(NO_NS, "textarea", this.fieldWrapper, nextSibling, "id", idStr, "name", idStr, "style", "display: block; width: 100%;"));
                 this.setFullWidth();
                 this.fields[0].style.fontSize = "inherit";
                 this.fields[0].inputEx = this;
                 break;
             case "combo": // input with a datalist
-                this.isMultipleInput = true;
-                nextSibling = this.datalist = createElementEx(NO_NS, "datalist", this.fieldWrapper, null, "id", idStr + "-datalist", "name", idStr + "-datalist");
+                nextSibling = this.datalist = createElementEx(NO_NS, "datalist", this.fieldWrapper, nextSibling, "id", idStr + "-datalist", "name", idStr + "-datalist");
                 typeStr = "text";
             default:
                 this.fields.push(createElementEx(NO_NS, "input", this.fieldWrapper, nextSibling, "id", idStr, "name", idStr, "type", typeStr));
@@ -573,421 +599,7 @@ class InputEx
         this.blankStyle = false;
     }
 
-    setValue(...values) // ALWAYS USE STRING VALUES IN CHECKBOX MULTIPLE
-    {
-        // validate at least the first value
-        if (typeof(values[0]) != "string" && typeof(values[0]) != "number")
-        {
-            throw("Invalid argument type: values:" + values.toString());
-        }
-
-        if (typeof(values[0]) == "string")
-        {
-            values[0] = values[0].trim();
-        }
-
-        switch (this.type)
-        {
-            case "radio-select":
-                for (const inputEx of this.inputExs) {
-                    if (inputEx.getValue() == values[0])
-                    {
-                        inputEx.check();
-                    }
-                }
-                break;
-            case "checkbox-select":
-                for (const inputEx of this.inputExs) {
-                    if (values.includes(inputEx.getValue()))
-                    {
-                        inputEx.check();
-                    }
-                }
-                break;
-            case "buttons":
-            case "buttonExs":
-                break;
-            case "combo":
-            case "buttonEx": // value attribute is still set but is not displayed
-            case "button":
-            case "submit":
-            case "reset":
-            default:
-                this.fields[0].value = values[0];
-                break;
-        }
-    }
-
-    getValue()
-    {
-        switch (this.type)
-        {
-            case "radio-select":
-                if (this.otherOptionEx != null && this.otherOptionEx.isChecked())
-                {
-                    return this.otherOptionEx.getValue();
-                }
-
-                for (const inputEx of this.inputExs) {
-                    if (inputEx.isChecked())
-                    {
-                        return inputEx.getValue();
-                    }
-                }
-                break;
-            case "checkbox-select":
-                var values = [];
-                for (const inputEx of this.inputExs) {
-                    // console.log(inputEx + "\n" + inputEx.isChecked() + inputEx.fields[0].checked);
-                    if (inputEx.isChecked())
-                    {
-                        values.push(inputEx.getValue());
-                    }
-                }
-                return values;
-                break;
-            case "radio":
-            case "checkbox":
-                if (this.inlineTextboxEx != null && this.isChecked())
-                {
-                    return this.inlineTextboxEx.getValue();
-                }
-                else if (this.isChecked())
-                {
-                    return this.fields[0].value.trim();
-                }
-                break;
-            case "buttons":
-            case "buttonExs":
-                break;
-            case "combo":
-            case "buttonEx":
-            case "button":
-            case "submit":
-            case "reset":
-            default:
-                return this.fields[0].value.trim();
-                break;
-        }
-
-        return "";
-    }
-
-    getDataValue()
-    {
-        var textValue = this.getValue();
-
-        if (this.type == "combo" && textValue != "")
-        {
-            for (const option of Array.from(this.datalist.children)) {
-                if (option.value == textValue)
-                {
-                    return option.getAttribute("data-value");
-                }
-            }
-        }
-    }
-
-    setDefaultValue(value)
-    {
-        this.defaultValue = value;
-    }
-
-    getDefaultValue()
-    {
-        return this.defaultValue;
-    }
-
-    /**
-     * Adds an inline textbox when the InputEx type is `radio` or `checkbox`
-     * @param {String} labelText (optional) Text displayed along with the textbox.
-     * @param {function} actionOnSelect (optional) A function with the signature that defines what to do with this InputEx when the parent InputEx changes value
-    */
-    addInlineTextboxEx(labelText = "", value = "", tooltip = "", actionOnSelect = null)
-    {
-        if (this.type == "radio" || this.type == "checkbox")
-        {
-            this.inlineTextboxEx = new InputEx(this.labels[0], this.id + "-inline-text-ex", "text");
-            this.inlineTextboxEx.setLabelText("&nbsp;" + labelText);
-            this.inlineTextboxEx.setValue(value);
-            this.inlineTextboxEx.setTooltipText(tooltip);
-
-            if (actionOnSelect != null)
-            {
-                this.handleInlineTextboxExOnCheck = actionOnSelect;
-                this.fields[0].addEventListener("change", this.handleInlineTextboxExOnCheck);
-                this.handleInlineTextboxExOnCheck();
-            }
-
-            return this.inlineTextboxEx;
-        }
-    }
-
-    addOtherOption(labelText, value, tooltipText, inlineLabel = "", selectHandler = null) // better to add this in runAfterFilling function
-    {
-        if (this.type == "radio-select" || this.type == "checkbox-select") // consider if this can be extended to other multiple InputEx option types
-        {
-            // this.timeIntervalAddOther = setInterval(()=>{
-            //     if (!this.isFilling)
-            //     {
-                    this.otherOptionEx = this.addItem(labelText, value, tooltipText);
-                    this.otherOptionEx.addInlineTextboxEx(inlineLabel, "", tooltipText, selectHandler);
-
-                    if (this.isReversed())
-                    {
-                        this.otherOptionEx.reverse();
-                    }
-
-                    // clearInterval(this.timeIntervalAddOther);
-                    // this.timeIntervalAddOther = undefined;
-                    // delete this.timeIntervalAddOther;
-            //     }
-            // }, 1000);
-
-            return this.otherOptionEx;
-        }
-    }
-
-    setAsExtendableList(setting = true, btnLabelText = "", clickFunc = null) // better to add this in runAfterFilling function
-    {
-        if ((this.type == "radio-select" || this.type == "checkbox-select") && setting)
-        {
-            if (this.extendableListAddBtnEx == null || this.extendableListAddBtnEx == undefined)
-            {
-                this.extendableListAddBtnEx = new InputEx(this.fieldWrapper, this.id + "-add-item-ex-btn", "buttonEx");
-                this.extendableListAddBtnEx.setLabelText(btnLabelText);
-                this.extendableListAddBtnEx.addEvent("click", clickFunc);
-            }
-            else
-            {
-                this.fieldWrapper.appendChild(this.extendableListAddBtnEx.container);
-            }
-            this.extendableList = setting;
-        }
-        else
-        {
-            
-        }
-    }
-
-    clearList()
-    {
-        if (this.isMultipleInput)
-        {
-            switch (this.type)
-            {
-                case 'radio-select':
-                case 'checkbox-select':
-                    while (this.inputExs.length > 0)
-                    {
-                        this.inputExs.pop().destroy();
-                    }
-                    if (this.otherOptionEx != null)
-                    {
-                        this.otherOptionEx.destroy();
-                        this.otherOptionEx = null;
-                    }
-                    if (this.extendableListAddBtnEx != null)
-                    {
-                        // this.extendableListAddBtnEx.destroy(); // do not throw reference away!!!!
-                    }
-                    this.dbInputEx = [];
-                    break;
-                case 'combo':
-                    // this.datalist.innerHTML = "";
-                    Array.from(this.datalist.children).forEach((option)=>{
-                        option.remove();
-                    });
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    check(doCheck = true) // single input only
-    {
-        if (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox"))
-        {
-            // this.fields[0].toggleAttribute("checked", doCheck); // hard-coded HTML check attributes confuse the browser
-            this.fields[0].checked = doCheck;
-
-            if (this.handleInlineTextboxExOnCheck != null || this.handleInlineTextboxExOnCheck != undefined)
-            {
-                this.handleInlineTextboxExOnCheck();
-            }
-
-        }
-    }
-
-    uncheck() // single input only
-    {
-        this.check(false);
-    }
-
-    isChecked() // single input only
-    {
-        return (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox") && (this.fields[0].checked)) //|| this.fields[0].hasAttribute("checked"))); // hard-coded HTML check attributes confuse the browser
-    }
-
-    setLabelText(labelText) // legend for fieldset of non-single input
-    {
-        if (typeof(labelText) != "string")
-        {
-            throw("Invalid argument type: labelText:" + labelText);
-        }
-
-        labelText = labelText.trim();
-
-        if (this.type == "button" || this.type == "submit" || this.type == "reset")
-        {
-            this.setValue(labelText);
-        }
-        else if (this.type == "buttonEx")
-        {
-            this.fields[0].innerHTML = labelText;
-        }
-        else if (!this.type.startsWith("button"))
-        {
-            if (this.labels.length == 0)
-            {
-                if (this.useFieldSet && this.isMultipleInput)
-                {
-                    this.labels.push(createElementEx(NO_NS, "legend", this.fieldWrapper));
-                }
-                else
-                {
-                    this.labels.push(createElementEx(NO_NS, "label", this.fieldWrapper, this.fields[0], "for", this.id));
-                }
-            }
-            this.fieldWrapper.insertBefore(document.createTextNode(" "), this.fields[0]);
-            this.labels[0].innerHTML = labelText;
-            this.labels[0].appendChild(this.colon = htmlToElement("<span class=\"colon hidden\">:</span>"));
-            this.labels[0].inputEx = this;
-            // this.labels[0].style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
-        }
-    }
-
-    getLabelText() // legend for fieldset of non-single input
-    {
-        if (this.type == "button" || this.type == "submit" || this.type == "reset")
-        {
-            return this.getValue();
-        }
-        else if (this.type == "buttonEx")
-        {
-            return this.fields[0].innerHTML;
-        }
-        else if (this.labels.length == 1 && !this.type.startsWith("button"))
-        {
-            return this.labels[0].innerHTML;
-        }
-
-        return "";
-    }
-
-    setPlaceholderText(placeholderText) // single input only
-    {
-        if (typeof(placeholderText) != "string")
-        {
-            throw("Invalid argument type: placeholderText:" + placeholderText);
-        }
-
-        placeholderText = placeholderText.trim();
-
-        if (!this.isMultipleInput || this.type == "combo" && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
-        {
-            this.fields[0].placeholder = placeholderText;
-        }
-    }
-
-    getPlaceholderText() // single input only
-    {
-        if (!this.isMultipleInput && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
-        {
-            return this.fields[0].placeholder;
-        }
-        else
-        {
-            return "";
-        }
-    }
-
-    require(setting = true)
-    {
-        if (!this.isMultipleInput)
-        {
-            this.fields[0].required = setting;
-        }
-    }
-
-    isRequired()
-    {
-        return this.fields[0].required;
-    }
-
-    getId()
-    {
-        return this.id;
-    }
-
-    setTooltipText(tooltipText)
-    {
-        if (typeof(tooltipText) != "string" && typeof(tooltipText) != "number")
-        {
-            throw("Invalid argument type: tooltipText:" + tooltipText);
-        }
-
-        if (typeof(tooltipText) == "string")
-        {
-            tooltipText = tooltipText.trim();
-        }
-
-        if (this.type != "radio-select" && this.type != "checkbox-select")//(!this.isMultipleInput)
-        {
-            if (tooltipText == "")
-            {
-                if (this.fields[0].hasAttribute("title"))
-                {
-                    this.fields[0].removeAttribute("title");
-                }
-            }
-            else
-            {
-                this.fields[0].title = tooltipText;
-            }
-        }
-        
-        if (this.labels.length > 0)
-        {
-            if (tooltipText == "")
-            {
-                if (this.labels[0].hasAttribute("title"))
-                {
-                    this.labels[0].removeAttribute("title");
-                }
-            }
-            else
-            {
-                this.labels[0].title = tooltipText;
-            }
-        }
-    }
-
-    getToolTipText() // single-input element types only
-    {
-        if (!this.isMultipleInput)
-        {
-            return this.fields[0].title;
-        }
-        else if (this.labels.length > 0)
-        {
-            return this.labels[0].title;
-        }
-
-        return "";
-    }
-
+    // METHODS THAT QUERY OR CHANGE THE STRUCTURE OF INPUTEX
     setParent(parentEl, nextSibling = null)
     {
         var invalidArgsStr = "";
@@ -1015,90 +627,57 @@ class InputEx
         return this.container.parentElement;
     }
 
-    enable(index = null, doEnable = true) // null index means all inputs should be enabled
+    /**
+     * Adds an inline textbox when the InputEx type is `radio` or `checkbox`
+     * @param {String} labelText (optional) Text displayed along with the textbox.
+     * @param {function} actionOnSelect (optional) A function with the signature that defines what to do with this InputEx when the parent InputEx changes value
+    */
+    addInlineTextboxEx(labelText = "", value = "", tooltip = "", actionOnSelect = null)
     {
-        var invalidArgsStr = "";
-
-        invalidArgsStr += (index == null || (typeof(index) == "number" && (index == 0 || Number.isInteger(this)) && index >= 0 && index < this.fields.length) ? "" : "index:" + index);
-        invalidArgsStr += (typeof(doEnable) == "boolean" ? "" : (invalidArgsStr == "" ? "" : ", ") + "doEnable:" + doEnable);
-
-        if (invalidArgsStr != "")
+        if (this.type == "radio" || this.type == "checkbox")
         {
-            throw("Invalid argument type: " + invalidArgsStr);
-        }
+            this.inlineTextboxEx = new InputEx(this.labels[0], this.id + "-inline-text-ex", "text");
+            this.inlineTextboxEx.setLabelText("&nbsp;" + labelText);
+            this.inlineTextboxEx.setDefaultValue(value, true);
+            this.inlineTextboxEx.setTooltipText(tooltip);
 
-        if (this.isMultipleInput && index == null)
-        {
-            this.inputExs.forEach((inputEx)=>{
-                inputEx.enable();
-            });
-
-            index = 0;
-        }
-        else
-        {
-            if (index == null)
+            if (actionOnSelect != null)
             {
-                index = 0;
+                this.handleInlineTextboxExOnCheck = actionOnSelect;
+                this.fields[0].addEventListener("change", this.handleInlineTextboxExOnCheck);
+                this.handleInlineTextboxExOnCheck();
             }
-    
-            this.fields[index].toggleAttribute("disabled", !doEnable);
+
+            return this.inlineTextboxEx;
         }
 
-        if (this.labels.length > index)
-        {
-            this.labels[index].toggleAttribute("disabled", !doEnable);
-        }
-
-        this.disabled = !doEnable;
-    }
-    
-    disable(index = null)
-    {
-        this.enable(index, false);
+        return null;
     }
 
-    isDisabled()
+    addOtherOption(labelText, value, tooltipText, inlineLabel = "", selectHandler = null) // use this in runAfterFilling if items are filled using fillItemsFromServer
     {
-        return this.disabled;
-    }
-
-    setGroupName(nameStr)
-    {
-        if (typeof(nameStr) != "string")
+        if (this.type == "radio-select" || this.type == "checkbox-select") // consider if this can be extended to other multiple InputEx option types
         {
-            throw("Invalid argument type: nameStr:" + nameStr);
-        }
+            this.otherOptionEx = this.addItem(labelText, value, tooltipText);
+            this.otherOptionEx.addInlineTextboxEx(inlineLabel, "", tooltipText, selectHandler);
 
-        this.name = nameStr.trim();
-
-        if (this.isMultipleInput)
-        {
-            this.inputExs.forEach((inputEx)=>{
-                inputEx.setGroupName(this.name);
-            });
-        }
-        else
-        {
-            this.fields[0].name = this.name;
-            if (this.labels.length > 0)
+            if (this.isReversed())
             {
-                this.labels[0].for = this.name;
+                this.otherOptionEx.reverse();
             }
+
+            return this.otherOptionEx;
         }
+        
+        return null;
     }
 
-    getGroupName()
-    {
-        return this.name;
-    }
-
-    addItem(labelText, value = "", tooltipText = "") // only for combo (will add to datalist), radio-select, multiple-radio-select, buttons, and buttonExs
+    addItem(labelText, value = "", tooltipText = "") // only for select and combo (will add to datalist), radio-select, multiple-radio-select, buttons, and buttonExs
     {
         var invalidArgsStr = "";
 
         invalidArgsStr += (typeof(labelText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "labelText:" + labelText);
-        invalidArgsStr += (typeof(value) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "value:" + value);
+        invalidArgsStr += (typeof(value) == "string" || typeof(value) == "number" ? "" : (invalidArgsStr == "" ? "" : "; ") + "value:" + value);
         invalidArgsStr += (typeof(tooltipText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "tooltipText:" + tooltipText);
 
         if (invalidArgsStr.trim() != "")
@@ -1111,8 +690,18 @@ class InputEx
 
         switch (this.type)
         {
+            case "select":
+                var option = createElementEx(NO_NS, "option", this.fields[0], null, "value", value);
+                addText(labelText, option);
+                if (tooltipText != "")
+                {
+                    option.title = tooltipText; // HAS NO EFFECT!!!
+                }
+                return option;
+                break;
             case "combo":
                 var option = createElementEx(NO_NS, "option", this.datalist, null, "value", labelText, "data-value", value);
+                // addText(labelText, option);
                 if (tooltipText != "")
                 {
                     option.title = tooltipText; // HAS NO EFFECT!!!
@@ -1130,11 +719,12 @@ class InputEx
                 this.inputExs.push(new InputEx(this.fieldWrapper, this.id + (this.type.indexOf("-select") >= 0 ? this.inputExs.length : ""), (this.type.indexOf("-select") >= 0 ? this.type.slice(0, this.type.indexOf("-")) : this.type.slice(0, this.type.indexOf("s")))));
                 this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
                 this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+                this.inputExs[this.inputExs.length - 1].parentInputEx = this;
                 if (this.type.indexOf("-select") >= 0)
                 {
                     if (value != "")
                     {
-                        this.inputExs[this.inputExs.length - 1].setValue(value);  // MAY CAUSE ISSUES IF DEVELOPER DOESN'T TRACK THE NUMBER OF ITEMS WITHOUT LABELS THAT WERE MIXED WITH LABELED ITEMS
+                        this.inputExs[this.inputExs.length - 1].setDefaultValue(value, true);  // MAY CAUSE ISSUES IF DEVELOPER DOESN'T TRACK THE NUMBER OF ITEMS WITHOUT LABELS THAT WERE MIXED WITH LABELED ITEMS
                     }
                     this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
                     // this.inputExs[this.inputExs.length - 1].setFullWidth();
@@ -1176,12 +766,38 @@ class InputEx
         });
     }
 
+    getItemAt(index = 0)
+    {
+        if (Number.isInteger(index) && index >= 0 && (index < this.inputExs.length || (this.type == "select" && index < this.fields[0].length - 1) || (this.type == "combo" && index < this.datalist.length)))
+        {
+            switch (this.type)
+            {
+                case "select":
+                case "combo":
+                    return (this.type == "select" ? this.fields[0] : this.datalist).getElementsByTagName("option")[index + (this.type == "select" ? 1 : 0)];
+                    break;
+                case "radio-select":
+                case "checkbox-select":
+                case "buttons":
+                case "buttonExs":
+                    return this.inputExs[index];
+                    break;
+            }    
+        }
+
+        return [index, this.inputExs.length];
+    }
+
     removeItemAt(index = 0)
     {
         if (Number.isInteger(index) && index >= 0 && index < this.inputExs.length)
         {
             switch (this.type)
             {
+                case "select":
+                case "combo":
+                    (this.type == "select" ? this.fields[0] : this.datalist).getElementsByTagName("option")[index + (this.type == "select" ? 1 : 0)].remove();
+                    break;
                 case "radio-select":
                 case "checkbox-select":
                 case "buttons":
@@ -1238,16 +854,7 @@ class InputEx
 
                     this.data = data;
 
-                    data.forEach(dataRow=>{
-                        var label = (labelColName in dataRow ? dataRow[labelColName].toString() : "");
-                        var value = (dataRow[valueColName] ?? "").toString();
-                        var tooltip = (dataRow[tooltipColName] ?? "").toString();
-                        this.addItem(label, value, tooltip);
-                        if (this.isReversed())
-                        {
-                            this.inputExs[this.inputExs.length - 1].reverse();
-                        }
-                    });
+                    this.fillItems(data, labelColName, valueColName, tooltipColName);
 
                     if (this.runAfterFilling != null)
                     {
@@ -1270,7 +877,7 @@ class InputEx
     {
         this.isFilling = true;
         for (const dataRow of dataRows) {
-            var label = dataRow[labelColName].toString();
+            var label = (dataRow[labelColName] ?? "").toString();
             var value = (dataRow[valueColName] ?? "").toString();
             var tooltip = (dataRow[tooltipColName] ?? "").toString();
             this.addItem(label, value, tooltip);
@@ -1282,6 +889,67 @@ class InputEx
         this.isFilling = false;
     }
 
+    setAsExtendableList(setting = true, btnLabelText = "", clickFunc = null) // better to add this in runAfterFilling function
+    {
+        if ((this.type == "radio-select" || this.type == "checkbox-select") && setting)
+        {
+            if (this.extendableListAddBtnEx == null || this.extendableListAddBtnEx == undefined)
+            {
+                this.extendableListAddBtnEx = new InputEx(this.fieldWrapper, this.id + "-add-item-ex-btn", "buttonEx");
+                this.extendableListAddBtnEx.setLabelText(btnLabelText);
+                this.extendableListAddBtnEx.addEvent("click", clickFunc);
+            }
+            else
+            {
+                this.fieldWrapper.appendChild(this.extendableListAddBtnEx.container);
+            }
+            this.extendableList = setting;
+        }
+        else
+        {
+            
+        }
+    }
+
+    clearList()
+    {
+        if (this.isMultipleInput)
+        {
+            switch (this.type)
+            {
+                case "radio-select":
+                case "checkbox-select":
+                    while (this.inputExs.length > 0)
+                    {
+                        this.inputExs.pop().destroy();
+                    }
+                    if (this.otherOptionEx != null)
+                    {
+                        this.otherOptionEx.destroy();
+                        this.otherOptionEx = null;
+                    }
+                    if (this.extendableListAddBtnEx != null)
+                    {
+                        // this.extendableListAddBtnEx.destroy(); // do not throw reference away!!!!
+                    }
+                    this.dbInputEx = [];
+                    break;
+                case "select":
+                case "combo":
+                    Array.from((this.type == "select" ? this.fields[0] : this.datalist).children).forEach((option)=>{
+                        option.remove();
+                    });
+                    if (this.type == "select")
+                    {
+                        addText("", createElementEx(NO_NS, "option", this.fields[0], null));
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     setWidth(width = "none")
     {
         if (typeof(width) != "string")
@@ -1291,7 +959,7 @@ class InputEx
 
         width = width.trim();
 
-        if (this.isMultipleInput && this.type != "combo")
+        if (this.isMultipleInput)
         {
             this.inputExs.forEach(inputEx=>{
                 inputEx.setWidth(width);
@@ -1388,14 +1056,13 @@ class InputEx
 
     reverse() // change actual order of label and field; toggle setting
     {
-        console.log()
-        if (this.isMultipleInput || this.type.startsWith("button") || this.labels.length <= 0)
+        if (this.isMultipleInput || this.type.startsWith("button"))
         {
             this.inputExs.forEach((inputEx)=>{
                 inputEx.reverse();
             });
         }
-        else
+        else if (this.labels.length > 0)
         {
             if (this.reversed)
             {
@@ -1407,7 +1074,6 @@ class InputEx
                 this.fieldWrapper.insertBefore(this.fields[0], this.labels[0]);
                 this.fieldWrapper.appendChild(this.labels[0]);
             }
-
         }
 
         this.reversed = !this.reversed;
@@ -1427,6 +1093,8 @@ class InputEx
             case "checkbox-select":
             case "radio-select":
             case "button":
+            case "submit":
+            case "reset":
             case "buttonEx":
             case "buttons":
             case "buttonExs":
@@ -1438,6 +1106,783 @@ class InputEx
                 this.fields[0].style.borderBottomWidth = "3px";
                 break;
         }
+    }
+
+    setHeaders(...headerTexts)
+    {
+        var invalidArgsStr = "";
+
+        if (this.type != "table")
+        {
+            return null;
+        }    
+
+        if (this.thead != null)
+        {
+            this.thead.remove();
+        }
+
+        this.thead = createElementEx(NO_NS, "span", this.table, this.tbody, "class", "input-ex-thead", "style", "display: table-header-group;");
+
+        headerTexts.forEach((headerText, i)=>{
+            invalidArgsStr += (typeof(headerText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "headerTexts[" + i + "]:" + headerText);
+            // addText(headerText, createElementEx(NO_NS, "b", this.thead, null, "class", "input-ex-table-header", "style", "display: table-cell;"));
+            createElementEx(NO_NS, "b", this.thead, null, "class", "input-ex-table-header", "style", "display: table-cell;").innerHTML = headerText;
+        });
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        createElementEx(NO_NS, "b", this.thead, null, "class", "input-ex-table-header-tail", "style", "display: table-cell;");
+
+        return this.thead;
+    }
+
+    getHeaders()
+    {
+        return (this.thead != null && this.thead.children.length > 1 ? Array.from(this.thead.children).map(th=>th.innerHTML).slice(0,-1) : []);
+    }
+
+    setTypes(...types)
+    {
+        var invalidArgsStr = "", diff = (this.thead == null || this.thead.children.length <= 1 ? 0 : this.thead.children.length - 1 - types.length);
+
+        if (this.type != "table")
+        {
+            return null;
+        }    
+
+        types.forEach((type, i)=>{
+            invalidArgsStr += (typeof(type) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "types[" + i + "]:" + type);
+            if (diff < 0 && this.thead.children.length - 2 < i)
+            {
+                createElementEx(NO_NS, "b", this.thead, this.thead.children[this.thead.children.length - 1], "class", "input-ex-table-header-blank", "style", "display: table-cell;");
+            }
+            this.tableTypes.push(type);
+        });
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+
+        while(this.tableTypes.length < this.thead.children.length - 1)
+        {
+            this.tableTypes.push("text");
+        }
+
+        return this.tableTypes;
+    }
+
+    setDBColNames(...dbColNames) // run only after setTypes()
+    {
+        var invalidArgsStr = "";
+
+        if (this.type != "table" || this.tableTypes.length == 0)
+        {
+            return null;
+        }    
+
+        dbColNames.forEach((dbColName, i)=>{
+            invalidArgsStr += (typeof(dbColName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbColNames[" + i + "]:" + dbColName);
+        });
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+        else if (this.tableTypes.length != dbColNames.length)
+        {
+            throw("Mismatch in tableTypes and dbColNames");
+        }
+
+        this.tableDBColNames = dbColNames;
+
+        return this.tableDBColNames;
+    }
+
+    setDBKeyName(dbKeyName)
+    {
+        var invalidArgsStr = "";
+
+        if (this.type != "table" || this.tableTypes.length == 0)
+        {
+            return null;
+        }    
+
+        if (typeof(dbKeyName) != "string" || dbKeyName.trim() == "")
+        {
+            throw("Incorrect argument types: dbKeyName:" + dbKeyName);
+        }
+
+        if (this.tableDBKeyName == "")
+        {
+            this.tableDBKeyName = dbKeyName;
+
+            this.inputExs.forEach(inputRow=>{
+                inputRow[this.tableDBKeyName] = null;
+            });
+        }
+        else
+        {
+            this.inputExs.forEach(inputRow=>{
+                inputRow[dbKeyName] = inputRow[this.tableDBKeyName];
+
+                delete inputRow[this.tableDBKeyName];
+            });
+
+            this.tableDBKeyName = dbKeyName;
+        }
+        
+
+        return this.tableDBKeyName;
+    }
+
+    setInitFunctions(...functions) // run only after setTypes()
+    {
+        var invalidArgsStr = "";
+
+        if (this.type != "table" || this.tableTypes.length == 0)
+        {
+            return null;
+        }    
+
+        functions.forEach((func, i)=>{
+            invalidArgsStr += (typeof(func) == "function" || func == null ? "" : (invalidArgsStr == "" ? "" : "; ") + "functions[" + i + "]:" + func);
+        });
+
+        if (invalidArgsStr.trim() != "")
+        {
+            throw("Incorrect argument types: " + invalidArgsStr);
+        }
+        else if (this.tableTypes.length != functions.length)
+        {
+            throw("Mismatch in tableTypes and functions");
+        }
+
+        this.tableInitFunctions = functions;
+
+        return this.tableInitFunctions;
+    }
+
+    addRow(number = 1, removeRowCallback = null)
+    {
+        var tr = null, td = null, inputRow = [], fieldEx = null;
+
+        if (typeof(number) != "number" || !Number.isInteger(number) || number < 0)
+        {
+            throw("Incorrect argument types: number:" + number);
+        }
+
+        if (this.type != "table")
+        {
+            return null;
+        }    
+
+        if (this.tableTypes.length == 0)
+        {
+            this.setTypes("text");
+        }
+
+        for (var count = 0; count < number; count++)
+        {
+            tr = createElementEx(NO_NS, "span", this.tbody, null, "class", "input-ex-tr", "style", "display: table-row;");
+            inputRow = [];
+    
+            this.tableTypes.forEach((type, i)=>{
+                td = createElementEx(NO_NS, "span", tr, null, "class", "input-ex-td", "style", "display: table-cell;");
+                if (type == 'displayEx')
+                {
+                    fieldEx = new DisplayEx(td, "span", this.id + (this.inputExs.length * this.tableTypes.length + i));
+                    if (this.tableDefaultValues.length > 0)
+                    {
+                        fieldEx.setHTMLContent(this.tableDefaultValues[i])
+                    }
+                }
+                else
+                {
+                    fieldEx = new InputEx(td, this.id + (this.inputExs.length * this.tableTypes.length + i), this.tableTypes[i]);
+                    if (this.tableDefaultValues.length > 0)
+                    {
+                        fieldEx.setDefaultValue(this.tableDefaultValues[i])
+                    }
+                    fieldEx.parentInputEx = this;
+                }
+                fieldEx.setFullWidth();
+                if (this.tableDBColNames.length == 0)
+                {
+                    inputRow.push(fieldEx);
+                }
+                else
+                {
+                    inputRow[this.tableDBColNames[i]] = fieldEx;
+                }
+                fieldEx["td"] = td;
+                fieldEx["tr"] = tr;
+                if (this.tableInitFunctions.length != 0 && this.tableInitFunctions[i] != null && this.tableInitFunctions[i] != undefined)
+                {
+                    this.tableInitFunctions[i](fieldEx);
+                }
+            });
+    
+            if (this.tableDBKeyName != "")
+            {
+                inputRow[this.tableDBKeyName] = null;
+            }
+            this.inputExs.push(inputRow);
+    
+            td = createElementEx(NO_NS, "span", tr, null, "class", "input-ex-td", "style", "display: table-cell;");
+            // Remove Row Button
+            fieldEx = new InputEx(td, this.id + ((this.inputExs.length + 1) * this.tableTypes.length), "buttonEx");
+            fieldEx.fields[0].style.borderRadius = "50%";
+            fieldEx.fields[0].style.padding = 0;
+            fieldEx.fields[0].style.fontSize = "0.5em";
+            fieldEx.fields[0].style.color = "red";
+            fieldEx.setLabelText("<span class=\"material-icons-round\">close</span>");
+            fieldEx.parentInputEx = this;
+            tr["removeBtn"] = fieldEx;
+            tr["inputRow"] = inputRow;
+            fieldEx["tr"] = tr;
+            fieldEx["inputRow"] = inputRow;
+            fieldEx.addEvent("click", function(removeRowClickEvent){
+                var removeRowCallbackDefault = ()=>{
+                    this.inputEx.parentInputEx.inputExs.splice(this.inputEx.parentInputEx.inputExs.findIndex(inputRow=>inputRow == this.inputEx["inputRow"]), 1);
+                    this.inputEx["tr"].remove();
+                };
+                if (this.inputEx.parentInputEx.removeRowOverride)
+                {
+                    (typeof(removeRowCallback) == "function" ? removeRowCallback : removeRowCallbackDefault)();
+                }
+                else
+                {
+                    new MsgBox(this.inputEx["tr"], "Do you really want to delete this row?", "YESNO", (typeof(removeRowCallback) == "function" ? removeRowCallback : removeRowCallbackDefault));
+                }
+            });
+        }
+
+        return (number == 1 ? inputRow : this.inputExs);
+    }
+
+    removeRow(index) // uses the removeRowCallback or the default callback supplied in addRow via the remove button
+    {
+        if (typeof(index) != "number" || !Number.isInteger(index) || index < 0 || index >= this.inputExs.length)
+        {
+            throw("Incorrect argument types: number:" + number);
+        }
+
+        if (this.type != "table")
+        {
+            return null;
+        }    
+
+        for (const key in this.inputExs[index])
+        {
+            this.inputExs[index][key]["tr"]["removeBtn"].fields[0].click();
+            break;
+        }
+    }
+
+    removeAllRows()
+    {
+        if (this.type != "table")
+        {
+            return null;
+        }    
+        
+        this.removeRowOverride = true;
+        while (this.inputExs.length > 0)
+        {
+            this.removeRow(0);
+        }
+        this.removeRowOverride = false;
+    }
+
+    createAddRowButton()
+    {
+        if (this.addRowButtonEx == null)
+        {
+            this.addRowButtonEx = new InputEx(this.fieldWrapper, this.id + "-add-row-button-ex", "buttonEx");
+            this.addRowButtonEx.setLabelText("+Add a row");
+            this.addRowButtonEx.addEvent("click", clickEvent=>{
+                this.addRow();
+            });
+        }
+
+        return this.addRowButtonEx;
+    }
+
+    // METHODS THAT QUERY OR MANIPULATE THE HANDLED DATA OF INPUTEX
+    getId()
+    {
+        return this.id;
+    }
+
+    setValue(...values) // ALWAYS USE STRING VALUES IN CHECKBOX MULTIPLE
+    {
+        // validate at least the first value
+        if (typeof(values[0]) != "string" && typeof(values[0]) != "number" || (this.type == "table" && (typeof(values[0]) != "string" || Object.prototype.toString.call(values[1]) != "[object Array]")))
+        {
+            throw("Invalid argument type: values:" + values.toString());
+        }
+
+        if (typeof(values[0]) == "string")
+        {
+            values[0] = values[0].trim();
+        }
+
+        switch (this.type)
+        {
+            case "radio-select":
+                for (const inputEx of this.inputExs) {
+                    if (inputEx.fields[0].value == values[0])
+                    {
+                        inputEx.check();
+                    }
+                    else
+                    {
+                        inputEx.uncheck();
+                    }
+                }
+                break;
+            case "checkbox-select":
+                for (const inputEx of this.inputExs) {
+                    if (values.includes(inputEx.fields[0].value) || values.map(value=>value.toString()).includes(inputEx.fields[0].value))
+                    {
+                        inputEx.check();
+                    }
+                    else
+                    {
+                        inputEx.uncheck();
+                    }
+                }
+                break;
+            case "table": // giving mismatching values will result in undefined behavior!!!!!!!!!
+                this.removeAllRows();
+                
+                if (values[0] != "")
+                {
+                    this.setDBKeyName(values[0]);
+                }
+
+                for (const row of values[1])
+                {
+                    var inputRow = this.addRow();
+                    for (const key in row)
+                    {
+                        if (values[0] != "" && key == values[0] && (inputRow[key] == null || inputRow[key] == undefined)) // primary key
+                        {
+                            inputRow[key] = row[key];
+                        }
+                        else if (row[key] != null && row[key] != undefined)
+                        {
+                            inputRow[key].setDefaultValue(row[key], true);
+                            inputRow[key].enable();
+                        }
+                    }
+                }
+                break;
+            case "buttons":
+            case "buttonExs":
+                break;
+            case "select":
+            case "combo":
+            case "buttonEx": // value attribute is still set but is not displayed
+            case "button":
+            case "submit":
+            case "reset":
+            default:
+                this.fields[0].value = values[0];
+                break;
+        }
+    }
+
+    getValue()
+    {
+        switch (this.type)
+        {
+            case "radio-select":
+                if (this.otherOptionEx != null && this.otherOptionEx.isChecked())
+                {
+                    return this.otherOptionEx.getValue();
+                }
+
+                for (const inputEx of this.inputExs) {
+                    if (inputEx.isChecked())
+                    {
+                        return inputEx.getValue();
+                    }
+                }
+                break;
+            case "checkbox-select":
+                var values = [];
+                for (const inputEx of this.inputExs) {
+                    // console.log(inputEx + "\n" + inputEx.isChecked() + inputEx.fields[0].checked);
+                    if (inputEx.isChecked())
+                    {
+                        values.push(inputEx.getValue());
+                    }
+                }
+                return values;
+                break;
+            case "radio":
+            case "checkbox":
+                if (this.inlineTextboxEx != null && this.isChecked())
+                {
+                    return this.inlineTextboxEx.getValue();
+                }
+                else if (this.isChecked())
+                {
+                    return this.fields[0].value.trim();
+                }
+                break;
+            case "table":
+                return this.inputExs.map(inputRow=>{
+                    var dataRow = {};
+                    for (const key in inputRow)
+                    {
+                        dataRow[key] = (typeof(inputRow[key]) == "string" || typeof(inputRow[key]) == "number" || inputRow[key] == null || inputRow[key] == undefined 
+                            ? inputRow[key] 
+                            : (inputRow[key].type == "checkbox" || inputRow[key].type == "radio" 
+                                ? inputRow[key].isChecked() 
+                                : (inputRow[key].type == "select" || inputRow[key].type == "combo"
+                                    ? inputRow[key].getDataValue()
+                                    : inputRow[key].getValue()
+                                )
+                            )
+                        );
+                    }
+                    return dataRow;
+                });
+                break;
+            case "buttons":
+            case "buttonExs":
+                break;
+            case "select":
+                if (this.fields[0].children.length > 0) // UNNECESSARY IF
+                {
+                    return Array.from(this.fields[0].children).find(option=>option.value == this.fields[0].value).innerHTML;
+                }
+                break;
+            case "combo":
+            case "buttonEx":
+            case "button":
+            case "submit":
+            case "reset":
+            default:
+                return this.fields[0].value.trim();
+                break;
+        }
+
+        return null;
+    }
+
+    getDataValue()
+    {
+        var textValue = this.getValue();
+
+        if (textValue != "" && this.type == "combo" && this.datalist.children.length > 0) // KEEP THE IF-ELSE FOR NOW, IN CASE THERE'S A NEED TO DEBUG
+        {
+            return Array.from(this.datalist.children).find(option=>option.value == textValue).getAttribute("data-value");
+        }
+        else if (textValue != "" && this.type == "select")
+        {
+            return this.fields[0].value;
+        }
+
+        return null;
+    }
+
+    resetValue()
+    {
+        switch (this.type)
+        {
+            case "table":
+                for (const inputExRow of this.inputExs)
+                {
+                    for (const key in inputExRow)
+                    {
+                        inputExRow[key].resetValue();
+                    }
+                }
+            default:
+                this.setValue(this.defaultValue ?? "");
+                break;
+        }
+    }
+
+    setDefaultValue(value, setAsValue = false)
+    {        
+        if (this.type != "table")
+        {
+            this.defaultValue = value;
+            
+            if (setAsValue)
+            {
+                this.setValue(value);
+            }
+        }
+    }
+
+    getDefaultValue()
+    {
+        return this.defaultValue;
+    }
+
+    setLabelText(labelText) // legend for fieldset of non-single input
+    {
+        if (typeof(labelText) != "string")
+        {
+            throw("Invalid argument type: labelText:" + labelText);
+        }
+
+        labelText = labelText.trim();
+
+        if (this.type == "button" || this.type == "submit" || this.type == "reset")
+        {
+            this.setValue(labelText);
+        }
+        else if (this.type == "buttonEx")
+        {
+            this.fields[0].innerHTML = labelText;
+        }
+        else if (!this.type.startsWith("button"))
+        {
+            if (this.labels.length == 0)
+            {
+                if (this.useFieldSet && this.isMultipleInput)
+                {
+                    this.labels.push(createElementEx(NO_NS, "legend", this.fieldWrapper));
+                }
+                else
+                {
+                    this.labels.push(createElementEx(NO_NS, "label", this.fieldWrapper, this.fields[0], "for", this.id));
+                }
+            }
+            this.fieldWrapper.insertBefore(document.createTextNode(" "), this.fields[0]);
+            this.labels[0].innerHTML = labelText;
+            this.labels[0].appendChild(this.colon = htmlToElement("<span class=\"colon hidden\">:</span>"));
+            this.labels[0].inputEx = this;
+            // this.labels[0].style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
+        }
+    }
+
+    getLabelText() // legend for fieldset of non-single input
+    {
+        if (this.type == "button" || this.type == "submit" || this.type == "reset")
+        {
+            return this.getValue();
+        }
+        else if (this.type == "buttonEx")
+        {
+            return this.fields[0].innerHTML;
+        }
+        else if (this.labels.length == 1 && !this.type.startsWith("button"))
+        {
+            return this.labels[0].innerHTML;
+        }
+
+        return null;
+    }
+
+    setPlaceholderText(placeholderText) // single input only
+    {
+        if (typeof(placeholderText) != "string")
+        {
+            throw("Invalid argument type: placeholderText:" + placeholderText);
+        }
+
+        placeholderText = placeholderText.trim();
+
+        if (!this.isMultipleInput && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
+        {
+            this.fields[0].placeholder = placeholderText;
+        }
+    }
+
+    getPlaceholderText() // single input only
+    {
+        if (!this.isMultipleInput && !this.type.startsWith("button") && this.type != "reset" && this.type != "submit")
+        {
+            return this.fields[0].placeholder;
+        }
+
+        return null;
+    }
+
+    setTooltipText(tooltipText)
+    {
+        if (typeof(tooltipText) != "string" && typeof(tooltipText) != "number")
+        {
+            throw("Invalid argument type: tooltipText:" + tooltipText);
+        }
+
+        if (typeof(tooltipText) == "string")
+        {
+            tooltipText = tooltipText.trim();
+        }
+
+        if (this.type != "radio-select" && this.type != "checkbox-select")//(!this.isMultipleInput)
+        {
+            if (tooltipText == "")
+            {
+                if (this.fields[0].hasAttribute("title"))
+                {
+                    this.fields[0].removeAttribute("title");
+                }
+            }
+            else
+            {
+                this.fields[0].title = tooltipText;
+            }
+        }
+        
+        if (this.labels.length > 0)
+        {
+            if (tooltipText == "")
+            {
+                if (this.labels[0].hasAttribute("title"))
+                {
+                    this.labels[0].removeAttribute("title");
+                }
+            }
+            else
+            {
+                this.labels[0].title = tooltipText;
+            }
+        }
+    }
+
+    getToolTipText() // single-input element types only
+    {
+        if (!this.isMultipleInput)
+        {
+            return this.fields[0].title;
+        }
+        else if (this.labels.length > 0)
+        {
+            return this.labels[0].title;
+        }
+
+        return null;
+    }
+
+    setGroupName(nameStr)
+    {
+        if (typeof(nameStr) != "string")
+        {
+            throw("Invalid argument type: nameStr:" + nameStr);
+        }
+
+        this.name = nameStr.trim();
+
+        if (this.isMultipleInput)
+        {
+            this.inputExs.forEach((inputEx)=>{
+                inputEx.setGroupName(this.name);
+            });
+        }
+        else
+        {
+            this.fields[0].name = this.name;
+            if (this.labels.length > 0)
+            {
+                this.labels[0].for = this.name;
+            }
+        }
+    }
+
+    getGroupName()
+    {
+        return this.name;
+    }
+
+    // METHODS THAT QUERY OR CHANGE THE STATE OF INPUTEX
+    check(doCheck = true) // single input only
+    {
+        if (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox"))
+        {
+            // this.fields[0].toggleAttribute("checked", doCheck); // hard-coded HTML check attributes confuse the browser
+            this.fields[0].checked = doCheck;
+
+            if (this.handleInlineTextboxExOnCheck != null || this.handleInlineTextboxExOnCheck != undefined)
+            {
+                this.handleInlineTextboxExOnCheck();
+            }
+
+        }
+    }
+
+    uncheck() // single input only
+    {
+        this.check(false);
+    }
+
+    isChecked() // single input only
+    {
+        return (!this.isMultipleInput && (this.type == "radio" || this.type == "checkbox") && (this.fields[0].checked)) //|| this.fields[0].hasAttribute("checked"))); // hard-coded HTML check attributes confuse the browser
+    }
+
+    require(setting = true)
+    {
+        if (!this.isMultipleInput)
+        {
+            this.fields[0].required = setting;
+        }
+    }
+
+    isRequired()
+    {
+        return this.fields[0].required;
+    }
+
+    enable(index = null, doEnable = true) // null index means all inputs should be enabled
+    {
+        var invalidArgsStr = "";
+
+        invalidArgsStr += (index == null || (typeof(index) == "number" && (index == 0 || Number.isInteger(this)) && index >= 0 && index < this.fields.length) ? "" : "index:" + index);
+        invalidArgsStr += (typeof(doEnable) == "boolean" ? "" : (invalidArgsStr == "" ? "" : ", ") + "doEnable:" + doEnable);
+
+        if (invalidArgsStr != "")
+        {
+            throw("Invalid argument type: " + invalidArgsStr);
+        }
+
+        if (this.isMultipleInput && index == null)
+        {
+            this.inputExs.forEach((inputEx)=>{
+                inputEx.enable();
+            });
+
+            index = 0;
+        }
+        else
+        {
+            if (index == null)
+            {
+                index = 0;
+            }
+    
+            this.fields[index].toggleAttribute("disabled", !doEnable);
+        }
+
+        if (this.labels.length > index)
+        {
+            this.labels[index].toggleAttribute("disabled", !doEnable);
+        }
+
+        this.disabled = !doEnable;
+    }
+    
+    disable(index = null)
+    {
+        this.enable(index, false);
+    }
+
+    isDisabled()
+    {
+        return this.disabled;
     }
 
     addStatusPane()
@@ -1589,17 +2034,17 @@ class InputEx
         return this.statusTimeout;
     }
 
-    addEvent(eventType, func, index = -1) // single and multiple inputs except for buttons and buttonExs
+    addEvent(eventType, func, index = -1, addEventListenerOption = false) // single and multiple inputs except for buttons and buttonExs
     {
         if (!this.isMultipleInput || this.type == "combo")
         {
             this.listeners.field[eventType] = func;
-            this.fields[0].addEventListener(eventType, this.listeners.field[eventType]);
+            this.fields[0].addEventListener(eventType, this.listeners.field[eventType], addEventListenerOption);
         }
         else if (this.type != "buttons" && this.type != "buttonExs" && (index == null || index == undefined || index == -1))
         {
             for (const inputEx of this.inputExs) {
-                inputEx.addEvent(eventType, func);
+                inputEx.addEvent(eventType, func, index, addEventListenerOption);
             }
         }
         else if (typeof(index) == "number" && Number.parseInt(index) >= 0)
@@ -1757,7 +2202,7 @@ class FormEx
         id = id.trim();
 
         this.container = createElementEx(NO_NS, "div", parentEl, null, "class", "form-ex", "style", "display: inline-block;");
-        this.container.style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
+        // this.container.style.userSelect = "none"; // MAY BE TRANSFERRED TO CSS INSTEAD
         this.useFormElement = useFormElement; // will contain the input element with its label or other InputEx elements
         this.fieldWrapper = createElementEx(NO_NS, (useFormElement ? "form" : "div"), this.container, null, "class", "form-ex-fields-wrapper", "style", "display: block;");
         this.headers = [];
@@ -1864,7 +2309,7 @@ class FormEx
 
         invalidArgsStr += (typeof(labelText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "labelText:" + labelText);
         invalidArgsStr += (typeof(type) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "type:" + type);
-        invalidArgsStr += (typeof(value) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "value:" + value);
+        invalidArgsStr += (typeof(value) == "string" || typeof(value) == "number" ? "" : (invalidArgsStr == "" ? "" : "; ") + "value:" + value);
         invalidArgsStr += (typeof(tooltip) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "tooltip:" + tooltip);
         invalidArgsStr += (typeof(dbColName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbColName:" + dbColName);
         invalidArgsStr += (typeof(dbTableName) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "dbTableName:" + dbTableName);
@@ -1877,12 +2322,16 @@ class FormEx
 
         labelText = labelText.trim();
         type = type.trim();
-        value = value.trim();
+        if (typeof(value) == "string")
+        {
+            value = value.trim();
+        }
         tooltip = tooltip.trim();
         dbColName = dbColName.trim();
         dbTableName = dbTableName.trim();
 
         this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), type, useFieldSet));
+        this.inputExs[this.inputExs.length - 1].parentFormEx = this;
         
         if (labelText != "")
         {
@@ -1904,9 +2353,9 @@ class FormEx
             this.dbTableName[dbColName] = dbTableName;
         }
 
-        if (value != "")
+        if (value != "" || typeof(value) == "number") // the number validation is needed as JS interprets 0 == "" as true
         {
-            this.inputExs[this.inputExs.length - 1].setValue(value);
+            this.inputExs[this.inputExs.length - 1].setDefaultValue(value, true);
         }
 
         // this.inputExs[this.inputExs.length - 1].spacer = document.createTextNode(" ");
@@ -2233,15 +2682,25 @@ class MsgBox extends DialogEx
 
         for (var i = 0; i < this.btnGrp.fields.length; i++)
         {
-            this.btnGrp.fields[this.btnGrp.fields.length - 1 - i].addEventListener("click", (clickEvent)=>{
+            this.btnGrp.fields[i].addEventListener("click", (clickEvent)=>{
                 this.returnValue = i;
                 this.close();
             });
 
-            if (i > 0 && i < func.length + 1 && func[i - 1] != null)
+            if (i < func.length && func[i] != null)
             {
-                this.btnGrp.fields[this.btnGrp.fields.length - 1 - i].addEventListener("click", func[i - 1]);
+                this.btnGrp.fields[i].addEventListener("click", func[i]);
             }
+
+            // this.btnGrp.fields[this.btnGrp.fields.length - 1 - i].addEventListener("click", (clickEvent)=>{
+            //     this.returnValue = i;
+            //     this.close();
+            // });
+
+            // if (i > 0 && i < func.length + 1 && func[i - 1] != null)
+            // {
+            //     this.btnGrp.fields[this.btnGrp.fields.length - 1 - i].addEventListener("click", func[i - 1]);
+            // }
         }
         this.btnGrp.fields[this.btnGrp.fields.length - 1].focus();
     }
@@ -2261,7 +2720,7 @@ class MPASIS_App
 
         this.forms = {};
 
-        for (const navLI of Array.from(this.navbar.querySelectorAll('li'))) {
+        for (const navLI of Array.from(this.navbar.querySelectorAll("li"))) {
             for (const link of Array.from(navLI.children)) {
                 if (link.tagName == "A")
                 {
@@ -2885,6 +3344,7 @@ class MPASIS_App
             var header = null, field = null, applicant = null, searchedApplicants = null, row = null, getAppliedPosition;
             document.positions = [];
             document.mpsEducIncrement = [];
+            document.enumEducationalAttainment = [];
 
             document.scrim = new ScrimEx(this.main);
 
@@ -2976,15 +3436,14 @@ class MPASIS_App
             field.setVertical();
             field.setMin(10);
             field.setMax(999);
-            field.setValue(18);
 
-            field = this.forms["applicantData"].addInputEx("Sex", "combo", "", "Sex", "sex", "Person");
+            field = this.forms["applicantData"].addInputEx("Sex", "select", "", "Sex", "sex", "Person");
             field.container.style.gridColumn = "5 / span 4";
             field.setVertical();
-            field.addItem("Male");
-            field.addItem("Female");
+            field.addItem("Male", 1);
+            field.addItem("Female", 2);
 
-            field = this.forms["applicantData"].addInputEx("Civil Status", "combo", "", "Civil Status", "civil_status", "Person"); // Cross-reference
+            field = this.forms["applicantData"].addInputEx("Civil Status", "select", "", "Civil Status", "civil_status", "Person"); // Cross-reference
             field.container.style.gridColumn = "9 / span 4";
             field.setVertical();
             field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=civilStatus", "civil_status", "index", "description");
@@ -3023,21 +3482,38 @@ class MPASIS_App
             educField.showColon();
             educField.reverse();
 
-            var postGradUnitsField = this.forms["applicantData"].addInputEx("Post-Graduate Units", "number", "0", "Post-graduate units taken toward the completion of the next post-graduate degree", "postgraduate_units", "Person");
+            var postGradUnitsField = this.forms["applicantData"].addInputEx("Post-Graduate Units", "number", 0, "Post-graduate units taken toward the completion of the next post-graduate degree", "postgraduate_units", "Person");
             postGradUnitsField.container.style.gridColumn = "7 / span 6";
             postGradUnitsField.setVertical();
             postGradUnitsField.setMin(0);
             postGradUnitsField.setMax(999);
-            postGradUnitsField.setValue(0);
             postGradUnitsField.disable();
 
             var completeAcadReqField = this.forms["applicantData"].addInputEx("Complete Academic Requirements completed towards a post-graduate degree", "checkbox", "", "Mark this if applicant has completed all academic requirements but has not yet received the post-graduate degree.", "complete_academic_requirements", "Person");
             completeAcadReqField.container.style.gridColumn = "7 / span 6";
+            completeAcadReqField.container.style.gridRow = "span 2";
             completeAcadReqField.reverse();
             completeAcadReqField.disable();
 
+            var degreeTable = this.forms["applicantData"].addInputEx("Degrees Taken by Applicant", "table", "", "", "degrees-table", "Degrees_Taken", true);
+            degreeTable.container.style.gridColumn = "1 / span 12";
+            degreeTable.setHeaders("Type", "Degree Name", "Year/Level Completed", "Units Earned", "Complete Academic Requirements", "Graduation Year");
+            Array.from(degreeTable.thead.children).forEach((th, i)=>{
+                if (i < degreeTable.thead.children.length - 1)
+                {
+                    th.style.border = "1px solid";
+                    th.style.backgroundColor = "lightgray";
+                    th.style.fontSize = (i > 1 ? "0.6em" : "0.75em");
+                    th.style.textAlign = "center";
+                    th.style.verticalAlign = "middle";
+                }
+            });
+            degreeTable.setTypes("select", "text", "number", "number", "checkbox", "number");
+            degreeTable.setDBColNames("degree_typeIndex", "degree", "year_level_completed", "units_earned", "complete_academic_requirements", "graduation_year");
+            degreeTable.setDBKeyName("degree_takenId");
+
             var displaySpecEduc = new DisplayEx(this.forms["applicantData"].fieldWrapper, "fieldset", "", "", "Specific Educational Requirements of the Position", "The position applied requires this specific educational attainment.");
-            displaySpecEduc.container.style.gridColumn = "7 / span 6";
+            displaySpecEduc.container.style.gridColumn = "1 / span 12";
             var reqSpecEduc = createElementEx(NO_NS, "span", null, null, "class", "req-spec-educ", "style", "font-weight: bold;");
             addText("NONE", reqSpecEduc);
             displaySpecEduc.addContent(reqSpecEduc);
@@ -3068,8 +3544,44 @@ class MPASIS_App
 
             var computeEducIncrementLevel = ()=>{
                 var educAttainment = educField.getValue();
-                var postGradUnits = (postGradUnitsField.isDisabled() || educAttainment <= 5 || educAttainment >= 8 ? null : postGradUnitsField.getValue());
-                var completeAcadReq = (!completeAcadReqField.isDisabled() && completeAcadReqField.isChecked() ? 1 : 0);
+                console.log(degreeTable.inputExs);
+                var highestPostGradDegrees = degreeTable.inputExs.filter(inputRow=>{ // in terms of education increment
+                    switch (educAttainment)
+                    {
+                        case 0: case 1: case 2: case 3: case 4: case 5:
+                            return false;
+                            break;
+                        case 6:
+                            return inputRow["degree_typeIndex"].getDataValue() < 8;
+                            break;
+                        case 7:
+                            return inputRow["degree_typeIndex"].getDataValue() < 9;
+                            break;
+                        default: // highest educational increment
+                            break;
+                    }
+                });
+                var highestPostGradDegree = (highestPostGradDegrees.length == 0 ? [] : highestPostGradDegrees.reduce((prevRow, nextRow)=>{
+                    return (parseInt(prevRow["degree_typeIndex"]) < parseInt(nextRow["degree_typeIndex"])
+                            || parseInt(prevRow["degree_typeIndex"]) == parseInt(nextRow["degree_typeIndex"]) 
+                                && (parseInt(prevRow["units_earned"]) <= parseInt(nextRow["units_earned"])
+                                    || nextRow["complete_academic_requirements"].isChecked()
+                                )
+                        ? nextRow
+                        : prevRow
+                    );
+                }));
+
+                // if HS grad (educ attainment 4), only a bachelor's degree type and a degree name can be provided, along with the year/level (0-1 only) and/or units earned. No access to CAR and graduation year.
+
+                // if Completed 2 years in College (educ attainment 5), same as HS grad, but year/level cap has been bumped to maximum.
+
+                // if Bachelor's/Master's/Doctorate degree (educ attainment 6-7), a degree type and a degree name can be provided, along with the units completed, CAR, and graduation year. No access to year/level completed
+                console.log(highestPostGradDegrees, highestPostGradDegree); 
+
+                var postGradUnits = (highestPostGradDegree.length == 0 || educAttainment <= 5 || educAttainment >= 8 ? null : highestPostGradDegree[0]["units_earned"].getValue());
+                var completeAcadReq = (highestPostGradDegree.length != 0 && highestPostGradDegree[0]["complete_academic_requirements"].isChecked() ? 1 : 0);
+
                 var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
 
                 var incrementObj = document.mpsEducIncrement.filter(increment=>(
@@ -3112,23 +3624,63 @@ class MPASIS_App
             });
 
             educField.runAfterFilling = function(){
+                educField["previousValue"] = educField.getValue();
+
                 for (const inputEx of educField.inputExs)
                 {
                     inputEx.addEvent("change", changeEvent=>{
-                        if (educField.getValue() > 5 && educField.getValue() < 8)
+                        // degreeTable.addRowButtonEx.enable(null, (educField.getValue() >= 4 && educField.getValue() <= 8));
+                        degreeTable.addRowButtonEx.enable(null, (inputEx.getValue() >= 4 && inputEx.getValue() <= 8));
+
+                        if (degreeTable.inputExs.length > 0)
                         {
-                            postGradUnitsField.enable(null, !completeAcadReqField.isChecked());
-                            completeAcadReqField.enable();
-                            completeAcadReqField.setLabelText("Complete Academic Requirements completed towards a " + (educField.getValue() == 6 ? "Master's Degree" : "Doctorate"));
+                            new MsgBox(educField.fieldWrapper,
+                                "You are trying to switch educational attainments while degrees have already been added. This will result in some incompatible degrees being deleted from the list. Do you still want to continue?",
+                                "YESNO",
+                                yes=>{
+                                    var educAttainment = inputEx.getValue();
+                                    degreeTable.removeRowOverride = true;
+                                    for (var i = 0; i < degreeTable.inputExs.length; i++)
+                                    {
+                                        var degree = degreeTable.inputExs[i];
+
+                                        if (educAttainment < 4 || (educAttainment < 6 && degree["degree_typeIndex"].getDataValue() > 6) || (educAttainment < 7 && degree["degree_typeIndex"].getDataValue() > 7))
+                                        {
+                                            degree["degree_typeIndex"]["tr"]["removeBtn"].fields[0].click();
+                                            i--;
+                                        }
+                                    }
+                                    degreeTable.removeRowOverride = false;
+                                    educField["previousValue"] = inputEx.getValue();
+
+                                    attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                                }, no=>{
+                                    educField.setValue(educField["previousValue"] ?? "");
+
+                                    attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                                });
                         }
                         else
                         {
-                            postGradUnitsField.disable();
-                            completeAcadReqField.disable();
-                            completeAcadReqField.setLabelText("Complete Academic Requirements completed towards a post-graduate degree");
+                            educField["previousValue"] = educField.getValue();
+
+                            attainedEducIncrement.innerHTML = computeEducIncrementLevel();
                         }
 
-                        attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                        // if (educField.getValue() > 5 && educField.getValue() < 8)
+                        // {
+                        //     postGradUnitsField.enable(null, !completeAcadReqField.isChecked());
+                        //     completeAcadReqField.enable();
+                        //     completeAcadReqField.setLabelText("Complete Academic Requirements completed towards a " + (educField.getValue() == 6 ? "Master's Degree" : "Doctorate"));
+                        // }
+                        // else
+                        // {
+                        //     postGradUnitsField.disable();
+                        //     completeAcadReqField.disable();
+                        //     completeAcadReqField.setLabelText("Complete Academic Requirements completed towards a post-graduate degree");
+                        // }
+
+
                     });
                 }
 /* 
@@ -3144,7 +3696,7 @@ class MPASIS_App
                 });
 */
             };
-            educField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
+            // educField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
 
             header = this.forms["applicantData"].addHeader("Training", 3);
             header.style.gridColumn = "1 / span 12";
@@ -3220,7 +3772,7 @@ class MPASIS_App
                     "trainingHoursInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "trainingHours-" + timestamp, "number")
                 });
 
-                trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].setValue("0");
+                trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].setDefaultValue(0, true);
 
                 trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].addEvent("change", changeEvent=>{
                     attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
@@ -3692,6 +4244,7 @@ class MPASIS_App
                         // console.log(data);
                         document.positions = data["positions"];
                         document.mpsEducIncrement = data["mps_increment_table_education"];
+                        document.enumEducationalAttainment = data["enum_educational_attainment"]
                         
                         document.scrim.destroy();
                         positionField.fillItems(document.positions.filter((position, index, positions)=>{
@@ -3699,6 +4252,148 @@ class MPASIS_App
                             while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
                             return i == index && position["filled"] == 0;
                         }), "position_title", "", ""); // removes duplicate positions
+
+                        educField.fillItems(document.enumEducationalAttainment, "educational_attainment", "index", "description");
+                        educField.runAfterFilling();
+
+                        degreeTable.setInitFunctions(function(inputEx){
+                            inputEx["td"].style.border = "1px solid";
+                            inputEx.setWidth("100%");
+                            // inputEx.fillItemsFromServer("/mpasis/php/process.php", "app=mpasis&a=fetch&f=univEducLevel", "educational_attainment", "index", "description");
+                            inputEx.fillItems(document.enumEducationalAttainment, "educational_attainment", "index", "description");
+                            for (const option of Array.from(inputEx.fields[0].children))
+                            {
+                                if (option.hasAttribute("value") && option.value < 6)
+                                {
+                                    option.remove();
+                                }
+                            }
+                            inputEx.addEvent("change", selectDegreeTypeChangeEvent=>{
+                                inputEx["tr"]["inputRow"]["degree"].enable(null, inputEx.getValue() != "");
+                                inputEx["tr"]["inputRow"]["degree"].resetValue();
+                                inputEx["tr"]["inputRow"]["year_level_completed"].disable();
+                                inputEx["tr"]["inputRow"]["year_level_completed"].resetValue();
+                                inputEx["tr"]["inputRow"]["units_earned"].disable();
+                                inputEx["tr"]["inputRow"]["units_earned"].resetValue();
+                                inputEx["tr"]["inputRow"]["complete_academic_requirements"].disable();
+                                inputEx["tr"]["inputRow"]["complete_academic_requirements"].resetValue();
+                                inputEx["tr"]["inputRow"]["graduation_year"].disable();
+                                inputEx["tr"]["inputRow"]["graduation_year"].resetValue();
+                                attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                            });
+                        }, function(inputEx){
+                            inputEx["td"].style.border = "1px solid";
+                            inputEx.setWidth("100%");
+                            inputEx.disable();
+                            var degreeNameChange = degreeNameEvent=>{
+                                var setting = (inputEx.getValue() != "");
+                                inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
+                                inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
+                                attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                            };
+                            inputEx.addEvent("change", degreeNameChange);
+                            inputEx.addEvent("keydown", degreeNameChange);
+                            inputEx.addEvent("keyup", degreeNameChange);
+                            inputEx.addEvent("keypress", degreeNameChange);
+                            inputEx.addEvent("blur", degreeNameChange);
+                        }, function(inputEx){
+                            inputEx["td"].style.border = "1px solid";
+                            inputEx.setTooltipText("Leave blank to make the other options available");
+                            inputEx.setMin(0);
+                            inputEx.setMax(8);
+                            inputEx.setWidth("100%");
+                            inputEx.fields[0].classList.add("right");
+                            inputEx.disable();
+                            var unitsEarnedChange = unitsEarnedEvent=>{
+                                var setting = (inputEx.getValue() == "" && inputEx["tr"]["inputRow"]["units_earned"].getValue() == "");
+                                // inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
+                                // inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
+                                inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
+                                attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                            };
+                            inputEx.addEvent("change", unitsEarnedChange);
+                            inputEx.addEvent("keydown", unitsEarnedChange);
+                            inputEx.addEvent("keyup", unitsEarnedChange);
+                            inputEx.addEvent("keypress", unitsEarnedChange);
+                            inputEx.addEvent("blur", unitsEarnedChange);
+                            inputEx.addEvent("blur", blurEvent=>{
+                                if (inputEx.getValue() == 0)
+                                {
+                                    inputEx.setValue("");
+                                }
+                            });
+                        }, function(inputEx){
+                            inputEx["td"].style.border = "1px solid";
+                            inputEx.setTooltipText("Leave blank to make the other options available");
+                            inputEx.setMin(0);
+                            inputEx.setMax(999);
+                            inputEx.setWidth("100%");
+                            inputEx.fields[0].classList.add("right");
+                            inputEx.disable();
+                            var unitsEarnedChange = unitsEarnedEvent=>{
+                                var setting = (inputEx.getValue() == "" && inputEx["tr"]["inputRow"]["year_level_completed"].getValue() == "");
+                                // inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
+                                // inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
+                                inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
+                                attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                            };
+                            inputEx.addEvent("change", unitsEarnedChange);
+                            inputEx.addEvent("keydown", unitsEarnedChange);
+                            inputEx.addEvent("keyup", unitsEarnedChange);
+                            inputEx.addEvent("keypress", unitsEarnedChange);
+                            inputEx.addEvent("blur", unitsEarnedChange);
+                            inputEx.addEvent("blur", blurEvent=>{
+                                if (inputEx.getValue() == 0)
+                                {
+                                    inputEx.setValue("");
+                                }
+                            });
+                        }, function(inputEx){
+                            inputEx["td"].style.textAlign = "center";
+                            inputEx["td"].style.border = "1px solid";
+                            inputEx["td"].title = "Leave blank to make the other options available";
+                            inputEx.setTooltipText("Leave blank to make the other options available");
+                            inputEx.disable();
+                            var carChange = carEvent=>{
+                                var setting = !inputEx.isChecked();
+                                inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
+                                // inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
+                                inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
+                                attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                            };
+                            inputEx.addEvent("change", carChange);
+                            inputEx.addEvent("keydown", carChange);
+                            inputEx.addEvent("keyup", carChange);
+                            inputEx.addEvent("keypress", carChange);
+                            inputEx.addEvent("blur", carChange);
+                        }, function(inputEx){
+                            inputEx["td"].style.border = "1px solid";
+                            inputEx.setTooltipText("Leave blank to make the other options available");
+                            inputEx.setMin(1901);
+                            inputEx.setMax((new Date()).getUTCFullYear());
+                            inputEx.setWidth("100%");
+                            inputEx.fields[0].classList.add("right");
+                            inputEx.disable();
+                            var gradChange = gradEvent=>{
+                                var setting = (inputEx.getValue() == "");
+                                inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
+                                inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
+                                // inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
+                                attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                            };
+                            inputEx.addEvent("change", gradChange);
+                            inputEx.addEvent("keydown", gradChange);
+                            inputEx.addEvent("keyup", gradChange);
+                            inputEx.addEvent("keypress", gradChange);
+                            inputEx.addEvent("blur", gradChange);
+                        });
+                        degreeTable.createAddRowButton().disable();
                     }
                 }
             });
@@ -4857,9 +5552,9 @@ class MPASIS_App
                         
                         // Education
                         scoreSheet.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
-                        scoreSheet.dbInputEx["application_code"].setValue(scoreSheet.dataLoaded["application_code"]);
-                        scoreSheet.dbInputEx["applicant_name"].setValue(scoreSheet.dataLoaded["applicant_name"]);
-                        scoreSheet.dbInputEx["position_title_applied"].setValue(scoreSheet.dataLoaded["position_title_applied"]);
+                        scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.dataLoaded["application_code"], true);
+                        scoreSheet.dbInputEx["applicant_name"].setDefaultValue(scoreSheet.dataLoaded["applicant_name"], true);
+                        scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.dataLoaded["position_title_applied"], true);
                         
                         var educAttainment = scoreSheet.dataLoaded["educational_attainmentIndex"];
                         var postGradUnits = (scoreSheet.dataLoaded["postgraduate_units"] == "" ? 0 : scoreSheet.dataLoaded["postgraduate_units"]);
@@ -5064,10 +5759,10 @@ class MPASIS_App
     {
         let name = cname + "=";
         let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
+        let ca = decodedCookie.split(";");
         for(let i = 0; i <ca.length; i++) {
           let c = ca[i];
-          while (c.charAt(0) == ' ') {
+          while (c.charAt(0) == " ") {
             c = c.substring(1);
           }
           if (c.indexOf(name) == 0) {
