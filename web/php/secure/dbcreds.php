@@ -2,6 +2,6 @@
     $dbtype = 'mysql';
     $servername = 'localhost';
 	$dbname = 'SDOStoTomas';
-	$dbuser = 'root';
-	$dbpass = 'admin';
+	$dbuser = 'sdoadmin';
+	$dbpass = 'sdo12345';
 ?>

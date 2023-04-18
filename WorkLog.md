@@ -1,13 +1,27 @@
 # Work Log
 
-## 4/15/2023
+## 4/18/2023
+I was able to fix some bugs early in the morning, when I woke up. The `date range bug`, I found out, was probably caused, in part by an ill-planned search-and-replace operation, which resulted in the function handling it to fail. Likewise, both this bug and the `new eligibility bug` was caused by the InputEx.getValue mishandling some data, which I was able to fix before I went to office.
+
+Once I arrived, I simultaneously worked on both the server configuration and the database-saving feature of the score sheet. The score sheet was designed to update data as opposed to the other forms, which are focused on creating data instead, so I was able to finish the feature more easily. I will need to add this feature into the applicant data form as well.
+
+In the beginning, the server kept on spewing some syntax errors. However, after finding the culprit undeclared PHP variables, I was finally able to make the system work on the server, although some occasional errors were encountered, especially when they tried to enter actual data into the applicant data form and the score sheet. Another issue encountered was the account creation feature, which was affected by the stricter data handling of the InputEx.getValue function, which kept on converting number string into actual numbers. This issue was encountered as a user tried to input a number password that starts with a zero. I fixed this, temporarily by specifying the password to not be automatically converted. I would have to rethink this stricter and more automatic conversion of data.
+
+Another issue encountered was when they were trying to edit an applicant data record, when they immediately saved the data without completing it. I will have to correct this issue by tomorrow to further empower the encoders in handling the applicant data.
+
+I am committing the system code as version 0.0.1. I will be frequently updating the minor revision number, especially as the CRUD system and UX are still very clunky.
+
+## 4/17/2023
+Today, I mainly focused on making the system work, at least, for the presentation in the afternoon. I worked out the bugs that I inevitably introduced while trying to add the `degree taken` information. I was able to fix the bug and make the application data form save the data, however, a few more bugs became apparent during the presentation, such as the work experience date range not summing up into a duration and the new eligibility refusing to save. Likewise, due to some confusion, a few fields under `accomplishments` appear to be summing up incorrectly, but it turned out that the score weights being viewed do not match those in effect in the system. The scoresheet, however, is still not saving data yet. I will be working on this at home later today.
+
+## 4/15/2023-4/16/2023
 Today, I shall initiate the implementation of the following:
 
 * [x] The `InputEx` type `select`
 * [x] The `InputEx` type <code title="This type will use span elements styled as table elements">`table`</code>
-* [ ] Adding `Degrees` into the applicant data and score sheet forms
+* [x] Adding `Degrees` into the applicant data and score sheet forms
 * [ ] Reorganizing of the `process.php` code
-* [ ] Saving/updating of score sheet data into the database
+* [x] Saving/updating of score sheet data into the database
 * [ ] Moving the -Ex styles out of the classes and into CSS files
 
 ## 4/14/2023

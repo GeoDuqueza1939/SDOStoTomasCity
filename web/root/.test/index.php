@@ -1,6 +1,19 @@
 <?php
 require_once('../path.php');
 
+function rrmdir($dir) {
+    if (is_dir($dir)) {
+        $objects = scandir($dir);
+        foreach ($objects as $object) {
+            if ($object != "." && $object != "..") {
+                if (filetype($dir."/".$object) == "dir") rrmdir($dir."/".$object); else unlink($dir."/".$object);
+            }
+        }
+        reset($objects);
+        rmdir($dir);
+    }
+}
+
 function testOther()
 {
     $addressText = "Block 19 Lot 15 Phase IV Mt. Claire Village, Sta. Anastacia, Sto. Tomas City, Batangas";
@@ -84,6 +97,9 @@ function hashMyPassword()
 
 // testOther();
 // hashMyPassword();
+
+// rrmdir("C:/XAMPP/htdocs-local/images");
+// exit;
 
 require_once(__FILE_ROOT__ . '/php/classes/ajaxResponse.php');
 require_once(__FILE_ROOT__ . '/php/classes/db.php');

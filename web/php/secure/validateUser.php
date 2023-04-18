@@ -27,7 +27,10 @@ function getValidCredentials(string $username, string $password)
     
             $dbResults = $dbconn->executeStatement("SELECT $fields FROM $join WHERE username='$username' AND password='" . hash('ripemd320', $password) ."'");
 
-            if (is_null($dbconn->lastException) && count($dbResults) > 0)
+            // var_dump($dbResults);
+            // die();
+
+            if (is_null($dbconn->lastException) && !is_null ($dbResults) && count($dbResults) > 0)
             {
                 $dbResults[0]["is_temporary_user"] = true;
             }

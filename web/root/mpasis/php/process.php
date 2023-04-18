@@ -58,12 +58,12 @@ if (isset($_REQUEST['test']))
 
 if (isset($_SESSION['user']))
 {
-    if ($_REQUEST['q'] == 'login') // UNUSED
+    if (isset($_REQUEST['q']) && $_REQUEST['q'] == 'login') // UNUSED
     {
         echo json_encode(new ajaxResponse('User', json_encode(array('Username'=>$_SESSION['user'], 'UserId'=>1 * $_SESSION['user_id']))));
         return;
 	}
-    elseif ($_REQUEST['a'] == 'logout') // UNUSED
+    elseif (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout') // UNUSED
     {
         session_unset();
 		session_destroy();
@@ -389,7 +389,7 @@ if (isset($_SESSION['user']))
                         }
                         return;
                         break;
-                    case 'applicantionsByApplicantOrCode':
+                    case 'applicationsByApplicantOrCode':
                         $srcStr = (isset($_REQUEST['srcStr']) ? $_REQUEST['srcStr'] : "");
                         if ($srcStr == '')
                         {
@@ -417,8 +417,6 @@ if (isset($_SESSION['user']))
                                 present_addressId,
                                 eea.index as educational_attainmentIndex,
                                 eea.educational_attainment as educational_attainment,
-                                postgraduate_units,
-                                complete_academic_requirements,
                                 application_code,
                                 position_title_applied,
                                 parenthetical_title_applied,
@@ -428,7 +426,49 @@ if (isset($_SESSION['user']))
                                 has_more_unrecorded_training,
                                 has_specific_work_experience,
                                 has_more_unrecorded_work_experience,
-                                has_specific_competency_required
+                                has_specific_competency_required,
+                                most_recent_performance_rating,
+                                number_of_citation_movs,
+                                number_of_academic_award_movs,
+                                number_of_awards_external_office_search,
+                                number_of_awards_external_org_level_search,
+                                number_of_awards_central_co_level_search,
+                                number_of_awards_central_national_search,
+                                number_of_awards_regional_ro_level_search,
+                                number_of_awards_regional_national_search,
+                                number_of_awards_division_sdo_level_search,
+                                number_of_awards_division_national_search,
+                                number_of_awards_school_school_level_search,
+                                number_of_awards_school_sdo_level_search,
+                                number_of_research_proposal_only,
+                                number_of_research_proposal_ar,
+                                number_of_research_proposal_ar_util,
+                                number_of_research_proposal_ar_util_adopt,
+                                number_of_research_proposal_ar_util_cite,
+                                number_of_smetwg_issuance_cert,
+                                number_of_smetwg_issuance_cert_output,
+                                number_of_speakership_external_office_search,
+                                number_of_speakership_external_org_level_search,
+                                number_of_speakership_central_co_level_search,
+                                number_of_speakership_central_national_search,
+                                number_of_speakership_regional_ro_level_search,
+                                number_of_speakership_regional_national_search,
+                                number_of_speakership_division_sdo_level_search,
+                                number_of_speakership_division_national_search,
+                                neap_facilitator_accreditation,
+                                number_of_app_educ_actionplan,
+                                number_of_app_educ_actionplan_ar,
+                                number_of_app_educ_actionplan_ar_adoption,
+                                app_educ_gwa,
+                                number_of_app_train_relevant_cert_ap,
+                                number_of_app_train_relevant_cert_ap_arlocal,
+                                number_of_app_train_relevant_cert_ap_arlocal_arother,
+                                number_of_app_train_not_relevant_cert_ap,
+                                number_of_app_train_not_relevant_cert_ap_arlocal,
+                                number_of_app_train_not_relevant_cert_ap_arlocal_arother,
+                                score_exam,
+                                score_skill,
+                                score_bei
                             FROM SDOStoTomas.Person pe
                             INNER JOIN SDOStoTomas.Job_Application ja ON ja.personId = pe.personId
                             LEFT JOIN SDOStoTomas.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
@@ -458,11 +498,23 @@ if (isset($_SESSION['user']))
                                 $dbResults[$i]['applicant_name'] = $fullName;
                                 $dbResults[$i]['applicant_option_label'] = $dbResult['application_code'] . " &ndash; $fullName &ndash; " . $dbResult['position_title_applied'];
 
+                                $dbResults2 = $dbconn->select("Degree_Taken", "degree_takenId, degree, degree_typeIndex, units_earned, complete_academic_requirements, graduation_year", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
+    
+                                if (is_null($dbconn->lastException))
+                                {
+                                    $dbResults[$i]['degree_taken'] = $dbResults2;
+                                }
+                                else
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
+
                                 $dbResults2 = $dbconn->select("Relevant_Training", "relevant_trainingId, descriptive_name, hours", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
     
                                 if (is_null($dbconn->lastException))
                                 {
-                                    $dbResults[$i]['relevant_trainings'] = $dbResults2;
+                                    $dbResults[$i]['relevant_training'] = $dbResults2;
                                 }
                                 else
                                 {
@@ -475,6 +527,18 @@ if (isset($_SESSION['user']))
                                 if (is_null($dbconn->lastException))
                                 {
                                     $dbResults[$i]['relevant_work_experience'] = $dbResults2;
+                                }
+                                else
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
+
+                                $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+    
+                                if (is_null($dbconn->lastException))
+                                {
+                                    $dbResults[$i]['relevant_eligibility'] = $dbResults2;
                                 }
                                 else
                                 {
@@ -586,14 +650,14 @@ if (isset($_SESSION['user']))
 
                                 if (!is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                     return;        
                                 }
                             }
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                             return;
                         }
                     }
@@ -605,7 +669,25 @@ if (isset($_SESSION['user']))
                 elseif (isset($_REQUEST['jobApplication']))
                 {
                     $jobApplication = json_decode($_REQUEST['jobApplication'], true);
+                    $param = [];
 
+                    if (isset($jobApplication['application_code']))
+                    {
+                        $param['application_code'] = $jobApplication['application_code'];
+                    }
+
+                    if (isset($jobApplication['position_title_applied']))
+                    {
+                        $param['position_title'] = $jobApplication['position_title_applied'];
+                    }
+
+                    if (isset($jobApplication['plantilla_item_number_applied']))
+                    {
+                        $param['plantilla_item_number'] = $jobApplication['plantilla_item_number_applied'];
+                    }
+
+                    logAction("mpasis", 6, $param);
+                    
                     $personalInfo = $jobApplication["personalInfo"];
 
                     $fieldStr = '';
@@ -627,7 +709,7 @@ if (isset($_SESSION['user']))
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                 return;
                             }    
                         }
@@ -655,7 +737,7 @@ if (isset($_SESSION['user']))
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                 return;
                             }    
                         }
@@ -683,7 +765,7 @@ if (isset($_SESSION['user']))
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                 return;
                             }    
                         }
@@ -714,7 +796,7 @@ if (isset($_SESSION['user']))
                                 }
                                 else
                                 {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                     return;
                                 }    
                             }
@@ -726,9 +808,9 @@ if (isset($_SESSION['user']))
 
                     foreach($personalInfo as $key => $value)
                     {
-                        if ($key != "addresses" && $key != "religion" && $key != "disabilities" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers")
+                        if ($key != "addresses" && $key != "religion" && $key != "disabilities" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers" && $key != 'degree_taken')
                         {
-                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
                         }
                     }
@@ -762,7 +844,7 @@ if (isset($_SESSION['user']))
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                         return;
                     }
 
@@ -783,14 +865,14 @@ if (isset($_SESSION['user']))
     
                                     if (!is_null($dbconn->lastException))
                                     {
-                                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                         return;
                                     }    
                                 }
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                 return;
                             }    
                         }
@@ -807,7 +889,37 @@ if (isset($_SESSION['user']))
     
                             if (!is_null($dbconn->lastException))
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                                return;
+                            }    
+                        }
+                    }
+
+                    if (isset($personalInfo["degree_taken"]) && count($personalInfo["degree_taken"]) > 0)
+                    {
+                        
+                        foreach ($personalInfo["degree_taken"] as $degree_taken)
+                        {
+                            $fieldStr = '';
+                            $valueStr = '';
+
+                            foreach ($degree_taken as $key => $value)
+                            {
+                                $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
+                                $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                            }
+
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$personId'";
+                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'personId';
+        
+                            $fieldStr = '(' . $fieldStr . ')';
+                            $valueStr = '(' . $valueStr . ')';
+        
+                            $dbconn->insert('Degree_Taken', $fieldStr, $valueStr);
+
+                            if (!is_null($dbconn->lastException))
+                            {
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                 return;
                             }    
                         }
@@ -824,7 +936,7 @@ if (isset($_SESSION['user']))
     
                             if (!is_null($dbconn->lastException))
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                                 return;
                             }
                         }
@@ -836,7 +948,7 @@ if (isset($_SESSION['user']))
                     foreach ($jobApplication as $key => $value) {
                         if ($key != "personalInfo" && $key != "relevantEligibility" && $key != "relevantTraining" && $key != "relevantWorkExp")
                         {
-                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
                         }
 
@@ -852,22 +964,24 @@ if (isset($_SESSION['user']))
     
                     if (is_null($dbconn->lastException))
                     {
-                        $applicationCode = $dbconn->lastInsertId;
+                        // $applicationCode = $dbconn->lastInsertId;
+                        $applicationCode = $jobApplication['application_code'];
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                         return;
                     }
 
-                    $fieldStr = '';
-                    $valueStr = '';
-                    
                     foreach ($jobApplication["relevantTraining"] as $relevantTraining) {
+                        $fieldStr = '';
+                        $valueStr = '';
+                        
                         foreach ($relevantTraining as $key => $value) {
-                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
-                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
+                            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;   
                         }
+
                         $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
                         $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
 
@@ -878,7 +992,7 @@ if (isset($_SESSION['user']))
         
                         if (!is_null($dbconn->lastException))
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                             return;
                         }
                     }
@@ -888,7 +1002,7 @@ if (isset($_SESSION['user']))
                     
                     foreach ($jobApplication["relevantWorkExp"] as $relevantWorkExp) {
                         foreach ($relevantWorkExp as $key => $value) {
-                            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                            $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
                         }
                         $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
@@ -901,7 +1015,7 @@ if (isset($_SESSION['user']))
         
                         if (!is_null($dbconn->lastException))
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                             return;
                         }
                     }
@@ -911,7 +1025,7 @@ if (isset($_SESSION['user']))
                         $fieldStr = '';
                         $valueStr = '';
 
-                        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                        $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                         $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'eligibilityId';
     
                         $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
@@ -924,7 +1038,7 @@ if (isset($_SESSION['user']))
 
                         if (!is_null($dbconn->lastException))
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '\nLast SQL Statement: ' . $dbconn->lastSQLStr)));
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                             return;
                         }
                     }
@@ -935,26 +1049,54 @@ if (isset($_SESSION['user']))
                         $param[($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'] = $_SESSION['user']['username'];
                     }
                     
-                    if (isset($applicationCode))
-                    {
-                        $param['application_code'] = $applicationCode;
-                    }
-
-                    if (isset($jobApplication['position_title_applied']))
-                    {
-                        $param['position_title'] = $jobApplication['position_title_applied'];
-                    }
-
-                    if (isset($jobApplication['plantilla_item_number_applied']))
-                    {
-                        $param['plantilla_item_number'] = $jobApplication['plantilla_item_number_applied'];
-                    }
-
-                    logAction("mpasis", 6, $param);
-                    
                     echo(json_encode(new ajaxResponse('Success', 'Application has been successfully saved with <b>Application Code: ' . $applicationCode . '</b>.')));
                     return;
                 }
+                break;
+            case 'update':
+                if (isset($_REQUEST['jobApplication']))
+                {
+                    $jobApplication = json_decode($_REQUEST['jobApplication'], true);
+                    $applicationCode = $jobApplication['application_code'];
+
+                    $fieldValueStr = '';
+
+                    foreach ($jobApplication as $key => $value)
+                    {
+                        switch ($key)
+                        {
+                            case 'applicant_name':
+                            case 'application_code':
+                            case 'position_title_applied':
+                                break;
+                            default:
+                                $fieldValueStr .= (trim($fieldValueStr) == '' ? '': ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'") . '';
+                                break;
+                        }
+                    }
+
+                    // echo(json_encode(new ajaxResponse('Success', $applicationCode)));
+                    // return;
+
+                    $dbconn->update('Job_Application', $fieldValueStr, "WHERE application_code='$applicationCode'");
+
+                    if (is_null($dbconn->lastException))
+                    {
+                        logAction('mpasis', 8, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'application_code'=>$applicationCode,
+                            'position_title'=>$jobApplication['position_title_applied']
+                        ));
+                        echo(json_encode(new ajaxResponse('Success', "Application Code: $applicationCode has been successfully updated!")));
+                        return;
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting temporary user details')));
+                        return;
+                    }
+                }
+                return;
                 break;
             case 'addTempUser':
                 $person = json_decode($_REQUEST['person'], true);
@@ -991,6 +1133,9 @@ if (isset($_SESSION['user']))
                                 $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
                                 $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
                             }
+
+                            echo(json_encode(new ajaxResponse('Success', json_encode([$fieldStr, $valueStr]))));
+                            return;
 
                             $dbconn->insert('Temp_User', "($fieldStr)", "($valueStr)");
 
