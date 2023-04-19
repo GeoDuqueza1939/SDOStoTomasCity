@@ -1,5 +1,17 @@
 # Work Log
 
+## 4/19/2023
+I worked all day to make the applicant data entry work for updates, too. Around past 3 in the afternoon, I have finally completed ***MPaSIS Mark II (v0.0.2)***. Although MPaSIS did not make it to the orientation and interview of two high-rank administrative positions, I am very positive that this will be a great help in the succeeding positions to be processed. The next things to do:
+
+* [ ] A login/session watcher that will keep the user logged until the user logs out or reaches the timeout in and/or will notify the user of an option to remain signed in
+* [ ] Summary of Score Sheet (view or subsection)
+* [ ] Comparative Assessment Result (view)
+* [ ] A feature to edit own account
+* [ ] An option to create a full-pledged account or a temporary account
+* [ ] Getting styles out of the classes and into the CSS
+* [ ] Making the controls bigger and more round or colorful
+* [ ] Reorganizing of the `process.php` code
+
 ## 4/18/2023
 I was able to fix some bugs early in the morning, when I woke up. The `date range bug`, I found out, was probably caused, in part by an ill-planned search-and-replace operation, which resulted in the function handling it to fail. Likewise, both this bug and the `new eligibility bug` was caused by the InputEx.getValue mishandling some data, which I was able to fix before I went to office.
 

@@ -35,13 +35,17 @@ else
         else
         {
             // MODE: sign in form (sign-in error)
+            $isInvalidSignIn = true;
+
             require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
-            echo "Invalid credentials";
+            // echo "Invalid credentials";
         }
     }
     else
     {
         // MODE: sign in form
+        $isInvalidSignIn = false;
+
         require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
     }
 }
