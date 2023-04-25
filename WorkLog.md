@@ -1,5 +1,21 @@
 # Work Log
 
+## 4/25/2023
+I began work today in finding the logic error that caused the criteria points to miscombine. I seemed to have found it, so I tried correcting it and I also converted the ScoreSheet.getCriteria member function into a static member for easier testing, and I succeeded in fixing it. I also tested it on a minified version of a Teacher I job position structure, and it returned the correct criteria score set. I also found another bug on the education, training, and experience scoring functions, which I have also fixed. In relation to this, I have found that the bug wasn't really a bug in a traditional sense, but was based on a discrepancy in some of the documents provided to me as references for use in the development process. I have already informed the Personnel Section (Miss Cathy and Miss Jessa) about this so they could do some adjustments.
+
+The session keeps on expiring. I couldn't find, yet, where this issue is coming from. It may be arising from the way my browser (MS Edge) keeps on hibernating unused tabs, which might be causing the session to expire like when the browser window is actually closed. I will need to find a way to keep the session alive. I might need to send the User variable/cookie from time to time.
+
+The generalized ScoreSheet isn't finished yet. I am still having difficulty in the data structure that will set the parameters in configuring the scoresheet UI. I hope I can think of something.
+
+## 4/24/2023
+Today, I focused on creating the new generalized Score Sheet. I started building the criteria function, minus the update functions. After that, I started to create the ScoreSheet class. I had issues with recreating the UI, as the behavior of the old and the new score sheets could prove to be wildly different, in consideration of the data/criteria handled and the user experience, as well. Also, the points kept on combining differently from expected and always seemed to result in an invalid total (!= 100). I need to find and fix the logic error that causes this.
+
+## 4/22/2023 - 4/23/2023
+As a preparating in creating a more generalized Score Sheet, I started to separate the styles from the -Ex classes and transfer them into a CSS file. I thought it would be easy and fast at first, however, it turned out to be a bit tedious and confusing and took longer than I thought it would. I started with the ScrimEx and the DisplayEx styling which were a lot simpler. But the holdup began with the InputEx and FormEx class. I might recode these classes, too, and remake some of them as sibling classes, as some of them have similar methods. In addition, I also added the SDO's logo on the menu and changed the color of the header a bit, whilst, along the way, fixing a CSS bug that caused the header text to get behind the nav button in some view dimensions.
+
+## 4/20/2023
+I did less coding today than the previous days. We switch workplaces twice today to give way to the exam and interview of some applicants. In the meantime, I tried to check if the jobs in the database were all categorized correctly. I made a list of positions labeled according to salary grades and categories, unsuccessfully using an OCR'd copy of the DO7s2023 so I typed some of it in the latter part, instead. I did find one position that was miscategorized so I corrected it. In the afternoon, as my cold started to worsen due to the cold aircon air, I started coding a function that will return the criteria set along with the weights depending on a given position's category and salary grade. I plan to create a new generalized ScoreSheet class that extends FormEx, which would use the criteria weights and other related information to generate UI elements on the fly. If I succeed, I might create other FormEx-derived classes based on this concept. Likewise, after moving style out of the -Ex classes, I might also create a new POST function that would rely more on JS Promises.
+
 ## 4/19/2023
 I worked all day to make the applicant data entry work for updates, too. Around past 3 in the afternoon, I have finally completed ***MPaSIS Mark II (v0.0.2)***. Although MPaSIS did not make it to the orientation and interview of two high-rank administrative positions, I am very positive that this will be a great help in the succeeding positions to be processed. The next things to do:
 
