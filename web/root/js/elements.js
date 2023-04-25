@@ -116,7 +116,7 @@ function addText(text, container, nextSibling = null)
  *      source: https://stackoverflow.com/a/35385518
  */
 function htmlToElement(html) {
-    var template = document.createElement('template');
+    var template = document.createElement("template");
     html = html.trim(); // Never return a text node of whitespace as the result
     template.innerHTML = html;
     return template.content.firstChild;
@@ -128,7 +128,7 @@ function htmlToElement(html) {
  *      source: https://stackoverflow.com/a/35385518
  */
 function htmlToElements(html) {
-    var template = document.createElement('template');
+    var template = document.createElement("template");
     template.innerHTML = html;
     return template.content.childNodes;
 }

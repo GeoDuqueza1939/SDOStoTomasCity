@@ -4,7 +4,8 @@
  * source: https://stackoverflow.com/a/55692897
  * @param {Any} obj 
  */
-export function type(obj) {
+// export function type(obj) {
+function type(obj) {
     /*
     type("string") //string
     type(null) //null

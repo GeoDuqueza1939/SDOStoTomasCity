@@ -462,9 +462,12 @@ if (isset($_SESSION['user']))
                                 number_of_speakership_division_sdo_level_search,
                                 number_of_speakership_division_national_search,
                                 neap_facilitator_accreditation,
-                                number_of_app_educ_actionplan,
-                                number_of_app_educ_actionplan_ar,
-                                number_of_app_educ_actionplan_ar_adoption,
+                                number_of_app_educ_r_actionplan,
+                                number_of_app_educ_r_actionplan_ar,
+                                number_of_app_educ_r_actionplan_ar_adoption,
+                                number_of_app_educ_nr_actionplan,
+                                number_of_app_educ_nr_actionplan_ar,
+                                number_of_app_educ_nr_actionplan_ar_adoption,
                                 app_educ_gwa,
                                 number_of_app_train_relevant_cert_ap,
                                 number_of_app_train_relevant_cert_ap_arlocal,
@@ -1320,8 +1323,12 @@ if (isset($_SESSION['user']))
                 break;
         }
     }
-
-    echo(json_encode(new ajaxResponse('Error', 'Unknown query.<br>')));
-    var_dump($_REQUEST);
 }
+else
+{
+    echo(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected.<br><br>Server Request: ' . json_encode($_REQUEST))));    
+    return;
+}
+
+echo(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
 ?>

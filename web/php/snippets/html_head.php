@@ -5,6 +5,12 @@
 <title><?php echo($pageTitle);?></title>
 <link href="/styles/default.css" rel="stylesheet" />
 <link href="/styles/main.css" rel="stylesheet" />
+<link href="/styles/ExClass.css" rel="stylesheet" />
+<script src="/js/ajax.js"></script>
+<script src="/js/elements.js"></script>
+<script src="/js/types.js"></script>
+<script src="/js/async.js"></script>
+<script src="/js/classes/ExClass.js"></script>
 <?php
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 

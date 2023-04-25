@@ -187,6 +187,7 @@ if (isset($_POST['query']))
             min-height: 2em;
             width: 30em;
             max-width: 100%;
+            max-height: 30em;
             background-color: lightgrey;
             overflow: auto;
             padding: 0.5em;

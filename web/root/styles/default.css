@@ -119,15 +119,44 @@ body {
     border: 1px solid;
 }
 
-table.bordered {
+table.bordered, .table.bordered {
     /* width: 100%; */
-    /* border-collapse: collapse; */
+    border-collapse: collapse;
 }
 
-table.bordered > thead > tr > th {
+table.bordered > thead.bg-lightgray > tr > th, .table.bordered > .thead.bg-lightgray > .tr > .th {
     background-color: lightgray;
 }
 
-table.bordered > tr > *, table.bordered > * > tr > * {
+table.bordered > tr > *, table.bordered > * > tr > *, .table.bordered > .tr > *, .table.bordered > * > .tr > * {
     border: 1px solid;
+}
+
+.table {
+    display: table;
+}
+
+.thead {
+    display: table-header-group;
+}
+
+.tbody {
+    display: table-row-group;
+}
+
+.tfoot {
+    display: table-footer-group;
+}
+
+.tr {
+    display: table-row;
+}
+
+.th {
+    display: table-cell;
+    font-weight: bold;
+}
+
+.td {
+    display: table-cell;
 }

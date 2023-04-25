@@ -1,0 +1,395 @@
+@keyframes status-marker-anim {
+    0% {rotate: 0deg; content: "\23f3"}
+    75% {rotate: 0deg; content: "\231b"}
+    100% {rotate: 180deg; content: "\231b"}
+}
+
+.scrim-ex {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #0008;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scrim-ex > .status-pane {
+    font-size: 3em;
+    /* font-size: 0.8em; */
+    /* font-style: italic; */
+    font-family: sans-serif;
+    text-shadow: 0.02em 0.02em black;
+}
+
+.scrim-ex > .status-pane.success {
+    color: green;
+}
+
+.scrim-ex > .status-pane.error {
+    color: red;
+}
+
+.scrim-ex > .status-pane.info {
+    color: blue;
+}
+
+.scrim-ex > .status-pane.wait {
+    color: darkslategray;
+}
+
+.scrim-ex > .status-pane > .status-marker {
+    font-style: normal;
+    font-weight: 2em;
+    display: block;
+    text-align: center;
+}
+
+.scrim-ex > .status-pane > .status-message {
+    display: block;
+    margin: 0.5em;
+}
+
+.scrim-ex > .status-pane.wait > .status-marker:before {
+    content: "\231b";
+    display: inline-block;
+    animation-name: status-marker-anim;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+    /* animation-timing-function: linear; */
+}
+
+.display-ex {
+    display: inline-block;
+}
+
+.display-ex > .content {
+    display: inline-block;
+}
+
+.display-ex > label, .display-ex > fieldset.content > legend {
+    display: inline-block;
+}
+
+.display-ex.inline {
+    display: inline;
+}
+
+.display-ex.inline > .content {
+    display: inline;
+}
+
+.display-ex.inline > label, .display-ex.inline > fieldset.content > legend {
+    display: inline;
+}
+
+.display-ex.full-width {
+    display: block;
+}
+
+.display-ex.full-width > .content {
+    display: inline-block;
+}
+
+.display-ex.full-width > label, .display-ex.full-width > fieldset.content > legend {
+    display: inline-block;
+}
+
+.display-ex.vertical {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.display-ex.vertical.inline {
+    display: inline-flex;
+}
+
+.display-ex.vertical.full-width {
+    display: flex;
+}
+
+.display-ex.vertical > .content,
+.display-ex.vertical.inline > .content,
+.display-ex.vertical.full-width > .content {
+    display: block;
+}
+
+.display-ex.vertical > label, .display-ex.vertical > fieldset.content > legend,
+.display-ex.vertical.inline > label, .display-ex.vertical.inline > fieldset.content > legend,
+.display-ex.vertical.full-width > label, .display-ex.vertical.full-width > fieldset.content > legend {
+    display: block;
+}
+
+.input-ex {
+    display: inline-block;
+    /* user-select: none; */
+}
+
+.input-ex > .fields {
+    display: block;
+}
+
+.input-ex > .fields > :not(datalist) {
+    display: inline-block;
+}
+
+.input-ex > .fields > input,
+.input-ex > .fields > select,
+.input-ex > .fields > button {
+    margin: 0.25em 0;
+    padding: 0.5em;
+    border-width: 0.1em;
+    border-radius: 1em;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.input-ex > .fields > input[type=button],
+.input-ex > .fields > input[type=submit],
+.input-ex > .fields > input[type=reset],
+.input-ex > .fields > button {
+    border-radius: 0.5em;
+    border-width: 0.15em;
+    padding: 0.5em 1em;
+}
+
+.input-ex > .fields > textarea {
+    display: block;
+    margin: 0.25em 0;
+    padding: 0.5em;
+    border-width: 0.1em;
+    border-style: inset;
+    border-radius: 1em;
+    width: 100%;
+    font-family: inherit;
+    font-size: 1em;
+}
+
+.input-ex > .fields > table, .input-ex > .fields > .table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.input-ex > .fields > table > * > * > * > .input-ex > .fields > input, .input-ex > .fields > .table > * > * > * > .input-ex > .fields > input,
+.input-ex > .fields > table > * > * > * > .input-ex > .fields > select, .input-ex > .fields > .table > * > * > * > .input-ex > .fields > select {
+    border-radius: 0;
+    padding: 0.25em;
+}
+
+.input-ex > .fields > table > * > * > * > .input-ex.remove-row-btn > * > button, .input-ex > .fields > .table > * > * > * > .input-ex.remove-row-btn > * > button {
+    border-radius: 50%;
+    padding: 0;
+    font-size: 0.5em;
+    color: red;
+}
+
+.input-ex.blank-style > .fields > input {
+    border-radius: 0;
+    border-top: 0 none;
+    border-left: 0 none;
+    border-right: 0 none;
+    border-bottom-width: 3px;
+}
+
+.input-ex > .fields > .status-pane {
+    font-size: 0.8em;
+    font-style: italic;
+    font-family: serif;
+}
+
+.input-ex > .fields > .status-pane.success {
+    color: green;
+}
+
+.input-ex > .fields > .status-pane.error {
+    color: red;
+}
+
+.input-ex > .fields > .status-pane.info {
+    color: blue;
+}
+
+.input-ex > .fields > .status-pane.wait {
+    color: darkslategray;
+}
+
+.input-ex > .fields > .status-pane > .status-marker {
+    font-style: normal;
+}
+
+.input-ex > .fields > .status-pane > .status-message {}
+
+.input-ex > .fields > .status-pane.wait > .status-marker:before {
+    content: "\231b";
+    display: inline-block;
+    animation-name: status-marker-anim;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+    /* animation-timing-function: linear; */
+}
+
+.input-ex.reversed > .fields {
+    padding-left: 1.5em;
+}
+
+.input-ex.reversed > .fields > input[type=radio],
+.input-ex.reversed > .fields > input[type=checkbox] {
+    float: left;
+    margin-left:-1.5em;
+}
+
+.input-ex.reversed > .fields > label {
+    margin-left:-1.75em;
+}
+
+.input-ex.reversed > .fields > input[type=radio] + label,
+.input-ex.reversed > .fields > input[type=checkbox] + label {
+    display: inline;
+    margin-left: 0;
+    padding-right: 1.25em;
+}
+
+.input-ex.inline {
+    display: inline;
+}
+
+.input-ex.inline > .fields {
+    display: inline;
+}
+
+.input-ex.inline > .fields > :not(datalist) {
+    display: inline;
+}
+
+.input-ex.full-width {
+    display: block;
+}
+
+.input-ex.full-width > .fields {
+    display: block;
+}
+
+.input-ex.full-width > .fields > :not(datalist) {
+    display: inline-block;
+}
+
+.input-ex.vertical {
+    display: inline-block;
+}
+
+.input-ex.vertical > .fields {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-ex.vertical > .fields > :not(datalist) {
+    display: block;
+}
+
+.input-ex.vertical > .fields > label {
+    padding: 0.5em;
+}
+
+/*
+.input-ex.vertical.full-width {
+    display: flex;
+}
+
+.input-ex.vertical.inline {
+    display: inline-flex;
+}
+*/
+
+.form-ex {
+    display: inline-block;
+    /* user-select: none; */
+
+}
+
+.form-ex.full-width {
+    display: block;
+}
+
+.form-ex > .fields {
+    display: block;
+}
+
+.form-ex > .fields > .status-pane {
+    font-size: 0.8em;
+    font-style: italic;
+    font-family: serif;
+}
+
+.form-ex > .fields > .status-pane.success {
+    color: green;
+}
+
+.form-ex > .fields > .status-pane.error {
+    color: red;
+}
+
+.form-ex > .fields > .status-pane.info {
+    color: blue;
+}
+
+.form-ex > .fields > .status-pane.wait {
+    color: darkslategray;
+}
+
+.form-ex > .fields > .status-pane > .status-marker {
+    font-style: normal;
+}
+
+.form-ex > .fields > .status-pane > .status-message {}
+
+.form-ex > .fields > .status-pane.wait > .status-marker:before {
+    content: "\231b";
+    display: inline-block;
+    animation-name: status-marker-anim;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+    /* animation-timing-function: linear; */
+}
+
+.dialog-ex.scrim {
+    /* z-index: 10; */
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: #0008;
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    /* font-size: 0.86em; */
+}
+
+.dialog-ex > .dialog {
+    border: 2px outset;
+    background-color: lightgray;
+    max-height: 50em;
+    max-width: 80%;
+    padding: 2em;
+    line-height: 2;
+    border-radius: 1em;
+    box-shadow: 0.2em 0.2em;
+}
+
+.dialog-ex > .dialog > .close-btn {
+    padding: 0;
+    margin:-2em -2em 0 0;
+    border-radius: 50%;
+    float: right;
+    /* break-after: always; */
+    font-size: inherit;
+}
+
+.dialog-ex > .dialog > .close-btn > .material-icons-round {
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+}

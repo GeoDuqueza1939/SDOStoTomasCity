@@ -14,3 +14,33 @@ body, .app > main {
     background-color: lightgray;
     margin-top: 1em;
 }
+
+.display-ex.subscore-display {
+    display: block;
+}
+
+.display-ex.subscore-display > .content {
+    display: block;
+    margin: 1em 0;
+    padding: 1em;
+    border: 0.15em solid gray;
+    border-radius: 1em;
+}
+
+.display-ex.subscore-display > .content > h3 {
+    margin-top: 0;
+    border-bottom: 1px solid;
+}
+
+.display-ex.subscore-display .subscore-display-points {
+    display: block;
+    text-align: right;
+    margin-top: 1em;
+    border-top: 1px solid;
+    font-size: 1.1em;
+    font-style: italic;
+}
+
+.display-ex.subscore-display .subscore-display-points > .content {
+    font-weight: bold;
+}
