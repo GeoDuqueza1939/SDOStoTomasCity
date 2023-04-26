@@ -1,5 +1,8 @@
 # Work Log
 
+## 4/26/2023
+I immediately went to continue working on the data structure that will configure the generalized score sheet. However, organizing the data turned to be very tedious and confusing. After lunch, I started to work using a spreadsheet software to organize all the data. Once I finish this, I would export the spreadsheet into a CSV that will be a lot easier to convert into JSON format using RegEx. I have finished until NEAP facilitatorship subcriteria. I also transferred the score sheet classes into the ExClass.js file so I can still use IntelliSense while coding the classes.
+
 ## 4/25/2023
 I began work today in finding the logic error that caused the criteria points to miscombine. I seemed to have found it, so I tried correcting it and I also converted the ScoreSheet.getCriteria member function into a static member for easier testing, and I succeeded in fixing it. I also tested it on a minified version of a Teacher I job position structure, and it returned the correct criteria score set. I also found another bug on the education, training, and experience scoring functions, which I have also fixed. In relation to this, I have found that the bug wasn't really a bug in a traditional sense, but was based on a discrepancy in some of the documents provided to me as references for use in the development process. I have already informed the Personnel Section (Miss Cathy and Miss Jessa) about this so they could do some adjustments.
 
