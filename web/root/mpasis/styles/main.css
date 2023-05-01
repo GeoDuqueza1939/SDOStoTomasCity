@@ -15,11 +15,13 @@ body, .app > main {
     margin-top: 1em;
 }
 
-.display-ex.subscore-display {
+.display-ex.main-criteria {
     display: block;
+    counter-reset: criteria2-heading;
+    counter-reset: criteria3-heading;
 }
 
-.display-ex.subscore-display > .content {
+.display-ex.main-criteria > .content {
     display: block;
     margin: 1em 0;
     padding: 1em;
@@ -27,12 +29,12 @@ body, .app > main {
     border-radius: 1em;
 }
 
-.display-ex.subscore-display > .content > h3 {
+.display-ex.main-criteria > .content > h3 {
     margin-top: 0;
     border-bottom: 1px solid;
 }
 
-.display-ex.subscore-display .subscore-display-points {
+.display-ex.main-criteria .main-criteria-points {
     display: block;
     text-align: right;
     margin-top: 1em;
@@ -41,6 +43,77 @@ body, .app > main {
     font-style: italic;
 }
 
-.display-ex.subscore-display .subscore-display-points > .content {
+.display-ex.main-criteria .main-criteria-points > .content {
     font-weight: bold;
+}
+
+.display-ex.criteria2 {
+    counter-reset: criteria3-heading;
+    counter-increment: criteria2-heading;
+}
+
+.display-ex.criteria2 > .content > h4::before {
+    content: counter(criteria2-heading) ". ";
+}
+
+.display-ex.criteria3 {
+    counter-increment: criteria3-heading;
+}
+
+.display-ex.criteria3 > .content > h5::before {
+    content: counter(criteria3-heading, lower-alpha) ". ";
+}
+
+.display-ex.main-criteria .content > h4,
+.display-ex.main-criteria .content > h5,
+.display-ex.main-criteria .content > h6 {
+    font-size: 1em;
+    margin-top: 1em;
+    margin-bottom: 0.25em;
+}
+
+.display-ex.main-criteria .content > h5 {
+    font-size: 0.95em;
+}
+
+.display-ex.main-criteria .content > h6 {
+    font-size: 0.9em;
+}
+
+.display-ex.main-criteria .input-ex {
+    display: block;
+}
+
+.display-ex.main-criteria .input-ex > .fields > :not(datalist) {
+    display: inline;
+}
+
+/* .display-ex.main-criteria .input-ex > .fields > label {
+    display: inline;
+} */
+
+.display-ex.criteria2.speakership .input-ex > .fields > label,
+.display-ex.criteria3.outstanding_emp_award .input-ex > .fields > label {
+    display: inline-block;
+    width: 23em;
+    max-width: 100%;
+}
+
+.display-ex.criteria2.research .input-ex > .fields > label,
+.display-ex.criteria2.smetwg .input-ex > .fields > label,
+.display-ex.criteria1.educationApp .criteria4.educationApp_exp_required .input-ex > .fields > label,
+.display-ex.criteria1.trainingApp .criteria4 .input-ex > .fields > label {
+    display: inline-block;
+    width: 9em;
+    max-width: 100%;
+}
+
+.display-ex.criteria1.potential .input-ex > .fields > label {
+    display: inline-block;
+    width: 16em;
+    max-width: 100%;
+}
+
+.display-ex.criteria1.potential .input-ex > .fields > input {
+    width: 5em;
 }

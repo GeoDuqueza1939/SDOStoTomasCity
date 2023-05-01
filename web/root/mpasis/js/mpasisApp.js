@@ -143,11 +143,11 @@ class MPASIS_App
             case "applicant-data-entry":
                 this.constructApplicantDataForm();
                 break;
+            case "applicant-scoresheet-old":
+                this.constructScoreSheetOld();
+                break;
             case "applicant-scoresheet":
                 this.constructScoreSheet();
-                break;
-            case "applicant-scoresheet-new":
-                this.constructScoreSheetNew();
                 break;
             case "job":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
@@ -2278,7 +2278,7 @@ class MPASIS_App
         return applicantDataForm;
     }
 
-    constructScoreSheet()
+    constructScoreSheetOld()
     {
         var scoreSheet = null, field = null, div = null, subDiv = null;
 
@@ -2287,7 +2287,7 @@ class MPASIS_App
             return this.forms["scoreSheet"];
         }
 
-        scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-applicant-scoresheet"], "scoresheet");
+        scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-applicant-scoresheet-old"], "score-sheet-old");
         scoreSheet.setFullWidth();
         scoreSheet["displayExs"] = [];
         scoreSheet["data"] = [];
@@ -2431,7 +2431,7 @@ class MPASIS_App
 
         // scoreSheet.loadedApplicant = null;
 
-        scoreSheet.addHeader("Score Sheet", 2, "scoresheet-title", true);
+        scoreSheet.addHeader("Score Sheet (Old)", 2, "scoresheet-title", true);
 
         var loadApplicant = scoreSheet.addInputEx("Load Application", "buttonEx");
         loadApplicant.setFullWidth();
@@ -3649,7 +3649,7 @@ class MPASIS_App
         return scoreSheet;
     }
 
-    constructScoreSheetNew()
+    constructScoreSheet()
     {
         var scoreSheet = null;
 
@@ -3658,7 +3658,7 @@ class MPASIS_App
             return this.forms["scoreSheetTest"];
         }
 
-        scoreSheet = this.forms["scoreSheetTest"] = new ScoreSheet(this.mainSections["main-applicant-scoresheet-new"], "score-sheet-test");
+        scoreSheet = this.forms["scoreSheetTest"] = new ScoreSheet(this.mainSections["main-applicant-scoresheet"], "score-sheet");
 
         return scoreSheet;
     }

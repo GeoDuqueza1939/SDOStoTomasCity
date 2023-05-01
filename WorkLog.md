@@ -1,5 +1,17 @@
 # Work Log
 
+## 5/1/2023
+Today was a busy day, as I went on tech call starting from the morning to late in the afternoon. The good thing was my wife was there to assist me, although the payout doesn't seem to be enough for what the both of us did. Upon arriving home in the early evening, I updated my work logs and, afterwards, checked on the new MPASIS score sheet. Upon testing using an ADAS I job application test data, I found another bug in the Application of Education criteria for positions with no experience requirement. It was caused by an incorrectly coded maximum value of "ANY" instead of an actual percentage maximum of 100, resulting into a NaN (Not a Number) result for the points. I fixed it and proceeded to add styling to the scoresheet.
+
+## 4/29/2023-4/30/2023
+I mostly rested the whole Saturday, occasionally adding some more code, although I made significant progress on Sunday. I was able to notice something in DO 007 s 2023, yet again. In the performance criteria, there was a different rubric to be used depending on whether or not the position requires prior work experience and whether or not the applicant has prior work experience, so I worked to implement it first. Afterwards, I worked in generalizing the total points computation for each criteria. I was able to finish it, although it seems to have an unintended effect of computing the points of each of all the other input fields under the same criteria. I left it as it is, as it might eventually prove useful to the encoders and/or evaluators. If it proves to be a bane instead, I will just have to remove it or adjust it to their liking.
+
+## 4/28/2023
+I was able to finish the education score sheet criteria computations. I then started to adapt this code to both the training and work experience criteria. However, I still get stumped with some of the computations, although I am getting close to the original functionality. I have also added yet another functionality wherein an input number control displays the points it contributes once it is updated, although I will have to find a way for this functionality to also be called by each criteria in updating the criteria's total points display.
+
+## 4/27/2023
+I finished the score sheet elements data structure in the morning and started to cleanup and convert the data into a JSON object/array. I, then, reinserted the data structure and started adjusting the code. Little by little, it seems to be resembling the old UI. I will have to finish this tomorrow so I could proceed with other features of the system over the weekend, such as the initial evaluation report form, the individual evaluation report form, the ranking, and so on. As these mostly just involve retrieval, these will be easier to implement.
+
 ## 4/26/2023
 I immediately went to continue working on the data structure that will configure the generalized score sheet. However, organizing the data turned to be very tedious and confusing. After lunch, I started to work using a spreadsheet software to organize all the data. Once I finish this, I would export the spreadsheet into a CSV that will be a lot easier to convert into JSON format using RegEx. I have finished until NEAP facilitatorship subcriteria. I also transferred the score sheet classes into the ExClass.js file so I can still use IntelliSense while coding the classes.
 

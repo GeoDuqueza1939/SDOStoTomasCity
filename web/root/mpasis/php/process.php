@@ -434,6 +434,8 @@ if (isset($_SESSION['user']))
                                 has_more_unrecorded_work_experience,
                                 has_specific_competency_required,
                                 most_recent_performance_rating,
+                                performance_cse_gwa_rating,
+                                performance_cse_honor_grad,
                                 number_of_citation_movs,
                                 number_of_academic_award_movs,
                                 number_of_awards_external_office_search,
@@ -453,14 +455,16 @@ if (isset($_SESSION['user']))
                                 number_of_research_proposal_ar_util_cite,
                                 number_of_smetwg_issuance_cert,
                                 number_of_smetwg_issuance_cert_output,
-                                number_of_speakership_external_office_search,
-                                number_of_speakership_external_org_level_search,
-                                number_of_speakership_central_co_level_search,
-                                number_of_speakership_central_national_search,
-                                number_of_speakership_regional_ro_level_search,
-                                number_of_speakership_regional_national_search,
-                                number_of_speakership_division_sdo_level_search,
-                                number_of_speakership_division_national_search,
+                                number_of_speakership_external_office_level,
+                                number_of_speakership_external_org_level,
+                                number_of_speakership_central_co_level,
+                                number_of_speakership_central_national_level,
+                                number_of_speakership_regional_ro_level,
+                                number_of_speakership_regional_national_level,
+                                number_of_speakership_division_sdo_level,
+                                number_of_speakership_division_regional_level,
+                                number_of_speakership_school_school_level,
+                                number_of_speakership_school_sdo_level,
                                 neap_facilitator_accreditation,
                                 number_of_app_educ_r_actionplan,
                                 number_of_app_educ_r_actionplan_ar,
@@ -511,7 +515,7 @@ if (isset($_SESSION['user']))
                                 $dbResults[$i]['applicant_name'] = $fullName;
                                 $dbResults[$i]['applicant_option_label'] = $dbResult['application_code'] . " &ndash; $fullName &ndash; " . $dbResult['position_title_applied'];
 
-                                $dbResults2 = $dbconn->select("Degree_Taken", "degree_takenId, degree, degree_typeIndex, units_earned, complete_academic_requirements, graduation_year", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
+                                $dbResults2 = $dbconn->select("Degree_Taken", "degree_takenId, degree, degree_typeIndex, year_level_completed, units_earned, complete_academic_requirements, graduation_year", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
     
                                 if (is_null($dbconn->lastException))
                                 {
