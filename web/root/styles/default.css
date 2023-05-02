@@ -172,3 +172,20 @@ table.bordered > tr > *, table.bordered > * > tr > *, .table.bordered > .tr > *,
 .blue {
     color: blue;
 }
+
+a.js-link {
+    color: blue;
+    cursor: pointer;
+}
+
+a.js-link:hover {
+    text-decoration: underline;
+}
+
+a.js-link:active {
+    color: red;
+}
+
+a.js-link:visited {
+    color: purple;
+}

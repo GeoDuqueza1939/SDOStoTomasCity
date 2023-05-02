@@ -131,22 +131,37 @@ class MPASIS_App
 
     async constructView(viewId)
     {
+        var el = null;
+
         this.mainSections["main-" + viewId] = createElementEx(NO_NS, "section", this.main, null, "id", "main-" + viewId);
 
         switch(viewId)
         {
             case "dashboard":
                 break;
-            case "applicant":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>Applicant Data</h2>";
+            case "applications":
+                this.mainSections["main-" + viewId].innerHTML = "<h2>Applications</h2>";
+                el = htmlToElement("<ul></ul>");
+                this.mainSections["main-" + viewId].appendChild(el);
+                [
+                    {viewId:"applicant-data-entry", label:"Applicant Data Entry"},
+                    {viewId:"scoresheet", label:"Score Sheet"}
+                ].forEach(obj=>{
+                    var item = createElementEx(NO_NS, "li", el);
+                    var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
+                    addText(obj.label, itemLink);
+                    itemLink.addEventListener("click", event=>{
+                        this.activateView(obj.viewId);
+                    });
+                });
                 break;
             case "applicant-data-entry":
                 this.constructApplicantDataForm();
                 break;
-            case "applicant-scoresheet-old":
+            case "scoresheet-old":
                 this.constructScoreSheetOld();
                 break;
-            case "applicant-scoresheet":
+            case "scoresheet":
                 this.constructScoreSheet();
                 break;
             case "job":
@@ -160,12 +175,29 @@ class MPASIS_App
                 break;
             case "evaluation":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Evaluation</h2>";
+                el = htmlToElement("<ul></ul>");
+                this.mainSections["main-" + viewId].appendChild(el);
+                [
+                    {viewId:"scoresheet", label:"Score Sheet"},
+                    {viewId:"ier", label:"Initial Evaluation Result (IER)"},
+                    {viewId:"ies", label:"Individual Evaluation Sheet (IES)"}
+                ].forEach(obj=>{
+                    var item = createElementEx(NO_NS, "li", el);
+                    var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
+                    addText(obj.label, itemLink);
+                    itemLink.addEventListener("click", event=>{
+                        this.activateView(obj.viewId);
+                    });
+                });
                 break;
-            case "scores":
+            case "scores": // NOT USED
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Scores and Rankings</h2>";
                 break;
-            case "tools":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>Assessment Tools</h2>";
+            case "ier":
+                this.mainSections["main-" + viewId].innerHTML = "<h2>Initial Evaluation Result (IER)</h2>";
+                break;
+            case "ies":
+                this.mainSections["main-" + viewId].innerHTML = "<h2>Individual Evaluation Sheet (IES)</h2>";
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
@@ -326,6 +358,7 @@ class MPASIS_App
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Settings</h2>";
                 break;
             default:
+                console.log(viewId);
                 break;
         }
     }
@@ -2287,7 +2320,7 @@ class MPASIS_App
             return this.forms["scoreSheet"];
         }
 
-        scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-applicant-scoresheet-old"], "score-sheet-old");
+        scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-scoresheet-old"], "score-sheet-old");
         scoreSheet.setFullWidth();
         scoreSheet["displayExs"] = [];
         scoreSheet["data"] = [];
@@ -3658,7 +3691,7 @@ class MPASIS_App
             return this.forms["scoreSheetTest"];
         }
 
-        scoreSheet = this.forms["scoreSheetTest"] = new ScoreSheet(this.mainSections["main-applicant-scoresheet"], "score-sheet");
+        scoreSheet = this.forms["scoreSheetTest"] = new ScoreSheet(this.mainSections["main-scoresheet"], "score-sheet");
 
         return scoreSheet;
     }

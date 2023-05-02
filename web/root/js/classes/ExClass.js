@@ -254,6 +254,109 @@ class DisplayCheckEx extends DisplayEx
     }
 }
 
+class DisplayTableEx extends DisplayEx
+{
+    constructor(parent = null, typeText = "div", idStr = "", contentText = "", labelText = "", tooltip = "")
+    {
+        super(parent, typeText, idStr, contentText, labelText, tooltip);
+        this.table = htmlToElement("<table></table>");
+        this.thead = null;
+        this.theadRow = null;
+        this.tbody = htmlToElement("<tbody></tbody>");
+        this.rows = []; // {tr:null, td:{}, data:{}} // each td and data shall use the colHeaderNames as keys
+        
+        this.addContent(this.table);
+        this.table.appendChild(this.tbody);
+
+        this.columnHeaders = []; // {colHeaderName ("required"), colHeaderText}
+    }
+
+    setHeaders(headers = [{colHeaderName:"", colHeaderText:""}], replace = false)
+    {
+        if (replace)
+        {
+            this.columnHeaders = [];
+            if (this.thead != null && this.thead != undefined)
+            {
+                this.thead.innerHTML = "";
+                this.theadRow = null;
+            }
+        }
+
+        if (this.columnHeaders.length == 0)
+        {
+            headers.forEach((header, index)=>{
+                try
+                {
+                    this.addHeader(header.colHeaderName, header.colHeaderText);
+                }
+                catch (ex)
+                {
+                    alert("Error in setting header: Please see console for details\n\n" + ex);
+                    console.log("Incorrect or invalid data format: header:", header);
+                }
+            });
+
+            for (const row of this.rows)
+            {
+                for (const key in row.dataRow)
+                {
+                    if (!(key in headers.map(header=>header.colHeaderName))) // trim extra columns from each row
+                    {
+                        delete row[key];
+                    }
+                }
+            }
+
+            return this.columnHeaders;
+        }
+
+        return null;
+    }
+    
+    addHeader(colHeaderName, colHeaderText = "")
+    {
+        if (this.thead == null || this.thead == undefined)
+        {
+            this.thead = htmlToElement("<thead></thead>");
+            this.table.insertBefore(this.thead, this.tbody);
+        }
+
+        if (this.theadRow == null || this.theadRow == undefined)
+        {
+            this.theadRow = htmlToElement("<tr></tr>");
+            this.thead.appendChild(this.theadRow);
+        }
+
+        this.columnHeaders.push({colHeaderName:colHeaderName, colHeaderText:colHeaderText});
+        this.theadRow.appendChild(htmlToElement("<th>" + colHeaderText + "</th>"));
+
+        this.rows.forEach((row, index)=>{ // add missing key in each row
+            if (!(colHeaderName in row["data"]))
+            {
+                row["data"][colHeaderName] = "";
+            }
+            row["td"][colHeaderName] = htmlToElement("<td>" + row["data"][colHeaderName] + "</td>");
+            row["tr"].appendChild(row["td"][colHeaderName]);
+        });
+    }
+
+    addRow(rowData = {})
+    {
+        this.rows.push({
+            tr:createElementEx(NO_NS, "tr", this.tbody),
+            td:{},
+            data:{}
+        });
+
+        this.columnHeaders.map(header=>header.colHeaderName).forEach((headerName)=>{
+            this.rows[this.rows.length - 1]["data"][headerName] = (headerName in rowData ? rowData[headerName] : "");
+            this.rows[this.rows.length - 1]["td"][headerName] = htmlToElement("<td>" + this.rows[this.rows.length - 1]["data"][headerName] + "</td>");
+            this.rows[this.rows.length - 1]["tr"].appendChild(this.rows[this.rows.length - 1]["td"][headerName]);
+        });
+    }
+}
+
 /**
  * Class InputEx
  * @requires NO_NS
@@ -2958,6 +3061,8 @@ class ScoreSheet extends FormEx
         this.dataLoaded = null;
         this.scoreSheetElementUIs = [];
 
+        this.ratingSummary = null;
+
         this.jobApplication = null;
         this.positionApplied = null;
         this.scoreSheetElements = null; // includes the criteria and some display elements
@@ -3077,12 +3182,18 @@ class ScoreSheet extends FormEx
                         scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
                         scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication["relevant_work_experience"].length > 0);
 
+                        scoreSheet.ratingSummary = new DisplayTableEx(scoreSheet.fieldWrapper, "div");
+                        scoreSheet.ratingSummary.setHeaders([{colHeaderName:"criteria", colHeaderText:"Criteria"}, {colHeaderName:"weight",colHeaderText:"Weight"}, {colHeaderName:"weighted-score",colHeaderText:"Weighted Score"}]);
+
                         for (const criteria of scoreSheet.scoreSheetElements)
                         {
                             if (criteria.weight > 0)
                             {
                                 div = new ScoreSheetElementUI(scoreSheet, criteria);
                                 scoreSheet.scoreSheetElementUIs.push(div);
+
+                                scoreSheet.ratingSummary.addRow({"criteria":criteria.label, "weight":criteria.weight});
+                                scoreSheet.fieldWrapper.appendChild(scoreSheet.ratingSummary.container);
                             }
                         }
 
