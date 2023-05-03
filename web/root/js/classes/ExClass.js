@@ -72,14 +72,21 @@ class DisplayEx
         }
     }
 
-    addContent(content, parent = null)
+    addContent(content, parent = null, addToBeginning = false)
     {
         if (Object.prototype.toString.call(parent) != "[object HTMLInputElement]")
         {
             parent = this.content;
         }
 
-        parent.appendChild(content);
+        if (addToBeginning && parent.childNodes.length > 0)
+        { 
+            parent.insertBefore(content, parent.childNodes[0]);
+        }
+        else
+        {
+            parent.appendChild(content);
+        }
 
         return content;
     }
@@ -240,6 +247,8 @@ class DisplayCheckEx extends DisplayEx
     {
         super(parent, typeText, idStr, contentText, labelText, tooltip);
         this.checked = false;
+
+        [this.container, this.content].forEach(el=>el["displayCheckEx"] = this);
     }
 
     check(doCheck = true)
@@ -263,12 +272,17 @@ class DisplayTableEx extends DisplayEx
         this.thead = null;
         this.theadRow = null;
         this.tbody = htmlToElement("<tbody></tbody>");
+        this.tfoot = null;
+        this.tfootRow = null;
         this.rows = []; // {tr:null, td:{}, data:{}} // each td and data shall use the colHeaderNames as keys
+        this.fRows = []; // {tr:null, td:{}, data:{}} // each td and data shall use the colHeaderNames as keys
         
         this.addContent(this.table);
         this.table.appendChild(this.tbody);
 
         this.columnHeaders = []; // {colHeaderName ("required"), colHeaderText}
+
+        [this.container, this.content].forEach(el=>el["displayTableEx"] = this);
     }
 
     setHeaders(headers = [{colHeaderName:"", colHeaderText:""}], replace = false)
@@ -354,6 +368,34 @@ class DisplayTableEx extends DisplayEx
             this.rows[this.rows.length - 1]["td"][headerName] = htmlToElement("<td>" + this.rows[this.rows.length - 1]["data"][headerName] + "</td>");
             this.rows[this.rows.length - 1]["tr"].appendChild(this.rows[this.rows.length - 1]["td"][headerName]);
         });
+    }
+
+    addFooter(colFooterName, colFooterText = "", rowspan = 1, colspan = 1)
+    {
+        if (this.tfoot == null || this.tfoot == undefined)
+        {
+            this.tfoot = htmlToElement("<tfoot></tfoot>");
+            this.table.appendChild(this.tfoot);
+        }
+
+        if (this.tfootRow == null || this.tfootRow == undefined)
+        {
+            this.tfootRow = htmlToElement("<tr></tr>");
+            this.tfoot.appendChild(this.tfootRow);
+            this.fRows.push({tr:this.tfootRow, td:{}, data:{}, rowspan:{}, colspan:{}});
+        }
+
+        if (this.rows.length > 0 && type(rowspan) == "number" && Object.keys(this.rows[0]["td"]).length < this.fRows.length + rowspan)
+        {
+            throw("New footer layout length should not exceed the number of columns in the table body");
+        }
+
+        this.fRows[this.fRows.length - 1]["td"][colFooterName] = htmlToElement("<td" + (type(rowspan) == "number" && rowspan > 1 ? " rowspan=\"" + rowspan + "\"" : "")  + (type(colspan) == "number" && colspan > 1 ? " rowspan=\"" + colspan + "\"" : "") + ">" + colFooterText + "</td>");
+        this.fRows[this.fRows.length - 1]["data"][colFooterName] = colFooterText;
+        this.fRows[this.fRows.length - 1]["rowspan"][colFooterName] = rowspan;
+        this.fRows[this.fRows.length - 1]["colspan"][colFooterName] = colspan;
+
+        this.fRows[this.fRows.length - 1]["tr"].appendChild(this.fRows[this.fRows.length - 1]["td"][colFooterName]);
     }
 }
 
@@ -2732,32 +2774,39 @@ class ScoreSheetElementUI
         this.fields = []; // InputExs
         this.scoreSheet = scoreSheet;
 
+        this.isComputingPoints = false;
+
         this.getPointsManually = null; // function to manually extract the points; useful when the awarding of points can ONLY be based on a rubrics
         var scoreChange = scoreChangeEvent=>{
-            var scoreSheetElementUI = this;
+            // DO NOT DELETE THE FOLLOWING LINES!!!!!!!!!!!!!!!!!!!!!
 
-            while (scoreSheetElementUI.parentScoreSheetElementUI != null && scoreSheetElementUI.parentScoreSheetElementUI != undefined)
-            {
-                scoreSheetElementUI = scoreSheetElementUI.parentScoreSheetElementUI;
-            }
+            // var scoreSheetElementUI = this;
 
-            scoreSheetElementUI.getPoints();
+            // while (scoreSheetElementUI.parentScoreSheetElementUI != null && scoreSheetElementUI.parentScoreSheetElementUI != undefined)
+            // {
+            //     scoreSheetElementUI = scoreSheetElementUI.parentScoreSheetElementUI;
+            // }
+
+            // scoreSheetElementUI.getPoints();
+
+            this.scoreSheet.summaryUI.getPoints();
         };
 
         switch (this.type)
         {
+            case "summary":
             case "criteria1":
             case "criteria2":
             case "criteria3":
             case "criteria4":
                 if (scoreSheetElement.weight != 0)
                 {
-                    uiEx = (this.type == "criteria1" ? scoreSheet.addDisplayEx("div", scoreSheetElement.id) : new DisplayEx(null, "div", scoreSheetElement.dbColName));
+                    uiEx = (this.type == "criteria1" || this.type == "summary" ? scoreSheet.addDisplayEx("div" + (this.type == "summary" ? "-table" : ""), scoreSheetElement.id) : new DisplayEx(null, "div", scoreSheetElement.dbColName));
                     this.container = uiEx.container;
                     this.contentWrapper = uiEx.content;
-                    this.label = createElementEx(NO_NS, "h" + (parseInt(this.type.replace("criteria", "")) + 2));
+                    this.label = createElementEx(NO_NS, "h" + ((this.type == "summary" ? 1 : parseInt(this.type.replace("criteria", ""))) + 2));
                     this.label.innerHTML = scoreSheetElement.label + (this.type == "criteria1" ? " <small style=\"font-weight: normal;\">(<i>max:\xa0" + scoreSheetElement.weight + "\xa0points</i>)</small>" : "");
-                    uiEx.addContent(this.label);
+                    uiEx.addContent(this.label, null, true);
                     if (this.type == "criteria1")
                     {
                         this.totalScoreDisplay = new DisplayEx(this.contentWrapper, "div", "", "n/a", "Total Points");
@@ -2771,6 +2820,11 @@ class ScoreSheetElementUI
                     this.container.scoreSheetElementUI = this;
                     this.contentWrapper.scoreSheetElementUI = this;
                     this.label.scoreSheetElementUI = this;
+                    
+                    if ("getPointsManually" in scoreSheetElement && type(scoreSheetElement.getPointsManually) == "function")
+                    {
+                        this.getPointsManually = scoreSheetElement.getPointsManually;
+                    }
                 }
                 break;
             case "h1":
@@ -2923,6 +2977,18 @@ class ScoreSheetElementUI
                 uiEx.addEvent("change", scoreChange);
                 this.inputEx = uiEx;
                 break;
+            case "summary-header":
+                if (parentScoreSheetElementUI.type == "summary")
+                {
+                    parentScoreSheetElementUI.container.displayTableEx.addHeader(scoreSheetElement.id, scoreSheetElement.label);
+                }
+                break;
+            case "summary-footer":
+                if (parentScoreSheetElementUI.type == "summary")
+                {
+                    parentScoreSheetElementUI.container.displayTableEx.addFooter(scoreSheetElement.id, scoreSheetElement.label);
+                }
+                break;
             case "list-item":
                 if (parentScoreSheetElementUI.type.includes("display-list"))
                 {
@@ -2949,13 +3015,9 @@ class ScoreSheetElementUI
             {
                 if (content.weight != 0)
                 {
-                    if (content.type.includes("-item"))
+                    uiEx = new ScoreSheetElementUI(scoreSheet, content, this);
+                    if (!content.type.includes("-item") && content.type != "summary-header" && content.type != "summary-footer")
                     {
-                        uiEx = new ScoreSheetElementUI(scoreSheet, content, this);
-                    }
-                    else
-                    {
-                        uiEx = new ScoreSheetElementUI(scoreSheet, content, this);
                         this.contentWrapper.appendChild(uiEx.container);
                         this.contents.push(uiEx);
                         if (content.type.includes("display"))
@@ -3023,9 +3085,20 @@ class ScoreSheetElementUI
             case "criteria2":
             case "criteria3":
             case "criteria4":
-                for (const scoreSheetElementUI of this.contents)
+                if (this.getPointsManually == null)
                 {
-                    points += scoreSheetElementUI.getPoints();
+                    for (const scoreSheetElementUI of this.contents)
+                    {
+                        points += scoreSheetElementUI.getPoints();
+                        if (this.scoreSheetElement.maxPoints > 0 && points > this.scoreSheetElement.maxPoints)
+                        {
+                            points = this.scoreSheetElement.maxPoints;
+                        }
+                    }
+                }
+                else if (type(this.getPointsManually) == "function")
+                {
+                    points = this.getPointsManually();
                     if (this.scoreSheetElement.maxPoints > 0 && points > this.scoreSheetElement.maxPoints)
                     {
                         points = this.scoreSheetElement.maxPoints;
@@ -3034,7 +3107,23 @@ class ScoreSheetElementUI
 
                 if (this.type == "criteria1")
                 {
-                    this.totalScoreDisplay.setHTMLContent(points)
+                    this.totalScoreDisplay.setHTMLContent(Math.round(points * 1000) / 1000);
+                    this.scoreSheet.summary[this.scoreSheetElement.id].innerHTML = points.toFixed(3);
+                }
+                break;
+            case "summary":
+                if (!this.isComputingPoints)
+                {
+                    this.isComputingPoints = true;
+
+                    for (const criteria of this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.type == "criteria1"))
+                    {
+                        points += criteria.getPoints();
+                    }
+    
+                    this.scoreSheet.summary["summary_total_score"].innerHTML = points.toFixed(3);
+
+                    this.isComputingPoints = false;
                 }
                 break;
             default:
@@ -3048,6 +3137,7 @@ class ScoreSheetElementUI
 class ScoreSheet extends FormEx
 {
     static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
+    static processURL = "/mpasis/php/process.php";
 
     constructor(parentEl = null, id = "", useFormElement = true)
     {
@@ -3061,7 +3151,9 @@ class ScoreSheet extends FormEx
         this.dataLoaded = null;
         this.scoreSheetElementUIs = [];
 
-        this.ratingSummary = null;
+        // this.ratingSummary = null;
+        this.summaryUI = null;
+        this.summary = {};
 
         this.jobApplication = null;
         this.positionApplied = null;
@@ -3122,6 +3214,8 @@ class ScoreSheet extends FormEx
                 if (!retrieveApplicantDialogBtnGrp.inputExs[0].isClickListenerAttached)
                 {
                     retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
+                        var scoreSheetElementUI = null, weight = 0;
+
                         if (searchResult.getValue() == "" || searchResult.getValue() == null)
                         {
                             retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
@@ -3136,8 +3230,6 @@ class ScoreSheet extends FormEx
             
                         scoreSheet.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
                         
-                        console.log(scoreSheet.jobApplication);
-
                         if (!("applicantInfo" in scoreSheet.displayExs))
                         {
                             div = scoreSheet.addDisplayEx("div", "applicantInfo");
@@ -3180,105 +3272,53 @@ class ScoreSheet extends FormEx
                         scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"], true);
 
                         scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
-                        scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication["relevant_work_experience"].length > 0);
-
-                        scoreSheet.ratingSummary = new DisplayTableEx(scoreSheet.fieldWrapper, "div");
-                        scoreSheet.ratingSummary.setHeaders([{colHeaderName:"criteria", colHeaderText:"Criteria"}, {colHeaderName:"weight",colHeaderText:"Weight"}, {colHeaderName:"weighted-score",colHeaderText:"Weighted Score"}]);
+                        scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication);
 
                         for (const criteria of scoreSheet.scoreSheetElements)
                         {
-                            if (criteria.weight > 0)
+                            if (criteria.weight != 0)
                             {
                                 div = new ScoreSheetElementUI(scoreSheet, criteria);
-                                scoreSheet.scoreSheetElementUIs.push(div);
 
-                                scoreSheet.ratingSummary.addRow({"criteria":criteria.label, "weight":criteria.weight});
-                                scoreSheet.fieldWrapper.appendChild(scoreSheet.ratingSummary.container);
+                                if (div.scoreSheetElement.id == "summary")
+                                {
+                                    scoreSheet.summaryUI = div;
+
+                                    scoreSheet.summary["summary_total_score"] = scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_score"];
+                                }
+                                else
+                                {
+                                    scoreSheet.scoreSheetElementUIs.push(div);
+                                    scoreSheet.fieldWrapper.appendChild(scoreSheet.summaryUI.container);
+
+                                    if (scoreSheet.summaryUI != null && scoreSheet.summaryUI != undefined)
+                                    {
+                                        scoreSheet.summaryUI.container.displayTableEx.addRow({"summary_criteria":criteria.label, "summary_weight":criteria.weight + "%","summary_score":0});
+                                        scoreSheet.summary[criteria.id] = scoreSheet.summaryUI.container.displayTableEx.rows[scoreSheet.summaryUI.container.displayTableEx.rows.length - 1]["td"]["summary_score"];
+                                        weight += criteria.weight;
+                                    }
+                                }                                
                             }
                         }
+
+                        scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_weight"].innerHTML = weight + "%";
 
                         var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"])[0];
 
                         // Education
-                        var educAttainment = scoreSheet.jobApplication["educational_attainmentIndex"];
-                        var degreeTaken = scoreSheet.jobApplication["degree_taken"];
-                        var hasSpecEduc = (scoreSheet.jobApplication["has_specific_education_required"] == null ? "n/a" : (scoreSheet.jobApplication["has_specific_education_required"] == 1 ? "Yes" : "No"));
+                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
                         
-                        var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
-                        var incrementObj = document.mpsEducIncrement.filter(increment=>(increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"]));
-                        var requiredEducIncrement = incrementObj[0]["education_increment_level"];
-                        var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
+                        // Training
+                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
 
-                        scoreSheet.scoreSheetElementUIs[0].displays["educational_attainment"].displayEx.setHTMLContent(scoreSheet.jobApplication["educational_attainment"]);
-                        scoreSheet.scoreSheetElementUIs[0].displays["degrees_taken"].contentWrapper.innerHTML = "";
-                        for (const degree of degreeTaken)
-                        {
-                            var degreeStr = degree["degree"]
-                                + " ("
-                                + (type(degree["graduation_year"]) == "number" && degree["graduation_year"] != null && degree["graduation_year"] != undefined ? "graduated in " + degree["graduation_year"]
-                                    : (type(degree["complete_academic_requirements"]) == "boolean" && degree["complete_academic_requirements"] || type(degree["complete_academic_requirements"]) == "number" && degree["complete_academic_requirements"] != 0 ? "complete academic requirements"
-                                        : (type(degree["units_earned"]) == "number" && degree["units_earned"] != null && degree["units_earned"] != undefined ? degree["units_earned"] + " units earned"
-                                            : (type(degree["year_level_completed"]) == "number" && degree["year_level_completed"] != null && degree["year_level_completed"] != undefined ? degree["year_level_completed"] + " year" + (degree["year_level_completed"] == 1 ? "" : "s") + " completed" : "no info")
-                                        )
-                                    )
-                                )
-                                + ")";
-                            
-                            scoreSheet.scoreSheetElementUIs[0].displays["degrees_taken"].contentWrapper.appendChild(htmlToElement("<li>" + degreeStr + "</li>"));
-                        }
-
-                        if (scoreSheet.scoreSheetElementUIs[0].displays["degrees_taken"].contentWrapper.innerHTML.trim() == "")
-                        {
-                            scoreSheet.scoreSheetElementUIs[0].displays["degrees_taken"].contentWrapper.outerHTML = "(no info)"; // THIS IS A BIT OF A HACK; MONITOR FOR IMPACTS
-                            scoreSheet.scoreSheetElementUIs[0].displays["degrees_taken"].displayEx.setVertical(false);
-                        }
-                        scoreSheet.scoreSheetElementUIs[0].displays["has_specific_education_required"].displayEx.setHTMLContent(hasSpecEduc);
-                        scoreSheet.scoreSheetElementUIs[0].displays["educIncrements"].displayEx.setHTMLContent(educIncrementAboveQS.toString());
-                        scoreSheet.scoreSheetElementUIs[0].displays["isEducQualified"].displayEx.check((hasSpecEduc == "n/a" || hasSpecEduc == "Yes") && applicantEducIncrement >= requiredEducIncrement);
-
-                        scoreSheet.scoreSheetElementUIs[0].totalScoreDisplay.setHTMLContent(ScoreSheet.getEducScore(educIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
-
-                        // // Training
-                        var relevantTrainings = scoreSheet.jobApplication["relevant_training"];
-                        var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
-                        var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
-                        var hasSpecTraining = (scoreSheet.jobApplication["has_specific_training"] == null ? "n/a" : (scoreSheet.jobApplication["has_specific_training"] == 1 ? "Yes" : "No"));
-                        var hasMoreTraining = (scoreSheet.jobApplication["has_more_unrecorded_training"] == null ? "n/a" : (scoreSheet.jobApplication["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
-                        var requiredTrainingHours = appliedPosition["required_training_hours"];
-                        var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
-                        var trainingIncrementAboveQS = applicantTrainingIncrement - requiredTrainingIncrement;
-                        
-                        scoreSheet.scoreSheetElementUIs[1].displays["relevant_training_hours"].displayEx.setHTMLContent(relevantTrainingHours.toString());
-                        scoreSheet.scoreSheetElementUIs[1].displays["relevant_training_count"].displayEx.setHTMLContent(relevantTrainings.length.toString());
-                        scoreSheet.scoreSheetElementUIs[1].displays["has_specific_training"].displayEx.setHTMLContent(hasSpecTraining);
-                        scoreSheet.scoreSheetElementUIs[1].displays["has_more_unrecorded_training"].displayEx.setHTMLContent(hasMoreTraining);
-                        scoreSheet.scoreSheetElementUIs[1].displays["trainIncrements"].displayEx.setHTMLContent(trainingIncrementAboveQS.toString());
-                        scoreSheet.scoreSheetElementUIs[1].displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "n/a" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
-
-                        scoreSheet.scoreSheetElementUIs[1].totalScoreDisplay.setHTMLContent(ScoreSheet.getTrainingScore(trainingIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
-                        
                         // Experience
-                        var relevantWorkExp = scoreSheet.jobApplication["relevant_work_experience"];
-                        var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? ScoreSheet.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
-                        var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
-                        var hasSpecWorkExp = (scoreSheet.jobApplication["has_specific_work_experience"] == null ? "n/a" : (scoreSheet.jobApplication["has_specific_work_experience"] == 1 ? "Yes" : "No"));
-                        var hasMoreWorkExp = (scoreSheet.jobApplication["has_more_unrecorded_work_experience"] == null ? "n/a" : (scoreSheet.jobApplication["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
-                        var requiredWorkExpYears = appliedPosition["required_work_experience_years"];
-                        var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
-                        var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
-                        
-                        scoreSheet.scoreSheetElementUIs[2].displays["relevant_work_experience_years"].displayEx.setHTMLContent(ScoreSheet.convertDurationToString(relevantWorkExpDuration));
-                        scoreSheet.scoreSheetElementUIs[2].displays["relevant_work_experience_count"].displayEx.setHTMLContent(relevantWorkExp.length.toString());
-                        scoreSheet.scoreSheetElementUIs[2].displays["has_specific_work_experience"].displayEx.setHTMLContent(hasSpecWorkExp);
-                        scoreSheet.scoreSheetElementUIs[2].displays["has_more_unrecorded_work_experience"].displayEx.setHTMLContent(hasMoreWorkExp);
-                        scoreSheet.scoreSheetElementUIs[2].displays["expIncrements"].displayEx.setHTMLContent(workExpIncrementAboveQS.toString());
-                        scoreSheet.scoreSheetElementUIs[2].displays["isWorkExpQualified"].displayEx.check((hasSpecTraining == "n/a" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
-
-                        scoreSheet.scoreSheetElementUIs[2].totalScoreDisplay.setHTMLContent(ScoreSheet.getWorkExpScore(workExpIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
 
                         // Performance
-                        scoreSheet.scoreSheetElementUIs[3].displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
-                        scoreSheet.scoreSheetElementUIs[3].displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
+                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
+
+                        scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
+                        scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
 
                         for (const key in scoreSheet.dbInputEx)
                         {
@@ -3306,14 +3346,101 @@ class ScoreSheet extends FormEx
                             }
                         }
 
-                        // update total points for all criteria
-                        for (const criteria of scoreSheet.scoreSheetElementUIs)
-                        {
-                            if (criteria.scoreSheetElement.id != "education" && criteria.scoreSheetElement.id != "training" && criteria.scoreSheetElement.id != "experience")
+                        var applicantDataBtnGrp = scoreSheet.addFormButtonGrp(2);
+                        applicantDataBtnGrp.setFullWidth();
+                        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+                        applicantDataBtnGrp.inputExs[0].setLabelText("Save");
+                        applicantDataBtnGrp.inputExs[0].setTooltipText("");
+                        applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                            var jobApplication = {};
+                
+                            if (scoreSheet.dbInputEx["application_code"].getValue() == "")
                             {
-                                criteria.getPoints();
+                                new MsgBox(scoreSheet.container, "Please load an application to use the scoresheet.", "OK");
+                
+                                return;
                             }
-                        }
+                
+                            for (const colName in scoreSheet.dbInputEx) {
+                                var tableName = scoreSheet.dbTableName[colName];
+                                var dbInputEx = scoreSheet.dbInputEx[colName];
+                
+                                switch (colName)
+                                {
+                                    case "applicant_name": case "applicant_option_label":
+                                    case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
+                                    case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
+                                    case "ethnicityId":
+                                    case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
+                                    case "has_more_unrecorded_training":
+                                    case "has_more_unrecorded_work_experience":
+                                    case "has_specific_competency_required":
+                                    case "has_specific_education_required":
+                                    case "has_specific_training":
+                                    case "has_specific_work_experience":
+                                    case "permanent_addressId":
+                                    case "personId":
+                                    case "present_addressId":
+                                    case "relevant_eligibility":
+                                    case "relevant_training":
+                                    case "relevant_work_experience":
+                                    case "religionId":
+                                    case "sex":
+                                        break;
+                                    default:
+                                        jobApplication[colName] = dbInputEx.getValue();
+                                        break;
+                                }
+                            }
+                            
+                            // console.log(scoreSheet.dbTableName, scoreSheet.dbInputEx);
+                
+                            // DEBUG
+                            // console.log(jobApplication);
+                            
+                            // new MsgBox(scoreSheet.container, "Application Code:" + jobApplication["application_code"] + " has been updated!", "OK");
+                
+                            // return;
+                            // DEBUG
+                
+                            // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
+                            postData(ScoreSheet.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
+                                var response;
+                
+                                if (event.target.readyState == 4 && event.target.status == 200)
+                                {
+                                    response = JSON.parse(event.target.responseText);
+                
+                                    if (response.type == "Error")
+                                    {
+                                        new MsgBox(scoreSheet.container, response.content, "Close");
+                                    }
+                                    else if (response.type == "Success")
+                                    {
+                                        new MsgBox(scoreSheet.container, response.content, "OK");
+                                    }
+                                }
+                            });
+                        });
+                        applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
+                        applicantDataBtnGrp.inputExs[1].setTooltipText("");
+                        applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{
+                            window.location.reload(true);
+                        }); // TO IMPLEMENT IN FORMEX/INPUTEX
+                        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+                        applicantDataBtnGrp.fieldWrapper.classList.add("right");
+                        applicantDataBtnGrp.setStatusMsgTimeout(20);                
+                                        
+                        // update total points for all criteria
+                        // for (const criteria of scoreSheet.scoreSheetElementUIs)
+                        // {
+                        //     if (criteria.scoreSheetElement.id != "education" && criteria.scoreSheetElement.id != "training" && criteria.scoreSheetElement.id != "experience")
+                        //     {
+                        //         criteria.getPoints();
+                        //     }
+                        // }
+
+                        scoreSheet.summaryUI.getPoints();
 
                         retrieveApplicantDialog.close();
                         this.innerHTML = "Reset Score Sheet";
@@ -3354,24 +3481,60 @@ class ScoreSheet extends FormEx
         var newDisplayEx = null;
         if (typeof(id) == "string" && id != "")
         {
-            newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
+            if (typeText == "div-table")
+            {
+                newDisplayEx = new DisplayTableEx(this.fieldWrapper, "div", id, contentText, labelText, tooltip);
+            }
+            else
+            {
+                newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
+            }
             this.displayExs[id] = newDisplayEx;
         }
         else
         {
-            newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, this.id + this.displayExs.length, contentText, labelText, tooltip);
+            if (typeText == "div-table")
+            {
+                newDisplayEx = new DisplayTableEx(this.fieldWrapper, "div", this.id + this.displayExs.length, contentText, labelText, tooltip);
+            }
+            else
+            {
+                newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, this.id + this.displayExs.length, contentText, labelText, tooltip);
+            }
             this.displayExs.push(newDisplayEx);
         }
         return newDisplayEx;
     }
 
-    static getScoreSheetElements(positionObj, applicantHasPriorWorkExp) // COMPUTATION INCLUDES NON-EXISTENT SALARY GRADES IN THE NON-TEACHING POSITIONS (23, 25-26); CONSIDER IN FUTURE ISSUES; MAY ALSO CONFUSE DEVELOPERS DURING USE, ESPECIALLY WHEN THE NAME OF VARIABLE IS `scoreSheet`
+    static getScoreSheetElements(positionObj, jobApplication) // COMPUTATION INCLUDES NON-EXISTENT SALARY GRADES IN THE NON-TEACHING POSITIONS (23, 25-26); CONSIDER IN FUTURE ISSUES; MAY ALSO CONFUSE DEVELOPERS DURING USE, ESPECIALLY WHEN THE NAME OF VARIABLE IS `scoreSheet`
     {
-        var salaryGrade, positionCategory, positionRequiresExp;
-        console.log(positionObj);
-        [salaryGrade, positionCategory, positionRequiresExp] = [positionObj["salary_grade"], positionObj["position_categoryId"], (positionObj["required_work_experience_years"] > 0)];
+        var salaryGrade, positionCategory, positionRequiresExp, applicantHasPriorWorkExp;
+        // console.log(positionObj, jobApplication);
+        [salaryGrade, positionCategory, positionRequiresExp, applicantHasPriorWorkExp] = [positionObj["salary_grade"], positionObj["position_categoryId"], (positionObj["required_work_experience_years"] > 0), (jobApplication["relevant_work_experience"].length > 0)];
 
         var criteria = [
+            {
+                id:"summary",
+                type:"summary",
+                label:"Summary of Ratings",
+                dbColName:"summary",
+                dbTableName:"",
+                content:[
+                    {id:"summary_criteria",type:"summary-header",label:"Criteria",dbColName:"summary_criteria",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_weight",type:"summary-header",label:"Weight",dbColName:"summary_weight",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_score",type:"summary-header",label:"Score",dbColName:"summary_score",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_total_label",type:"summary-footer",label:"Grand Total:",dbColName:"summary_total_label",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_total_weight",type:"summary-footer",label:"0%",dbColName:"summary_total_weight",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_total_score",type:"summary-footer",label:"0.000",dbColName:"summary_total_score",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
+                ],
+                parentId:null,
+                score:0,
+                weight:-1,
+                maxPoints:0,
+                min:0,
+                max:0,
+                step:0
+            },
             {
                 id:"education",
                 type:"criteria1",
@@ -3392,7 +3555,52 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 5 || (positionCategory == 4 && salaryGrade != 24) ? 5 : 10),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                getPointsManually:function(){
+                    var score = 0;
+                    var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0];
+
+                    var educAttainment = jobApplication["educational_attainmentIndex"];
+                    var degreeTaken = jobApplication["degree_taken"];
+                    var hasSpecEduc = (jobApplication["has_specific_education_required"] == null ? "n/a" : (jobApplication["has_specific_education_required"] == 1 ? "Yes" : "No"));
+                    
+                    var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
+                    var incrementObj = document.mpsEducIncrement.filter(increment=>(increment["baseline_educational_attainment"] == positionObj["required_educational_attainment"]));
+                    var requiredEducIncrement = incrementObj[0]["education_increment_level"];
+                    var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
+
+                    scoreSheetElementUI.displays["educational_attainment"].displayEx.setHTMLContent(jobApplication["educational_attainment"]);
+                    scoreSheetElementUI.displays["degrees_taken"].contentWrapper.innerHTML = "";
+                    for (const degree of degreeTaken)
+                    {
+                        var degreeStr = degree["degree"]
+                            + " ("
+                            + (type(degree["graduation_year"]) == "number" && degree["graduation_year"] != null && degree["graduation_year"] != undefined ? "graduated in " + degree["graduation_year"]
+                                : (type(degree["complete_academic_requirements"]) == "boolean" && degree["complete_academic_requirements"] || type(degree["complete_academic_requirements"]) == "number" && degree["complete_academic_requirements"] != 0 ? "complete academic requirements"
+                                    : (type(degree["units_earned"]) == "number" && degree["units_earned"] != null && degree["units_earned"] != undefined ? degree["units_earned"] + " units earned"
+                                        : (type(degree["year_level_completed"]) == "number" && degree["year_level_completed"] != null && degree["year_level_completed"] != undefined ? degree["year_level_completed"] + " year" + (degree["year_level_completed"] == 1 ? "" : "s") + " completed" : "no info")
+                                    )
+                                )
+                            )
+                            + ")";
+                        
+                            scoreSheetElementUI.displays["degrees_taken"].contentWrapper.appendChild(htmlToElement("<li>" + degreeStr + "</li>"));
+                    }
+
+                    if (scoreSheetElementUI.displays["degrees_taken"].contentWrapper.innerHTML.trim() == "" && !scoreSheetElementUI.displays["degrees_taken"].contentWrapper.classList.contains("hidden"))
+                    {
+                        scoreSheetElementUI.displays["degrees_taken"].contentWrapper.classList.add("hidden");
+                        scoreSheetElementUI.displays["degrees_taken"].displayEx.setVertical(false);
+                        scoreSheetElementUI.displays["degrees_taken"].contentWrapper.parentElement.appendChild(document.createTextNode("(no info)"));
+                    }
+                    scoreSheetElementUI.displays["has_specific_education_required"].displayEx.setHTMLContent(hasSpecEduc);
+                    scoreSheetElementUI.displays["educIncrements"].displayEx.setHTMLContent(educIncrementAboveQS.toString());
+                    scoreSheetElementUI.displays["isEducQualified"].displayEx.check((hasSpecEduc == "n/a" || hasSpecEduc == "Yes") && applicantEducIncrement >= requiredEducIncrement);
+
+                    score = ScoreSheet.getEducScore(educIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
+                    
+                    return score;
+                }
             },
             {
                 id:"training",
@@ -3415,7 +3623,31 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 5 || (positionCategory == 4 && (salaryGrade <= 9 || salaryGrade == 24)) ? 5 : 10),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                getPointsManually:function(){
+                    var score = 0;
+                    var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0];
+
+                    var relevantTrainings = jobApplication["relevant_training"];
+                    var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
+                    var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
+                    var hasSpecTraining = (jobApplication["has_specific_training"] == null ? "n/a" : (jobApplication["has_specific_training"] == 1 ? "Yes" : "No"));
+                    var hasMoreTraining = (jobApplication["has_more_unrecorded_training"] == null ? "n/a" : (jobApplication["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
+                    var requiredTrainingHours = positionObj["required_training_hours"];
+                    var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
+                    var trainingIncrementAboveQS = applicantTrainingIncrement - requiredTrainingIncrement;
+                    
+                    scoreSheetElementUI.displays["relevant_training_hours"].displayEx.setHTMLContent(relevantTrainingHours.toString());
+                    scoreSheetElementUI.displays["relevant_training_count"].displayEx.setHTMLContent(relevantTrainings.length.toString());
+                    scoreSheetElementUI.displays["has_specific_training"].displayEx.setHTMLContent(hasSpecTraining);
+                    scoreSheetElementUI.displays["has_more_unrecorded_training"].displayEx.setHTMLContent(hasMoreTraining);
+                    scoreSheetElementUI.displays["trainIncrements"].displayEx.setHTMLContent(trainingIncrementAboveQS.toString());
+                    scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "n/a" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
+
+                    score = ScoreSheet.getTrainingScore(trainingIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
+                    
+                    return score;
+                }
             },
             {
                 id:"experience",
@@ -3438,7 +3670,31 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory > 3 ? (salaryGrade > 9 ? 15 : 20) : 10),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                getPointsManually:function(){
+                    var score = 0;
+                    var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0];
+
+                    var relevantWorkExp = jobApplication["relevant_work_experience"];
+                    var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? ScoreSheet.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
+                    var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
+                    var hasSpecWorkExp = (jobApplication["has_specific_work_experience"] == null ? "n/a" : (jobApplication["has_specific_work_experience"] == 1 ? "Yes" : "No"));
+                    var hasMoreWorkExp = (jobApplication["has_more_unrecorded_work_experience"] == null ? "n/a" : (jobApplication["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
+                    var requiredWorkExpYears = positionObj["required_work_experience_years"];
+                    var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
+                    var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
+                    
+                    scoreSheetElementUI.displays["relevant_work_experience_years"].displayEx.setHTMLContent(ScoreSheet.convertDurationToString(relevantWorkExpDuration));
+                    scoreSheetElementUI.displays["relevant_work_experience_count"].displayEx.setHTMLContent(relevantWorkExp.length.toString());
+                    scoreSheetElementUI.displays["has_specific_work_experience"].displayEx.setHTMLContent(hasSpecWorkExp);
+                    scoreSheetElementUI.displays["has_more_unrecorded_work_experience"].displayEx.setHTMLContent(hasMoreWorkExp);
+                    scoreSheetElementUI.displays["expIncrements"].displayEx.setHTMLContent(workExpIncrementAboveQS.toString());
+                    scoreSheetElementUI.displays["isWorkExpQualified"].displayEx.check((hasSpecWorkExp == "n/a" || hasSpecWorkExp == "Yes") && applicantWorkExpIncrement >= requiredWorkExpIncrement);
+
+                    score = ScoreSheet.getWorkExpScore(workExpIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
+                    
+                    return score;
+                }
             },
             {
                 id:"performance",
@@ -3453,15 +3709,16 @@ class ScoreSheet extends FormEx
                     {id:"most_recent_performance_rating",type:"input-number",label:"Most recent relevant 1-year Performance Rating attained",dbColName:"most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:(positionCategory == 1 || !(positionRequiresExp || applicantHasPriorWorkExp) ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),maxPoints:0,min:0,max:5,step:0.1},
                     {id:"performance_cse_gwa_rating",type:"input-number",label:"CSE Rating/GWA in the highest academic/grade level earned (actual/equivalent)",dbColName:"performance_cse_gwa_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:(positionCategory == 1 || positionRequiresExp || applicantHasPriorWorkExp ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),maxPoints:0,min:0,max:100,step:0.1,getPointsManually:function(){
                         var value = this.inputEx.getValue();
+                        var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
 
                         if (value == 0)
                         {
-                            this.scoreSheet.scoreSheetElementUIs[3].fields["performance_cse_honor_grad"].inputEx.enable();
+                            scoreSheetElementUI.fields["performance_cse_honor_grad"].inputEx.enable();
                         }
                         else
                         {
-                            this.scoreSheet.scoreSheetElementUIs[3].fields["performance_cse_honor_grad"].inputEx.disable();
-                            this.scoreSheet.scoreSheetElementUIs[3].fields["performance_cse_honor_grad"].inputEx.setDefaultValue(0, true);
+                            scoreSheetElementUI.fields["performance_cse_honor_grad"].inputEx.disable();
+                            scoreSheetElementUI.fields["performance_cse_honor_grad"].inputEx.setDefaultValue(0, true);
                         }
 
                         return this.scoreSheetElement.score * value / (this.scoreSheetElement.weight < 0 ? 1 : this.scoreSheetElement.max / this.scoreSheetElement.weight);
@@ -3487,15 +3744,16 @@ class ScoreSheet extends FormEx
                         step:0,
                         getPointsManually:function(){
                             var value = this.inputEx.getValue();
+                            var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
 
                             if (value == 0)
                             {
-                                this.scoreSheet.scoreSheetElementUIs[3].fields["performance_cse_gwa_rating"].inputEx.enable();
+                                scoreSheetElementUI.fields["performance_cse_gwa_rating"].inputEx.enable();
                             }
                             else
                             {
-                                this.scoreSheet.scoreSheetElementUIs[3].fields["performance_cse_gwa_rating"].inputEx.disable();
-                                this.scoreSheet.scoreSheetElementUIs[3].fields["performance_cse_gwa_rating"].inputEx.setDefaultValue(0, true);
+                                scoreSheetElementUI.fields["performance_cse_gwa_rating"].inputEx.disable();
+                                scoreSheetElementUI.fields["performance_cse_gwa_rating"].inputEx.setDefaultValue(0, true);
                             }
     
                             return this.scoreSheetElement.score * value / (this.scoreSheetElement.weight < 0 ? 1 : this.scoreSheetElement.max / this.scoreSheetElement.weight);
@@ -4193,7 +4451,7 @@ class ScoreSheet extends FormEx
                 min:0,
                 max:0,
                 step:0
-            }
+            },
         ];
 
         return criteria;

@@ -1,5 +1,8 @@
 # Work Log
 
+## 5/3/2023
+I continued my work on the Score Sheet's Summary of Ratings. At around noon, it was mostly functional, although I seem to have forgotten to add a table footer where I could put the "Grand Total" of the scores. I was able to complete the Summary, which had automatic adding of scores, and even added some styling. I also found a bug in a field under the performance criteria, which I traced to sone of the data types set in some columns of the Job_Application database table, and fixed them. It was a lot of work, but most of it are visible changes which can be views via the locally hosted app.
+
 ## 5/2/2023
 I updated the files in the temporary web server (XAMPP in Ms. Jen's PC). I also edited the Job_Application table in XAMPP, as it has been restructured a bit in my end to accommodate changes in and corrections to the source code. I also started to fix some styling bugs that caused some InputEx objects to not render properly, especially in full width. I also added some links to forms into some of the landing pages. I have, likewise, added stubs for other important MPS forms. I have also began work to incorporate a Summary of Ratings to the Score Sheet, although I would often veer from this task whenever I see something else to do or correct. I have created a DisplayTableEx class for this purpose which I extended from DisplayEx, but I might recode it to be extended from ScoreSheetElementUI instead, as it more closely fits my intention. I was able to finish up to an unstyled Summary of Ratings (no scores yet). If I finish this part, although the Score Sheet is already functional as it is, it will more closely resemble the paper-based version in terms of functionality.
 
