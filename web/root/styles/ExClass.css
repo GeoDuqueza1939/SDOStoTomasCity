@@ -189,12 +189,19 @@
     color: red;
 }
 
-.input-ex.blank-style > .fields > input {
+.input-ex.blank-style > .fields > input,
+.input-ex.blank-style > .fields > select {
     border-radius: 0;
     border-top: 0 none;
     border-left: 0 none;
     border-right: 0 none;
     border-bottom-width: 3px;
+}
+
+.input-ex.simple-style > .fields > input,
+.input-ex.simple-style > .fields > select {
+    padding: initial;
+    border-radius: initial;
 }
 
 .input-ex > .fields > .status-pane {
@@ -379,10 +386,10 @@
 .dialog-ex > .dialog {
     border: 2px outset;
     background-color: lightgray;
-    max-height: 50em;
+    max-height: 95%;
     max-width: 80%;
     padding: 2em;
-    line-height: 2;
+    /* line-height: 2; */
     border-radius: 1em;
     box-shadow: 0.2em 0.2em;
 }

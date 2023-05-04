@@ -282,6 +282,8 @@ class DisplayTableEx extends DisplayEx
 
         this.columnHeaders = []; // {colHeaderName ("required"), colHeaderText}
 
+        this.isHeaderCustomized = false;
+
         [this.container, this.content].forEach(el=>el["displayTableEx"] = this);
     }
 
@@ -330,6 +332,11 @@ class DisplayTableEx extends DisplayEx
     
     addHeader(colHeaderName, colHeaderText = "")
     {
+        if (this.isHeaderCustomized)
+        {
+            throw("Table header has been manually modified. Either continue with manual modifications or use the `DisplayTableEx.setHeader` method with the `replace` function set to `true`.");
+        }
+
         if (this.thead == null || this.thead == undefined)
         {
             this.thead = htmlToElement("<thead></thead>");
@@ -342,8 +349,8 @@ class DisplayTableEx extends DisplayEx
             this.thead.appendChild(this.theadRow);
         }
 
-        this.columnHeaders.push({colHeaderName:colHeaderName, colHeaderText:colHeaderText});
-        this.theadRow.appendChild(htmlToElement("<th>" + colHeaderText + "</th>"));
+        this.columnHeaders.push({colHeaderName:colHeaderName, colHeaderText:colHeaderText, colHeaderCell:htmlToElement("<th>" + colHeaderText + "</th>")});
+        this.theadRow.appendChild(this.columnHeaders[this.columnHeaders.length - 1]["colHeaderCell"]);
 
         this.rows.forEach((row, index)=>{ // add missing key in each row
             if (!(colHeaderName in row["data"]))
@@ -458,6 +465,7 @@ class InputEx
         this.statusMsg = null;
 
         this.isMultipleInput = false;
+        this.isMultipleOption = false;
         this.disabled = false;
         this.isFilling = false;
         this.runAfterFilling = null; // function to run after filling items from server; should be assigned before running fillItemsFromServer
@@ -493,6 +501,7 @@ class InputEx
                 this.table.inputEx = this;
                 break;
             case "select":
+                this.isMultipleOption = true;
                 this.fields.push(createElementEx(NO_NS, "select", this.fieldWrapper, nextSibling, "id", idStr, "name", idStr));
                 this.fields[0].inputEx = this;
                 addText("", createElementEx(NO_NS, "option", this.fields[0], nextSibling));
@@ -513,6 +522,7 @@ class InputEx
                 this.fields[0].inputEx = this;
                 break;
             case "combo": // input with a datalist
+                this.isMultipleOption = true;
                 nextSibling = this.datalist = createElementEx(NO_NS, "datalist", this.fieldWrapper, nextSibling, "id", idStr + "-datalist", "name", idStr + "-datalist");
                 typeStr = "text";
             default:
@@ -853,7 +863,7 @@ class InputEx
 
     clearList()
     {
-        if (this.isMultipleInput)
+        if (this.isMultipleInput || this.isMultipleOption)
         {
             switch (this.type)
             {
@@ -1046,6 +1056,27 @@ class InputEx
                 break;
             default:
                 this.container.classList.toggle("blank-style");
+                break;
+        }
+    }
+
+    setSimpleStyle()
+    {
+        switch (this.type)
+        {
+            case "checkbox":
+            case "radio":
+            case "checkbox-select":
+            case "radio-select":
+            case "button":
+            case "submit":
+            case "reset":
+            case "buttonEx":
+            case "buttons":
+            case "buttonExs":
+                break;
+            default:
+                this.container.classList.toggle("simple-style");
                 break;
         }
     }
@@ -2235,6 +2266,7 @@ class FormEx
         this.inputExs = [];
         this.dbInputEx = {};
         this.dbTableName = {};
+        this.displayExs = [];        
         this.boxes = {};
         this.statusPane = null; // a status pane for displaying success, error, or info messages.
         this.func = {
@@ -2391,6 +2423,36 @@ class FormEx
         // this.inputExs[this.inputExs.length - 1].spacer = document.createTextNode(" ");
         // this.fieldWrapper.insertBefore(this.inputExs[this.inputExs.length - 1].spacer, this.inputEx[this.inputEx.length - 1].container);
         return this.inputExs[this.inputExs.length - 1];
+    }
+
+    addDisplayEx(typeText = "div", id = "", contentText = "", labelText = "", tooltip = "")
+    {
+        var newDisplayEx = null;
+        if (typeof(id) == "string" && id != "")
+        {
+            if (typeText == "div-table")
+            {
+                newDisplayEx = new DisplayTableEx(this.fieldWrapper, "div", id, contentText, labelText, tooltip);
+            }
+            else
+            {
+                newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
+            }
+            this.displayExs[id] = newDisplayEx;
+        }
+        else
+        {
+            if (typeText == "div-table")
+            {
+                newDisplayEx = new DisplayTableEx(this.fieldWrapper, "div", this.id + this.displayExs.length, contentText, labelText, tooltip);
+            }
+            else
+            {
+                newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, this.id + this.displayExs.length, contentText, labelText, tooltip);
+            }
+            this.displayExs.push(newDisplayEx);
+        }
+        return newDisplayEx;
     }
 
     addFormButtonGrp(numOfBtns, useFieldSet = false) // inputEx buttons for submitting data, resetting the form, or any other custom function
@@ -3186,10 +3248,15 @@ class ScoreSheet extends FormEx
         {
             retrieveApplicantDialog = new DialogEx(scoreSheet.fieldWrapper);
             var form = retrieveApplicantDialog.addFormEx();
+            form.setFullWidth();
             
             var searchBox = form.addInputEx("Enter an applicant name or code", "text", "", "Type to populate list");
             searchBox.setFullWidth();
+            // searchBox.setVertical();
             searchBox.showColon();
+            searchBox.container.style.marginBottom = "0.5em";
+            searchBox.fields[0].style.display = "block";
+            searchBox.fields[0].style.width = "100%";
 
             var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
             searchResult.setFullWidth();
@@ -3197,9 +3264,14 @@ class ScoreSheet extends FormEx
             searchResult.reverse();
             searchResult.hide();
 
+            searchResult.fieldWrapper.style.maxHeight = "15em";
+            searchResult.fieldWrapper.style.overflowY = "auto";
+
             var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(2);
             retrieveApplicantDialogBtnGrp.setFullWidth();
+            retrieveApplicantDialogBtnGrp.container.style.marginTop = "0.5em";
             retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
+
             retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("Load");
             retrieveApplicantDialogBtnGrp.inputExs[0].setTooltipText("Load Selected");
             retrieveApplicantDialogBtnGrp.inputExs[0].disable();
@@ -3474,36 +3546,6 @@ class ScoreSheet extends FormEx
             this.innerHTML = "Load Application";
         }
 
-    }
-
-    addDisplayEx(typeText = "div", id = "", contentText = "", labelText = "", tooltip = "")
-    {
-        var newDisplayEx = null;
-        if (typeof(id) == "string" && id != "")
-        {
-            if (typeText == "div-table")
-            {
-                newDisplayEx = new DisplayTableEx(this.fieldWrapper, "div", id, contentText, labelText, tooltip);
-            }
-            else
-            {
-                newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
-            }
-            this.displayExs[id] = newDisplayEx;
-        }
-        else
-        {
-            if (typeText == "div-table")
-            {
-                newDisplayEx = new DisplayTableEx(this.fieldWrapper, "div", this.id + this.displayExs.length, contentText, labelText, tooltip);
-            }
-            else
-            {
-                newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, this.id + this.displayExs.length, contentText, labelText, tooltip);
-            }
-            this.displayExs.push(newDisplayEx);
-        }
-        return newDisplayEx;
     }
 
     static getScoreSheetElements(positionObj, jobApplication) // COMPUTATION INCLUDES NON-EXISTENT SALARY GRADES IN THE NON-TEACHING POSITIONS (23, 25-26); CONSIDER IN FUTURE ISSUES; MAY ALSO CONFUSE DEVELOPERS DURING USE, ESPECIALLY WHEN THE NAME OF VARIABLE IS `scoreSheet`
@@ -4720,6 +4762,127 @@ class ScoreSheet extends FormEx
     resetForm()
     {
         window.location.reload(true);
+    }
+}
+
+class IERForm extends FormEx
+{
+    constructor(parentEl = null, id = "", useFormElement = true)
+    {
+        super(parentEl, id, useFormElement);
+
+        var posInfo = null
+
+        this.setTitle("Initial Evaluation Result (IER)", 2);
+        this.setFullWidth();
+
+        posInfo = this.addBox("ier-position-info", false);
+
+        [
+            {id:"ier-selected-position", label:"Position Title"},
+            {id:"ier-selected-paren-position", label:"Parenthetical Position"},
+            {id:"ier-selected-plantilla", label:"Plantilla Item Number"}
+        ].forEach(field=>{
+            this.addInputEx(field.label, "select", "", "", field.id);
+            this.dbInputEx[field.id].setFullWidth();
+            this.dbInputEx[field.id].showColon();
+            posInfo.appendChild(this.dbInputEx[field.id].container);
+            this.dbInputEx[field.id].setSimpleStyle();
+        });
+
+        [
+            {id:"ier-position", label:"Position"},
+            {id:"ier-position-salary-grade", label:"Salary Grade and Monthly Salary"},
+            {id:"ier-position-qs", label:"Qualification Standards"}
+        ].forEach(field=>{
+            posInfo.appendChild(this.addDisplayEx("div", field.id, "", field.label).container);
+            this.displayExs[field.id].setFullWidth();
+            this.displayExs[field.id].showColon();    
+        });
+
+        this.displayExs["ier-position-qs"].setVertical();
+        this.displayExs["ier-position-qs"].content.style.paddingLeft = "2em";
+
+        [
+            {id:"ier-position-qs-education", label:"Education"},
+            {id:"ier-position-qs-training", label:"Training"},
+            {id:"ier-position-qs-experience", label:"Experience"},
+            {id:"ier-position-qs-eligibility", label:"Eligibility"}
+        ].forEach(field=>{
+            this.displayExs["ier-position-qs"].addContent(this.addDisplayEx("div", field.id, "", field.label).container);
+            this.displayExs[field.id].setFullWidth();
+            this.displayExs[field.id].showColon();    
+        });
+
+        this.addDisplayEx("div-table", "ier-table");
+        this.displayExs["ier-table"].container.classList.add("ier-table");
+        this.displayExs["ier-table"].setHeaders([
+            {colHeaderName:"row-number", colHeaderText:"No."},
+            {colHeaderName:"application-code", colHeaderText:"Application Code"},
+            {colHeaderName:"applicant-name", colHeaderText:"Names of Applicant"},
+            {colHeaderName:"address", colHeaderText:"Address"},
+            {colHeaderName:"age", colHeaderText:"Age"},
+            {colHeaderName:"sex", colHeaderText:"Sex"},
+            {colHeaderName:"civil-status", colHeaderText:"Civil Status"},
+            {colHeaderName:"religion", colHeaderText:"Religion"},
+            {colHeaderName:"disability", colHeaderText:"Disability"},
+            {colHeaderName:"ethnic-group", colHeaderText:"Ethnic Group"},
+            {colHeaderName:"email-address", colHeaderText:"Email Address"},
+            {colHeaderName:"contact-number", colHeaderText:"Contact No."},
+            {colHeaderName:"education", colHeaderText:"Education"},
+            {colHeaderName:"training-title", colHeaderText:"Title"},
+            {colHeaderName:"training-hours", colHeaderText:"Hours"},
+            {colHeaderName:"experience-details", colHeaderText:"Details"},
+            {colHeaderName:"experience-years", colHeaderText:"Years"},
+            {colHeaderName:"eligibility", colHeaderText:"Eligibility"},
+            {colHeaderName:"remarks", colHeaderText:"Remarks (Qualified or Disqualified)"}
+        ]);
+
+        this.displayExs["ier-table"].table.classList.add("bordered");
+        this.displayExs["ier-table"].thead.insertBefore(htmlToElement("<tr></tr>"), this.displayExs["ier-table"].theadRow);
+        [["old", 0], ["old", 0], ["old", 0], ["new", "Personal Information", 9], ["old", 9], ["new", "Training", 2], ["new", "Experience", 2], ["old", 13], ["old", 13]].forEach(header=>{
+            if (header[0] == "new")
+            {
+                this.displayExs["ier-table"].thead.children[0].appendChild(htmlToElement("<th colspan=\"" + header[2] + "\">" + header[1] + "</th>"));
+            }
+            else
+            {
+                this.displayExs["ier-table"].theadRow.children[header[1]].setAttribute("rowspan", "2");
+                this.displayExs["ier-table"].thead.children[0].appendChild(this.displayExs["ier-table"].theadRow.children[header[1]]);
+            }
+        });
+
+        this.displayExs["ier-table"].isHeaderCustomized = true;
+
+        this.dbInputEx["ier-selected-position"].setStatusMsgTimeout(-1);
+        this.dbInputEx["ier-selected-position"].showWait("Loading");
+
+        this.dbInputEx["ier-selected-position"].fillItems(document.positions.filter((position, index, positions)=>{
+            var i = 0;
+            while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
+            return i == index && position["filled"] == 0;
+        }), "position_title", "plantilla_item_number");
+
+        this.dbInputEx["ier-selected-position"].resetStatus();
+
+        this.dbInputEx["ier-selected-position"].addEvent("change", positionChange=>{
+            this.dbInputEx["ier-selected-paren-position"].setValue("");
+            this.dbInputEx["ier-selected-paren-position"].clearList();
+            this.dbInputEx["ier-selected-paren-position"].fillItems(document.positions.filter(position=>(position["position_title"] == this.dbInputEx["ier-selected-position"].getValue())), "parenthetical_title", "plantilla_item_number", "");
+            
+            this.dbInputEx["ier-selected-plantilla"].setValue("");
+            this.dbInputEx["ier-selected-plantilla"].clearList();
+            this.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == this.dbInputEx["ier-selected-position"].getValue() && (this.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == this.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
+            var option = this.dbInputEx["ier-selected-plantilla"].addItem("ANY");
+            option.parentElement.insertBefore(option, option.parentElement.children[0]);
+        });
+        this.dbInputEx["ier-selected-paren-position"].addEvent("change", changeEvent=>{
+            this.dbInputEx["ier-selected-plantilla"].setValue("");
+            this.dbInputEx["ier-selected-plantilla"].clearList();
+            this.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == this.dbInputEx["ier-selected-position"].getValue() && (this.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == this.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
+            var option = this.dbInputEx["ier-selected-plantilla"].addItem("ANY");
+            option.parentElement.insertBefore(option, option.parentElement.children[0]);
+        });
     }
 }
 

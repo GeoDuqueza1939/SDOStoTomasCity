@@ -164,3 +164,10 @@ body, .app > main {
     text-align: right;
     font-weight: bold;
 }
+
+.display-ex.ier-table {
+    border: 0.1em inset;
+    background-color: white;
+    overflow: auto;
+    max-width: 100%;
+}

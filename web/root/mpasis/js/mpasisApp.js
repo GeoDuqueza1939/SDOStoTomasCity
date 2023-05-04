@@ -37,7 +37,14 @@ class MPASIS_App
         this.defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
         this.scrim = null;
 
-        this.forms = {};
+        this.forms = {
+            jobData:null,
+            applicantData:null,
+            scoreSheet:null,
+            scoreSheetOld:null,
+            ier:null,
+            ies:null
+        };
 
         for (const navLI of Array.from(this.navbar.querySelectorAll("li"))) {
             for (const link of Array.from(navLI.children)) {
@@ -194,10 +201,10 @@ class MPASIS_App
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Scores and Rankings</h2>";
                 break;
             case "ier":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>Initial Evaluation Result (IER)</h2>";
+                this.constructIER();
                 break;
             case "ies":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>Individual Evaluation Sheet (IES)</h2>";
+                this.constructIES();
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
@@ -729,9 +736,9 @@ class MPASIS_App
     {
         var applicantDataForm = null, header = null, field = null, applicant = null, searchedApplicants = null, row = null, getAppliedPosition;
 
-        if ("applicantData" in this.forms)
+        if (this.forms["applicantData"] != null && this.forms["applicantData"] != undefined)
         {
-            return applicantDataForm;
+            return this.forms["applicantData"];
         }
 
         document.positions = [];
@@ -1649,15 +1656,22 @@ class MPASIS_App
                 var searchBox = form.addInputEx("Enter an applicant name or application code", "text", "", "Type to populate list");
                 searchBox.setFullWidth();
                 searchBox.showColon();
-
+                searchBox.container.style.marginBottom = "0.5em";
+                searchBox.fields[0].style.display = "block";
+                searchBox.fields[0].style.width = "100%";
+    
                 var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
                 searchResult.setFullWidth();
                 searchResult.setVertical();
                 searchResult.reverse();
                 searchResult.hide();
 
+                searchResult.fieldWrapper.style.maxHeight = "15em";
+                searchResult.fieldWrapper.style.overflowY = "auto";
+    
                 var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(3);
                 retrieveApplicantDialogBtnGrp.setFullWidth();
+                retrieveApplicantDialogBtnGrp.container.style.marginTop = "0.5em";
                 retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
 
                 retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("New Application");
@@ -2044,7 +2058,7 @@ class MPASIS_App
             plantillaField.setValue("");
             plantillaField.clearList();
         //     await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
-            plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] == parenField.getValue())), "plantilla_item_number", "", "");
+            plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "", "");
             var option = plantillaField.addItem("ANY");
             option.parentElement.insertBefore(option, option.parentElement.children[0]);
         });
@@ -2052,7 +2066,7 @@ class MPASIS_App
             plantillaField.setValue("");
             plantillaField.clearList();
             // await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
-            plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] == parenField.getValue())), "plantilla_item_number", "", "");
+            plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "", "");
             var option = plantillaField.addItem("ANY");
             option.parentElement.insertBefore(option, option.parentElement.children[0]);
         });
@@ -2315,12 +2329,12 @@ class MPASIS_App
     {
         var scoreSheet = null, field = null, div = null, subDiv = null;
 
-        if (this.forms["scoreSheet"] != null && this.forms["scoreSheet"] != undefined)
+        if (this.forms["scoreSheetOld"] != null && this.forms["scoreSheetOld"] != undefined)
         {
             return this.forms["scoreSheet"];
         }
 
-        scoreSheet = this.forms["scoreSheet"] = new FormEx(this.mainSections["main-scoresheet-old"], "score-sheet-old");
+        scoreSheet = this.forms["scoreSheetOld"] = new FormEx(this.mainSections["main-scoresheet-old"], "score-sheet-old");
         scoreSheet.setFullWidth();
         scoreSheet["displayExs"] = [];
         scoreSheet["data"] = [];
@@ -3684,16 +3698,31 @@ class MPASIS_App
 
     constructScoreSheet()
     {
-        var scoreSheet = null;
-
-        if (this.forms["scoreSheetTest"] != null && this.forms["scoreSheet"] != undefined)
+        if (this.forms["scoreSheet"] != null && this.forms["scoreSheet"] != undefined)
         {
-            return this.forms["scoreSheetTest"];
+            return this.forms["scoreSheet"];
         }
 
-        scoreSheet = this.forms["scoreSheetTest"] = new ScoreSheet(this.mainSections["main-scoresheet"], "score-sheet");
+        this.forms["scoreSheet"] = new ScoreSheet(this.mainSections["main-scoresheet"], "score-sheet");
 
-        return scoreSheet;
+        return this.forms["scoreSheet"];
+    }
+
+    constructIER()
+    {
+        if (this.forms["ier"] != null && this.forms["ier"] != undefined)
+        {
+            return this.forms["ier"];
+        }
+
+        this.forms["ier"] = new IERForm(this.mainSections["main-ier"], "ier-form");
+
+        return this.forms["ier"];
+    }
+
+    constructIES()
+    {
+        this.mainSections["main-ies"].innerHTML = "<h2>Individual Evaluation Sheet (IES)</h2>";
     }
 
     setCookie(cname, cvalue, exdays)
