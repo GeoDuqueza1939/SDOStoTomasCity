@@ -199,6 +199,7 @@
 }
 
 .input-ex.simple-style > .fields > input,
+.input-ex.simple-style > .fields > button,
 .input-ex.simple-style > .fields > select {
     padding: initial;
     border-radius: initial;

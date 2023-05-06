@@ -48,6 +48,203 @@ function sendDebug($data)
     exit;
 }
 
+function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
+{
+    $query = "SELECT
+        pe.personId as personId,
+        given_name,
+        middle_name,
+        family_name,
+        spouse_name,
+        ext_name,
+        birth_date,
+        birth_place,
+        sex,
+        age,
+        ecs.index as civil_statusIndex,
+        ecs.civil_status as civil_status,
+        r.religionId as religionId,
+        r.religion as religion,
+        eth.ethnicityId as ethnicityId,
+        eth.ethnic_group as ethnic_group,
+        permAdd.addressId as permanent_addressId,
+        permAdd.address as permanent_address,
+        presAdd.addressId as present_addressId,
+        presAdd.address as present_address,
+        eea.index as educational_attainmentIndex,
+        eea.educational_attainment as educational_attainment,
+        application_code,
+        position_title_applied,
+        parenthetical_title_applied,
+        plantilla_item_number_applied,
+        has_specific_education_required,
+        has_specific_training,
+        has_more_unrecorded_training,
+        has_specific_work_experience,
+        has_more_unrecorded_work_experience,
+        has_specific_competency_required,
+        most_recent_performance_rating,
+        performance_cse_gwa_rating,
+        performance_cse_honor_grad,
+        number_of_citation_movs,
+        number_of_academic_award_movs,
+        number_of_awards_external_office_search,
+        number_of_awards_external_org_level_search,
+        number_of_awards_central_co_level_search,
+        number_of_awards_central_national_search,
+        number_of_awards_regional_ro_level_search,
+        number_of_awards_regional_national_search,
+        number_of_awards_division_sdo_level_search,
+        number_of_awards_division_national_search,
+        number_of_awards_school_school_level_search,
+        number_of_awards_school_sdo_level_search,
+        number_of_research_proposal_only,
+        number_of_research_proposal_ar,
+        number_of_research_proposal_ar_util,
+        number_of_research_proposal_ar_util_adopt,
+        number_of_research_proposal_ar_util_cite,
+        number_of_smetwg_issuance_cert,
+        number_of_smetwg_issuance_cert_output,
+        number_of_speakership_external_office_level,
+        number_of_speakership_external_org_level,
+        number_of_speakership_central_co_level,
+        number_of_speakership_central_national_level,
+        number_of_speakership_regional_ro_level,
+        number_of_speakership_regional_national_level,
+        number_of_speakership_division_sdo_level,
+        number_of_speakership_division_regional_level,
+        number_of_speakership_school_school_level,
+        number_of_speakership_school_sdo_level,
+        neap_facilitator_accreditation,
+        number_of_app_educ_r_actionplan,
+        number_of_app_educ_r_actionplan_ar,
+        number_of_app_educ_r_actionplan_ar_adoption,
+        number_of_app_educ_nr_actionplan,
+        number_of_app_educ_nr_actionplan_ar,
+        number_of_app_educ_nr_actionplan_ar_adoption,
+        app_educ_gwa,
+        number_of_app_train_relevant_cert_ap,
+        number_of_app_train_relevant_cert_ap_arlocal,
+        number_of_app_train_relevant_cert_ap_arlocal_arother,
+        number_of_app_train_not_relevant_cert_ap,
+        number_of_app_train_not_relevant_cert_ap_arlocal,
+        number_of_app_train_not_relevant_cert_ap_arlocal_arother,
+        score_exam,
+        score_skill,
+        score_bei
+    FROM SDOStoTomas.Person pe
+    INNER JOIN SDOStoTomas.Job_Application ja ON ja.personId = pe.personId
+    LEFT JOIN SDOStoTomas.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
+    LEFT JOIN SDOStoTomas.ENUM_Civil_Status ecs ON pe.civil_status = ecs.index
+    LEFT JOIN SDOStoTomas.Religion r ON pe.religionId = r.religionId
+    LEFT JOIN SDOStoTomas.Ethnicity eth ON pe.ethnicityId = eth.ethnicityId
+    LEFT JOIN SDOStoTomas.Address presAdd ON pe.present_addressId = presAdd.addressId
+    LEFT JOIN SDOStoTomas.Address permAdd ON pe.permanent_addressId = permAdd.addressId"
+    . (is_null($where) || (is_string($where) && trim($where) == "") ? "" : " WHERE $where")
+    . (is_null($limit) || !is_numeric($limit) ? "" : " LIMIT $limit");
+
+    $dbResults = $dbconn->executeQuery($query);
+
+    if (is_null($dbconn->lastException))
+    {
+        for ($i = 0; $i < count($dbResults); $i++)
+        {
+            $dbResult = $dbResults[$i];
+
+            $fullName = (is_string($dbResult['spouse_name']) && $dbResult['spouse_name'] != '' ? $dbResult['spouse_name'] . ', ' : (is_string($dbResult['family_name']) && $dbResult['family_name'] != '' ? $dbResult['family_name'] . ', ' : ''));
+            $fullName .= $dbResult['given_name'];
+            $fullName .= ($fullName == '' ? '' : ' ') . (is_string($dbResult['middle_name']) && $dbResult['middle_name'] != "" ? $dbResult['middle_name'] : '');
+            $fullName = trim($fullName);
+            $fullName .= (is_string($dbResult['spouse_name']) && $dbResult['spouse_name'] != '' ? ' ' . $dbResult['family_name'] : '');
+            $fullName = trim($fullName);
+
+            $dbResults[$i]['applicant_name'] = $fullName;
+            $dbResults[$i]['applicant_option_label'] = $dbResult['application_code'] . " &ndash; $fullName &ndash; " . $dbResult['position_title_applied'];
+
+            $dbResults2 = $dbconn->select("Degree_Taken", "degree_takenId, degree, degree_typeIndex, year_level_completed, units_earned, complete_academic_requirements, graduation_year", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['degree_taken'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+
+            $dbResults2 = $dbconn->executeQuery("SELECT person_disabilityId, pd.disabilityId as disabilityId, disability FROM Disability d INNER JOIN Person_Disability pd ON d.disabilityId=pd.disabilityId WHERE personId='" . $dbResults[$i]['personId'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['disability'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+
+            $dbResults2 = $dbconn->select("Email_Address", "email_address", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['email_address'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+
+            $dbResults2 = $dbconn->select("Contact_Number", "contact_numberId, contact_number", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['contact_number'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+
+            $dbResults2 = $dbconn->select("Relevant_Training", "relevant_trainingId, descriptive_name, hours", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['relevant_training'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+
+            $dbResults2 = $dbconn->select("Relevant_Work_Experience", "relevant_work_experienceId, descriptive_name, start_date, end_date", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['relevant_work_experience'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+
+            $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+
+            if (is_null($dbconn->lastException))
+            {
+                $dbResults[$i]['relevant_eligibility'] = $dbResults2;
+            }
+            else
+            {
+                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+            }
+        }
+
+        return json_encode(new ajaxResponse('Data', json_encode($dbResults)));
+    }
+        
+    return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+}
+
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
@@ -134,7 +331,7 @@ if (isset($_SESSION['user']))
                         }
                         return;
                         break;
-                    case 'applicant-data-entry-initial':
+                    case 'initial-data':
                         $positions = $dbconn->select('Position', '*', '');
 
                         if (is_null($dbconn->lastException))
@@ -187,6 +384,14 @@ if (isset($_SESSION['user']))
                                     }
                                 }
 
+                                $salaryGrade = $dbconn->select('Salary_Table', '*', 'WHERE effectivity_date >= "2023-01-01"');
+
+                                if (!is_null($dbconn->lastException))
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
+
                                 $educIncrementTable = $dbconn->select('MPS_Increment_Table_Education', '*', '');
 
                                 if (!is_null($dbconn->lastException))
@@ -199,7 +404,7 @@ if (isset($_SESSION['user']))
 
                                 if (is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment]))));
+                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment]))));
                                 }
                                 else
                                 {
@@ -395,219 +600,21 @@ if (isset($_SESSION['user']))
                         $srcStr = (isset($_REQUEST['srcStr']) ? $_REQUEST['srcStr'] : "");
                         if ($srcStr == '')
                         {
-                            echo(json_encode(new ajaxResponse('Info', 'Blank search string')));
-                            return;
+                            die(json_encode(new ajaxResponse('Info', 'Blank search string')));
                         }
 
-                        $dbResults = $dbconn->executeQuery(
-                            "SELECT
-                                pe.personId as personId,
-                                given_name,
-                                middle_name,
-                                family_name,
-                                spouse_name,
-                                ext_name,
-                                birth_date,
-                                birth_place,
-                                sex,
-                                age,
-                                ecs.index as civil_statusIndex,
-                                ecs.civil_status as civil_status,
-                                r.religionId as religionId,
-                                r.religion as religion,
-                                eth.ethnicityId as ethnicityId,
-                                eth.ethnic_group as ethnic_group,
-                                permAdd.addressId as permanent_addressId,
-                                permAdd.address as permanent_address,
-                                presAdd.addressId as present_addressId,
-                                presAdd.address as present_address,
-                                eea.index as educational_attainmentIndex,
-                                eea.educational_attainment as educational_attainment,
-                                application_code,
-                                position_title_applied,
-                                parenthetical_title_applied,
-                                plantilla_item_number_applied,
-                                has_specific_education_required,
-                                has_specific_training,
-                                has_more_unrecorded_training,
-                                has_specific_work_experience,
-                                has_more_unrecorded_work_experience,
-                                has_specific_competency_required,
-                                most_recent_performance_rating,
-                                performance_cse_gwa_rating,
-                                performance_cse_honor_grad,
-                                number_of_citation_movs,
-                                number_of_academic_award_movs,
-                                number_of_awards_external_office_search,
-                                number_of_awards_external_org_level_search,
-                                number_of_awards_central_co_level_search,
-                                number_of_awards_central_national_search,
-                                number_of_awards_regional_ro_level_search,
-                                number_of_awards_regional_national_search,
-                                number_of_awards_division_sdo_level_search,
-                                number_of_awards_division_national_search,
-                                number_of_awards_school_school_level_search,
-                                number_of_awards_school_sdo_level_search,
-                                number_of_research_proposal_only,
-                                number_of_research_proposal_ar,
-                                number_of_research_proposal_ar_util,
-                                number_of_research_proposal_ar_util_adopt,
-                                number_of_research_proposal_ar_util_cite,
-                                number_of_smetwg_issuance_cert,
-                                number_of_smetwg_issuance_cert_output,
-                                number_of_speakership_external_office_level,
-                                number_of_speakership_external_org_level,
-                                number_of_speakership_central_co_level,
-                                number_of_speakership_central_national_level,
-                                number_of_speakership_regional_ro_level,
-                                number_of_speakership_regional_national_level,
-                                number_of_speakership_division_sdo_level,
-                                number_of_speakership_division_regional_level,
-                                number_of_speakership_school_school_level,
-                                number_of_speakership_school_sdo_level,
-                                neap_facilitator_accreditation,
-                                number_of_app_educ_r_actionplan,
-                                number_of_app_educ_r_actionplan_ar,
-                                number_of_app_educ_r_actionplan_ar_adoption,
-                                number_of_app_educ_nr_actionplan,
-                                number_of_app_educ_nr_actionplan_ar,
-                                number_of_app_educ_nr_actionplan_ar_adoption,
-                                app_educ_gwa,
-                                number_of_app_train_relevant_cert_ap,
-                                number_of_app_train_relevant_cert_ap_arlocal,
-                                number_of_app_train_relevant_cert_ap_arlocal_arother,
-                                number_of_app_train_not_relevant_cert_ap,
-                                number_of_app_train_not_relevant_cert_ap_arlocal,
-                                number_of_app_train_not_relevant_cert_ap_arlocal_arother,
-                                score_exam,
-                                score_skill,
-                                score_bei
-                            FROM SDOStoTomas.Person pe
-                            INNER JOIN SDOStoTomas.Job_Application ja ON ja.personId = pe.personId
-                            LEFT JOIN SDOStoTomas.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
-                            LEFT JOIN SDOStoTomas.ENUM_Civil_Status ecs ON pe.civil_status = ecs.index
-                            LEFT JOIN SDOStoTomas.Religion r ON pe.religionId = r.religionId
-                            LEFT JOIN SDOStoTomas.Ethnicity eth ON pe.ethnicityId = eth.ethnicityId
-                            LEFT JOIN SDOStoTomas.Address presAdd ON pe.present_addressId = presAdd.addressId
-                            LEFT JOIN SDOStoTomas.Address permAdd ON pe.permanent_addressId = permAdd.addressId
-                            WHERE given_name LIKE '%$srcStr%'
-                                OR middle_name LIKE '%$srcStr%'
-                                OR family_name LIKE '%$srcStr%'
-                                OR spouse_name LIKE '%$srcStr%'
-                                OR ext_name LIKE '%$srcStr%'
-                                OR application_code LIKE '%$srcStr%'
-                            LIMIT 100;
-                        ");
-
-                        if (is_null($dbconn->lastException))
+                        exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'", 100));
+                        break;
+                    case 'applicationsByPosition':
+                        $positionTitle = (isset($_REQUEST['positionTitle']) ? $_REQUEST['positionTitle'] : "");
+                        $parenTitle = (isset($_REQUEST['parenTitle']) ? $_REQUEST['parenTitle'] : "");
+                        $plantilla = (isset($_REQUEST['plantilla']) ? $_REQUEST['plantilla'] : "");
+                        if ($positionTitle == '' && $plantilla == '')
                         {
-                            for ($i = 0; $i < count($dbResults); $i++)
-                            {
-                                $dbResult = $dbResults[$i];
-
-                                $fullName = (is_string($dbResult['spouse_name']) && $dbResult['spouse_name'] != '' ? $dbResult['spouse_name'] . ', ' : (is_string($dbResult['family_name']) && $dbResult['family_name'] != '' ? $dbResult['family_name'] . ', ' : ''));
-                                $fullName .= $dbResult['given_name'];
-                                $fullName .= ($fullName == '' ? '' : ' ') . (is_string($dbResult['middle_name']) && $dbResult['middle_name'] != "" ? $dbResult['middle_name'] : '');
-                                $fullName = trim($fullName);
-                                $fullName .= (is_string($dbResult['spouse_name']) && $dbResult['spouse_name'] != '' ? ' ' . $dbResult['family_name'] : '');
-                                $fullName = trim($fullName);
-
-                                $dbResults[$i]['applicant_name'] = $fullName;
-                                $dbResults[$i]['applicant_option_label'] = $dbResult['application_code'] . " &ndash; $fullName &ndash; " . $dbResult['position_title_applied'];
-
-                                $dbResults2 = $dbconn->select("Degree_Taken", "degree_takenId, degree, degree_typeIndex, year_level_completed, units_earned, complete_academic_requirements, graduation_year", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['degree_taken'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $dbResults2 = $dbconn->executeQuery("SELECT person_disabilityId, pd.disabilityId as disabilityId, disability FROM Disability d INNER JOIN Person_Disability pd ON d.disabilityId=pd.disabilityId WHERE personId='" . $dbResults[$i]['personId'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['disability'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $dbResults2 = $dbconn->select("Email_Address", "email_address", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['email_address'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $dbResults2 = $dbconn->select("Contact_Number", "contact_numberId, contact_number", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['contact_number'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $dbResults2 = $dbconn->select("Relevant_Training", "relevant_trainingId, descriptive_name, hours", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['relevant_training'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $dbResults2 = $dbconn->select("Relevant_Work_Experience", "relevant_work_experienceId, descriptive_name, start_date, end_date", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['relevant_work_experience'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
-    
-                                if (is_null($dbconn->lastException))
-                                {
-                                    $dbResults[$i]['relevant_eligibility'] = $dbResults2;
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-                            }
-
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                            return;
+                            die(json_encode(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
                         }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                            return;
-                        }
+
+                        exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'", 100));
                         break;
                     default:
                         break;

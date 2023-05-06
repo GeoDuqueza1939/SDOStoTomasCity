@@ -1068,13 +1068,13 @@ class InputEx
             case "radio":
             case "checkbox-select":
             case "radio-select":
+            case "buttons":
+            case "buttonExs":
+                break;
             case "button":
             case "submit":
             case "reset":
             case "buttonEx":
-            case "buttons":
-            case "buttonExs":
-                break;
             default:
                 this.container.classList.toggle("simple-style");
                 break;
@@ -2463,6 +2463,8 @@ class FormEx
         }
 
         this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), "buttonExs", useFieldSet));
+        
+        this.inputExs[this.inputExs.length - 1].parentFormEx = this;
 
         for (var i = 0; i < numOfBtns; i++)
         {
@@ -4771,24 +4773,12 @@ class IERForm extends FormEx
     {
         super(parentEl, id, useFormElement);
 
-        var posInfo = null
+        var posInfo = null, thisIERForm = this;
 
         this.setTitle("Initial Evaluation Result (IER)", 2);
         this.setFullWidth();
 
         posInfo = this.addBox("ier-position-info", false);
-
-        [
-            {id:"ier-selected-position", label:"Position Title"},
-            {id:"ier-selected-paren-position", label:"Parenthetical Position"},
-            {id:"ier-selected-plantilla", label:"Plantilla Item Number"}
-        ].forEach(field=>{
-            this.addInputEx(field.label, "select", "", "", field.id);
-            this.dbInputEx[field.id].setFullWidth();
-            this.dbInputEx[field.id].showColon();
-            posInfo.appendChild(this.dbInputEx[field.id].container);
-            this.dbInputEx[field.id].setSimpleStyle();
-        });
 
         [
             {id:"ier-position", label:"Position"},
@@ -4797,7 +4787,155 @@ class IERForm extends FormEx
         ].forEach(field=>{
             posInfo.appendChild(this.addDisplayEx("div", field.id, "", field.label).container);
             this.displayExs[field.id].setFullWidth();
-            this.displayExs[field.id].showColon();    
+            this.displayExs[field.id].showColon();
+        });
+
+        this.addInputEx("Select Position", "button", "", "", "ier-select-position-button");
+        this.displayExs["ier-position"].setInline();
+        this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
+        // this.dbInputEx["ier-select-position-button"].setSimpleStyle();
+        this.dbInputEx["ier-select-position-button"].addEvent("click", selectPositionEvent=>{
+            var selectPositionDialog = new DialogEx(this.container, "ier-select-position-dialog");
+            selectPositionDialog.addFormEx();
+            selectPositionDialog.formEx.setTitle("Select Position", 3);
+            selectPositionDialog.formEx.headers[0].style = "margin: 0 0 0.5em; text-align: center;";
+
+            [
+                {id:"ier-selected-position", label:"Position Title"},
+                {id:"ier-selected-paren-position", label:"Parenthetical Position"},
+                {id:"ier-selected-plantilla", label:"Plantilla Item Number"}
+            ].forEach(field=>{
+                selectPositionDialog.formEx.addInputEx(field.label, "select", "", "", field.id);
+                selectPositionDialog.formEx.dbInputEx[field.id].setFullWidth();
+                selectPositionDialog.formEx.dbInputEx[field.id].showColon();
+                selectPositionDialog.formEx.dbInputEx[field.id].addStatusPane();
+                selectPositionDialog.formEx.dbInputEx[field.id].container.style.gridColumn = "span 3";
+                selectPositionDialog.formEx.dbInputEx[field.id].fieldWrapper.style = "display: grid; align-items: center; column-gap: 0.5em; grid-template-columns: auto auto 0.5em;";
+                selectPositionDialog.formEx.dbInputEx[field.id].labels[0].style.gridColumn = "1 / span 1";
+                selectPositionDialog.formEx.dbInputEx[field.id].fields[0].style.gridColumn = "2 / span 1";
+                selectPositionDialog.formEx.dbInputEx[field.id].fields[0].style.minWidth = "15em";
+            });
+    
+            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].setStatusMsgTimeout(-1);
+            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].showWait("Loading");
+    
+            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].fillItems(document.positions.filter((position, index, positions)=>{
+                var i = 0;
+                while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
+                return i == index && position["filled"] == 0;
+            }), "position_title", "plantilla_item_number");
+    
+            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].resetStatus();
+    
+            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].addEvent("change", positionChange=>{
+                if (selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() == "")
+                {
+
+                }
+
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].setValue("");
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].clearList();
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].fillItems(document.positions.filter(position=>(position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() && position["parenthetical_title"] != null && position["parenthetical_title"] != "")), "parenthetical_title", "plantilla_item_number", "");
+                
+                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
+                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].clearList();
+                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() && (selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
+                var option = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addItem("ANY");
+                option.parentElement.insertBefore(option, option.parentElement.children[1]);
+
+                if (Array.from(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children).length == 3)
+                {
+                    selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children[2].value);
+                }
+            });
+            selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].addEvent("change", changeEvent=>{
+                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
+                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].clearList();
+                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() && (selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
+                var option = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addItem("ANY");
+                option.parentElement.insertBefore(option, option.parentElement.children[1]);
+
+                if (Array.from(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children).length == 3)
+                {
+                    selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children[2].value);
+                }
+            });
+            selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addEvent("change", changeEvent=>{
+                var selectedPlantilla = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].getValue();
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].clearList();
+                var temp = document.positions.filter(position=>((((selectedPlantilla == "ANY" || selectedPlantilla == "") && position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue()) || position["plantilla_item_number"] == selectedPlantilla) && position["parenthetical_title"] != null && position["parenthetical_title"] != ""));
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].fillItems(temp, "parenthetical_title", "plantilla_item_number", "");
+                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].setValue(selectedPlantilla);
+            });
+
+            var btnGrp = selectPositionDialog.formEx.addFormButtonGrp(2);
+            btnGrp.setFullWidth();
+            btnGrp.fieldWrapper.classList.add("center");
+            
+            btnGrp.inputExs[0].setLabelText("Select");
+            btnGrp.inputExs[0].setTooltipText("Select");
+            btnGrp.inputExs[0].addEvent("click", closeSelectPositionDialogEvent=>{
+                var positionTitle = selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue().trim();
+                var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue().trim();
+                var plantilla = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].getValue().trim();
+                var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
+
+                this.dbInputEx["ier-select-position-button"].container.remove();
+                this.displayExs["ier-position"].setHTMLContent("<b>" + positionString + "</b>");
+                this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
+                
+                var position = document.positions.filter(position=>((plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
+                
+                this.displayExs["ier-position-salary-grade"].setHTMLContent("<b>" + "SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")" + "</b>");
+                
+                // this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? "" : " (" + position["specific_education_required"] + ")") + "</b>");
+                // this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training") + (position["specific_training_required"] == null || position["specific_training_required"] == "" ? "" : " (" + position["specific_training_required"] + ")") + "</b>");
+                // this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") + (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? "" : " (" + position["specific_work_experience_required"] + ")") + "</b>");
+                this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] : position["specific_education_required"]) + "</b>");
+                this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : (position["specific_training_required"] == null || position["specific_training_required"] == "" ? position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training" : position["specific_training_required"])) + "</b>");
+                this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience" : position["specific_work_experience_required"])) + "</b>");
+
+                var eligString = "";
+                
+                position["required_eligibility"].forEach(eligSet=>{
+                    eligString += (eligSet["eligibility"] == null || eligSet["eligibility"] == "" ? "" : (eligString.trim() == "" ? "" : "; ") + eligSet["eligibility"]);
+                    eligString += (eligSet["eligibility2"] == null || eligSet["eligibility2"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility2"]);
+                    eligString += (eligSet["eligibility3"] == null || eligSet["eligibility3"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility3"]);
+                });
+
+                this.displayExs["ier-position-qs-eligibility"].setHTMLContent("<b>" + eligString + "</b>");
+                
+                postData(ScoreSheet.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
+                    var response;
+
+                    if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
+                    {
+                        response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
+    
+                        if (response.type == "Error")
+                        {
+                            new MsgBox(thisIERForm.container, response.content, "Close");
+                        }
+                        else if (response.type == "Data")
+                        {
+                            new MsgBox(thisIERForm.container, response.content, "OK");
+                        }
+                        else if (response.type == "Success")
+                        {
+                            new MsgBox(thisIERForm.container, response.content, "OK");
+                        }
+                    }
+                });
+
+                selectPositionDialog.close();
+            });
+            
+            btnGrp.inputExs[1].setLabelText("Cancel");
+            btnGrp.inputExs[1].setTooltipText("Cancel");
+            btnGrp.inputExs[1].addEvent("click", closeSelectPositionDialogEvent=>{
+                selectPositionDialog.close();
+            });
         });
 
         this.displayExs["ier-position-qs"].setVertical();
@@ -4853,36 +4991,6 @@ class IERForm extends FormEx
         });
 
         this.displayExs["ier-table"].isHeaderCustomized = true;
-
-        this.dbInputEx["ier-selected-position"].setStatusMsgTimeout(-1);
-        this.dbInputEx["ier-selected-position"].showWait("Loading");
-
-        this.dbInputEx["ier-selected-position"].fillItems(document.positions.filter((position, index, positions)=>{
-            var i = 0;
-            while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
-            return i == index && position["filled"] == 0;
-        }), "position_title", "plantilla_item_number");
-
-        this.dbInputEx["ier-selected-position"].resetStatus();
-
-        this.dbInputEx["ier-selected-position"].addEvent("change", positionChange=>{
-            this.dbInputEx["ier-selected-paren-position"].setValue("");
-            this.dbInputEx["ier-selected-paren-position"].clearList();
-            this.dbInputEx["ier-selected-paren-position"].fillItems(document.positions.filter(position=>(position["position_title"] == this.dbInputEx["ier-selected-position"].getValue())), "parenthetical_title", "plantilla_item_number", "");
-            
-            this.dbInputEx["ier-selected-plantilla"].setValue("");
-            this.dbInputEx["ier-selected-plantilla"].clearList();
-            this.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == this.dbInputEx["ier-selected-position"].getValue() && (this.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == this.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
-            var option = this.dbInputEx["ier-selected-plantilla"].addItem("ANY");
-            option.parentElement.insertBefore(option, option.parentElement.children[0]);
-        });
-        this.dbInputEx["ier-selected-paren-position"].addEvent("change", changeEvent=>{
-            this.dbInputEx["ier-selected-plantilla"].setValue("");
-            this.dbInputEx["ier-selected-plantilla"].clearList();
-            this.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == this.dbInputEx["ier-selected-position"].getValue() && (this.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == this.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
-            var option = this.dbInputEx["ier-selected-plantilla"].addItem("ANY");
-            option.parentElement.insertBefore(option, option.parentElement.children[0]);
-        });
     }
 }
 

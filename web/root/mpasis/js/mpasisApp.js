@@ -63,7 +63,7 @@ class MPASIS_App
         this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
 
         // load some initial data
-        postData(this.processURL, "app=mpasis&a=fetch&f=applicant-data-entry-initial", postEvent=>{
+        postData(this.processURL, "app=mpasis&a=fetch&f=initial-data", postEvent=>{
             var response;
 
             if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -79,6 +79,7 @@ class MPASIS_App
                     var data = JSON.parse(response.content);
 
                     document.positions = data["positions"];
+                    document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
             
@@ -1878,7 +1879,7 @@ class MPASIS_App
             }
         });
 
-        postData(this.processURL, "app=mpasis&a=fetch&f=applicant-data-entry-initial", (postEvent)=>{
+        postData(this.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
             var response;
 
             if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -1894,6 +1895,7 @@ class MPASIS_App
                     var data = JSON.parse(response.content);
                     // console.log(data);
                     document.positions = data["positions"];
+                    document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
                     
@@ -3666,7 +3668,7 @@ class MPASIS_App
 
         document.scrim = new ScrimEx(this.main);
 
-        postData(this.processURL, "app=mpasis&a=fetch&f=applicant-data-entry-initial", (postEvent)=>{
+        postData(this.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
             var response;
 
             if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -3682,7 +3684,9 @@ class MPASIS_App
                     var data = JSON.parse(response.content);
                     // console.log(data);
                     document.positions = data["positions"];
+                    document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
+                    document.enumEducationalAttainment = data["enum_educational_attainment"];
                     
                     document.scrim.destroy();
                 }
