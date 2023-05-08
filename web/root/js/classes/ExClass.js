@@ -371,7 +371,7 @@ class DisplayTableEx extends DisplayEx
         });
 
         this.columnHeaders.map(header=>header.colHeaderName).forEach((headerName)=>{
-            this.rows[this.rows.length - 1]["data"][headerName] = (headerName in rowData ? rowData[headerName] : "");
+            this.rows[this.rows.length - 1]["data"][headerName] = (headerName in rowData ? rowData[headerName] ?? "" : "");
             this.rows[this.rows.length - 1]["td"][headerName] = htmlToElement("<td>" + this.rows[this.rows.length - 1]["data"][headerName] + "</td>");
             this.rows[this.rows.length - 1]["tr"].appendChild(this.rows[this.rows.length - 1]["td"][headerName]);
         });
@@ -403,6 +403,19 @@ class DisplayTableEx extends DisplayEx
         this.fRows[this.fRows.length - 1]["colspan"][colFooterName] = colspan;
 
         this.fRows[this.fRows.length - 1]["tr"].appendChild(this.fRows[this.fRows.length - 1]["td"][colFooterName]);
+    }
+
+    removeRow(index = this.rows.length - 1) // default: removes last row added.
+    {
+        this.rows.splice(index, 1)[0].tr.remove();
+    }
+
+    removeAllRows()
+    {
+        while (this.rows.length > 0)
+        {
+            this.removeRow();
+        }
     }
 }
 
@@ -3617,18 +3630,7 @@ class ScoreSheet extends FormEx
                     scoreSheetElementUI.displays["degrees_taken"].contentWrapper.innerHTML = "";
                     for (const degree of degreeTaken)
                     {
-                        var degreeStr = degree["degree"]
-                            + " ("
-                            + (type(degree["graduation_year"]) == "number" && degree["graduation_year"] != null && degree["graduation_year"] != undefined ? "graduated in " + degree["graduation_year"]
-                                : (type(degree["complete_academic_requirements"]) == "boolean" && degree["complete_academic_requirements"] || type(degree["complete_academic_requirements"]) == "number" && degree["complete_academic_requirements"] != 0 ? "complete academic requirements"
-                                    : (type(degree["units_earned"]) == "number" && degree["units_earned"] != null && degree["units_earned"] != undefined ? degree["units_earned"] + " units earned"
-                                        : (type(degree["year_level_completed"]) == "number" && degree["year_level_completed"] != null && degree["year_level_completed"] != undefined ? degree["year_level_completed"] + " year" + (degree["year_level_completed"] == 1 ? "" : "s") + " completed" : "no info")
-                                    )
-                                )
-                            )
-                            + ")";
-                        
-                            scoreSheetElementUI.displays["degrees_taken"].contentWrapper.appendChild(htmlToElement("<li>" + degreeStr + "</li>"));
+                        scoreSheetElementUI.displays["degrees_taken"].contentWrapper.appendChild(htmlToElement("<li>" + MPASIS_App.convertDegreeObjToStr(degree) + "</li>"));
                     }
 
                     if (scoreSheetElementUI.displays["degrees_taken"].contentWrapper.innerHTML.trim() == "" && !scoreSheetElementUI.displays["degrees_taken"].contentWrapper.classList.contains("hidden"))
@@ -4775,6 +4777,8 @@ class IERForm extends FormEx
 
         var posInfo = null, thisIERForm = this;
 
+        thisIERForm.dataRows = null; // variable to hold the fetched job applications data
+
         this.setTitle("Initial Evaluation Result (IER)", 2);
         this.setFullWidth();
 
@@ -4794,6 +4798,61 @@ class IERForm extends FormEx
         this.displayExs["ier-position"].setInline();
         this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
         // this.dbInputEx["ier-select-position-button"].setSimpleStyle();
+
+        this.displayExs["ier-position-qs"].setVertical();
+        this.displayExs["ier-position-qs"].content.style.paddingLeft = "2em";
+
+        [
+            {id:"ier-position-qs-education", label:"Education"},
+            {id:"ier-position-qs-training", label:"Training"},
+            {id:"ier-position-qs-experience", label:"Experience"},
+            {id:"ier-position-qs-eligibility", label:"Eligibility"}
+        ].forEach(field=>{
+            this.displayExs["ier-position-qs"].addContent(this.addDisplayEx("div", field.id, "", field.label).container);
+            this.displayExs[field.id].setFullWidth();
+            this.displayExs[field.id].showColon();    
+        });
+
+        this.addDisplayEx("div-table", "ier-table");
+        this.displayExs["ier-table"].container.classList.add("ier-table");
+        this.displayExs["ier-table"].setHeaders([
+            {colHeaderName:"row_number", colHeaderText:"No."},
+            {colHeaderName:"application_code", colHeaderText:"Application Code"},
+            {colHeaderName:"applicant_name", colHeaderText:"Names of Applicant"},
+            {colHeaderName:"address", colHeaderText:"Address"}, // multiple/custom
+            {colHeaderName:"age", colHeaderText:"Age"},
+            {colHeaderName:"sex", colHeaderText:"Sex"},
+            {colHeaderName:"civil_status", colHeaderText:"Civil Status"},
+            {colHeaderName:"religion", colHeaderText:"Religion"},
+            {colHeaderName:"disability", colHeaderText:"Disability"}, // multiple/custom
+            {colHeaderName:"ethnic_group", colHeaderText:"Ethnic Group"},
+            {colHeaderName:"email_address", colHeaderText:"Email Address"}, // multiple/custom
+            {colHeaderName:"contact_number", colHeaderText:"Contact No."}, // multiple/custom
+            {colHeaderName:"education", colHeaderText:"Education"}, // multiple/custom
+            {colHeaderName:"training_title", colHeaderText:"Title"}, // multiple/custom
+            {colHeaderName:"training_hours", colHeaderText:"Hours"}, // multiple/custom
+            {colHeaderName:"experience_details", colHeaderText:"Details"}, // multiple/custom
+            {colHeaderName:"experience_years", colHeaderText:"Years"}, // multiple/custom
+            {colHeaderName:"eligibility", colHeaderText:"Eligibility"}, // multiple/custom
+            {colHeaderName:"remarks", colHeaderText:"Remarks (Qualified or Disqualified)"} // multiple/custom
+        ]);
+
+        this.displayExs["ier-table"].table.classList.add("bordered");
+        this.displayExs["ier-table"].thead.insertBefore(htmlToElement("<tr></tr>"), this.displayExs["ier-table"].theadRow);
+        [["old", 0], ["old", 0], ["old", 0], ["new", "Personal Information", 9], ["old", 9], ["new", "Training", 2], ["new", "Experience", 2], ["old", 13], ["old", 13]].forEach(header=>{
+            if (header[0] == "new")
+            {
+                this.displayExs["ier-table"].thead.children[0].appendChild(htmlToElement("<th colspan=\"" + header[2] + "\">" + header[1] + "</th>"));
+            }
+            else
+            {
+                this.displayExs["ier-table"].theadRow.children[header[1]].setAttribute("rowspan", "2");
+                this.displayExs["ier-table"].thead.children[0].appendChild(this.displayExs["ier-table"].theadRow.children[header[1]]);
+            }
+        });
+
+        this.displayExs["ier-table"].isHeaderCustomized = true;
+
         this.dbInputEx["ier-select-position-button"].addEvent("click", selectPositionEvent=>{
             var selectPositionDialog = new DialogEx(this.container, "ier-select-position-dialog");
             selectPositionDialog.addFormEx();
@@ -4905,13 +4964,15 @@ class IERForm extends FormEx
                 });
 
                 this.displayExs["ier-position-qs-eligibility"].setHTMLContent("<b>" + eligString + "</b>");
-                
+
                 postData(ScoreSheet.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
-                    var response;
+                    var response = null, rows = [], row = null;
 
                     if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                     {
                         response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
+
+                        // console.log(response);
     
                         if (response.type == "Error")
                         {
@@ -4919,11 +4980,115 @@ class IERForm extends FormEx
                         }
                         else if (response.type == "Data")
                         {
-                            new MsgBox(thisIERForm.container, response.content, "OK");
+                            thisIERForm.dataRows = JSON.parse(response.content);
+
+                            console.log(thisIERForm.dataRows);
+
+                            this.displayExs["ier-table"].removeAllRows();
+
+                            for (const dataRow of thisIERForm.dataRows)
+                            {
+                                row = {};
+                            
+                                for (const key in dataRow)
+                                {
+                                    switch (key)
+                                    {
+                                        case "degree_taken":
+                                            // DO NOTHING
+                                            break;
+                                        case "address":
+                                            row["address"] = dataRow["present_address"] ?? dataRow["permanent_address"] ?? "";
+                                            break;
+                                        case "disability":
+                                        case "email_address":
+                                        case "contact_number":
+                                            row[key] = (dataRow[key].length > 0 ? dataRow[key].map(obj=>obj[key]).join("; ") : "");
+                                            break;
+                                        case "educational_attainment":
+                                            if (dataRow["degree_taken"].length > 0)
+                                            {
+                                                row["education"] = "<ul>\n";
+                                                
+                                                for (const degree of dataRow["degree_taken"])
+                                                {
+                                                    row["education"] += "<li>" + MPASIS_App.convertDegreeObjToStr(degree) + "</li>\n";
+                                                }
+
+                                                row["education"] += "</ul>\n";
+                                            }
+                                            else
+                                            {
+                                                row["education"] = dataRow[key];
+                                            }
+                                            break;
+                                        case "relevant_training":
+                                            if (dataRow[key].length > 0)
+                                            {
+                                                var totalHours = 0;
+                                                row["training_title"] = "<ul>\n";
+                                                
+                                                for (const relevantTraining of dataRow[key])
+                                                {
+                                                    row["training_title"] += "<li>" + relevantTraining["descriptive_name"] + " (" + relevantTraining["hours"] + (relevantTraining["hours"] == 1 ? " hour" : " hours") + ")</li>\n";
+                                                    totalHours += (relevantTraining["hours"] ?? 0);
+                                                }
+
+                                                row["training_title"] += "</ul>\n";
+                                                row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
+                                            }
+                                            break;
+                                        case "relevant_work_experience":
+                                            if (dataRow[key].length > 0)
+                                            {
+                                                var totalDuration = null, duration = null;
+                                                row["experience_details"] = "<ul>\n";
+                                                
+                                                for (const relevantWorkExp of dataRow[key])
+                                                {
+                                                    duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? ScoreSheet.defaultEndDate);
+                                                    row["experience_details"] += "<li>" + relevantWorkExp["descriptive_name"] + " (" + ScoreSheet.convertDurationToString(duration) + ")</li>\n";
+                                                    totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
+                                                }
+
+                                                row["experience_details"] += "</ul>\n";
+                                                row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
+                                            }
+                                            break;
+                                        case "relevant_eligibility":
+                                            if (dataRow[key].length > 0)
+                                            {
+                                                row["eligibility"] = "<ul>\n";
+
+                                                for (const relevantEligibility of dataRow[key])
+                                                {
+                                                    row["eligibility"] += "<li>" + relevantEligibility["eligibility"] + "</li>\n";
+                                                }
+
+                                                row["eligibility"] += "</ul>\n";
+                                            }
+                                            break;
+                                        default:
+                                            row[key] = dataRow[key];
+                                            break;
+                                    }
+                                }
+                                
+                                rows.push(row);
+
+                                row["row_number"] = this.displayExs["ier-table"].rows.length + 1;
+
+                                this.displayExs["ier-table"].addRow(row);
+                            }
                         }
-                        else if (response.type == "Success")
+                        // else if (response.type == "Success")
+                        // {
+                        //     new MsgBox(thisIERForm.container, response.content, "OK");
+                        // }
+                        else if (response.type == "Debug")
                         {
                             new MsgBox(thisIERForm.container, response.content, "OK");
+                            console.log(response.content);
                         }
                     }
                 });
@@ -4937,60 +5102,6 @@ class IERForm extends FormEx
                 selectPositionDialog.close();
             });
         });
-
-        this.displayExs["ier-position-qs"].setVertical();
-        this.displayExs["ier-position-qs"].content.style.paddingLeft = "2em";
-
-        [
-            {id:"ier-position-qs-education", label:"Education"},
-            {id:"ier-position-qs-training", label:"Training"},
-            {id:"ier-position-qs-experience", label:"Experience"},
-            {id:"ier-position-qs-eligibility", label:"Eligibility"}
-        ].forEach(field=>{
-            this.displayExs["ier-position-qs"].addContent(this.addDisplayEx("div", field.id, "", field.label).container);
-            this.displayExs[field.id].setFullWidth();
-            this.displayExs[field.id].showColon();    
-        });
-
-        this.addDisplayEx("div-table", "ier-table");
-        this.displayExs["ier-table"].container.classList.add("ier-table");
-        this.displayExs["ier-table"].setHeaders([
-            {colHeaderName:"row-number", colHeaderText:"No."},
-            {colHeaderName:"application-code", colHeaderText:"Application Code"},
-            {colHeaderName:"applicant-name", colHeaderText:"Names of Applicant"},
-            {colHeaderName:"address", colHeaderText:"Address"},
-            {colHeaderName:"age", colHeaderText:"Age"},
-            {colHeaderName:"sex", colHeaderText:"Sex"},
-            {colHeaderName:"civil-status", colHeaderText:"Civil Status"},
-            {colHeaderName:"religion", colHeaderText:"Religion"},
-            {colHeaderName:"disability", colHeaderText:"Disability"},
-            {colHeaderName:"ethnic-group", colHeaderText:"Ethnic Group"},
-            {colHeaderName:"email-address", colHeaderText:"Email Address"},
-            {colHeaderName:"contact-number", colHeaderText:"Contact No."},
-            {colHeaderName:"education", colHeaderText:"Education"},
-            {colHeaderName:"training-title", colHeaderText:"Title"},
-            {colHeaderName:"training-hours", colHeaderText:"Hours"},
-            {colHeaderName:"experience-details", colHeaderText:"Details"},
-            {colHeaderName:"experience-years", colHeaderText:"Years"},
-            {colHeaderName:"eligibility", colHeaderText:"Eligibility"},
-            {colHeaderName:"remarks", colHeaderText:"Remarks (Qualified or Disqualified)"}
-        ]);
-
-        this.displayExs["ier-table"].table.classList.add("bordered");
-        this.displayExs["ier-table"].thead.insertBefore(htmlToElement("<tr></tr>"), this.displayExs["ier-table"].theadRow);
-        [["old", 0], ["old", 0], ["old", 0], ["new", "Personal Information", 9], ["old", 9], ["new", "Training", 2], ["new", "Experience", 2], ["old", 13], ["old", 13]].forEach(header=>{
-            if (header[0] == "new")
-            {
-                this.displayExs["ier-table"].thead.children[0].appendChild(htmlToElement("<th colspan=\"" + header[2] + "\">" + header[1] + "</th>"));
-            }
-            else
-            {
-                this.displayExs["ier-table"].theadRow.children[header[1]].setAttribute("rowspan", "2");
-                this.displayExs["ier-table"].thead.children[0].appendChild(this.displayExs["ier-table"].theadRow.children[header[1]]);
-            }
-        });
-
-        this.displayExs["ier-table"].isHeaderCustomized = true;
     }
 }
 

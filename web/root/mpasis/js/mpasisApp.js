@@ -1291,16 +1291,16 @@ class MPASIS_App
 
                 // var duration = Date.parse(end) - Date.parse(start);
                 // console.log([start, end]);
-                var dur = this.getDuration(start, end);
+                var dur = ScoreSheet.getDuration(start, end);
 
-                // console.log([dur, this.convertDurationToString(dur)]);
+                // console.log([dur, ScoreSheet.convertDurationToString(dur)]);
 
-                workExp["workExpDuration"].setHTMLContent(this.convertDurationToString(dur));
+                workExp["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(dur));
 
                 return dur;
             });
 
-            var total = (totals.length > 0 ? totals.reduce(this.addDuration) : {y:0, m:0, d:0});
+            var total = (totals.length > 0 ? totals.reduce(ScoreSheet.addDuration) : {y:0, m:0, d:0});
             
             totalWorkExpDuration.innerHTML = (total.y > 0 ? total.y + "&nbsp;year" + (total.y == 1 ? "" : "s") : "") + (total.m > 0 ? (total.y > 0 ? ", " : "") + total.m + "&nbsp;month" + (total.m == 1 ? "" : "s") : "") + (total.y + total.m > 0 && total.d != 0 ? ", " : "") + (total.y + total.m > 0 && total.d == 0 ? "" : total.d + "&nbsp;day" + (total.d == 1 ? "" : "s"));
 
@@ -1798,7 +1798,7 @@ class MPASIS_App
                                             workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"].setDefaultValue(workExp["descriptive_name"], true);
                                             workExpInputExs[workExpInputExs.length - 1]["workExpStartDateInputEx"].setDefaultValue(workExp["start_date"], true);
                                             workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].setDefaultValue(workExp["end_date"], true);
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpDuration"].setHTMLContent(this.convertDurationToString(this.getDuration(workExp["start_date"], workExp["end_date"])));
+                                            workExpInputExs[workExpInputExs.length - 1]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
                                         }
                                         attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
                                         // console.log (applicationObj[key]);
@@ -3347,7 +3347,7 @@ class MPASIS_App
                         scoreSheet.displayExs["education"].displays["has_specific_education_required"].setHTMLContent(hasSpecEduc);
                         scoreSheet.displayExs["education"].displays["educIncrements"].setHTMLContent(educIncrementAboveQS.toString());
 
-                        scoreSheet.displayExs["education"].totalPoints.setHTMLContent(this.getEducScore(educIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+                        scoreSheet.displayExs["education"].totalPoints.setHTMLContent(ScoreSheet.getEducScore(educIncrementAboveQS, appliedPosition).toString());
 
                         // Training
                         var relevantTrainings = scoreSheet.dataLoaded["relevant_training"];
@@ -3365,25 +3365,25 @@ class MPASIS_App
                         scoreSheet.displayExs["training"].displays["has_more_unrecorded_training"].setHTMLContent(hasMoreTraining);
                         scoreSheet.displayExs["training"].displays["trainIncrements"].setHTMLContent(trainingIncrementAboveQS.toString());
 
-                        scoreSheet.displayExs["training"].totalPoints.setHTMLContent(this.getTrainingScore(trainingIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+                        scoreSheet.displayExs["training"].totalPoints.setHTMLContent(ScoreSheet.getTrainingScore(trainingIncrementAboveQS, appliedPosition).toString());
                         
                         // Experience
                         var relevantWorkExp = scoreSheet.dataLoaded["relevant_work_experience"];
-                        var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>this.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? this.defaultEndDate : workExp["end_date"]))).reduce(this.addDuration): {y:0, m:0, d:0});
-                        var applicantWorkExpIncrement = Math.trunc(this.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
+                        var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? this.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
+                        var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
                         var hasSpecWorkExp = (scoreSheet.dataLoaded["has_specific_work_experience"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_work_experience"] == 1 ? "Yes" : "No"));
                         var hasMoreWorkExp = (scoreSheet.dataLoaded["has_more_unrecorded_work_experience"] == null ? "n/a" : (scoreSheet.dataLoaded["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
                         var requiredWorkExpYears = appliedPosition["required_work_experience_years"];
                         var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
                         var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
                         
-                        scoreSheet.displayExs["experience"].displays["relevant_work_experience_years"].setHTMLContent(this.convertDurationToString(relevantWorkExpDuration));
+                        scoreSheet.displayExs["experience"].displays["relevant_work_experience_years"].setHTMLContent(ScoreSheet.convertDurationToString(relevantWorkExpDuration));
                         scoreSheet.displayExs["experience"].displays["relevant_work_experience_count"].setHTMLContent(relevantWorkExp.length.toString());
                         scoreSheet.displayExs["experience"].displays["has_specific_work_experience"].setHTMLContent(hasSpecWorkExp);
                         scoreSheet.displayExs["experience"].displays["has_more_unrecorded_work_experience"].setHTMLContent(hasMoreWorkExp);
                         scoreSheet.displayExs["experience"].displays["expIncrements"].setHTMLContent(workExpIncrementAboveQS.toString());
 
-                        scoreSheet.displayExs["experience"].totalPoints.setHTMLContent(this.getTrainingScore(workExpIncrementAboveQS, appliedPosition["position_categoryId"], appliedPosition["salary_grade"]).toString());
+                        scoreSheet.displayExs["experience"].totalPoints.setHTMLContent(ScoreSheet.getWorkExpScore(workExpIncrementAboveQS, appliedPosition).toString());
 
                         var div = scoreSheet.displayExs["educationApp"];
 
@@ -3754,174 +3754,80 @@ class MPASIS_App
         return "";
     }
 
-    getDuration(startDate, endDate)
+    static isDefined(value)
     {
-        var err = "";
+        return value != null && value != undefined;
+    }
 
-        [startDate, endDate] = [new Date(startDate), new Date(endDate)];
+    static isEmptyString(value) // checks if value is empty string
+    {
+        return type(value) == "string" && value == "";
+    }
 
-        if (startDate == "Invalid Date")
+    static isEmptySpaceString(value) // checks if value is a string of space characters
+    {
+        return type(value) == "string" && value != "" && value.trim() == "";
+    }
+
+    static isEmpty(value)
+    {
+        return !this.isDefined(value) || this.isEmptyString(value);
+    }
+
+    static getFullName(givenName, middleName, familyName, spouseName, extName, lastNameFirst = false, middleInitialOnly = false)
+    {
+        var nameArr = null;
+
+        if (!this.isDefined(givenName) || this.isEmptySpaceString(givenName))
         {
-            err += (err == "" ? "" : "\n") + "Invalid Start Date";
+            throw("Invalid argument: givenName:" + givenName);
         }
 
-        if (endDate == "Invalid Date")
+        nameArr = [givenName, middleName, familyName, spouseName, extName];
+
+        if (lastNameFirst)
         {
-            err += (err == "" ? "" : "\n") + "Invalid End Date";
-        }
-
-        if (err != "")
-        {
-            return err;
-        }
-
-        var start = {m:startDate.getMonth(), d:startDate.getDate(), y:startDate.getFullYear()};
-        var end = {m:endDate.getMonth(), d:endDate.getDate(), y:endDate.getFullYear()};
-
-        var years, months, days, leapCount;
-
-        [years, months, days] = [end.y - start.y, end.m - start.m, end.d - start.d + 1];
-        // leapCount = Math.trunc(years / 4) + (years < 4 && (start.y % 4 == 0 || end.y % 4 < start.y % 4) ? 1 : 0);
-        const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-        if (days <= 0)
-        {
-            months--;
-            days += daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0); // also adjust for leap years
-        }
-
-        if (months < 0)
-        {
-            years--;
-            months += 12;
-        }
-
-        if (years < 0)
-        {
-            days = Math.trunc((endDate - startDate) / 1000 / 60 / 60 / 24);
-            days -= (days == 0 ? 1 : 0);
-            months = 0;
-            years = 0;
-        }
-
-        if (days >= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0))
-        {
-            days -= daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0);
-            months++;
-
-            if (months >= 12)
+            for (var i = nameArr.length - 2; i > 0; i--)
             {
-                months -= 12;
-                years++;
+                var lastName = nameArr.splice(i, 1);
+
+                if (this.isDefined(lastName) && !this.isEmptySpaceString(lastName))
+                {
+                    nameArr.unshift(lastName + ", ");
+                    break;
+                }
+            }
+
+            if (middleInitialOnly && nameArr.length > 3)
+            {
+                nameArr[2] = this.getNameInitials(nameArr[2]);
             }
         }
-
-        return {y:years, m:months, d:days};
+        else if (middleInitialOnly)
+        {
+            nameArr[1] = this.getNameInitials(nameArr[1]);
+        }
+        
+        return nameArr.filter(name=>this.isDefined(name) && !this.isEmptySpaceString(name)).join(" ");
     }
 
-    addDuration(duration1, duration2)
+    static getNameInitials(nameStr)
     {
-        var years, months, days;
-        [years, months, days] = [duration1.y + duration2.y, duration1.m + duration2.m, duration1.d + duration2.d];
-
-        if (isNaN(years) || isNaN(months) || isNaN(days))
-        {
-            return {y:0, m:0, d:0};
-        }
-
-        months += Math.trunc(days / 30);
-        days %= 30;
-
-        years += Math.trunc(months / 12);
-        months %= 12;
-
-        return {y:years, m:months, d:days};
+        return (!this.isDefined(nameStr) && this.isEmptySpaceString(nameStr) ? "" : nameStr.split(" ").map(name=>name[0] + ".").join(" "));
     }
 
-    convertDurationToNum(duration)
+    static convertDegreeObjToStr(degree)
     {
-        return (typeof(duration) == "string" ? NaN : duration.y + duration.m / 12 + duration.d / 365.25);
-    }
-
-    convertDurationToString(duration)
-    {
-        return (isNaN(duration.y) || isNaN(duration.m) || isNaN(duration.d) ? "Invalid date(s)" + (typeof(duration) == "string" ? "\n" + duration : "") : (duration.y > 0 ? duration.y + "&nbsp;year" + (duration.y == 1 ? "" : "s") : "") + (duration.m > 0 ? (duration.y > 0 ? ", " : "") + duration.m + "&nbsp;month" + (duration.m == 1 ? "" : "s") : "") + (duration.y + duration.m > 0 && duration.d != 0 ? ", " : "") + (duration.y + duration.m > 0 && duration.d == 0 ? "" : duration.d + "&nbsp;day" + (duration.d == 1 ? "" : "s")));
-    }
-
-    getEducScore(incrementAboveQS, positionCategory, salaryGrade)
-    {
-        var uBoundsExclusive = [2, 4, 6, 8, 10], scores = [0, 1, 2, 3, 4, 5];
-        if (positionCategory < 4)
-        {
-            scores = [0, 2, 4, 6, 8, 10];
-        }
-        else if (positionCategory > 4)
-        {
-            uBoundsExclusive = [1, 2, 3, 4, 5];
-        }
-        else if (positionCategory == 4 && salaryGrade <= 9)
-        {
-            uBoundsExclusive[0]--; // check page 4 of Enclosure No. 5 of DO 007 s 2023 for this tiny detail
-        }
-        else if (salaryGrade == 24)
-        {
-            uBoundsExclusive = [4, 6, 8, 9, 10];
-            scores = [0, 2, 4, 6, 8, 10];
-        }
-
-        var i = 0;
-
-        while (uBoundsExclusive[i] < incrementAboveQS)
-        {
-            i++;
-        }
-
-        return scores[i];
-    }
-
-    getTrainingScore(incrementAboveQS, positionCategory, salaryGrade)
-    {
-        var uBoundsExclusive = [1, 2, 3, 4, 5], scores = [0, 1, 2, 3, 4, 5];
-        if (positionCategory < 4)
-        {
-            uBoundsExclusive = [2, 4, 6, 8, 10];
-            scores = [0, 2, 4, 6, 8, 10];
-        }
-        else if (salaryGrade >= 10 && salaryGrade <= 22 || salaryGrade == 27)
-        {
-            scores = [0, 2, 4, 6, 8, 10];
-        }
-
-        var i = 0;
-
-        while (uBoundsExclusive[i] < incrementAboveQS)
-        {
-            i++;
-        }
-
-        return scores[i];
-    }
-
-    getWorkExpScore(incrementAboveQS, positionCategory, salaryGrade)
-    {
-        var uBoundsExclusive = [2, 4, 6, 8, 10], scores = [0, 3, 6, 9, 12, 15];
-        if (positionCategory < 4)
-        {
-            scores = [0, 2, 4, 6, 8, 10];
-        }
-        else if (positionCategory > 4 || salaryGrade <= 9)
-        {
-            scores = [0, 4, 8, 12, 16, 20];
-        }
-
-        var i = 0;
-
-        while (uBoundsExclusive[i] < incrementAboveQS)
-        {
-            i++;
-        }
-
-        return scores[i];
+        return degree["degree"]
+            + " ("
+            + (type(degree["graduation_year"]) == "number" && degree["graduation_year"] != null && degree["graduation_year"] != undefined ? "graduated in " + degree["graduation_year"]
+                : (type(degree["complete_academic_requirements"]) == "boolean" && degree["complete_academic_requirements"] || type(degree["complete_academic_requirements"]) == "number" && degree["complete_academic_requirements"] != 0 ? "complete academic requirements"
+                    : (type(degree["units_earned"]) == "number" && degree["units_earned"] != null && degree["units_earned"] != undefined ? degree["units_earned"] + " units earned"
+                        : (type(degree["year_level_completed"]) == "number" && degree["year_level_completed"] != null && degree["year_level_completed"] != undefined ? degree["year_level_completed"] + " year" + (degree["year_level_completed"] == 1 ? "" : "s") + " completed" : "no info")
+                    )
+                )
+            )
+            + ")";
     }
 }
 

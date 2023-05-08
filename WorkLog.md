@@ -1,5 +1,15 @@
 # Work Log
 
+## 5/6/2023
+TO DO:
+* [x] Create code that will load job applications into the IER Form.
+* [ ] Add code to enable/disable [Select] button in `Select Application` dialog
+* [ ] Implement app behavior wherein a user will be asked to define a new password after first login.
+* [ ] Create a printout template for the IER
+* [ ] Reimplement similar changes to position fields in the applicant data entry form
+
+I immediately encountered and fixed a bug which I inadvertently introduced last week when I created the `fetch` codes. It turns out that I forgot to modify the `WHERE` SQL clause for filtering records using job position info. I tried to use some static methods from the ScoreSheet class, also removing the same methods from the MPASIS_App class to lessen the code base in the process. I also encountered some difficulty in inserting multiple-item values, such as degrees taken or trainings undergone. With the degrees, I decided to render them as list items similar to how these were rendered in the Score Sheet. For the trainings and the work experiences, I settled on rendering them as lists, as well, but I added the hours and years for each training and employment experience, and, for their second column, I just inserted the total hours or years, whichever is applicable. For the eligibility, I had to modify the back-end coding to include not just the eligibility ids, which had been included all along, but the eligibility names, as well. I also had these names rendered as lists, too. <u class="to-do">What's left to insert is whether the applicant is qualified to apply or not, depending on the presented documents.</u> <u class="to-do">Likewise, although I suggested otherwise, I might still need to insert the HRMO's name in the IER, as well, just to be thorough.</u>
+
 ## 5/5/2023
 TO DO:
 * [x] Force updates in the parenthetical position field

@@ -48,7 +48,9 @@ function sendDebug($data)
     exit;
 }
 
-function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
+// exit(sendDebug($_REQUEST["plantilla"]));
+
+function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
     $query = "SELECT
         pe.personId as personId,
@@ -227,7 +229,8 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
                 return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
-            $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+            // $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+            $dbResults2 = $dbconn->executeQuery("SELECT relevant_eligibilityId, Relevant_Eligibility.eligibilityId, eligibility FROM Relevant_Eligibility INNER JOIN Eligibility ON Relevant_Eligibility.eligibilityId=Eligibility.eligibilityId WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
 
             if (is_null($dbconn->lastException))
             {
@@ -239,7 +242,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
         }
 
-        return json_encode(new ajaxResponse('Data', json_encode($dbResults)));
+        return json_encode(new ajaxResponse(($isDebug ? 'Debug' : 'Data'), json_encode($dbResults)));
     }
         
     return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
@@ -606,15 +609,18 @@ if (isset($_SESSION['user']))
                         exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'", 100));
                         break;
                     case 'applicationsByPosition':
-                        $positionTitle = (isset($_REQUEST['positionTitle']) ? $_REQUEST['positionTitle'] : "");
-                        $parenTitle = (isset($_REQUEST['parenTitle']) ? $_REQUEST['parenTitle'] : "");
-                        $plantilla = (isset($_REQUEST['plantilla']) ? $_REQUEST['plantilla'] : "");
+                        $positionTitle = trim(isset($_REQUEST['positionTitle']) && !is_null($_REQUEST['positionTitle']) ? $_REQUEST['positionTitle'] : '');
+                        $parenTitle = trim(isset($_REQUEST['parenTitle']) && !is_null($_REQUEST['parenTitle']) ? $_REQUEST['parenTitle'] : '');
+                        $plantilla = trim(isset($_REQUEST['plantilla']) && !is_null($_REQUEST['plantilla']) ? $_REQUEST['plantilla'] : '');
+                        $where = '';
                         if ($positionTitle == '' && $plantilla == '')
                         {
                             die(json_encode(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
                         }
 
-                        exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'", 100));
+                        $where .= ($plantilla == '' ? "position_title_applied='$positionTitle'" . ($parenTitle == '' ? '' : " AND parenthetical_title_applied=$parenTitle") : "plantilla_item_number_applied='$plantilla'");
+                        
+                        exit(selectJobApplications($dbconn, $where, 100, false));
                         break;
                     default:
                         break;
@@ -1337,7 +1343,7 @@ if (isset($_SESSION['user']))
 }
 else
 {
-    echo(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected.<br><br>Server Request: ' . json_encode($_REQUEST))));    
+    echo(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));    
     return;
 }
 
