@@ -4,7 +4,8 @@
     --bg1: #0247fe; /* header, nav */
     --fg2: #012998;
     --hlt: #070f26; /* footer, header (if nav is bg2) */
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
+    font-family: sans-serif;
     /* font-size: 10pt; */
 
     --header-fg: orange;
@@ -188,4 +189,14 @@ a.js-link:active {
 
 a.js-link:visited {
     color: purple;
+}
+
+ul {
+    margin: 0;
+    padding: 0 0 0 1.5em;
+}
+
+ol {
+    margin: 0;
+    padding: 0 0 0 2em;
 }

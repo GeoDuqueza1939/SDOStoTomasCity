@@ -743,6 +743,7 @@ class MPASIS_App
         }
 
         document.positions = [];
+        document.salaryGrade = [];
         document.mpsEducIncrement = [];
         document.enumEducationalAttainment = [];
 
@@ -779,15 +780,17 @@ class MPASIS_App
         plantillaField.container.style.gridColumn = "9 / span 4";
         plantillaField.setVertical();
 
-        getAppliedPosition = function(positionsArray, positionField, parenField, plantillaField){
-            if (plantillaField.getValue() == "ANY")
-            {
-                return positionsArray.find(position=>position["position_title"] == positionField.getValue());
-            }
-            else if (plantillaField.getValue() != "")
-            {
-                return positionsArray.find(position=>position["plantilla_item_number"] == plantillaField.getValue());
-            }
+        getAppliedPosition = function(positionsArray, positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx()){
+            // if (plantillaField.getValue() == "ANY")
+            // {
+            //     return positionsArray.find(position=>position["position_title"] == positionField.getValue());
+            // }
+            // else if (plantillaField.getValue() != "")
+            // {
+            //     return positionsArray.find(position=>position["plantilla_item_number"] == plantillaField.getValue());
+            // }
+
+            return document.positions.filter(position=>((position["parenthetical_title"] == parenField.getValue().trim() || plantillaField.getValue().trim() == "ANY" || plantillaField.getValue().trim() == "") && position["position_title"] == positionField.getValue().trim() || position["plantilla_item_number"] == plantillaField.getValue().trim()))[0];
         }
 
         header = applicantDataForm.addHeader("Personal Information", 3);
@@ -941,53 +944,11 @@ class MPASIS_App
         displayEducIncrement.addContent(remarkEduc);
 
         var computeEducIncrementLevel = ()=>{
-            var educAttainment = parseInt(educField.getValue());
-            var highestPostGradDegrees = degreeTable.inputExs.filter(inputRow=>{ // in terms of education increment
-                switch (educAttainment)
-                {
-                    case 0: case 1: case 2: case 3: case 4: case 5:
-                        return false;
-                        break;
-                    case 6:
-                        return parseInt(inputRow["degree_typeIndex"].getDataValue()) > 6 && parseInt(inputRow["degree_typeIndex"].getDataValue()) < 8;
-                        break;
-                    case 7:
-                        return parseInt(inputRow["degree_typeIndex"].getDataValue()) > 7 && parseInt(inputRow["degree_typeIndex"].getDataValue()) < 9;
-                        break;
-                    default: // highest educational increment
-                        break;
-                }
-            });
-            var highestPostGradDegree = (highestPostGradDegrees.length == 0 ? null : highestPostGradDegrees.reduce((prevRow, nextRow)=>{
-                var test = prevRow["degree_typeIndex"].getDataValue() < nextRow["degree_typeIndex"].getDataValue()
-                || prevRow["degree_typeIndex"].getDataValue() == nextRow["degree_typeIndex"].getDataValue() 
-                && (prevRow["units_earned"].getValue() <= nextRow["units_earned"].getValue() || prevRow["units_earned"].getValue() == "")
-                || nextRow["complete_academic_requirements"].isChecked();
-
-                return ( test
-                    ? nextRow
-                    : prevRow
-                );
-            }));
-
-            var postGradUnits = (highestPostGradDegree == null || educAttainment <= 5 || educAttainment >= 8 ? null : highestPostGradDegree["units_earned"].getValue());
-            postGradUnits = (postGradUnits == "" ? null : postGradUnits);
-            var completeAcadReq = (highestPostGradDegree != null && !highestPostGradDegree["complete_academic_requirements"].isDisabled() && highestPostGradDegree["complete_academic_requirements"].isChecked() ? 1 : 0);
-
             var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
-
+            var increment = ScoreSheet.getEducIncrements(parseInt(educField.getValue()), degreeTable.getValue());
             
-            var incrementObj = document.mpsEducIncrement.filter(increment=>{                    
-                var test = educAttainment < 6 && increment["baseline_educational_attainment"] == educAttainment
-                || educAttainment >= 6 && increment["baseline_educational_attainment"] == educAttainment
-                   && ((postGradUnits == null && (increment["baseline_postgraduate_units"] == null || increment["baseline_postgraduate_units"] == 0)) || (postGradUnits != null && increment["baseline_postgraduate_units"] <= postGradUnits))
-                   && ((completeAcadReq == null && (increment["complete_academic_requirements"] || increment["complete_academic_requirements"] == null)) || (completeAcadReq != null && increment["complete_academic_requirements"] == completeAcadReq))
+            requiredEducIncrement.innerHTML = (appliedPosition == null ? 0 : ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []));
 
-                return test;
-            });
-
-            var increment = (incrementObj.length > 0 ? incrementObj[incrementObj.length - 1]["education_increment_level"] : -1);
-        
             if (appliedPosition != null && increment >= Number.parseInt(requiredEducIncrement.innerHTML) && (specEducAttained.isDisabled() || specEducAttained.isChecked()))
             {
                 remarkEduc.innerHTML = "(Qualified)";
@@ -1132,6 +1093,8 @@ class MPASIS_App
             increment = (increment > 31 ? 31 : increment);
 
             var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
+
+            requiredTrainingIncrement.innerHTML = (appliedPosition == null ? 0 : Math.trunc(appliedPosition["required_training_hours"] / 8) + 1);
 
             if (appliedPosition != null && appliedPosition["required_training_hours"] <= total && increment >= Number.parseInt(requiredTrainingIncrement.innerHTML) && (specTrainingAttained.isDisabled() || specTrainingAttained.isChecked()))
             {
@@ -1289,11 +1252,7 @@ class MPASIS_App
                 var end = workExp["workExpEndDateInputEx"].getValue();
                 end = (end == "" ? this.defaultEndDate : end);
 
-                // var duration = Date.parse(end) - Date.parse(start);
-                // console.log([start, end]);
                 var dur = ScoreSheet.getDuration(start, end);
-
-                // console.log([dur, ScoreSheet.convertDurationToString(dur)]);
 
                 workExp["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(dur));
 
@@ -1305,6 +1264,10 @@ class MPASIS_App
             totalWorkExpDuration.innerHTML = (total.y > 0 ? total.y + "&nbsp;year" + (total.y == 1 ? "" : "s") : "") + (total.m > 0 ? (total.y > 0 ? ", " : "") + total.m + "&nbsp;month" + (total.m == 1 ? "" : "s") : "") + (total.y + total.m > 0 && total.d != 0 ? ", " : "") + (total.y + total.m > 0 && total.d == 0 ? "" : total.d + "&nbsp;day" + (total.d == 1 ? "" : "s"));
 
             var increment = Math.trunc((total.y * 12 + total.m + total.d / 30) / 6) + 1;
+
+            var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
+
+            requiredWorkExpIncrement.innerHTML = (appliedPosition == null ? 0 : Math.trunc(appliedPosition["required_work_experience_years"] * 12 / 6) + 1);
 
             if (increment >= Number.parseInt(requiredWorkExpIncrement.innerHTML) && (specWorkExpAttained.isDisabled() || specWorkExpAttained.isChecked()))
             {
@@ -1403,53 +1366,6 @@ class MPASIS_App
         var remarkElig = createElementEx(NO_NS, "span", null, null, "class", "remark");
         addText("Not Required", remarkElig);
         displayEligQualification.addContent(remarkElig);
-
-        var validateEligibility = (eligibilities = [], requiredEligibilities = [[]])=>{
-            var isEligibleInAll = [];
-
-            for (const requiredEligibilitySet of requiredEligibilities) {
-                var isEligibleInOne = false;
-
-                for (const eligibility of eligibilities)
-                {
-                    for (const requiredEligibility of requiredEligibilitySet) {
-                        if (!isEligibleInOne && requiredEligibility == 1) // CS Sub-Pro
-                        {
-                            isEligibleInOne = true;
-                        }
-
-                        if (!isEligibleInOne && requiredEligibility == 2 && eligibility >= 2) // CS Pro
-                        {
-                            isEligibleInOne = true;
-                        }
-
-                        if (!isEligibleInOne && requiredEligibility == 3 && eligibility > 3) // Any PRC License
-                        {
-                            isEligibleInOne = true;
-                        }
-
-                        if (!isEligibleInOne && requiredEligibility == eligibility) // exact PRC License
-                        {
-                            isEligibleInOne = true;
-                        }
-                        
-                        if (isEligibleInOne)
-                        {
-                            break;
-                        }
-                    }
-                    
-                    if (isEligibleInOne)
-                    {
-                        break;
-                    }
-                }
-                
-                isEligibleInAll.push(isEligibleInOne);
-            }
-
-            return (isEligibleInAll.length == 0 ? "Not Required" : (isEligibleInAll.reduce((eligValue, nextEligValue)=>(eligValue && nextEligValue)) ? "" : "Not ") + "Qualified");
-        };
 
         field.runAfterFilling = function(){
             var parentEx = this;
@@ -1554,10 +1470,11 @@ class MPASIS_App
                         }
                     }
 
-                    var validElig = validateEligibility(parentEx.getValue(), requiredEligibilities);
+                    var validElig = ScoreSheet.validateEligibility(parentEx.getValue(), requiredEligibilities);
     
-                    remarkElig.innerHTML = validateEligibility(parentEx.getValue(), requiredEligibilities);
-                    remarkElig.style.color = (validElig == "Qualified" ? "green" : (validElig == "Not Qualified" ? "red" : null));
+                    remarkElig.innerHTML = (validElig < 0 ? "Not Required" : (validElig > 0 ? "" : "Not ") + "Qualified");
+                    // remarkElig.style.color = (validElig == "Qualified" ? "green" : (validElig == "Not Qualified" ? "red" : null));
+                    remarkElig.style.color = (validElig > 0 ? "green" : (validElig == 0 ? "red" : null));
                 };
 
                 inputEx.addEvent("change", inputEx["changeElig"]);
@@ -1814,17 +1731,9 @@ class MPASIS_App
                                         break;
                                 }
                             }
-
                         }
 
-                        if (newApplication)
-                        {
-                            applicantDataBtnGrp.inputExs[0].setLabelText("Save");
-                        }
-                        else
-                        {
-                            applicantDataBtnGrp.inputExs[0].setLabelText("Update");
-                        }
+                        applicantDataBtnGrp.inputExs[0].setLabelText(newApplication ? "Save" : "Update");
                 };
 
                 searchResult.runAfterFilling = ()=>{
@@ -1893,7 +1802,7 @@ class MPASIS_App
                 else if (response.type == "Data")
                 {
                     var data = JSON.parse(response.content);
-                    // console.log(data);
+
                     document.positions = data["positions"];
                     document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
@@ -2051,27 +1960,42 @@ class MPASIS_App
             }
         });
 
-        positionField.addEvent("change", (changeEvent)=>{
-            parenField.setValue("");
-            parenField.clearList();
-        //     await parenField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=parenTitles&positionTitle=" + positionField.getValue(), "parenthetical_title", "", "");
-            parenField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue())), "parenthetical_title", "", "");
+        positionField.addEvent("change", positionChangeEvent=>{
+            MPASIS_App.selectPosition(positionField, parenField, plantillaField);
+        });
+
+        // positionField.addEvent("change", (changeEvent)=>{
+        //     parenField.setValue("");
+        //     parenField.clearList();
+        // //     await parenField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=parenTitles&positionTitle=" + positionField.getValue(), "parenthetical_title", "", "");
+        //     parenField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] != null && position["parenthetical_title"] != "")), "parenthetical_title", "plantilla_item_number");
             
-            plantillaField.setValue("");
-            plantillaField.clearList();
-        //     await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
-            plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "", "");
-            var option = plantillaField.addItem("ANY");
-            option.parentElement.insertBefore(option, option.parentElement.children[0]);
+        //     plantillaField.setValue("");
+        //     plantillaField.clearList();
+        // //     await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
+        //     plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "plantilla_item_number");
+        //     var option = plantillaField.addItem("ANY");
+        //     option.parentElement.insertBefore(option, option.parentElement.children[0]);
+        // });
+
+        parenField.addEvent("change", parenChangeEvent=>{
+            MPASIS_App.selectParen(positionField, parenField, plantillaField);
         });
-        parenField.addEvent("change", changeEvent=>{
-            plantillaField.setValue("");
-            plantillaField.clearList();
-            // await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
-            plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "", "");
-            var option = plantillaField.addItem("ANY");
-            option.parentElement.insertBefore(option, option.parentElement.children[0]);
+
+        // parenField.addEvent("change", changeEvent=>{
+        //     plantillaField.setValue("");
+        //     plantillaField.clearList();
+        //     // await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
+        //     plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "", "");
+        //     var option = plantillaField.addItem("ANY");
+        //     option.parentElement.insertBefore(option, option.parentElement.children[0]);
+        // });
+
+        plantillaField.addEvent("change", plantillaChangeEvent=>{
+            MPASIS_App.selectPlantilla(positionField, parenField, plantillaField);
         });
+
+
         var plantillaChange = changeEvent=>{
             var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
 
@@ -2145,7 +2069,8 @@ class MPASIS_App
                 reqCompetency.innerHTML = "NONE";
                 competencyAttained.disable();
             }
-            requiredEducIncrement.innerHTML = document.mpsEducIncrement.find(increment=>increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"])["education_increment_level"];
+            // requiredEducIncrement.innerHTML = document.mpsEducIncrement.find(increment=>increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"])["education_increment_level"];
+            requiredEducIncrement.innerHTML = ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []);
             requiredTrainingIncrement.innerHTML = Math.trunc(appliedPosition["required_training_hours"] / 8) + 1;
             requiredWorkExpIncrement.innerHTML = Math.trunc(appliedPosition["required_work_experience_years"] * 12 / 6) + 1;
             remarkElig.innerHTML = (appliedPosition["required_eligibility"].length == 0 ? "Not Required" : "Not Qualified");
@@ -3329,17 +3254,8 @@ class MPASIS_App
                         var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.dataLoaded["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.dataLoaded["plantilla_item_number_applied"])[0];
                         var hasSpecEduc = (scoreSheet.dataLoaded["has_specific_education_required"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_education_required"] == 1 ? "Yes" : "No"));
                         
-                        var incrementObj = document.mpsEducIncrement.filter(increment=>(
-                            increment["baseline_educational_attainment"] == educAttainment
-                            && (postGradUnits == null
-                            || (postGradUnits != null && increment["baseline_postgraduate_units"] <= postGradUnits))
-                            && increment["complete_academic_requirements"] == completeAcadReq
-                        ));
-                        var applicantEducIncrement = incrementObj[0]["education_increment_level"];
-                        incrementObj = document.mpsEducIncrement.filter(increment=>(
-                            increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"]
-                        ));
-                        var requiredEducIncrement = incrementObj[0]["education_increment_level"];
+                        var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
+                        var requiredEducIncrement = ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []);
                         var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
 
                         scoreSheet.displayExs["education"].displays["educational_attainment"].setHTMLContent(scoreSheet.dataLoaded["educational_attainment"]);
@@ -3719,7 +3635,7 @@ class MPASIS_App
             return this.forms["ier"];
         }
 
-        this.forms["ier"] = new IERForm(this.mainSections["main-ier"], "ier-form");
+        this.forms["ier"] = new IERForm(this.mainSections["main-ier"]);
 
         return this.forms["ier"];
     }
@@ -3828,6 +3744,47 @@ class MPASIS_App
                 )
             )
             + ")";
+    }
+
+    static selectPosition(positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx())
+    {
+        parenField.setValue("");
+        parenField.clearList();
+        parenField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] != null && position["parenthetical_title"] != "")), "parenthetical_title", "plantilla_item_number");
+
+        this.selectParen(positionField, parenField, plantillaField);
+    }
+
+    static selectParen(positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx())
+    {
+        plantillaField.setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
+        plantillaField.clearList();
+        plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "plantilla_item_number");
+        var option = plantillaField.addItem("ANY");
+        option.parentElement.insertBefore(option, option.parentElement.children[(plantillaField.type == "combo" ? 0 : 1)]);
+
+        if (Array.from((plantillaField.type == "combo" ? plantillaField.datalist : plantillaField.fields[0]).children).length == (plantillaField.type == "combo" ? 2 : 3))
+        {
+            plantillaField.setValue((plantillaField.type == "combo" ? plantillaField.datalist : plantillaField.fields[0]).children[(plantillaField.type == "combo" ? 1 : 2)].value); // select the only plantilla item number available
+        }
+    }
+
+    static selectPlantilla(positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx())
+    {
+        var selectedPlantilla = plantillaField.getValue();
+        parenField.setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
+        parenField.clearList();
+        var temp = document.positions.filter(position=>((((selectedPlantilla == "ANY" || selectedPlantilla == "") && position["position_title"] == positionField.getValue()) || position["plantilla_item_number"] == selectedPlantilla) && position["parenthetical_title"] != null && position["parenthetical_title"] != ""));
+        parenField.fillItems(temp, "parenthetical_title", "plantilla_item_number", "");
+        if (parenField.type == "combo")
+        {
+            var filteredOptions = Array.from(parenField.datalist.children).filter(option=>option.getAttribute("data-value") == selectedPlantilla);
+            parenField.setValue((filteredOptions.length > 0 ? filteredOptions[0].value : ""));
+        }
+        else
+        {
+            parenField.setValue(selectedPlantilla);
+        }
     }
 }
 

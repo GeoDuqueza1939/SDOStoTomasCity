@@ -1,5 +1,18 @@
 # Work Log
 
+## 5/7/2023
+TO DO:
+* [x] Add code in the IER to check whether an applicant is qualified or not
+* [x] Fix the styling of IER form elements
+* [x] Add code in the IER to enable/disable [Select] button in `Select Application` dialog
+* [ ] Implement app behavior wherein a user will be asked to define a new password after first login.
+* [ ] Create a printout template for the IER
+* [x] Reimplement similar changes to position fields in the applicant data entry form
+
+I first worked out the IER code for determining whether an applicant is qualified or not. However, I had to revisit and revise some similar code in the applicant data form to make things simpler and more consistent. I transferred some of them into static methods to optimize code use. After I got the qualification validation working, I then proceeded to restyle the IER elements by removing some of the styling methods and adding more styles in the CSS files. I also inserted code to prevent the clicking of the `Select` button while no position title is selected. An hour before end-of-shift, I began to revisit the position fields in the applicant data entry form to make their behavior consistent with the positions field in the IER's select position dialog.
+
+So far, the app hasn't been used or even tested due to time constraint. <u class="to-do">I should make use of this time to fix the user management features of MPaSIS to facilitate its use by others.</u>
+
 ## 5/6/2023
 TO DO:
 * [x] Create code that will load job applications into the IER Form.

@@ -1128,6 +1128,7 @@ class InputEx
             {
                 th = createElementEx(NO_NS, "b", this.thead, null, "class", "th")
             }
+            th["inputEx"] = this;
             th.innerHTML = headerText;
         });
 
@@ -1144,6 +1145,7 @@ class InputEx
         {
             createElementEx(NO_NS, "b", this.thead, null, "class", "th tail");
         }
+        th["inputEx"] = this;
 
         return this.thead;
     }
@@ -1439,6 +1441,7 @@ class InputEx
             if (this.addRowButtonEx == null)
             {
                 this.addRowButtonEx = new InputEx(this.fieldWrapper, this.id + "-add-row-button-ex", "buttonEx");
+                this.addRowButtonEx.parentInputEx = this;
                 this.addRowButtonEx.setLabelText("+Add a row");
                 this.addRowButtonEx.addEvent("click", clickEvent=>{
                     this.addRow();
@@ -2300,6 +2303,11 @@ class FormEx
         this.statusMarker = null;
         this.statusMsg = null;
         this.formMode = 0; // 0: Adding/Creating Record; 1: Editing; 2: Viewing
+
+        if (!MPASIS_App.isEmpty(this.id))
+        {
+            this.container.setAttribute("id", this.id);
+        }
 
         [this.container, this.fieldWrapper].forEach(el=>el["formEx"] = this);
     }
@@ -3261,7 +3269,7 @@ class ScoreSheet extends FormEx
         var retrieveApplicantDialog = null;
         if (this.innerHTML == "Load Application")
         {
-            retrieveApplicantDialog = new DialogEx(scoreSheet.fieldWrapper);
+            retrieveApplicantDialog = new DialogEx(app.main);
             var form = retrieveApplicantDialog.addFormEx();
             form.setFullWidth();
             
@@ -4505,6 +4513,28 @@ class ScoreSheet extends FormEx
 
     static getEducIncrements(educAttainment = 0, degreesTaken = [{degree_typeIndex:0,degree:"",year_level_completed:null,units_earned:null,complete_academic_requirements:null,graduation_year:null}])
     {
+        // // OLD CODE FROM APPLICANT DATA FORM
+        // var incrementObj = document.mpsEducIncrement.filter(increment=>{                    
+        //     return educAttainment < 6 && increment["baseline_educational_attainment"] == educAttainment
+        //     || educAttainment >= 6 && increment["baseline_educational_attainment"] == educAttainment
+        //        && ((postGradUnits == null && (increment["baseline_postgraduate_units"] == null || increment["baseline_postgraduate_units"] == 0)) || (postGradUnits != null && increment["baseline_postgraduate_units"] <= postGradUnits))
+        //        && ((completeAcadReq == null && (increment["complete_academic_requirements"] || increment["complete_academic_requirements"] == null)) || (completeAcadReq != null && increment["complete_academic_requirements"] == completeAcadReq));
+        // });
+        // var increment = (incrementObj.length > 0 ? incrementObj[incrementObj.length - 1]["education_increment_level"] : -1);
+
+        // // OLD CODE FROM OLD SCORE SHEET
+        // var incrementObj = document.mpsEducIncrement.filter(increment=>(
+        //     increment["baseline_educational_attainment"] == educAttainment
+        //     && (postGradUnits == null
+        //     || (postGradUnits != null && increment["baseline_postgraduate_units"] <= postGradUnits))
+        //     && increment["complete_academic_requirements"] == completeAcadReq
+        // ));
+        // var applicantEducIncrement = incrementObj[0]["education_increment_level"];
+        // incrementObj = document.mpsEducIncrement.filter(increment=>(
+        //     increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"]
+        // ));
+        // var requiredEducIncrement = incrementObj[0]["education_increment_level"];
+
         if (type(educAttainment) != "number")
         {
             throw("Invalid argument type: educAttainment:" + educAttainment);
@@ -4755,13 +4785,65 @@ class ScoreSheet extends FormEx
 
     static convertDurationToNum(duration)
     {
-        return (typeof(duration) == "string" ? NaN : duration.y + duration.m / 12 + duration.d / 365.25);
+        return (duration == null || duration == undefined ? 0 : (typeof(duration) == "string" ? NaN : duration.y + duration.m / 12 + duration.d / 365.25));
     }
 
     static convertDurationToString(duration)
     {
         return (isNaN(duration.y) || isNaN(duration.m) || isNaN(duration.d) ? "Invalid date(s)" + (typeof(duration) == "string" ? "\n" + duration : "") : (duration.y > 0 ? duration.y + "&nbsp;year" + (duration.y == 1 ? "" : "s") : "") + (duration.m > 0 ? (duration.y > 0 ? ", " : "") + duration.m + "&nbsp;month" + (duration.m == 1 ? "" : "s") : "") + (duration.y + duration.m > 0 && duration.d != 0 ? ", " : "") + (duration.y + duration.m > 0 && duration.d == 0 ? "" : duration.d + "&nbsp;day" + (duration.d == 1 ? "" : "s")));
     }
+
+    static validateEligibility(eligibilities = [], requiredEligibilities = [[]])
+    {
+        var isEligibleInAll = [], requiredEligibilitySet = null;
+
+        for (const requiredEligibilitySetConst of requiredEligibilities) {
+            var isEligibleInOne = false;
+            requiredEligibilitySet = requiredEligibilitySetConst;
+
+            for (const eligibility of eligibilities)
+            {
+                if (!Array.isArray(requiredEligibilitySet))
+                {
+                    var temp = [];
+                    if (requiredEligibilitySet.eligibilityId != null)
+                    {
+                        temp.push(requiredEligibilitySet.eligibilityId);
+                    }
+                    if (requiredEligibilitySet.eligibilityId2 != null)
+                    {
+                        temp.push(requiredEligibilitySet.eligibilityId2);
+                    }
+                    if (requiredEligibilitySet.eligibilityId3 != null)
+                    {
+                        temp.push(requiredEligibilitySet.eligibilityId3);
+                    }
+                    requiredEligibilitySet = temp;
+                }
+
+                for (const requiredEligibility of requiredEligibilitySet) {
+                    isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 1); // CS Sub-Pro    
+                    isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 2 && eligibility >= 2); // CS Pro
+                    isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 3 && eligibility > 3); // Any PRC License    
+                    isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == eligibility); // exact PRC License
+                    if (isEligibleInOne)
+                    {
+                        break;
+                    }
+                }
+
+                if (isEligibleInOne)
+                {
+                    break;
+                }
+            }
+            
+            isEligibleInAll.push(isEligibleInOne);
+        }
+
+        // return (isEligibleInAll.length == 0 ? "Not Required" : (isEligibleInAll.reduce((eligValue, nextEligValue)=>(eligValue && nextEligValue)) ? "" : "Not ") + "Qualified");
+        return (isEligibleInAll.length == 0 ? -1 : (isEligibleInAll.reduce((eligValue, nextEligValue)=>(eligValue && nextEligValue)) ? 1 : 0));
+    };
 
     resetForm()
     {
@@ -4776,13 +4858,16 @@ class IERForm extends FormEx
         super(parentEl, id, useFormElement);
 
         var posInfo = null, thisIERForm = this;
-
-        thisIERForm.dataRows = null; // variable to hold the fetched job applications data
+        
+        this.container.classList.add("ier-form");
 
         this.setTitle("Initial Evaluation Result (IER)", 2);
-        this.setFullWidth();
+        // this.setFullWidth();
+
+        thisIERForm.fetchedApplications = null; // variable to hold the fetched job applications data
 
         posInfo = this.addBox("ier-position-info", false);
+        posInfo.classList.add("ier-position-info");
 
         [
             {id:"ier-position", label:"Position"},
@@ -4790,17 +4875,18 @@ class IERForm extends FormEx
             {id:"ier-position-qs", label:"Qualification Standards"}
         ].forEach(field=>{
             posInfo.appendChild(this.addDisplayEx("div", field.id, "", field.label).container);
-            this.displayExs[field.id].setFullWidth();
+            this.displayExs[field.id].container.classList.add(field.id);
+            // this.displayExs[field.id].setFullWidth();
             this.displayExs[field.id].showColon();
         });
 
         this.addInputEx("Select Position", "button", "", "", "ier-select-position-button");
-        this.displayExs["ier-position"].setInline();
+        // this.displayExs["ier-position"].setInline();
         this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
         // this.dbInputEx["ier-select-position-button"].setSimpleStyle();
 
-        this.displayExs["ier-position-qs"].setVertical();
-        this.displayExs["ier-position-qs"].content.style.paddingLeft = "2em";
+        // this.displayExs["ier-position-qs"].setVertical();
+        // this.displayExs["ier-position-qs"].content.style.paddingLeft = "2em";
 
         [
             {id:"ier-position-qs-education", label:"Education"},
@@ -4809,8 +4895,8 @@ class IERForm extends FormEx
             {id:"ier-position-qs-eligibility", label:"Eligibility"}
         ].forEach(field=>{
             this.displayExs["ier-position-qs"].addContent(this.addDisplayEx("div", field.id, "", field.label).container);
-            this.displayExs[field.id].setFullWidth();
-            this.displayExs[field.id].showColon();    
+            // this.displayExs[field.id].setFullWidth();
+            // this.displayExs[field.id].showColon();    
         });
 
         this.addDisplayEx("div-table", "ier-table");
@@ -4837,7 +4923,6 @@ class IERForm extends FormEx
             {colHeaderName:"remarks", colHeaderText:"Remarks (Qualified or Disqualified)"} // multiple/custom
         ]);
 
-        this.displayExs["ier-table"].table.classList.add("bordered");
         this.displayExs["ier-table"].thead.insertBefore(htmlToElement("<tr></tr>"), this.displayExs["ier-table"].theadRow);
         [["old", 0], ["old", 0], ["old", 0], ["new", "Personal Information", 9], ["old", 9], ["new", "Training", 2], ["new", "Experience", 2], ["old", 13], ["old", 13]].forEach(header=>{
             if (header[0] == "new")
@@ -4854,7 +4939,7 @@ class IERForm extends FormEx
         this.displayExs["ier-table"].isHeaderCustomized = true;
 
         this.dbInputEx["ier-select-position-button"].addEvent("click", selectPositionEvent=>{
-            var selectPositionDialog = new DialogEx(this.container, "ier-select-position-dialog");
+            var selectPositionDialog = new DialogEx(app.main, "ier-select-position-dialog");
             selectPositionDialog.addFormEx();
             selectPositionDialog.formEx.setTitle("Select Position", 3);
             selectPositionDialog.formEx.headers[0].style = "margin: 0 0 0.5em; text-align: center;";
@@ -4887,45 +4972,19 @@ class IERForm extends FormEx
             selectPositionDialog.formEx.dbInputEx["ier-selected-position"].resetStatus();
     
             selectPositionDialog.formEx.dbInputEx["ier-selected-position"].addEvent("change", positionChange=>{
-                if (selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() == "")
-                {
-
-                }
-
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].setValue("");
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].clearList();
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].fillItems(document.positions.filter(position=>(position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() && position["parenthetical_title"] != null && position["parenthetical_title"] != "")), "parenthetical_title", "plantilla_item_number", "");
-                
-                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
-                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].clearList();
-                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() && (selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
-                var option = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addItem("ANY");
-                option.parentElement.insertBefore(option, option.parentElement.children[1]);
-
-                if (Array.from(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children).length == 3)
-                {
-                    selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children[2].value);
-                }
+                btnGrp.inputExs[0].enable(null, selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() != "");
             });
-            selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].addEvent("change", changeEvent=>{
-                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
-                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].clearList();
-                selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fillItems(document.positions.filter(position=>(position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() && (selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue() == "" || position["parenthetical_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue()))), "plantilla_item_number", "plantilla_item_number", "");
-                var option = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addItem("ANY");
-                option.parentElement.insertBefore(option, option.parentElement.children[1]);
 
-                if (Array.from(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children).length == 3)
-                {
-                    selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].setValue(selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].fields[0].children[2].value);
-                }
+            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].addEvent("change", positionChangeEvent=>{
+                MPASIS_App.selectPosition(selectPositionDialog.formEx.dbInputEx["ier-selected-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"]);
             });
-            selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addEvent("change", changeEvent=>{
-                var selectedPlantilla = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].getValue();
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].clearList();
-                var temp = document.positions.filter(position=>((((selectedPlantilla == "ANY" || selectedPlantilla == "") && position["position_title"] == selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue()) || position["plantilla_item_number"] == selectedPlantilla) && position["parenthetical_title"] != null && position["parenthetical_title"] != ""));
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].fillItems(temp, "parenthetical_title", "plantilla_item_number", "");
-                selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].setValue(selectedPlantilla);
+
+            selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].addEvent("change", parenChangeEvent=>{
+                MPASIS_App.selectParen(selectPositionDialog.formEx.dbInputEx["ier-selected-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"]);
+            });
+
+            selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addEvent("change", plantillaChangeEvent=>{
+                MPASIS_App.selectPlantilla(selectPositionDialog.formEx.dbInputEx["ier-selected-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"]);
             });
 
             var btnGrp = selectPositionDialog.formEx.addFormButtonGrp(2);
@@ -4934,27 +4993,21 @@ class IERForm extends FormEx
             
             btnGrp.inputExs[0].setLabelText("Select");
             btnGrp.inputExs[0].setTooltipText("Select");
-            btnGrp.inputExs[0].addEvent("click", closeSelectPositionDialogEvent=>{
+            btnGrp.inputExs[0].disable();
+            btnGrp.inputExs[0].addEvent("click", selectPositionDialogEvent=>{
                 var positionTitle = selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue().trim();
                 var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue().trim();
                 var plantilla = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].getValue().trim();
                 var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                 this.dbInputEx["ier-select-position-button"].container.remove();
-                this.displayExs["ier-position"].setHTMLContent("<b>" + positionString + "</b>");
+                this.displayExs["ier-position"].setHTMLContent(positionString);
                 this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
                 
-                var position = document.positions.filter(position=>((plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
+                var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
                 
-                this.displayExs["ier-position-salary-grade"].setHTMLContent("<b>" + "SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")" + "</b>");
+                this.displayExs["ier-position-salary-grade"].setHTMLContent("SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")");
                 
-                // this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? "" : " (" + position["specific_education_required"] + ")") + "</b>");
-                // this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training") + (position["specific_training_required"] == null || position["specific_training_required"] == "" ? "" : " (" + position["specific_training_required"] + ")") + "</b>");
-                // this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") + (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? "" : " (" + position["specific_work_experience_required"] + ")") + "</b>");
-                this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] : position["specific_education_required"]) + "</b>");
-                this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : (position["specific_training_required"] == null || position["specific_training_required"] == "" ? position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training" : position["specific_training_required"])) + "</b>");
-                this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience" : position["specific_work_experience_required"])) + "</b>");
-
                 var eligString = "";
                 
                 position["required_eligibility"].forEach(eligSet=>{
@@ -4963,10 +5016,21 @@ class IERForm extends FormEx
                     eligString += (eligSet["eligibility3"] == null || eligSet["eligibility3"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility3"]);
                 });
 
-                this.displayExs["ier-position-qs-eligibility"].setHTMLContent("<b>" + eligString + "</b>");
-
+                // this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? "" : " (" + position["specific_education_required"] + ")") + "</b>");
+                // this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training") + (position["specific_training_required"] == null || position["specific_training_required"] == "" ? "" : " (" + position["specific_training_required"] + ")") + "</b>");
+                // this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") + (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? "" : " (" + position["specific_work_experience_required"] + ")") + "</b>");
+                [
+                    {id:"ier-position-qs-education", text:(position["specific_education_required"] == null || position["specific_education_required"] == "" ? document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] : position["specific_education_required"])},
+                    {id:"ier-position-qs-training", text:(position["required_training_hours"] <= 0 ? "None required" : (position["specific_training_required"] == null || position["specific_training_required"] == "" ? position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training" : position["specific_training_required"]))},
+                    {id:"ier-position-qs-experience", text:(position["required_work_experience_years"] <= 0 ? "None required" : (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience" : position["specific_work_experience_required"]))},
+                    {id:"ier-position-qs-eligibility",text:eligString}
+                ].forEach(obj=>{
+                    this.displayExs[obj.id].setHTMLContent(obj.text);
+                    this.displayExs[obj.id].container.title = obj.text;
+                });
+                
                 postData(ScoreSheet.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
-                    var response = null, rows = [], row = null;
+                    var response = null, rows = [], row = null, isQualified = true;
 
                     if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                     {
@@ -4980,37 +5044,38 @@ class IERForm extends FormEx
                         }
                         else if (response.type == "Data")
                         {
-                            thisIERForm.dataRows = JSON.parse(response.content);
+                            thisIERForm.fetchedApplications = JSON.parse(response.content);
 
-                            console.log(thisIERForm.dataRows);
+                            // console.log(thisIERForm.fetchedApplications);
 
                             this.displayExs["ier-table"].removeAllRows();
 
-                            for (const dataRow of thisIERForm.dataRows)
+                            for (const jobApplication of thisIERForm.fetchedApplications)
                             {
                                 row = {};
                             
-                                for (const key in dataRow)
+                                for (const key in jobApplication)
                                 {
                                     switch (key)
                                     {
                                         case "degree_taken":
+                                        case "permanent_address":
                                             // DO NOTHING
                                             break;
-                                        case "address":
-                                            row["address"] = dataRow["present_address"] ?? dataRow["permanent_address"] ?? "";
+                                        case "present_address":
+                                            row["address"] = jobApplication["present_address"] ?? jobApplication["permanent_address"] ?? "";
                                             break;
                                         case "disability":
                                         case "email_address":
                                         case "contact_number":
-                                            row[key] = (dataRow[key].length > 0 ? dataRow[key].map(obj=>obj[key]).join("; ") : "");
+                                            row[key] = (jobApplication[key].length > 0 ? jobApplication[key].map(obj=>obj[key]).join("; ") : "");
                                             break;
                                         case "educational_attainment":
-                                            if (dataRow["degree_taken"].length > 0)
+                                            if (jobApplication["degree_taken"].length > 0)
                                             {
                                                 row["education"] = "<ul>\n";
                                                 
-                                                for (const degree of dataRow["degree_taken"])
+                                                for (const degree of jobApplication["degree_taken"])
                                                 {
                                                     row["education"] += "<li>" + MPASIS_App.convertDegreeObjToStr(degree) + "</li>\n";
                                                 }
@@ -5019,16 +5084,19 @@ class IERForm extends FormEx
                                             }
                                             else
                                             {
-                                                row["education"] = dataRow[key];
+                                                row["education"] = jobApplication[key];
                                             }
+
+                                            isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
+                                            isQualified &&= (position["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
                                             break;
                                         case "relevant_training":
-                                            if (dataRow[key].length > 0)
+                                            var totalHours = 0;
+                                            if (jobApplication[key].length > 0)
                                             {
-                                                var totalHours = 0;
                                                 row["training_title"] = "<ul>\n";
                                                 
-                                                for (const relevantTraining of dataRow[key])
+                                                for (const relevantTraining of jobApplication[key])
                                                 {
                                                     row["training_title"] += "<li>" + relevantTraining["descriptive_name"] + " (" + relevantTraining["hours"] + (relevantTraining["hours"] == 1 ? " hour" : " hours") + ")</li>\n";
                                                     totalHours += (relevantTraining["hours"] ?? 0);
@@ -5037,14 +5105,17 @@ class IERForm extends FormEx
                                                 row["training_title"] += "</ul>\n";
                                                 row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
                                             }
+                                        
+                                            isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                            isQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
                                             break;
                                         case "relevant_work_experience":
-                                            if (dataRow[key].length > 0)
+                                            var totalDuration = null, duration = null;
+                                            if (jobApplication[key].length > 0)
                                             {
-                                                var totalDuration = null, duration = null;
                                                 row["experience_details"] = "<ul>\n";
                                                 
-                                                for (const relevantWorkExp of dataRow[key])
+                                                for (const relevantWorkExp of jobApplication[key])
                                                 {
                                                     duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? ScoreSheet.defaultEndDate);
                                                     row["experience_details"] += "<li>" + relevantWorkExp["descriptive_name"] + " (" + ScoreSheet.convertDurationToString(duration) + ")</li>\n";
@@ -5054,25 +5125,34 @@ class IERForm extends FormEx
                                                 row["experience_details"] += "</ul>\n";
                                                 row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
                                             }
+                                            
+                                            isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(position["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                            isQualified &&= (position["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
                                             break;
                                         case "relevant_eligibility":
-                                            if (dataRow[key].length > 0)
+                                            if (jobApplication[key].length > 0)
                                             {
                                                 row["eligibility"] = "<ul>\n";
 
-                                                for (const relevantEligibility of dataRow[key])
+                                                for (const relevantEligibility of jobApplication[key])
                                                 {
                                                     row["eligibility"] += "<li>" + relevantEligibility["eligibility"] + "</li>\n";
                                                 }
 
                                                 row["eligibility"] += "</ul>\n";
                                             }
+
+                                            var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), position["required_eligibility"]);
+
+                                            isQualified &&= (valElig != 0);
                                             break;
                                         default:
-                                            row[key] = dataRow[key];
+                                            row[key] = jobApplication[key];
                                             break;
-                                    }
+                                    }                                    
                                 }
+
+                                row["remarks"] = (isQualified ? "Qualified" : "Disqualified");
                                 
                                 rows.push(row);
 
@@ -5098,7 +5178,7 @@ class IERForm extends FormEx
             
             btnGrp.inputExs[1].setLabelText("Cancel");
             btnGrp.inputExs[1].setTooltipText("Cancel");
-            btnGrp.inputExs[1].addEvent("click", closeSelectPositionDialogEvent=>{
+            btnGrp.inputExs[1].addEvent("click", selectPositionDialogEvent=>{
                 selectPositionDialog.close();
             });
         });

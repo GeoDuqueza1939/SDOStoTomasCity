@@ -165,9 +165,106 @@ body, .app > main {
     font-weight: bold;
 }
 
-.display-ex.ier-table {
+.ier-form {
+    display: block;
+    /* font-family: "Bookman Old Style", "URW Bookman", serif; */
+}
+
+.ier-form > h2 {
+    text-transform: uppercase;
+}
+
+.ier-position-info > .display-ex {
+    display: block;
+}
+
+.ier-position-info .display-ex > * {
+    display: inline;
+    line-height: 1.5;
+}
+
+.ier-position > .content,
+.ier-position-salary-grade > .content {
+    font-weight: bold;
+    border-bottom: 1px solid;
+    padding: 0 0.5em;
+}
+
+.ier-position > .content > .input-ex {
+    float: right;
+    /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
+    /* font-family: revert; */
+    /* font-family: sans-serif; */
+}
+
+.ier-position-qs {
+    overflow: hidden;
+}
+
+.ier-position-qs > .content {
+    display: table;
+    margin-left: 2em;
+}
+
+.ier-position-qs > .content > .display-ex {
+    display: table-row;
+}
+
+.ier-position-qs > .content > .display-ex > * {
+    display: table-cell;
+}
+
+.ier-position-qs > .content > .display-ex > label {
+    padding-right: 0.5em;
+}
+
+.ier-position-qs > .content > .display-ex > .content {
+    min-width: 25em;
+    padding: 0 0.5em;
+    border-bottom: 1px solid;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: bold;
+}
+
+.ier-table {
+    margin-top: 1em;
     border: 0.1em inset;
     background-color: white;
     overflow: auto;
     max-width: 100%;
+}
+
+.ier-table table {
+    border-collapse: collapse;
+}
+
+.ier-table thead {
+    font-size: 0.9em;
+}
+
+.ier-table tr > * {
+    border: 1px solid;
+    padding: 0.25em;
+}
+
+.ier-table tbody > tr > * {
+    vertical-align: baseline;
+}
+
+.ier-table tbody > tr > :nth-child(3) {
+    min-width: 15em;
+}
+
+.ier-table tr > :nth-child(1),
+.ier-table tr > :nth-child(5),
+.ier-table tr > :nth-child(6),
+.ier-table tr > :nth-child(7),
+.ier-table tr > :nth-child(8),
+.ier-table tr > :nth-child(9),
+.ier-table tr > :nth-child(10),
+.ier-table tr > :nth-child(15),
+.ier-table tr > :nth-child(17),
+.ier-table tr > :nth-child(19) {
+    text-align: center;
 }
