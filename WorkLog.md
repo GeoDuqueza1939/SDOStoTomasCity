@@ -1,5 +1,12 @@
 # Work Log
 
+## 5/14/2023
+TO DO:
+* [ ] Implement app behavior wherein a user will be asked to define a new password after first login
+* [ ] Create a printout template for the IER
+* [ ] Add a FormEx-derived IES class
+
+
 ## 5/12/2023
 TO DO:
 * [x] Repair web server configuration

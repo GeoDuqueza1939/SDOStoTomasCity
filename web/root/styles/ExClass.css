@@ -135,7 +135,7 @@
     display: block;
 }
 
-.input-ex > .fields > :not(datalist):not(table) {
+.input-ex:not > .fields > :not(datalist):not(table):not(.inline):not(.full-width):not(.hidden) {
     display: inline-block;
 }
 
@@ -306,6 +306,11 @@
 
 .input-ex.vertical.full-width {
     display: block;
+}
+
+.input-ex.hidden {
+    display: none;
+    visibility: hidden;
 }
 
 /*

@@ -3026,7 +3026,7 @@ class UserEditor extends DialogEx
 
 class PasswordEditor extends DialogEx
 {
-    constructor(parent = null, id = "", requireCurrentPassword = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
+    constructor(parent = null, id = "", requireCurrentPassword = false, requireChange = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
     {
         super(parent, id);
         this.scrim.classList.add("password-editor");
@@ -3113,7 +3113,9 @@ class PasswordEditor extends DialogEx
                     }
                     else if (response.type == "Success")
                     {
-                        new MsgBox(app.main, response.content, "OK");
+                        new MsgBox(app.main, response.content, "OK", ()=>{
+                            app.navClick("signout");
+                        });
                     }
                 }
             });
@@ -3125,6 +3127,13 @@ class PasswordEditor extends DialogEx
         btnGrp.inputExs[1].addEvent("click", changePasswordEvent=>{
             this.close();
         });
+
+        if (requireChange)
+        {
+            btnGrp.inputExs[1].setInline();
+            btnGrp.inputExs[1].hide();
+            this.closeBtn.classList.add("hidden");
+        }
     }
 }
 

@@ -115,6 +115,7 @@ class MPASIS_App
                 break;
             case "signout":
                 postData(window.location.href, "app=mpasis&a=logout", (postEvent)=>{
+                    this.setCookie("user", "", -1);
                     this.setCookie("current_view", "", -1);
                     window.location.reload(true);
                 });
@@ -246,7 +247,7 @@ class MPASIS_App
                                 new UserEditor(this.main, "my-user-editor", 1, this.currentUser);
                                 break;
                             case "change-password":
-                                new PasswordEditor(this.main, "my-password-editor");
+                                new PasswordEditor(this.main, "my-password-editor", true);
                                 break;
                         }
                     });
@@ -1770,7 +1771,7 @@ class MPASIS_App
                                         break;
                                     default:
                                         // console.log(key);
-                                        if (applicantDataForm.dbInputEx[key].type == "checkbox" || applicantDataForm.dbInputEx[key] == "radio")
+                                        if (!newApplication && !applicantDataForm.dbInputEx[key].isDisabled() && (applicantDataForm.dbInputEx[key].type == "checkbox" || applicantDataForm.dbInputEx[key] == "radio"))
                                         {
                                             applicantDataForm.dbInputEx[key].check(applicationObj[key] == 1);
                                         }
@@ -2272,6 +2273,7 @@ class MPASIS_App
                 }
                 else // if (tableName == "Job_Application")
                 {
+                    console.log(colName.indexOf("has_specific_"), dbInputEx.isDisabled());
                     if (colName.indexOf("has_specific_") == 0 && !dbInputEx.isDisabled())
                     {
                         jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
@@ -2307,7 +2309,9 @@ class MPASIS_App
                 jobApplication["has_more_unrecorded_work_experience"] = (moreWorkExp.isChecked() ? 1 : 0);
             }
 
-            if (applicantDataBtnGrp.inputExs[0].getLabelText() == "Update")
+            console.log(applicantDataForm.dataLoaded);
+            // if (applicantDataBtnGrp.inputExs[0].getLabelText() == "Update")
+            if ("personId" in applicantDataForm.dataLoaded)
             {
                 jobApplication["personalInfo"]["personId"] = applicantDataForm.dataLoaded["personId"];
                 // for (const key in applicantDataForm.dataLoaded)
@@ -3764,7 +3768,7 @@ class MPASIS_App
         const d = new Date();
         d.setTime(d.getTime() + (exdays*24*60*60*1000));
         let expires = "expires="+ d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/;samesite=strict";
     }
     
     getCookie(cname)
@@ -3903,3 +3907,11 @@ class MPASIS_App
 }
 
 var app = new MPASIS_App(document.getElementById("mpasis"));
+
+if (app.currentUser["first_signin"] && app.currentUser["first_signin"] != 0)
+{
+    var passChange = new PasswordEditor(app.main, "my-password-editor", false, true);
+
+    passChange.formEx.setStatusMsgTimeout(-1);
+    passChange.formEx.showInfo("Please set your new password");
+}

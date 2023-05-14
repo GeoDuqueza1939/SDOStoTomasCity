@@ -351,4 +351,18 @@ class DatabaseConnection
 		return $this->dbname;
 	}
 }
+
+function recordExists(DatabaseConnection $dbconn, $tableName, $colName, $value)
+{
+    $dbResults = $dbconn->select($tableName, $colName, "WHERE $colName='$value'");
+
+    if (is_null($dbconn->lastException))
+    {
+        return (count($dbResults) > 0);
+    }
+    else
+    {
+        die(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+    }
+}
 ?>

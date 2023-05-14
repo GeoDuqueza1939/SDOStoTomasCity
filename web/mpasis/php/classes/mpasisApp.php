@@ -3,6 +3,7 @@
 require_once(__FILE_ROOT__ . '/php/classes/app.php');
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 require_once(__FILE_ROOT__ . '/php/audit/log.php');
+require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 class MPASIS_App extends App
 {
@@ -34,6 +35,7 @@ class MPASIS_App extends App
         $pageTitle = $this->getName() . ' | Department of Education | Sto. Tomas City SDO';
         $pageType = PageType::MPASIS;
         $addDebug = false;
+        // $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,7 +43,7 @@ class MPASIS_App extends App
 <body>
     <div id="mpasis" class="app">
 <?php
-if (isset($_SESSION['user']))
+if (isValidUserSession())
 {
     if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout' || !isset($_COOKIE['user']))
     {
@@ -75,9 +77,9 @@ require_once(__FILE_ROOT__ . '/php/snippets/nav_full.php'); // general nav
             
             <h3>Summary</h3>
             <ul>
-                <li><b>Available Positions:</b> 0</li>
-                <li><b>Applications Entered:</b> 0</li>
-                <li><b>Unique Applicants:</b> 0</li>
+                <li><b>Available Positions:</b> <?php echo count($this->getDB_SDO()->select('Position', '*', 'WHERE filled=FALSE'));?></li>
+                <li><b>Applications Entered:</b> <?php echo count($this->getDB_SDO()->select('Job_Application', '*', ''));?></li>
+                <li><b>Unique Applicants:</b> <?php echo count($this->getDB_SDO()->executeQuery('SELECT Person.personId FROM Job_Application INNER JOIN Person ON Job_Application.personId=Person.personId GROUP BY personId'));?></li>
             </ul>
 
             <h3>Applications</h3>

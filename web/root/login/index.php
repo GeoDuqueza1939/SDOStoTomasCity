@@ -16,7 +16,7 @@ $addDebug = true;
 <?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
 <body>
 <?php
-if (isset($_SESSION['user']))
+if (isValidUserSession())
 {
     // MODE: operation; should redirect to source URL, if available, or to the root directory
     header('Location: ' . (isset($_REQUEST['src']) ? $_REQUEST['src'] : '/') . (isset($_REQUEST['app']) ? '?app=' . $_REQUEST['app'] : ''));
