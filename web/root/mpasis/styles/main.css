@@ -233,10 +233,16 @@ body, .app > main {
     background-color: white;
     overflow: auto;
     max-width: 100%;
+    display: block;
+}
+
+.ier-table > .content {
+    display: block;
 }
 
 .ier-table table {
     border-collapse: collapse;
+    width: 100%;
 }
 
 .ier-table thead {
@@ -268,3 +274,223 @@ body, .app > main {
 .ier-table tr > :nth-child(19) {
     text-align: center;
 }
+
+
+.query-results-users {
+    display: block;
+    max-width: 100%;
+    margin-top: 1em;
+    border: 2px inset;
+    padding: 0.2em;
+}
+
+.query-results-users > .content {
+    display: block;
+    overflow: auto;
+    background-color: white;
+}
+
+.query-results-users table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+}
+
+.query-results-users table > * > tr > * {
+    border: 1px solid;
+    padding: 0.2em;
+}
+
+.query-results-users table > thead > tr > * {
+    background-color: lightgray;
+}
+
+.query-results-users table > tbody > tr > td + td {
+    text-align: center;
+}
+
+.query-results-users .account-controls button {
+    padding: 0;
+    border-radius: 50%;
+    border-width: 1px;
+    cursor: pointer;
+}
+
+.query-results-users .account-controls button > span[class^=material-] {
+    font-size: inherit;
+    padding: 0;
+    margin: 0;
+}
+
+.user-editor > .dialog {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.user-editor > .dialog > .form-ex {
+    display: block;
+    overflow: auto;
+}
+
+.user-editor > .dialog > .form-ex > h3 {
+    margin: 0 0 0.5em;
+    text-align: center;
+}
+
+.user-editor > .dialog > .form-ex > .fields {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto;
+    gap: 0.25em 1em;
+    /* width: 40em; */
+    align-items: center;
+    /* justify-content: center; */
+    overflow: auto;
+}
+
+.user-editor > .dialog > .form-ex > .fields > * {
+    display: block;
+    grid-column: span 2;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields {
+    width: 11em;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields > label {
+}
+
+.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields > input {
+    display: block;
+    width: 100%;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields > .status-pane {
+}
+
+.user-editor > .dialog > .form-ex > .fields > .employeeId,
+.user-editor > .dialog > .form-ex > .fields > .temp_user {
+    grid-column: span 3;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .employeeId > .fields,
+.user-editor > .dialog > .form-ex > .fields > .temp_user > .fields,
+.user-editor > .dialog > .form-ex > .fields > .username > .fields {
+    width: unset;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .employeeId > .fields > input {
+    display: inline-block;
+    width: 10em;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .temp_user > .fields > input {
+    display: inline;
+    width: unset;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .username {
+    grid-column: span 6;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .username > .fields {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto;
+    align-items: center;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .username > .fields > label {
+    display: block;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .username > .fields > input {
+    display: block;
+    width: 100%;
+    grid-column: span 5;
+}
+
+
+.user-editor > .dialog > .form-ex > .fields > .user-editor-access-levels {
+    grid-column: span 6;
+}
+
+.user-editor-access-levels > label {
+    display: block;
+}
+
+.user-editor-access-levels > .content {
+    display: grid;
+    grid-template-columns: auto auto auto;
+}
+
+.user-editor-access-levels > .content > .input-ex {
+}
+
+.user-editor-access-levels > .content > .input-ex > .fields {
+}
+
+.user-editor-access-levels > .content > .input-ex > .fields > label {
+}
+
+.user-editor-access-levels > .content > .input-ex > .fields > input {
+    width: 5em;
+}
+
+.user-editor-buttons {
+    display: block;
+    margin-top: 1em;
+}
+
+.user-editor-buttons > .fields {
+    text-align: center;
+}
+
+.user-editor > .dialog > .form-ex > .fields > .status-pane {
+    grid-column: span 6;
+    text-align: center;
+}
+
+.password-editor > .dialog {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.password-editor > .dialog > .form-ex {
+    display: block;
+    overflow: auto;
+}
+
+.password-editor > .dialog > .form-ex > h3 {
+    margin: 0 0 0.5em;
+    text-align: center;
+}
+
+
+.password-editor > .dialog > .form-ex > .fields > .input-ex {
+    display: block;
+}
+
+.password-editor > .dialog > .form-ex > .fields > .input-ex > .fields {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    gap: 0.25em 1em;
+}
+
+.password-editor > .dialog > .form-ex > .fields > .input-ex > .fields > label {}
+
+.password-editor > .dialog > .form-ex > .fields > .input-ex > .fields > input {}
+
+.password-editor > .dialog > .form-ex > .fields > .status-pane {
+    grid-column: span 6;
+    text-align: center;
+}
+
+.password-editor-buttons {
+    display: block;
+    margin-top: 1em;
+}
+
+.password-editor-buttons > .fields {
+    text-align: center;
+}
+

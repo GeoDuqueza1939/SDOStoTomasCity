@@ -36,6 +36,10 @@ class MPASIS_App
         this.processURL = "/mpasis/php/process.php";
         this.defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
         this.scrim = null;
+        this.temp = {};
+        this.currentUser = JSON.parse(this.getCookie("user"));
+        
+        var app = this;
 
         this.forms = {
             jobData:null,
@@ -72,7 +76,7 @@ class MPASIS_App
 
                 if (response.type == "Error")
                 {
-                    new MsgBox(applicantDataForm.container, "Error: " + response.content, "CLOSE");
+                    new MsgBox(app.main, "Error: " + response.content, "CLOSE");
                 }
                 else if (response.type == "Data")
                 {
@@ -174,6 +178,19 @@ class MPASIS_App
                 break;
             case "job":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
+                el = htmlToElement("<ul></ul>");
+                this.mainSections["main-" + viewId].appendChild(el);
+                [
+                    {viewId:"job-data-entry", label:"Data Entry"},
+                    // {viewId:"scoresheet", label:"Score Sheet"}
+                ].forEach(obj=>{
+                    var item = createElementEx(NO_NS, "li", el);
+                    var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
+                    addText(obj.label, itemLink);
+                    itemLink.addEventListener("click", event=>{
+                        this.activateView(obj.viewId);
+                    });
+                });
                 break;
             case "job-data-entry":
                 this.constructJobDataForm();
@@ -211,7 +228,29 @@ class MPASIS_App
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
                 break;
             case "my-account":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>My Account</h2>Change my username<br>Change my password<br>";
+                this.mainSections["main-" + viewId].innerHTML = "<h2>My Account</h2>";
+                el = htmlToElement("<ul></ul>");
+                this.mainSections["main-" + viewId].appendChild(el);
+                [
+                    {dialogId:"edit-user", label:"Edit my account details"},
+                    {dialogId:"change-password", label:"Change my password"}
+                ].forEach(obj=>{
+                    var item = createElementEx(NO_NS, "li", el);
+                    var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
+                    addText(obj.label, itemLink);
+                    itemLink.addEventListener("click", event=>{
+                        // this.activateView(obj.viewId);
+                        switch (obj.dialogId)
+                        {
+                            case "edit-user":
+                                new UserEditor(this.main, "my-user-editor", 1, this.currentUser);
+                                break;
+                            case "change-password":
+                                new PasswordEditor(this.main, "my-password-editor");
+                                break;
+                        }
+                    });
+                });
                 break;
             case "other-account":
                 var otherAccountFormEx = new FormEx(this.mainSections["main-" + viewId], "other-account-form-ex", false);
@@ -219,7 +258,7 @@ class MPASIS_App
                 otherAccountFormEx.setTitle("Other Account", 2);
 
                 var searchBox = otherAccountFormEx.addInputEx("", "text", "", "Wildcards:\n\n    % - zero, one, or more characters\n    _ - one character");
-                searchBox.setPlaceholderText("Enter the username to search");
+                searchBox.setPlaceholderText("Enter a name or username to search");
                 searchBox.setWidth("75%");
                 searchBox.fieldWrapper.classList.add("center");
                 searchBox.setFullWidth();
@@ -234,7 +273,7 @@ class MPASIS_App
                 btnGrp.inputExs[0].setLabelText("Search Accounts");
                 btnGrp.inputExs[0].setTooltipText("");
                 btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                    postData(this.processURL, "app=mpasis&a=fetch&f=tempuser&k=" + searchBox.getValue() + "%", (event)=>{
+                    postData(this.processURL, "app=mpasis&a=fetch&f=users&k=" + searchBox.getValue() + "%", (event)=>{
                         var response;
 
                         if (event.target.readyState == 4 && event.target.status == 200)
@@ -245,15 +284,81 @@ class MPASIS_App
                             {
                                 otherAccountFormEx.raiseError(response.content);
                             }
+                            if (response.type == "Debug")
+                            {
+                                otherAccountFormEx.showInfo(response.content);
+                                new MsgBox(app.main, response.content);
+                                console.log("response.content: ", response.content);
+                            }
                             else if (response.type == "Data")
                             {
-                                var viewer = otherAccountFormEx.boxes["list-users"];
+                                // var viewer = otherAccountFormEx.boxes["list-users"];
+                                var viewer = otherAccountFormEx.displayExs["list-users"];
                                 var data = JSON.parse(response.content);
 
-                                viewer.innerHTML = "";
+                                // viewer.innerHTML = "";
 
-                                for (const row of data) {
-                                    viewer.innerHTML += row["username"] + "<br>";
+                                viewer.removeAllRows();
+
+                                for (const row of data.filter(row=>row["username"] != this.currentUser["username"])) {
+                                    // viewer.innerHTML += row["username"] + "<br>";
+                                    viewer.addRow({
+                                        "person_name":MPASIS_App.getFullName(row["given_name"], row["middle_name"], row["family_name"], row["spouse_name"], row["ext_name"], true, true),
+                                        "username":row["username"],
+                                        "control":""
+                                    });
+                                    var controlButtons = new InputEx(null, "", "buttonExs");
+                                    controlButtons.container.classList.add("account-controls");
+                                    controlButtons.addItem("<span class=\"material-icons-round blue\">edit</span>", "", "Edit Account");
+                                    controlButtons.addItem("<span class=\"material-icons-round red\">close</span>", "", "Delete Account");
+                                    controlButtons.inputExs.forEach((btn, index)=>{
+                                        switch (index)
+                                        {
+                                            case 0:
+                                                btn.addEvent("click", clickEditAccountEvent=>{
+                                                    this.temp["searchButton"] = btnGrp.inputExs[0];
+                                                    var editUserDialog = new UserEditor(this.main, "mpasis-other-account-user-editor", 1, row);
+                                                });
+                                                break;
+                                            case 1:
+                                                btn.addEvent("click", clickEditAccountEvent=>{
+                                                    this.temp["searchButton"] = btnGrp.inputExs[0];
+                                                    var deleteUserDialog = new MsgBox(this.main, "Do you really want to delete the user: " + row["username"] + "?", "YESNO", ()=>{
+                                                        deleteUserDialog.btnGrp.inputExs[0].fields[0].removeEventListener("click", deleteUserDialog.defaultBtnFunc);
+
+                                                        postData(this.processURL, "a=delete&username=" + row["username"] + "&temp_user=" + row["temp_user"], async deleteUserEvent=>{
+                                                            var response;
+
+                                                            if (deleteUserEvent.target.readyState == 4 && deleteUserEvent.target.status == 200)
+                                                            {
+                                                                response = JSON.parse(deleteUserEvent.target.responseText);
+
+                                                                if (response.type == "Error")
+                                                                {
+                                                                    new MsgBox(app.main, "ERROR: " + response.content);
+                                                                }
+                                                                else if (response.type == "Success")
+                                                                {
+                                                                    new MsgBox(app.main, response.content);
+                                                                    await sleep(3000);
+                                                                    app.temp["searchButton"].fields[0].click();
+                                                                }
+                                                                else if (response.type == "Debug")
+                                                                {
+                                                                    new MsgBox(app.main, response.content);
+                                                                    console.log("response.content: ", response.content);
+                                                                }
+                                                            }
+                                                        });
+
+                                                        this.temp["searchButton"].fields[0].click();
+                                                    });
+                                                });
+                                                break;
+                                        }
+                                    });
+                                    // console.log(controlButtons);
+                                    viewer.rows[viewer.rows.length - 1]["td"]["control"].appendChild(controlButtons.container);
                                 }
                             }
                         }
@@ -262,105 +367,114 @@ class MPASIS_App
                 btnGrp.inputExs[1].setLabelText("Add New Account");
                 btnGrp.inputExs[1].setTooltipText("");
                 btnGrp.inputExs[1].addEvent("click", (event)=>{
-                    var addUserDialog = new DialogEx(otherAccountFormEx.container, "add-user");
-                    var form = addUserDialog.addFormEx();
-                    form.addInputEx("Given Name", "text", "", "Enter the applicant's given name.", "given_name", "Person");
-                    form.addLineBreak();
-                    form.addInputEx("Middle Name", "text", "", "Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none.", "middle_name", "Person");
-                    form.addLineBreak();
-                    form.addInputEx("Family Name", "text", "", "Enter the applicant's family name. For married women, please enter the maiden last name.", "family_name", "Person");
-                    form.addLineBreak();
-                    form.addInputEx("Spouse Name", "text", "", "For married women, please enter the spouse's last name. Leave blank for none.", "spouse_name", "Person");
-                    form.addLineBreak();
-                    form.addInputEx("Ext. Name", "text", "", "Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none.", "ext_name", "Person");
-                    form.addLineBreak();
-                    form.addLineBreak();
-                    form.addInputEx("Username", "text", "", "Please enter a username. Make sure to use only letters, digits, periods, and underscores.", "username", "Temp_User");
-                    form.addLineBreak();
-                    form.addInputEx("Password", "password", "1234", "Please enter a temporary password. Default: 1234", "password", "Temp_User");
-                    form.addLineBreak();
-                    var input = form.addInputEx("Access Level", "number", "1", "Please enter this user's MPASIS access level. Default: 1", "mpasis_access_level", "Temp_User");
-                    input.setMin(0);
-                    input.setMax(4);
-                    form.addLineBreak();
+                    var addUserDialog = new UserEditor(this.main, "mpasis-other-account-user-editor", 0);
+                    // var addUserDialog = new DialogEx(otherAccountFormEx.container, "add-user");
+                    // var form = addUserDialog.addFormEx();
+                    // form.addInputEx("Given Name", "text", "", "Enter the applicant's given name.", "given_name", "Person");
                     // form.addLineBreak();
-                    var btnGrp = form.addFormButtonGrp(2);
-                    btnGrp.setFullWidth();
-                    btnGrp.fieldWrapper.classList.add("center");
-                    form.addStatusPane();
-                    btnGrp.inputExs[0].setLabelText("Save");
-                    btnGrp.inputExs[0].setTooltipText("");
-                    btnGrp.inputExs[0].addEvent("click", (event)=>{
-                        var person = {};
-                        var tempUser = {};
-                        var error = "";
+                    // form.addInputEx("Middle Name", "text", "", "Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none.", "middle_name", "Person");
+                    // form.addLineBreak();
+                    // form.addInputEx("Family Name", "text", "", "Enter the applicant's family name. For married women, please enter the maiden last name.", "family_name", "Person");
+                    // form.addLineBreak();
+                    // form.addInputEx("Spouse Name", "text", "", "For married women, please enter the spouse's last name. Leave blank for none.", "spouse_name", "Person");
+                    // form.addLineBreak();
+                    // form.addInputEx("Ext. Name", "text", "", "Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none.", "ext_name", "Person");
+                    // form.addLineBreak();
+                    // form.addLineBreak();
+                    // form.addInputEx("Username", "text", "", "Please enter a username. Make sure to use only letters, digits, periods, and underscores.", "username", "Temp_User");
+                    // form.addLineBreak();
+                    // form.addInputEx("Password", "password", "1234", "Please enter a temporary password. Default: 1234", "password", "Temp_User");
+                    // form.addLineBreak();
+                    // var input = form.addInputEx("Access Level", "number", "1", "Please enter this user's MPASIS access level. Default: 1", "mpasis_access_level", "Temp_User");
+                    // input.setMin(0);
+                    // input.setMax(4);
+                    // form.addLineBreak();
+                    // // form.addLineBreak();
+                    // var btnGrp = form.addFormButtonGrp(2);
+                    // btnGrp.setFullWidth();
+                    // btnGrp.fieldWrapper.classList.add("center");
+                    // form.addStatusPane();
+                    // btnGrp.inputExs[0].setLabelText("Save");
+                    // btnGrp.inputExs[0].setTooltipText("");
+                    // btnGrp.inputExs[0].addEvent("click", (event)=>{
+                    //     var person = {};
+                    //     var tempUser = {};
+                    //     var error = "";
 
-                        for (const dbColName in form.dbInputEx) {
-                            var value = form.dbInputEx[dbColName].getValue();
-                            if ((typeof(value) == "string" && value != "") || typeof(value) == "number")
-                            {
-                                if (form.dbTableName[dbColName] == "Person")
-                                {
-                                    person[dbColName] = value;
-                                }
-                                else
-                                {
-                                    tempUser[dbColName] = value;
-                                }
-                            }
-                            else if (dbColName == "given_name")
-                            {
-                                error += "Given Name should not be blank.<br>";
-                            }
-                            else if (dbColName == "username")
-                            {
-                                error += "Username should not be blank.<br>";
-                            }
-                            else if (dbColName == "username")
-                            {
-                                error += "Password should not be blank.<br>";
-                            }
-                        }
+                    //     for (const dbColName in form.dbInputEx) {
+                    //         var value = form.dbInputEx[dbColName].getValue();
+                    //         if ((typeof(value) == "string" && value != "") || typeof(value) == "number")
+                    //         {
+                    //             if (form.dbTableName[dbColName] == "Person")
+                    //             {
+                    //                 person[dbColName] = value;
+                    //             }
+                    //             else
+                    //             {
+                    //                 tempUser[dbColName] = value;
+                    //             }
+                    //         }
+                    //         else if (dbColName == "given_name")
+                    //         {
+                    //             error += "Given Name should not be blank.<br>";
+                    //         }
+                    //         else if (dbColName == "username")
+                    //         {
+                    //             error += "Username should not be blank.<br>";
+                    //         }
+                    //         else if (dbColName == "username")
+                    //         {
+                    //             error += "Password should not be blank.<br>";
+                    //         }
+                    //     }
 
-                        if (error != "")
-                        {
-                            form.raiseError(error);
-                        }
-                        else
-                        {
-                            postData(this.processURL, "app=mpasis&a=addTempUser&person=" + packageData(person) + "&tempUser=" + packageData(tempUser), (event)=>{
-                                var response;
+                    //     if (error != "")
+                    //     {
+                    //         form.raiseError(error);
+                    //     }
+                    //     else
+                    //     {
+                    //         postData(this.processURL, "app=mpasis&a=addTempUser&person=" + packageData(person) + "&tempUser=" + packageData(tempUser), (event)=>{
+                    //             var response;
 
-                                if (event.target.readyState == 4 && event.target.status == 200)
-                                {
-                                    response = JSON.parse(event.target.responseText);
+                    //             if (event.target.readyState == 4 && event.target.status == 200)
+                    //             {
+                    //                 response = JSON.parse(event.target.responseText);
 
-                                    if (response.type == "Error")
-                                    {
-                                        form.raiseError(response.content);
-                                    }
-                                    else if (response.type == "Success")
-                                    {
-                                        form.showSuccess(response.content);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    btnGrp.inputExs[1].setLabelText("Close");
-                    btnGrp.inputExs[1].setTooltipText("");
-                    btnGrp.inputExs[1].addEvent("click", (event)=>{
-                        addUserDialog.close();
-                    });
+                    //                 if (response.type == "Error")
+                    //                 {
+                    //                     form.raiseError(response.content);
+                    //                 }
+                    //                 else if (response.type == "Success")
+                    //                 {
+                    //                     form.showSuccess(response.content);
+                    //                 }
+                    //             }
+                    //         });
+                    //     }
+                    // });
+                    // btnGrp.inputExs[1].setLabelText("Close");
+                    // btnGrp.inputExs[1].setTooltipText("");
+                    // btnGrp.inputExs[1].addEvent("click", (event)=>{
+                    //     addUserDialog.close();
+                    // });
                 });
 
                 otherAccountFormEx.addStatusPane();
                 otherAccountFormEx.setStatusMsgTimeout(10);
                 
-                var div = otherAccountFormEx.addBox("list-users");
-
-                div.classList.add("query-results-users");
-
+                // var div = otherAccountFormEx.addBox("list-users");
+                
+                // div.classList.add("query-results-users");
+                
+                otherAccountFormEx.addDisplayEx("div-table", "list-users");
+                otherAccountFormEx.displayExs["list-users"].container.classList.add("query-results-users");
+                otherAccountFormEx.displayExs["list-users"].setHeaders([
+                    {colHeaderName:"person_name", colHeaderText:"Name"},
+                    {colHeaderName:"username", colHeaderText:"Username"},
+                    {colHeaderName:"control", colHeaderText:"Controls"}
+                ]);
+        
                 break;
             case "settings":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Settings</h2>";
@@ -3682,7 +3796,7 @@ class MPASIS_App
 
     static isEmptySpaceString(value) // checks if value is a string of space characters
     {
-        return type(value) == "string" && value != "" && value.trim() == "";
+        return type(value) == "string" && (value == "" || value.trim() == "");
     }
 
     static isEmpty(value)
@@ -3694,7 +3808,7 @@ class MPASIS_App
     {
         var nameArr = null;
 
-        if (!this.isDefined(givenName) || this.isEmptySpaceString(givenName))
+        if (!MPASIS_App.isDefined(givenName) || MPASIS_App.isEmptySpaceString(givenName))
         {
             throw("Invalid argument: givenName:" + givenName);
         }
@@ -3705,9 +3819,9 @@ class MPASIS_App
         {
             for (var i = nameArr.length - 2; i > 0; i--)
             {
-                var lastName = nameArr.splice(i, 1);
+                var lastName = nameArr.splice(i, 1)[0];
 
-                if (this.isDefined(lastName) && !this.isEmptySpaceString(lastName))
+                if (MPASIS_App.isDefined(lastName) && !MPASIS_App.isEmptySpaceString(lastName))
                 {
                     nameArr.unshift(lastName + ", ");
                     break;
@@ -3729,7 +3843,7 @@ class MPASIS_App
 
     static getNameInitials(nameStr)
     {
-        return (!this.isDefined(nameStr) && this.isEmptySpaceString(nameStr) ? "" : nameStr.split(" ").map(name=>name[0] + ".").join(" "));
+        return (!this.isDefined(nameStr) || this.isEmptySpaceString(nameStr) ? "" : nameStr.split(" ").map(name=>name[0] + ".").join(" "));
     }
 
     static convertDegreeObjToStr(degree)

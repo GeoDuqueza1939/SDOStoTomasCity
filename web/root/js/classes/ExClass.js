@@ -2780,18 +2780,25 @@ class MsgBox extends DialogEx
     constructor(parent = null, message, type = "OK", ...func)
     {
         super(parent, "msgbox" + (new Date()).valueOf());
+        this.scrim.classList.add("msgbox");
         this.message = message;
         this.addFormEx();
         this.messageContainer = this.formEx.addBox("message-container");
         this.messageContainer.innerHTML = message;
         
         this.btnGrp = new InputEx(this.dialogBox, "msgbox-btns" + (new Date()).valueOf(), "buttonExs");
+        this.btnGrp.container.classList.add("msgbox-btns");
         this.btnGrp.setFullWidth();
         this.btnGrp.fieldWrapper.classList.add("center");
 
         this.returnValue = -1;
         this.default = null;
         this.cancel = null;
+
+        this.defaultBtnFunc = clickEvent=>{
+            this.returnValue = i;
+            this.close();
+        };
 
         switch (type)
         {
@@ -2814,10 +2821,7 @@ class MsgBox extends DialogEx
 
         for (var i = 0; i < this.btnGrp.fields.length; i++)
         {
-            this.btnGrp.fields[i].addEventListener("click", (clickEvent)=>{
-                this.returnValue = i;
-                this.close();
-            });
+            this.btnGrp.fields[i].addEventListener("click", this.defaultBtnFunc);
 
             if (i < func.length && func[i] != null)
             {
@@ -2835,6 +2839,292 @@ class MsgBox extends DialogEx
             // }
         }
         this.btnGrp.fields[this.btnGrp.fields.length - 1].focus();
+    }
+}
+
+class UserEditor extends DialogEx
+{
+    constructor(parent = null, id = "", mode = 0, userData = null)
+    {
+        super(parent, id);
+
+        this.scrim.classList.add("user-editor");
+        this.mode = mode; // 0: add user; 1: edit user
+
+        this.data = {
+            username:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["username"] : null),
+            employeeId:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["employeeId"] : null),
+            personId:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["personId"] : null)
+        }
+        
+        this.addFormEx();
+        this.formEx.setTitle((mode ? "Edit" : "Add") + " User", 3);
+
+        [
+            {label:"Employee ID", type:"input", colName:"employeeId", table:"User", tooltip:""},
+            {label:"Temporary account only", type:"checkbox", colName:"temp_user", table:"", tooltip:"Temporary accounts are accounts that are not bound to employee information"},
+            {label:"Given Name", type:"input", colName:"given_name", table:"Person", tooltip:"Enter the applicant's given name. This is required."},
+            {label:"Middle Name", type:"input", colName:"middle_name", table:"Person", tooltip:"Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none."},
+            {label:"Family Name", type:"input", colName:"family_name", table:"Person", tooltip:"Enter the applicant's family name. For married women, please enter the maiden last name."},
+            {label:"Spouse Name", type:"input", colName:"spouse_name", table:"Person", tooltip:"For married women, please enter the spouse's last name. Leave blank for none."},
+            {label:"Ext. Name", type:"input", colName:"ext_name", table:"Person", tooltip:"Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none."},
+            {label:"Username", type:"input", colName:"username", table:"All_User", tooltip:""}
+        ].forEach(field=>{
+            this.formEx.addInputEx(field.label, field.type, (mode == 1 && field.colName != "temp_user" && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? "" : ""), field.tooltip, field.colName, field.table);
+            this.formEx.dbInputEx[field.colName].container.classList.add(field.colName);
+            if (field.colName.includes("_name"))
+            {
+                // this.formEx.dbInputEx[field.colName].setWidth("11em");
+            }
+            if (field.colName == "employeeId")
+            {
+                // this.formEx.dbInputEx[field.colName].setWidth("9em");
+                this.formEx.dbInputEx[field.colName].showColon();
+            }
+            if (field.type == "checkbox")
+            {
+                this.formEx.dbInputEx[field.colName].reverse();
+            }
+            else if (field.colName == "username")
+            {
+                this.formEx.dbInputEx[field.colName].showColon();
+            }
+            if (this.mode != 0 && field.colName == "temp_user")
+            {
+                this.formEx.dbInputEx[field.colName].check(userData[field.colName]);
+            }
+            this.formEx.addSpacer();
+        });
+
+        this.formEx.addDisplayEx("div", "user-editor-access-levels", "", "Access Levels");
+        this.formEx.displayExs["user-editor-access-levels"].showColon();
+        this.formEx.displayExs["user-editor-access-levels"].container.classList.add("user-editor-access-levels");
+
+        [
+            {label:"SeRGS", type:"number", colName:"sergs_access_level", table:"All_User", tooltip:"Access level for the Service Record Generation System"},
+            {label:"OPMS", type:"number", colName:"opms_access_level", table:"All_User", tooltip:"Access level for the Online Performance Management System"},
+            {label:"MPaSIS", type:"number", colName:"mpasis_access_level", table:"All_User", tooltip:"Access level for the Merit Promotion and Selection Information System"}
+        ].forEach(field=>{
+            this.formEx.addInputEx(field.label, field.type, (mode == 1 && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? 0 : 0), field.tooltip, field.colName, field.table);
+            this.formEx.displayExs["user-editor-access-levels"].addContent(this.formEx.dbInputEx[field.colName].container);
+            this.formEx.dbInputEx[field.colName].setMin(0);
+            this.formEx.dbInputEx[field.colName].setMax(field.label == "MPaSIS" ? 4 : 10);
+            this.formEx.dbInputEx[field.colName].fields[0].classList.add("right");
+            this.formEx.addSpacer();
+        });
+
+        this.formEx.dbInputEx["temp_user"].addEvent("change", event=>{
+            this.formEx.dbInputEx["employeeId"].enable(null, !this.formEx.dbInputEx["temp_user"].isChecked());
+        });
+
+        var dialog = this;
+        var form = this.formEx;
+        var btnGrp = form.addFormButtonGrp(2);
+        // btnGrp.setFullWidth();
+        btnGrp.container.classList.add("user-editor-buttons");
+        form.addStatusPane();
+        btnGrp.inputExs[0].setLabelText("Save");
+        btnGrp.inputExs[0].setTooltipText("");
+        btnGrp.inputExs[0].addEvent("click", (event)=>{
+            var person = {};
+            var user = {};
+            var error = "";
+
+            for (const dbColName in form.dbInputEx) {
+                var value = form.dbInputEx[dbColName].getValue();
+                if (dbColName == "temp_user")
+                {
+                    user[dbColName] = form.dbInputEx[dbColName].isChecked();
+                }
+                else if ((MPASIS_App.isDefined(value) && !MPASIS_App.isEmptySpaceString(value)) || typeof(value) == "number")
+                {
+                    if (form.dbTableName[dbColName] == "Person")
+                    {
+                        person[dbColName] = value;
+                    }
+                    else
+                    {
+                        user[dbColName] = value;
+                    }
+                }
+                else if (dbColName == "employeeId" && !form.dbInputEx["temp_user"].isChecked())
+                {
+                    error += "Employee ID should not be blank for non-temporary user accounts.<br>";
+                }
+                else if (dbColName == "given_name" && form.dbInputEx["temp_user"].isChecked())
+                {
+                    error += "Given Name should not be blank.<br>";
+                }
+                else if (dbColName == "username")
+                {
+                    error += "Username should not be blank.<br>";
+                }
+            }
+
+            user["personId"] = dialog.data["personId"];
+
+            if (error != "")
+            {
+                form.raiseError(error);
+            }
+            else
+            {
+                // // DEBUG
+                // console.log(form.dbInputEx, person, user, ScoreSheet.processURL);
+
+                // return;
+                // // DEBUG
+
+                postData(ScoreSheet.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                    var response;
+
+                    if (event.target.readyState == 4 && event.target.status == 200)
+                    {
+                        response = JSON.parse(event.target.responseText);
+
+                        if (response.type == "Error")
+                        {
+                            form.raiseError(response.content);
+                        }
+                        else if (response.type == "Success")
+                        {
+                            form.showSuccess(response.content);
+                            app.temp["searchButton"].fields[0].click();
+                            await sleep(3000);
+                            dialog.close();
+                        }
+                        else if (response.type == "Debug")
+                        {
+                            new MsgBox(form.container.parentElement, response.content, "OK");
+                            console.log(response.content);
+                        }
+                        else
+                        {
+                            console.log(response.content, event.target);
+                        }
+                    }
+                });
+            }
+        });
+        btnGrp.inputExs[1].setLabelText("Close");
+        btnGrp.inputExs[1].setTooltipText("");
+        btnGrp.inputExs[1].addEvent("click", event=>{
+            this.close();
+        });
+
+        form.container.parentElement.appendChild(btnGrp.container);
+        // form.container.parentElement.appendChild(form.statusPane);
+        // TEMP
+        this.formEx.dbInputEx["employeeId"].disable();
+        this.formEx.dbInputEx["temp_user"].disable();
+        if (this.mode == 1)
+            return;
+        this.formEx.dbInputEx["temp_user"].check();
+        // TEMP
+    }
+}
+
+class PasswordEditor extends DialogEx
+{
+    constructor(parent = null, id = "", requireCurrentPassword = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
+    {
+        super(parent, id);
+        this.scrim.classList.add("password-editor");
+
+        this.addFormEx();
+        this.formEx.setTitle("Change Password", 3);
+
+        [
+            {label:"Current Password", type:"password", colName:"password", table:"All_User", tooltip:"Type your old password"},
+            {label:"New Password", type:"password", colName:"new_password", table:"All_User", tooltip:"Type new password"},
+            {label:"Retype New Password", type:"password", colName:"retype_new_password", table:"All_User", tooltip:"Retype new password"}
+        ].forEach((field, index)=>{
+            if (requireCurrentPassword || field.colName != "password")
+            {
+                this.formEx.addInputEx(field.label, field.type, "", field.tooltip, field.colName, field.table);
+            }
+
+            var passwordRetypeFunc = passwordRetypeEvent=>{
+                var passMatch = MPASIS_App.isEmpty(this.formEx.dbInputEx["retype_new_password"].getValue()) || this.formEx.dbInputEx["new_password"].getValue() == this.formEx.dbInputEx["retype_new_password"].getValue();
+                var allFilled = !MPASIS_App.isEmpty(this.formEx.dbInputEx["new_password"].getValue()) && !MPASIS_App.isEmpty(this.formEx.dbInputEx["retype_new_password"].getValue()) && (!requireCurrentPassword || !MPASIS_App.isEmpty(this.formEx.dbInputEx["password"].getValue()));
+
+                btnGrp.inputExs[0].enable(null, passMatch && allFilled);
+                
+                if (passMatch)
+                {
+                    this.formEx.resetStatus();
+                }
+                else
+                {
+                    this.formEx.raiseError("New passwords do not match");
+                }
+            };
+
+            if (field.colName in this.formEx.dbInputEx)
+            {
+                this.formEx.dbInputEx[field.colName].addEvent("change", passwordRetypeFunc);
+                this.formEx.dbInputEx[field.colName].addEvent("keydown", passwordRetypeFunc);
+                this.formEx.dbInputEx[field.colName].addEvent("keypress", passwordRetypeFunc);
+                this.formEx.dbInputEx[field.colName].addEvent("keyup", passwordRetypeFunc);
+            }
+
+        });
+
+        this.formEx.addStatusPane();
+        this.formEx.setStatusMsgTimeout(-1);
+        // this.dialogBox.appendChild(this.formEx.statusPane);
+
+        var btnGrp = this.formEx.addFormButtonGrp(2);
+        btnGrp.container.classList.add("password-editor-buttons");
+        this.dialogBox.appendChild(btnGrp.container);
+
+        btnGrp.inputExs[0].setLabelText("Save");
+        btnGrp.inputExs[0].setTooltipText("Save new password");
+        btnGrp.inputExs[0].disable()
+        btnGrp.inputExs[0].addEvent("click", changePasswordEvent=>{
+            var passwordDetails = {
+                requireCurrentPassword:requireCurrentPassword,
+                password:(requireCurrentPassword ? this.formEx.dbInputEx["password"].getValue() : null),
+                new_password:this.formEx.dbInputEx["new_password"].getValue(),
+                user:app.currentUser
+            }
+
+            // // DEBUG
+            // console.log(passwordDetails);
+
+            // return;
+            // // DEBUG
+
+            postData(ScoreSheet.processURL, "a=update&passd=" + packageData(passwordDetails), updatePasswordEvent=>{
+                var response;
+
+                if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)
+                {
+                    response = JSON.parse(updatePasswordEvent.target.responseText);
+
+                    if (response.type == "Error")
+                    {
+                        new MsgBox(app.main, response.content, "Close");
+                    }
+                    else if (response.type == "Debug")
+                    {
+                        new MsgBox(app.main, response.content, "Close");
+                        console.log(response.content);
+                    }
+                    else if (response.type == "Success")
+                    {
+                        new MsgBox(app.main, response.content, "OK");
+                    }
+                }
+            });
+
+        });
+
+        btnGrp.inputExs[1].setLabelText("Cancel");
+        btnGrp.inputExs[1].setTooltipText("");
+        btnGrp.inputExs[1].addEvent("click", changePasswordEvent=>{
+            this.close();
+        });
     }
 }
 

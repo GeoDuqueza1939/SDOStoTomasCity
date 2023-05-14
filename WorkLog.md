@@ -1,6 +1,34 @@
 # Work Log
 
-## 5/7/2023
+## 5/12/2023
+TO DO:
+* [x] Repair web server configuration
+* [x] Add an option to modify one's own account details and password
+* [ ] Implement app behavior wherein a user will be asked to define a new password after first login
+* [ ] Create a printout template for the IER
+* [ ] Add a FormEx-derived IES class
+
+I was supposed to push through with some system tests today, however, the web server in Ms. Jen's PC experienced issues when the main router had to be restarted and IP addresses had been reassigned. Fortunately, only the Apache of XAMPP experienced issues and not MySQL and FileZilla. Once I was able to get the new IP address of the web server, I scrummaged through several XAMPP folders and eventually found a httpd configuration file. I then commented out the line which causes it to stick to listening to the former IP address assigned and was finally able to launch Apache afterwards. I then continued working on the password editing feature, which I finished by end-of-workday. I will have to work on the feature forcing the user to change passwords on first sign-in over this coming weekend so I can finally work on the IES, as well.
+
+## 5/11/2023
+TO DO:
+* [x] Add a better User editing form, with option to add either a permanent or a temporary user account
+* [ ] Implement app behavior wherein a user will be asked to define a new password after first login
+* [ ] Create a printout template for the IER
+* [ ] Add a FormEx-derived IES class
+
+Creating the front-end and back-end logic and the styling for the User editor form wasn't that easy as expected. I had issues with the former code which was haphazardly constructed. However, in the afterhours, I was finally able to make the data interchange work for both adding and updating. I will have to add the function for deleting and for resetting passwords tomorrow.
+
+## 5/10/2023
+TO DO:
+* [ ] Implement app behavior wherein a user will be asked to define a new password after first login
+* [x] Restructure database to prepare for adding user management features
+* [ ] Add a better User editing form, with option to add either a permanent or a temporary user account
+* [ ] Create a printout template for the IER
+
+I started to restructure my local database along with the hosted database to accomodate more user management features. However, when I went on creating a new user editing form class, I had some difficulties in figuring out how to implement the logic and the styling. So, I first tried to set up the name and username fields along with the system access levels. I had issues in placing the elements, especially when using grid display style. I might use the Mozilla Firefox browser tomorrow to better implement the styling, as that browser is more standards compliant than Microsoft Edge or Google Chrome.
+
+## 5/9/2023
 TO DO:
 * [x] Add code in the IER to check whether an applicant is qualified or not
 * [x] Fix the styling of IER form elements
@@ -9,11 +37,11 @@ TO DO:
 * [ ] Create a printout template for the IER
 * [x] Reimplement similar changes to position fields in the applicant data entry form
 
-I first worked out the IER code for determining whether an applicant is qualified or not. However, I had to revisit and revise some similar code in the applicant data form to make things simpler and more consistent. I transferred some of them into static methods to optimize code use. After I got the qualification validation working, I then proceeded to restyle the IER elements by removing some of the styling methods and adding more styles in the CSS files. I also inserted code to prevent the clicking of the `Select` button while no position title is selected. An hour before end-of-shift, I began to revisit the position fields in the applicant data entry form to make their behavior consistent with the positions field in the IER's select position dialog.
+I first worked out the IER code for determining whether an applicant is qualified or not. However, I had to revisit and revise some similar code in the applicant data form to make things simpler and more consistent. I transferred some of them into static methods to optimize code use. After I got the qualification validation working, I then proceeded to restyle the IER elements by removing some of the styling methods and adding more styles in the CSS files. I also inserted code to prevent the clicking of the `Select` button while no position title is selected. An hour before end-of-workday, I began to revisit the position fields in the applicant data entry form to make their behavior consistent with the positions field in the IER's select position dialog.
 
 So far, the app hasn't been used or even tested due to time constraint. <u class="to-do">I should make use of this time to fix the user management features of MPaSIS to facilitate its use by others.</u>
 
-## 5/6/2023
+## 5/8/2023
 TO DO:
 * [x] Create code that will load job applications into the IER Form.
 * [ ] Add code to enable/disable [Select] button in `Select Application` dialog
@@ -32,7 +60,7 @@ TO DO:
 * [ ] Create a printout template for the IER
 * [ ] Reimplement similar changes to position fields in the applicant data entry form
 
-Today's work was quite straigthforward. I began my work in the parenthetical position field of the IER form. First, I made the plantilla item number field reset and update the value of the parenthetical position field upon selecting a plantilla item number. Next, I remove the extra blank parenthetical position options that were created while the parenthetical position in the database is either blank or null. All this while, I have also worked to transfer these position fields to a dialog box that will load the selected position. Afterwards, I implemented code that extracts the salary table from the database beforehand so it can be loaded once a position is selected and loaded in the IER. <u class="to-do">I will have to generalize this code, too, or at least put it into the MPaSIS app class constructor so this will be readily available after the MPaSIS app page is loaded.</u> I, then, added code that filters the loaded job position data and loads the qualifications into the display fields. Loading the education, training, and experience QS's were a breeze, but loading the eligibility data was a bit tricky. It was probably due to my mindset that was anticipating that <u class="to-do">the system might need to implement both an optional set of eligibilities (`OR`) and mandatory sets of eligibilities (`AND`)</u>. I was able to pull it through, though. Near the end of my shift, I started to lay the groundwork for fetching job applications based on selected position data. To do this, I first transferred most of the code in fetching job applications using applicant codes or names into a PHP function and generalized it to accept other `WHERE` criteria and `LIMIT` values. <u class="to-do">I might expand this function later on to allow for more arguments.</u> Just before I tapped out for the day, I was already pulling these job application data from the database. <u class="to-do">All that's left to do is restructure the data for displaying in the IER table.</u>
+Today's work was quite straigthforward. I began my work in the parenthetical position field of the IER form. First, I made the plantilla item number field reset and update the value of the parenthetical position field upon selecting a plantilla item number. Next, I remove the extra blank parenthetical position options that were created while the parenthetical position in the database is either blank or null. All this while, I have also worked to transfer these position fields to a dialog box that will load the selected position. Afterwards, I implemented code that extracts the salary table from the database beforehand so it can be loaded once a position is selected and loaded in the IER. <u class="to-do">I will have to generalize this code, too, or at least put it into the MPaSIS app class constructor so this will be readily available after the MPaSIS app page is loaded.</u> I, then, added code that filters the loaded job position data and loads the qualifications into the display fields. Loading the education, training, and experience QS's were a breeze, but loading the eligibility data was a bit tricky. It was probably due to my mindset that was anticipating that <u class="to-do">the system might need to implement both an optional set of eligibilities (`OR`) and mandatory sets of eligibilities (`AND`)</u>. I was able to pull it through, though. Near the end of my workday, I started to lay the groundwork for fetching job applications based on selected position data. To do this, I first transferred most of the code in fetching job applications using applicant codes or names into a PHP function and generalized it to accept other `WHERE` criteria and `LIMIT` values. <u class="to-do">I might expand this function later on to allow for more arguments.</u> Just before I tapped out for the day, I was already pulling these job application data from the database. <u class="to-do">All that's left to do is restructure the data for displaying in the IER table.</u>
 
 ## 5/4/2023
 I started the day by working on and fixing the styling of some message boxes for loading job applications, which sometimes fails to render properly on some views and also overflows outside the screen. I then continued to implement the IER form. As I added position fields on IER, I encountered and fixed a minor bug that was left unfixed in the Applicant Data Entry form which manifests itself whenever position titles and parenthetical titles are selected but no plantilla item numbers are listed. I also modified the FormEx class with a new method that I formerly included with its ScoreSheet subclass so the method can be used with the IER form, as well. Tonight or tomorrow, whichever time is convenient, <u class="to-do">I shall also implement code that will force updates in the parenthetical position field once the plantilla item number is selected.</u> <u class="to-do">Likewise, I will try to finish the IER tomorrow.</u>

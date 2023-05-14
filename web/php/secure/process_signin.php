@@ -3,7 +3,8 @@
 
 $_SESSION['user'] = $userInfo;//$_POST['unm'];
 // setcookie('user', $_POST['unm'], time() + 500, '/'); // EXPIRE IN 500 SECONDS
-setcookie('user', $_POST['unm'], time() + 60 * 60 * 24, '/');
+// setcookie('user', $_POST['unm'], time() + 60 * 60 * 24, '/');
+setcookie('user', json_encode($_SESSION['user']), time() + 60 * 60 * 24, '/');
 // setcookie('user', $_POST['unm']);
 
 // clear post, get, and request superglobal

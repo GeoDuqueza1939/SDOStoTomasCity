@@ -388,7 +388,7 @@
     border: 2px outset;
     background-color: lightgray;
     max-height: 95%;
-    max-width: 80%;
+    max-width: 85%;
     padding: 2em;
     /* line-height: 2; */
     border-radius: 1em;
@@ -408,4 +408,8 @@
     margin: 0;
     padding: 0;
     font-size: 1em;
+}
+
+.msgbox-btns {
+    margin-top: 1em;
 }

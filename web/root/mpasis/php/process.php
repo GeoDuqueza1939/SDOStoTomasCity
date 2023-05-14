@@ -41,14 +41,13 @@ require_once('../../path.php');
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
 require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 require_once(__FILE_ROOT__ . '/php/audit/log.php');
+require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 function sendDebug($data)
 {
     echo(json_encode(new ajaxResponse('Debug', json_encode($data))));
     exit;
 }
-
-// exit(sendDebug($_REQUEST["plantilla"]));
 
 function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
@@ -248,6 +247,241 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
     return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
 }
 
+function recordExists(DatabaseConnection $dbconn, $tableName, $colName, $value)
+{
+    $dbResults = $dbconn->select($tableName, $colName, "WHERE $colName='$value'");
+
+    if (is_null($dbconn->lastException))
+    {
+        return (count($dbResults) > 0);
+    }
+    else
+    {
+        die(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+    }
+}
+
+function userExists(DatabaseConnection $dbconn, $username, $isTempUser = false)
+{
+    return recordExists($dbconn, ($isTempUser ? 'Temp_' : '') . 'User', 'username', $username);
+}
+
+function employeeExists(DatabaseConnection $dbconn, $employeeId)
+{
+    return recordExists($dbconn, 'Employee', 'employeeId', $employeeId);
+}
+
+function addUser(DatabaseConnection $dbconn, $user, $person, $calledByUpdateUser = false)
+{
+    $isTempUser = $user['temp_user'];
+    $username = $user['username'];
+
+    $fieldStr = '';
+    $valueStr = '';
+
+    if (!$calledByUpdateUser && userExists($dbconn, $username, $isTempUser)) // if not called by updateUser method and username already exists, raise an error
+    {
+        return json_encode(new ajaxResponse('Error', 'Username already exists'));
+    }
+    elseif ($isTempUser) // insert person details and return the personId for use later
+    {
+        if (isset($person['given_name']))
+        {
+            foreach ($person as $key => $value) {
+                $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
+                $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
+            }
+
+            $user['personId'] = $dbconn->insert('Person', "($fieldStr)", "($valueStr)");
+
+            if (!is_null($dbconn->lastException))
+            {
+                return json_encode(new ajaxResponse('Error', 'Exception encountered while inserting personal details'));
+            }
+        }
+        else
+        {
+            return json_encode(new ajaxResponse('Error', 'Given Name is required for temporary user accounts'));
+        }
+    }
+    elseif (!isset($user['employeeId']))
+    {
+        return json_encode(new ajaxResponse('Error', 'Employee ID is required for non-temporary user accounts'));
+    }
+    elseif (!employeeExists($dbconn, $user['employeeId'])) 
+    {
+        return json_encode(new ajaxResponse('Error', 'Employee ID doesn\'t exist'));
+    }
+    
+    if (!isset($user['password']))
+    {
+        $user['password'] = '1234'; // DEFAULT PASSWORD FOR NEW ACCOUNTS
+    }
+    $user['password'] = trim(hash('ripemd320', $user['password']));
+    $user['first_signin'] = true;
+
+    $fieldStr = '';
+    $valueStr = '';
+    
+    foreach ($user as $key => $value) {
+        if ((($isTempUser && $key != 'employeeId') || $key != 'personId') && $key != 'temp_user')
+        {
+            $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
+            $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
+        }
+    }
+
+    $dbconn->insert(($isTempUser ? 'Temp_' : '') . 'User', "($fieldStr)", "($valueStr)");
+
+    if (is_null($dbconn->lastException))
+    {
+        logAction('mpasis', ($isTempUser ? 16 : 10), array(
+            ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+            ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
+        ));
+        return json_encode(new ajaxResponse('Success', ($isTempUser ? 'Temporary u' : 'U') . 'ser successfully created'));
+    }
+    else
+    {
+        die(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting' . ($isTempUser ? ' temporary' : '') . ' user details<br><br>Last SQL query: ' . $dbconn->lastSQLStr . '<br><br>' . $dbconn->lastException->getMessage())));
+    }
+}
+
+function updateUser(DatabaseConnection $dbconn, $user, $person)
+{
+    $isTempUser = $user['temp_user'];
+    $username = $user['username'];
+    $fieldValueStr = '';
+    // sendDebug($username);
+
+    // sendDebug([$user, $person]);
+
+    if (userExists($dbconn, $username, $isTempUser))
+    {
+        if (isset($user['personId']))
+        {
+            foreach ($person as $key => $value)
+            {
+                $fieldValueStr .= (trim($fieldValueStr) == '' ? '': ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'");
+            }
+
+            $dbconn->update('Person', $fieldValueStr, 'WHERE personId=\'' . $user['personId'] . '\'');
+
+            if (!is_null($dbconn->lastException))
+            {
+                return json_encode(new ajaxResponse('Error', 'Exception encountered while updating personal details'));
+            }
+        }
+        else
+        {
+            return json_encode(new ajaxResponse('Error', 'Person ID is required for updating user accounts'));
+        }
+
+        $fieldValueStr = '';
+
+        foreach ($user as $key => $value) {
+            if ($key != 'temp_user' && $key != ($isTempUser ? 'employeeId' : 'personId'))
+            {
+                $fieldValueStr .= (trim($fieldValueStr) == '' ? '' : ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'") . '';
+            }
+        }
+
+        $dbconn->update(($isTempUser ? 'Temp_' : '') . 'User', $fieldValueStr, 'WHERE username=\'' . $user['username'] . '\'');
+
+        if (is_null($dbconn->lastException))
+        {
+            logAction('mpasis', ($isTempUser ? 18 : 12), array(
+                ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+                ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
+            ));
+            return json_encode(new ajaxResponse('Success', ($isTempUser ? 'Temporary u' : 'U') . 'ser successfully updated'));
+        }
+        else
+        {
+            return json_encode(new ajaxResponse('Error', 'Exception encountered while updating user details<br>' . $dbconn->lastSQLStr . '<br>' . $dbconn->lastException->getMessage()));
+        }
+    }
+    else
+    {
+        return addUser($dbconn, $user, $person, true);
+    }
+}
+
+function fetchUser($dbconn, $username = '', $criteriaStr = 'all')
+{
+    $criteria = '';
+
+    if (isset($username) && is_string($username) && trim($username) != "")
+    {
+        $criteria = " WHERE username='$username'";
+    }
+    elseif (isset($criteriaStr) && is_string($criteriaStr) && trim($criteriaStr) != "")
+    {
+        $criteria = $criteriaStr;
+    }
+
+    $dbResults = $dbconn->executeQuery(
+        getUserFetchQuery() . $criteria . ';'
+    );
+
+    if (is_null($dbconn->lastException))
+    {
+        logAction('mpasis', 11, array(
+            ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+            // ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
+            'username_op'=>$criteria
+        ));
+        return $dbResults;
+    }
+    else
+    {
+        die(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+    }
+}
+
+function changePassword($dbconn, $passwordDetails) // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+{
+    $requireCurrentPassword = $passwordDetails['requireCurrentPassword'];
+    $password = $passwordDetails['password'];
+    $newPassword = $passwordDetails['new_password'];
+    $user = $passwordDetails['user'];
+    $username = $user['username'];
+    
+    if (isset($newPassword) && is_string($newPassword))
+    {
+        $newPassword = hash('ripemd320', $newPassword);
+    }
+    else
+    {
+        return json_encode(new ajaxResponse('Error', 'The new password is invalid'));
+    }
+
+    if ($requireCurrentPassword) // this is more secure
+    {
+        if (isset($password) && is_string($password))
+        {
+            $password = hash('ripemd320', $password);
+        }
+        else
+        {
+            return json_encode(new ajaxResponse('Error', 'The entered current password is invalid'));
+        }
+
+        $dbconn->update(($user['temp_user'] == 0 ? '' : 'Temp_') . 'User', "password='$newPassword'", "WHERE username='$username' AND password='$password'");
+    }
+    elseif (isset($_SESSION['user'])) // require a user to be logged in when current password is not required
+    {
+        $dbconn->update(($user['temp_user'] == 0 ? '' : 'Temp_') . 'User', "password='$newPassword'", "WHERE username='$username'");
+    }
+    else
+    {
+        // FORBIDDEN
+        return json_encode(new ajaxResponse('Error', 'Password can only be changed when signed in'));
+    }
+
+    return json_encode(new ajaxResponse('Success', 'Password successfully updated!'));
+}
+
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
@@ -281,6 +515,30 @@ if (isset($_SESSION['user']))
             case 'fetch':
                 switch($_REQUEST['f'])
                 {
+                    case 'users':
+                        $criteriaStr = (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE All_User.username LIKE "%' . trim($_REQUEST['k']) . '%" OR given_name LIKE "%' . trim($_REQUEST['k']) . '%" OR middle_name LIKE "%' . trim($_REQUEST['k']) . '%" OR family_name LIKE "%' . trim($_REQUEST['k']) . '%" OR spouse_name LIKE "%' . trim($_REQUEST['k']) . '%" OR ext_name LIKE "%' . trim($_REQUEST['k']) . '%"');
+                        
+                        echo(json_encode(new ajaxResponse('Data', json_encode(fetchUser($dbconn, '', $criteriaStr)))));
+                        // echo(json_encode(new ajaxResponse('Data', fetchUser($dbconn, '', $criteriaStr))));
+                        // $dbResults = $dbconn->executeQuery(
+                        //     getUserFetchQuery() . $criteriaStr . ';'
+                        // );
+    
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     logAction('mpasis', 11, array(
+                        //         ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+                        //         // ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
+                        //         'username_op'=>$user['username']
+                        //     ));
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
+                        return;
+                        break;
                     case 'tempuser':
                         $dbResults = $dbconn->executeQuery(
                             'SELECT 
@@ -1199,6 +1457,11 @@ if (isset($_SESSION['user']))
                     echo(json_encode(new ajaxResponse('Success', 'Application has been successfully saved with <b>Application Code: ' . $applicationCode . '</b>.')));
                     return;
                 }
+                elseif (isset($_REQUEST['user']))
+                {
+                    echo(addUser($dbconn, json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
+                    return;
+                }
                 break;
             case 'update':
                 if (isset($_REQUEST['jobApplication']))
@@ -1218,7 +1481,7 @@ if (isset($_SESSION['user']))
                                 // do nothing
                                 break;
                             default:
-                                $fieldValueStr .= (trim($fieldValueStr) == '' ? '': ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'") . '';
+                                $fieldValueStr .= (trim($fieldValueStr) == '' ? '' : ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'") . '';
                                 break;
                         }
                     }
@@ -1240,8 +1503,51 @@ if (isset($_SESSION['user']))
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting temporary user details')));
+                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details')));
                         return;
+                    }
+                }
+                elseif (isset($_REQUEST['user']))
+                {
+                    echo(updateUser($dbconn, json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
+                }
+                elseif (isset($_REQUEST['passd']))
+                {
+                    echo(changePassword($dbconn, json_decode($_REQUEST['passd'], true)));
+                }
+                return;
+                break;
+            case 'delete':
+                if (isset($_REQUEST['username']) && isset($_REQUEST['temp_user']))
+                {
+                    
+                    $username = $_REQUEST['username'];
+                    $isTempUser = $_REQUEST['temp_user'];
+                    $user = null;
+
+                    if ($_SESSION['user']['username'] == $username)
+                    {
+                        die(json_encode(new ajaxResponse('Error', 'A user cannot delete own account')));
+                    }
+                    
+                    $user = fetchUser($dbconn, $username)[0];
+                    
+                    if ($isTempUser)
+                    {
+                        $dbconn->delete('Person', 'WHERE personId=\'' . $user['personId'] . '\'');
+                    }
+                    else
+                    {
+                        $dbconn->delete('User', "WHERE username='$username'");
+                    }
+
+                    if (is_null($dbconn->lastException))
+                    {
+                        echo(json_encode(new ajaxResponse('Success', 'User: ' . $_REQUEST['username'] . ' has been deleted.')));
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', 'Deletion of user: ' . $_REQUEST['username'] . ' failed.')));
                     }
                 }
                 return;
@@ -1282,9 +1588,6 @@ if (isset($_SESSION['user']))
                                 $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
                             }
 
-                            echo(json_encode(new ajaxResponse('Success', json_encode([$fieldStr, $valueStr]))));
-                            return;
-
                             $dbconn->insert('Temp_User', "($fieldStr)", "($valueStr)");
 
                             if (is_null($dbconn->lastException))
@@ -1298,7 +1601,7 @@ if (isset($_SESSION['user']))
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting temporary user details')));
+                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details')));
                                 return;
                             }
                         }
@@ -1310,7 +1613,7 @@ if (isset($_SESSION['user']))
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered in inserting personal details')));
+                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting personal details')));
                         return;
                     }
                 }
@@ -1341,7 +1644,7 @@ if (isset($_SESSION['user']))
         }
     }
 }
-else
+else // NOT SIGNED-IN
 {
     echo(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));    
     return;
