@@ -2,10 +2,16 @@
 
 ## 5/14/2023
 TO DO:
-* [ ] Implement app behavior wherein a user will be asked to define a new password after first login
+* [x] Implement app behavior wherein a user will be asked to define a new password after first login
+* [x] Add more safeguards in validating user login
+* [x] Fix bug found in Applicant Data Entry form that causes duplicate personal data to be generated
+* [x] Generalize the location of the processURL variable
+* [x] Remove "commented" code
+* [ ] Create PHP functions that will further generalize adding and updating of specific database records
 * [ ] Create a printout template for the IER
-* [ ] Add a FormEx-derived IES class
+* [ ] Add a FormEx-derived IES class 
 
+I mostly rested today as it was a fine Sunday. However, I would occasionally modify the code whenever I have enough time to spare. As it was already a bit overdue, I prioritized the password reset on first login. Now, the system just has to set the first_signin database value in the User or Temp_User table to force a password reset. This will also be useful when people who are forgetful of their own passwords are added as users into the system. <u class="to-do">I will have to add a reset feature on the user list later on, as well, for better user management.</u> Next, as I remembered my conversation with Mr. Rey regarding system security, I also added a few more checks for the user session and moved some of the account-related PHP functions out from the web-exposed PHP files and into locally-accessible PHP files instead. While working on these, I also came upon a bug in the Applicant Data Entry form which caused personal data to be duplicated whenever another job application is generated from an already existing one. This bug was also fixed. However, I could not successfully begin on the IES form just yet. Sadly, I will definitely need more time for this. Before wrapping up for the day, I also proceeded to remove some of the old, commented-out code to declutter the source code and also relocated to the MPASIS_App class and fixed the references to the processURL variable.
 
 ## 5/12/2023
 TO DO:

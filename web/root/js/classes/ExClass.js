@@ -6,7 +6,6 @@ class ScrimEx
     {
         this.scrim = createElementEx(NO_NS, "div", parent, null, "class", "scrim-ex");
         this.scrim["scrimEx"] = this;
-        // this.content = null;
         this.scrimEvents = [];
     }
 
@@ -655,7 +654,6 @@ class InputEx
                 break;
             case "combo":
                 var option = createElementEx(NO_NS, "option", this.datalist, null, "value", labelText, "data-value", value);
-                // addText(labelText, option);
                 if (tooltipText != "")
                 {
                     option.title = tooltipText; // HAS NO EFFECT!!!
@@ -681,7 +679,6 @@ class InputEx
                         this.inputExs[this.inputExs.length - 1].setDefaultValue(value, true);  // MAY CAUSE ISSUES IF DEVELOPER DOESN'T TRACK THE NUMBER OF ITEMS WITHOUT LABELS THAT WERE MIXED WITH LABELED ITEMS
                     }
                     this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
-                    // this.inputExs[this.inputExs.length - 1].setFullWidth();
                 }
                 if (tooltipText != "")
                 {
@@ -1119,7 +1116,6 @@ class InputEx
 
         headerTexts.forEach((headerText, i)=>{
             invalidArgsStr += (typeof(headerText) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "headerTexts[" + i + "]:" + headerText);
-            // addText(headerText, createElementEx(NO_NS, "b", this.thead, null, "class", "th");
             if (this.type == "table")
             {
                 th = createElementEx(NO_NS, "th", this.thead, null)
@@ -1571,7 +1567,6 @@ class InputEx
             case "checkbox-select":
                 var values = [];
                 for (const inputEx of this.inputExs) {
-                    // console.log(inputEx + "\n" + inputEx.isChecked() + inputEx.fields[0].checked);
                     if (inputEx.isChecked())
                     {
                         value = inputEx.getValue();
@@ -2043,7 +2038,7 @@ class InputEx
         this.setStatusMessage(infoMsg, "info");
     }
 
-    showWait(infoMsg) // blue
+    showWait(infoMsg) // gray
     {
         this.setStatusMessage(infoMsg, "wait");
     }
@@ -2113,9 +2108,7 @@ class InputEx
     {
         if (!this.isMultipleInput || this.type == "combo")
         {
-            // this.listeners.field[eventType] = func;
             this.listeners.field.push({"eventType":eventType,eventFunction:func});
-            // this.fields[0].addEventListener(eventType, this.listeners.field[eventType], addEventListenerOption);
             this.fields[0].addEventListener(eventType, func, addEventListenerOption);
         }
         else if (this.type != "buttons" && this.type != "buttonExs" && (index == null || index == undefined || index == -1))
@@ -2135,9 +2128,7 @@ class InputEx
     {
         if (!this.isMultipleInput)
         {
-            // this.listeners.label[eventType] = func;
             this.listeners.label.push({"eventType":eventType,eventFunction:func});
-            // this.labels[0].addEventListener(eventType, this.listeners.label[eventType]);
             this.labels[0].addEventListener(eventType, func);
         }
     }
@@ -2146,9 +2137,7 @@ class InputEx
     {
         if (!this.isMultipleInput)
         {
-            // this.listeners.status[eventType] = func;
             this.listeners.status.push({"eventType":eventType,eventFunction:func});
-            // this.statusPane.addEventListener(eventType, this.listeners.status[eventType]);
             this.statusPane.addEventListener(eventType, func);
         }
     }
@@ -2441,8 +2430,6 @@ class FormEx
             this.inputExs[this.inputExs.length - 1].setDefaultValue(value, true);
         }
 
-        // this.inputExs[this.inputExs.length - 1].spacer = document.createTextNode(" ");
-        // this.fieldWrapper.insertBefore(this.inputExs[this.inputExs.length - 1].spacer, this.inputEx[this.inputEx.length - 1].container);
         return this.inputExs[this.inputExs.length - 1];
     }
 
@@ -2920,7 +2907,6 @@ class UserEditor extends DialogEx
         var dialog = this;
         var form = this.formEx;
         var btnGrp = form.addFormButtonGrp(2);
-        // btnGrp.setFullWidth();
         btnGrp.container.classList.add("user-editor-buttons");
         form.addStatusPane();
         btnGrp.inputExs[0].setLabelText("Save");
@@ -2970,12 +2956,12 @@ class UserEditor extends DialogEx
             else
             {
                 // // DEBUG
-                // console.log(form.dbInputEx, person, user, ScoreSheet.processURL);
+                // console.log(form.dbInputEx, person, user, MPASIS_App.processURL);
 
                 // return;
                 // // DEBUG
 
-                postData(ScoreSheet.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
                     var response;
 
                     if (event.target.readyState == 4 && event.target.status == 200)
@@ -3013,7 +2999,7 @@ class UserEditor extends DialogEx
         });
 
         form.container.parentElement.appendChild(btnGrp.container);
-        // form.container.parentElement.appendChild(form.statusPane);
+
         // TEMP
         this.formEx.dbInputEx["employeeId"].disable();
         this.formEx.dbInputEx["temp_user"].disable();
@@ -3072,7 +3058,6 @@ class PasswordEditor extends DialogEx
 
         this.formEx.addStatusPane();
         this.formEx.setStatusMsgTimeout(-1);
-        // this.dialogBox.appendChild(this.formEx.statusPane);
 
         var btnGrp = this.formEx.addFormButtonGrp(2);
         btnGrp.container.classList.add("password-editor-buttons");
@@ -3095,7 +3080,7 @@ class PasswordEditor extends DialogEx
             // return;
             // // DEBUG
 
-            postData(ScoreSheet.processURL, "a=update&passd=" + packageData(passwordDetails), updatePasswordEvent=>{
+            postData(MPASIS_App.processURL, "a=update&passd=" + packageData(passwordDetails), updatePasswordEvent=>{
                 var response;
 
                 if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)
@@ -3521,7 +3506,6 @@ class ScoreSheetElementUI
 class ScoreSheet extends FormEx
 {
     static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
-    static processURL = "/mpasis/php/process.php";
 
     constructor(parentEl = null, id = "", useFormElement = true)
     {
@@ -3798,7 +3782,7 @@ class ScoreSheet extends FormEx
                             // DEBUG
                 
                             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-                            postData(ScoreSheet.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
+                            postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
                                 var response;
                 
                                 if (event.target.readyState == 4 && event.target.status == 200)
@@ -5328,7 +5312,7 @@ class IERForm extends FormEx
                     this.displayExs[obj.id].container.title = obj.text;
                 });
                 
-                postData(ScoreSheet.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
+                postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
                     var response = null, rows = [], row = null, isQualified = true;
 
                     if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
@@ -5482,6 +5466,11 @@ class IERForm extends FormEx
             });
         });
     }
+}
+
+class IESForm extends FormEx
+{
+    
 }
 
 // export { ScrimEx, DisplayEx, InputEx, FormEx, DialogEx, MsgBox };

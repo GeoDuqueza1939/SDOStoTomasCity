@@ -26,6 +26,8 @@ function getUnicodeCharacter(cp) {
 
 class MPASIS_App
 {
+    static processURL = "/mpasis/php/process.php";
+
     constructor(container)
     {
         // change nav links into click event listeners
@@ -33,7 +35,6 @@ class MPASIS_App
         this.main = Array.from(container.querySelectorAll("main"))[0];
         this.mainSections = {};
         this.mainSections["main-dashboard"] = document.getElementById("main-dashboard");
-        this.processURL = "/mpasis/php/process.php";
         this.defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
         this.scrim = null;
         this.temp = {};
@@ -63,11 +64,10 @@ class MPASIS_App
             };
         };
 
-        this.scrim = new ScrimEx(this.main);
-        this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
+        this.showScrim();
 
         // load some initial data
-        postData(this.processURL, "app=mpasis&a=fetch&f=initial-data", postEvent=>{
+        postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=initial-data", postEvent=>{
             var response;
 
             if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -76,7 +76,7 @@ class MPASIS_App
 
                 if (response.type == "Error")
                 {
-                    new MsgBox(app.main, "Error: " + response.content, "CLOSE");
+                    new MsgBox(app.main, "ERROR: " + response.content, "CLOSE");
                 }
                 else if (response.type == "Data")
                 {
@@ -92,13 +92,9 @@ class MPASIS_App
                         this.setCookie("current_view", "dashboard", 1);
                     }
             
-                    // console.log(this.getCookie("current_view"));
-            
                     this.activateView(this.getCookie("current_view"));
             
-                    // document.getElementById(this.getCookie("current_view")).querySelectorAll("a")[0].click();
-
-                    this.scrim.destroy();
+                    this.closeScrim();
                 }                    
             }
         });
@@ -182,8 +178,7 @@ class MPASIS_App
                 el = htmlToElement("<ul></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
-                    {viewId:"job-data-entry", label:"Data Entry"},
-                    // {viewId:"scoresheet", label:"Score Sheet"}
+                    {viewId:"job-data-entry", label:"Data Entry"}
                 ].forEach(obj=>{
                     var item = createElementEx(NO_NS, "li", el);
                     var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
@@ -227,6 +222,25 @@ class MPASIS_App
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
+                el = htmlToElement("<ul></ul>");
+                this.mainSections["main-" + viewId].appendChild(el);
+                [
+                    {viewId:"my-account", label:"Edit My Account"},
+                    {viewId:"other-account", label:"View/Edit Other Accounts"},
+                    {viewId:"signout", label:"Sign Out"}
+                ].forEach(obj=>{
+                    var item = createElementEx(NO_NS, "li", el);
+                    var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
+                    addText(obj.label, itemLink);
+                    if (obj.viewId == "signout")
+                    {
+                        itemLink.addEventListener("click", event=>this.navClick(obj.viewId));
+                    }
+                    else
+                    {
+                        itemLink.addEventListener("click", event=>this.activateView(obj.viewId));
+                    }
+                });
                 break;
             case "my-account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>My Account</h2>";
@@ -240,7 +254,6 @@ class MPASIS_App
                     var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
                     addText(obj.label, itemLink);
                     itemLink.addEventListener("click", event=>{
-                        // this.activateView(obj.viewId);
                         switch (obj.dialogId)
                         {
                             case "edit-user":
@@ -274,7 +287,7 @@ class MPASIS_App
                 btnGrp.inputExs[0].setLabelText("Search Accounts");
                 btnGrp.inputExs[0].setTooltipText("");
                 btnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                    postData(this.processURL, "app=mpasis&a=fetch&f=users&k=" + searchBox.getValue() + "%", (event)=>{
+                    postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=users&k=" + searchBox.getValue() + "%", (event)=>{
                         var response;
 
                         if (event.target.readyState == 4 && event.target.status == 200)
@@ -283,7 +296,7 @@ class MPASIS_App
 
                             if (response.type == "Error")
                             {
-                                otherAccountFormEx.raiseError(response.content);
+                                otherAccountFormEx.raiseError("ERROR: " + response.content);
                             }
                             if (response.type == "Debug")
                             {
@@ -293,16 +306,12 @@ class MPASIS_App
                             }
                             else if (response.type == "Data")
                             {
-                                // var viewer = otherAccountFormEx.boxes["list-users"];
                                 var viewer = otherAccountFormEx.displayExs["list-users"];
                                 var data = JSON.parse(response.content);
-
-                                // viewer.innerHTML = "";
 
                                 viewer.removeAllRows();
 
                                 for (const row of data.filter(row=>row["username"] != this.currentUser["username"])) {
-                                    // viewer.innerHTML += row["username"] + "<br>";
                                     viewer.addRow({
                                         "person_name":MPASIS_App.getFullName(row["given_name"], row["middle_name"], row["family_name"], row["spouse_name"], row["ext_name"], true, true),
                                         "username":row["username"],
@@ -327,7 +336,7 @@ class MPASIS_App
                                                     var deleteUserDialog = new MsgBox(this.main, "Do you really want to delete the user: " + row["username"] + "?", "YESNO", ()=>{
                                                         deleteUserDialog.btnGrp.inputExs[0].fields[0].removeEventListener("click", deleteUserDialog.defaultBtnFunc);
 
-                                                        postData(this.processURL, "a=delete&username=" + row["username"] + "&temp_user=" + row["temp_user"], async deleteUserEvent=>{
+                                                        postData(MPASIS_App.processURL, "a=delete&username=" + row["username"] + "&temp_user=" + row["temp_user"], async deleteUserEvent=>{
                                                             var response;
 
                                                             if (deleteUserEvent.target.readyState == 4 && deleteUserEvent.target.status == 200)
@@ -358,7 +367,6 @@ class MPASIS_App
                                                 break;
                                         }
                                     });
-                                    // console.log(controlButtons);
                                     viewer.rows[viewer.rows.length - 1]["td"]["control"].appendChild(controlButtons.container);
                                 }
                             }
@@ -369,104 +377,10 @@ class MPASIS_App
                 btnGrp.inputExs[1].setTooltipText("");
                 btnGrp.inputExs[1].addEvent("click", (event)=>{
                     var addUserDialog = new UserEditor(this.main, "mpasis-other-account-user-editor", 0);
-                    // var addUserDialog = new DialogEx(otherAccountFormEx.container, "add-user");
-                    // var form = addUserDialog.addFormEx();
-                    // form.addInputEx("Given Name", "text", "", "Enter the applicant's given name.", "given_name", "Person");
-                    // form.addLineBreak();
-                    // form.addInputEx("Middle Name", "text", "", "Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none.", "middle_name", "Person");
-                    // form.addLineBreak();
-                    // form.addInputEx("Family Name", "text", "", "Enter the applicant's family name. For married women, please enter the maiden last name.", "family_name", "Person");
-                    // form.addLineBreak();
-                    // form.addInputEx("Spouse Name", "text", "", "For married women, please enter the spouse's last name. Leave blank for none.", "spouse_name", "Person");
-                    // form.addLineBreak();
-                    // form.addInputEx("Ext. Name", "text", "", "Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none.", "ext_name", "Person");
-                    // form.addLineBreak();
-                    // form.addLineBreak();
-                    // form.addInputEx("Username", "text", "", "Please enter a username. Make sure to use only letters, digits, periods, and underscores.", "username", "Temp_User");
-                    // form.addLineBreak();
-                    // form.addInputEx("Password", "password", "1234", "Please enter a temporary password. Default: 1234", "password", "Temp_User");
-                    // form.addLineBreak();
-                    // var input = form.addInputEx("Access Level", "number", "1", "Please enter this user's MPASIS access level. Default: 1", "mpasis_access_level", "Temp_User");
-                    // input.setMin(0);
-                    // input.setMax(4);
-                    // form.addLineBreak();
-                    // // form.addLineBreak();
-                    // var btnGrp = form.addFormButtonGrp(2);
-                    // btnGrp.setFullWidth();
-                    // btnGrp.fieldWrapper.classList.add("center");
-                    // form.addStatusPane();
-                    // btnGrp.inputExs[0].setLabelText("Save");
-                    // btnGrp.inputExs[0].setTooltipText("");
-                    // btnGrp.inputExs[0].addEvent("click", (event)=>{
-                    //     var person = {};
-                    //     var tempUser = {};
-                    //     var error = "";
-
-                    //     for (const dbColName in form.dbInputEx) {
-                    //         var value = form.dbInputEx[dbColName].getValue();
-                    //         if ((typeof(value) == "string" && value != "") || typeof(value) == "number")
-                    //         {
-                    //             if (form.dbTableName[dbColName] == "Person")
-                    //             {
-                    //                 person[dbColName] = value;
-                    //             }
-                    //             else
-                    //             {
-                    //                 tempUser[dbColName] = value;
-                    //             }
-                    //         }
-                    //         else if (dbColName == "given_name")
-                    //         {
-                    //             error += "Given Name should not be blank.<br>";
-                    //         }
-                    //         else if (dbColName == "username")
-                    //         {
-                    //             error += "Username should not be blank.<br>";
-                    //         }
-                    //         else if (dbColName == "username")
-                    //         {
-                    //             error += "Password should not be blank.<br>";
-                    //         }
-                    //     }
-
-                    //     if (error != "")
-                    //     {
-                    //         form.raiseError(error);
-                    //     }
-                    //     else
-                    //     {
-                    //         postData(this.processURL, "app=mpasis&a=addTempUser&person=" + packageData(person) + "&tempUser=" + packageData(tempUser), (event)=>{
-                    //             var response;
-
-                    //             if (event.target.readyState == 4 && event.target.status == 200)
-                    //             {
-                    //                 response = JSON.parse(event.target.responseText);
-
-                    //                 if (response.type == "Error")
-                    //                 {
-                    //                     form.raiseError(response.content);
-                    //                 }
-                    //                 else if (response.type == "Success")
-                    //                 {
-                    //                     form.showSuccess(response.content);
-                    //                 }
-                    //             }
-                    //         });
-                    //     }
-                    // });
-                    // btnGrp.inputExs[1].setLabelText("Close");
-                    // btnGrp.inputExs[1].setTooltipText("");
-                    // btnGrp.inputExs[1].addEvent("click", (event)=>{
-                    //     addUserDialog.close();
-                    // });
                 });
 
                 otherAccountFormEx.addStatusPane();
                 otherAccountFormEx.setStatusMsgTimeout(10);
-                
-                // var div = otherAccountFormEx.addBox("list-users");
-                
-                // div.classList.add("query-results-users");
                 
                 otherAccountFormEx.addDisplayEx("div-table", "list-users");
                 otherAccountFormEx.displayExs["list-users"].container.classList.add("query-results-users");
@@ -525,7 +439,7 @@ class MPASIS_App
         field.addStatusPane();
         field.setStatusMsgTimeout(20);
         field.addEvent("change", (changeEvent)=>{
-            postData(this.processURL, "app=mpasis&a=getSalaryFromSG&sg=" + changeEvent.target.inputEx.getValue(), (event)=>{
+            postData(MPASIS_App.processURL, "app=mpasis&a=getSalaryFromSG&sg=" + changeEvent.target.inputEx.getValue(), (event)=>{
                 var response;
                 var sgField = changeEvent.target.inputEx;
 
@@ -533,7 +447,7 @@ class MPASIS_App
                     response = JSON.parse(event.target.responseText);
                     
                     if (response.type == "Error") {
-                        sgField.raiseError(response.content);
+                        sgField.raiseError("ERROR: " + response.content);
                     }
                     else if (response.type == "Salary") {
                         if (response.content == null)
@@ -566,7 +480,7 @@ class MPASIS_App
         field.runAfterFilling = function(){
             this.inputExs[0].check();
         };
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=positionCategory", "position_category", "position_categoryId", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=positionCategory", "position_category", "position_categoryId", "description");
         
         this.forms["jobData"].addSpacer();
         
@@ -585,10 +499,8 @@ class MPASIS_App
         field.runAfterFilling = function(){
             this.inputExs[0].check();
         };
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
         
-        // this.forms["jobData"].addSpacer();
-
         field = this.forms["jobData"].addInputEx("Position requires specific education", "checkbox", "", "", "requires-spec-education");
         field.labels[0].style.fontWeight = "bold";
         field.reverse();
@@ -612,7 +524,6 @@ class MPASIS_App
         field = this.forms["jobData"].addInputEx("Total hours of relevant training", "number", "0", "", "required_training_hours", "Position");
         field.container.style.gridColumn = "1 / span 6";
         field.container.style.gridRow = "span 3";
-        // field.setVertical();
         field.showColon();
         field.setMin(0);
         field.setMax(999);
@@ -641,7 +552,6 @@ class MPASIS_App
         field = this.forms["jobData"].addInputEx("Total years of relevant work experience", "number", "0", "", "required_work_experience_years", "Position");
         field.container.style.gridColumn = "1 / span 6";
         field.container.style.gridRow = "span 3";
-        // field.setVertical();
         field.showColon();
         field.setMin(0);
         field.setMax(99);
@@ -669,15 +579,11 @@ class MPASIS_App
 
         var eligField = this.forms["jobData"].addInputEx("Please select all the eligibilities required for this position", "checkbox-select", "", "", "required_eligibility", "Required_Eligibility", true);
         eligField.container.style.gridColumn = "1 / span 12";
-        // eligField.container.style.gridRow = "span 4";
         eligField.reverse();
         eligField.setVertical();
         eligField.runAfterFilling = function(){
-            // this.inputExs[0].check();
             var addEligibilityBtn = null;
             var eligField = this;
-            this.processURL = "/mpasis/php/process.php";
-
 
             addEligibilityBtn = new InputEx(this.fieldWrapper, "add-eligibility-input-ex", "buttonEx", false);
             addEligibilityBtn.setLabelText("+Add Missing Eligibility");
@@ -705,7 +611,7 @@ class MPASIS_App
                             newElig["description"] = descText.getValue();
                         }
 
-                        postData(this.processURL, "app=mpasis&a=add&eligibilities=" + packageData([newElig]), (event)=>{
+                        postData(MPASIS_App.processURL, "app=mpasis&a=add&eligibilities=" + packageData([newElig]), (event)=>{
                             var response;
 
                             if (event.target.readyState == 4 && event.target.status == 200)
@@ -714,7 +620,7 @@ class MPASIS_App
 
                                 if (response.type == "Error")
                                 {
-                                    addEligForm.raiseError(response.content);
+                                    addEligForm.raiseError("ERROR: " + response.content);
                                 }
                                 else if (response.type = "Data")
                                 {
@@ -735,7 +641,7 @@ class MPASIS_App
 
                                         addEligibilityBtn.destroy();
 
-                                        eligField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
+                                        eligField.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
                                         
                                     }, 5000);
                                 }
@@ -753,7 +659,7 @@ class MPASIS_App
                 
             });
         };
-        eligField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
+        eligField.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
 
         header = this.forms["jobData"].addHeader("Competency", 4);
         header.style.gridColumn = "1 / span 12";
@@ -794,8 +700,6 @@ class MPASIS_App
             plantillaItems.forEach((plantillaItem)=>{
                 position = {};
 
-                // console.log(this.forms["jobData"].dbInputEx);
-
                 for (const key in this.forms["jobData"].dbInputEx) {
                     if (key == "plantilla_item_number")
                     {
@@ -813,7 +717,7 @@ class MPASIS_App
             });
             
             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-            postData(this.processURL, "app=mpasis&a=add&positions=" + packageData(positions), (event)=>{
+            postData(MPASIS_App.processURL, "app=mpasis&a=add&positions=" + packageData(positions), (event)=>{
                 var response;
 
                 if (event.target.readyState == 4 && event.target.status == 200)
@@ -822,17 +726,14 @@ class MPASIS_App
 
                     if (response.type == "Error")
                     {
-                        // this.forms["jobData"].raiseError(response.content);
-                        new MsgBox(this.forms["jobData"].container, response.content, "OK");
+                        new MsgBox(this.forms["jobData"].container, "ERROR: " + response.content, "OK");
                     }
                     else if (response.type == "Success")
                     {
-                        // this.forms["jobData"].showSuccess(response.content);
                         new MsgBox(this.forms["jobData"].container, response.content, "OK");
                     }
                 }
             });
-            // console.log(positions);
         });
         jobDataBtnGrp.inputExs[1].setLabelText("Reset");
         jobDataBtnGrp.inputExs[1].setTooltipText("");
@@ -896,15 +797,6 @@ class MPASIS_App
         plantillaField.setVertical();
 
         getAppliedPosition = function(positionsArray, positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx()){
-            // if (plantillaField.getValue() == "ANY")
-            // {
-            //     return positionsArray.find(position=>position["position_title"] == positionField.getValue());
-            // }
-            // else if (plantillaField.getValue() != "")
-            // {
-            //     return positionsArray.find(position=>position["plantilla_item_number"] == plantillaField.getValue());
-            // }
-
             return document.positions.filter(position=>((position["parenthetical_title"] == parenField.getValue().trim() || plantillaField.getValue().trim() == "ANY" || plantillaField.getValue().trim() == "") && position["position_title"] == positionField.getValue().trim() || position["plantilla_item_number"] == plantillaField.getValue().trim()))[0];
         }
 
@@ -914,20 +806,10 @@ class MPASIS_App
 
         var loadApplicant = applicantDataForm.addInputEx("Load Existing Applicant", "buttonEx");
         loadApplicant.container.style.gridColumn = "1 / span 8";
-        // loadApplicant.setFullWidth();
-        // loadApplicant.fieldWrapper.classList.add("right");
         
         field = applicantDataForm.addInputEx("Application Code", "text", "", "Application Code", "application_code", "Job_Application");
         field.container.style.gridColumn = "9 / span 4";
         field.setVertical();
-
-        // var searchExistingApplicant = applicantDataForm.addInputEx("Search for existing applicants", "combo", "", "Type some names to search for possible matches", "", "");
-        // searchExistingApplicant.container.classList.add("right");
-        // searchExistingApplicant.container.style.gridColumn = "1 / span 12";
-        // searchExistingApplicant.addStatusPane();
-        // searchExistingApplicant.statusPane.style.display = "block";
-        // searchExistingApplicant.statusPane.style.height = "1.5em";
-        // searchExistingApplicant.showColon();
 
         field = applicantDataForm.addInputEx("Given Name", "text", "", "First Name", "given_name", "Person");
         field.container.style.gridColumn = "1 / span 4";
@@ -975,22 +857,22 @@ class MPASIS_App
         field = applicantDataForm.addInputEx("Civil Status", "select", "", "Civil Status", "civil_status", "Person"); // Cross-reference
         field.container.style.gridColumn = "9 / span 4";
         field.setVertical();
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=civilStatus", "civil_status", "index", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=civilStatus", "civil_status", "index", "description");
 
         field = applicantDataForm.addInputEx("Religion", "combo", "", "Religious Affiliation", "religion", "Person"); // Cross-reference; Allow adding new
         field.container.style.gridColumn = "1 / span 4";
         field.setVertical();
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=religion", "religion", "religionId", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=religion", "religion", "religionId", "description");
 
         field = applicantDataForm.addInputEx("Disability", "combo", "", "Disability; if multiple, please separate with semi-colons", "disability", "Person_Disability"); // Multiple cross-reference; Allow adding new
         field.container.style.gridColumn = "5 / span 4";
         field.setVertical();
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=disability", "disability", "disabilityId", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=disability", "disability", "disabilityId", "description");
 
         field = applicantDataForm.addInputEx("Ethnic Group", "combo", "", "Ethnic Group", "ethnicity", "Person"); // Cross-reference; Allow adding new
         field.container.style.gridColumn = "9 / span 4";
         field.setVertical();
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=ethnicGroup", "ethnic_group", "ethnicityId", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=ethnicGroup", "ethnic_group", "ethnicityId", "description");
 
         field = applicantDataForm.addInputEx("Email Address", "email", "", "Email address; if multiple, please separate with semi-colons", "email_address", "Email_Address"); // Multiple cross-reference; Allow adding new
         field.container.style.gridColumn = "1 / span 6";
@@ -1088,7 +970,6 @@ class MPASIS_App
             for (const inputEx of educField.inputExs)
             {
                 inputEx.addEvent("change", changeEvent=>{
-                    // degreeTable.addRowButtonEx.enable(null, (educField.getValue() >= 4 && educField.getValue() <= 8));
                     degreeTable.addRowButtonEx.enable(null, (inputEx.getValue() >= 4 && inputEx.getValue() <= 8));
 
                     if (degreeTable.inputExs.length > 0)
@@ -1125,37 +1006,9 @@ class MPASIS_App
 
                         attainedEducIncrement.innerHTML = computeEducIncrementLevel();
                     }
-
-                    // if (educField.getValue() > 5 && educField.getValue() < 8)
-                    // {
-                    //     postGradUnitsField.enable(null, !completeAcadReqField.isChecked());
-                    //     completeAcadReqField.enable();
-                    //     completeAcadReqField.setLabelText("Complete Academic Requirements completed towards a " + (educField.getValue() == 6 ? "Master's Degree" : "Doctorate"));
-                    // }
-                    // else
-                    // {
-                    //     postGradUnitsField.disable();
-                    //     completeAcadReqField.disable();
-                    //     completeAcadReqField.setLabelText("Complete Academic Requirements completed towards a post-graduate degree");
-                    // }
-
-
                 });
             }
-/* 
-            this.addOtherOption("Other", "-1", "Please specify another level of education", "<i>(Please specify):</i>", function(event){
-                if (Object.prototype.toString.call(this) == "[object Object]")
-                {
-                    this.inlineTextboxEx.enable(null, this.isChecked());
-                }
-                else if (Object.prototype.toString.call(this) == "[object HTMLInputElement]")
-                {
-                    this.inputEx.inlineTextboxEx.enable(null, this.inputEx.isChecked());
-                }
-            });
-*/
         };
-        // educField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=educLevel", "educational_attainment", "index", "description");
 
         header = applicantDataForm.addHeader("Training", 3);
         header.style.gridColumn = "1 / span 12";
@@ -1484,7 +1337,7 @@ class MPASIS_App
 
         field.runAfterFilling = function(){
             var parentEx = this;
-            this.processURL = "/mpasis/php/process.php";
+            MPASIS_App.processURL = "/mpasis/php/process.php";
 
             this.removeItemAt(this.inputExs.findIndex(inputEx=>Number.parseInt(inputEx.fields[0].value) == 3)); // Remove RA 1080 entry which is only used as a general/umbrella requirement for positions
 
@@ -1516,7 +1369,7 @@ class MPASIS_App
                             newElig["description"] = descText.getValue();
                         }
 
-                        postData(this.processURL, "app=mpasis&a=add&eligibilities=" + packageData([newElig]), (event)=>{
+                        postData(MPASIS_App.processURL, "app=mpasis&a=add&eligibilities=" + packageData([newElig]), (event)=>{
                             var response;
 
                             if (event.target.readyState == 4 && event.target.status == 200)
@@ -1525,7 +1378,7 @@ class MPASIS_App
 
                                 if (response.type == "Error")
                                 {
-                                    addEligForm.raiseError(response.content);
+                                    addEligForm.raiseError("ERROR: " + response.content);
                                 }
                                 else if (response.type = "Data")
                                 {
@@ -1546,7 +1399,7 @@ class MPASIS_App
 
                                         addEligibilityBtn.destroy();
 
-                                        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
+                                        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
                                         
                                     }, 5000);
                                 }
@@ -1588,7 +1441,6 @@ class MPASIS_App
                     var validElig = ScoreSheet.validateEligibility(parentEx.getValue(), requiredEligibilities);
     
                     remarkElig.innerHTML = (validElig < 0 ? "Not Required" : (validElig > 0 ? "" : "Not ") + "Qualified");
-                    // remarkElig.style.color = (validElig == "Qualified" ? "green" : (validElig == "Not Qualified" ? "red" : null));
                     remarkElig.style.color = (validElig > 0 ? "green" : (validElig == 0 ? "red" : null));
                 };
 
@@ -1596,7 +1448,7 @@ class MPASIS_App
             }
             
         };
-        field.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=eligibilities", "eligibility", "eligibilityId", "description");
 
         header = applicantDataForm.addHeader("Competency", 3);
         header.style.gridColumn = "1 / span 12";
@@ -1624,60 +1476,6 @@ class MPASIS_App
         var remarkCompetency = createElementEx(NO_NS, "span", null, null, "class", "remark");
         addText("Not Required", remarkCompetency);
         displayCompetencyQualification.addContent(remarkCompetency);
-
-        // var searchApplicant = (searchEvent)=>{
-        //     searchEvent.target.inputEx.showInfo("Searching . . .");
-
-        //     postData(this.processURL, "app=mpasis&a=fetch&f=searchApplicationByName&name=" + searchEvent.target.inputEx.getValue(), (postEvent)=>{
-        //         var response;
-
-        //         if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
-        //         {
-        //             response = JSON.parse(postEvent.target.responseText);
-
-        //             if (response.type == "Error")
-        //             {
-        //                 searchEvent.target.inputEx.raiseError(response.content);
-        //             }
-        //             else if (response.type == "Data")
-        //             {
-        //                 var results = JSON.parse(response.content);
-        //                 var option = null;
-                        
-        //                 searchEvent.target.inputEx.resetStatus();
-        //                 searchEvent.target.inputEx.clearList();
-
-        //                 searchedApplicants = results;
-
-        //                 if (results.length == 0)
-        //                 {
-        //                     // searchEvent.target.inputEx.showSuccess("No results found");
-        //                 }
-        //                 else
-        //                 {
-        //                     for (const key in results) {
-        //                         var label = results[key]["application_code"] + " " + results[key]["given_name"] + (results[key]["middle_name"] == null || results[key]["middle_name"].trim() == "" ? "" : " " + results[key]["middle_name"]) + (results[key]["family_name"] == null || results[key]["family_name"].trim() == "" ? "" : " " + results[key]["family_name"]) + (results[key]["spouse_name"] == null || results[key]["spouse_name"].trim() == "" ? "" : " " + results[key]["spouse_name"]) + (results[key]["ext_name"] == null || results[key]["ext_name"].trim() == "" ? "" : ", " + results[key]["ext_name"]);
-        //                         option = searchEvent.target.inputEx.addItem(label);
-        //                     }
-        //                 }
-        //                 // console.log(results);
-        //             }
-        //         }
-        //     });
-        // };
-
-        // searchExistingApplicant.addEvent("change", searchApplicant);
-        // searchExistingApplicant.addEvent("keydown", searchApplicant);
-        // searchExistingApplicant.addEvent("input", (event)=>{
-        //     for (const option of Array.from(event.target.inputEx.datalist.children)) {
-        //         if (option.value == event.target.inputEx.getValue())
-        //         {
-        //             // alert(option.value.match(/^\d+/)[0]);
-        //             applicant = searchedApplicants[option.value.match(/^\d+/)[0]];
-        //             console.log(applicant);
-        //         }
-        //     }
-        // });
 
         loadApplicant.addEvent("click", loadApplicantClickEvent=>{
             var retrieveApplicantDialog = null;
@@ -1737,9 +1535,6 @@ class MPASIS_App
                         {
                             if (key in applicantDataForm.dbInputEx)
                             {
-                                // console.log(key + ": in applicantDataForm.dbInputEx");
-                                // console.log(key, "=", applicationObj[key]);
-
                                 switch (key)
                                 {
                                     case "position_title_applied":
@@ -1770,18 +1565,13 @@ class MPASIS_App
                                         attainedEducIncrement.innerHTML = computeEducIncrementLevel();
                                         break;
                                     default:
-                                        // console.log(key);
                                         if (!newApplication && !applicantDataForm.dbInputEx[key].isDisabled() && (applicantDataForm.dbInputEx[key].type == "checkbox" || applicantDataForm.dbInputEx[key] == "radio"))
                                         {
                                             applicantDataForm.dbInputEx[key].check(applicationObj[key] == 1);
                                         }
-                                        else
+                                        else //if (!newApplication || key != "application_code") // application code is not auto-generated as of this moment
                                         {
-                                            if (!(key == "application_code" && newApplication))
-                                            {
-                                            // console.log(key);
                                             applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key] ?? "", true);
-                                            }
                                         }
                                         break;
                                 }
@@ -1833,16 +1623,12 @@ class MPASIS_App
                                             workExpInputExs[workExpInputExs.length - 1]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
                                         }
                                         attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
-                                        // console.log (applicationObj[key]);
-                                        // console.log(workExpInputExs);
                                         break;
                                     case "relevant_eligibility":
-                                        // console.log(applicationObj["relevant_eligibility"].map(elig=>elig["eligibilityId"]));
                                         applicantDataForm.dbInputEx["eligibilityId"].setDefaultValue(applicationObj[key].map(elig=>elig["eligibilityId"]), true);
                                         applicantDataForm.dbInputEx["eligibilityId"].inputExs[1]["changeElig"]();
                                         break;
                                     default:
-                                        // console.log(key + ": not in applicantDataForm.dbInputEx");
                                         break;
                                 }
                             }
@@ -1903,7 +1689,7 @@ class MPASIS_App
             }
         });
 
-        postData(this.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
+        postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
             var response;
 
             if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -1912,7 +1698,7 @@ class MPASIS_App
 
                 if (response.type == "Error")
                 {
-                    new MsgBox(applicantDataForm.container, "Error: " + response.content, "CLOSE");
+                    new MsgBox(applicantDataForm.container, "ERROR: " + response.content, "CLOSE");
                 }
                 else if (response.type == "Data")
                 {
@@ -1924,6 +1710,7 @@ class MPASIS_App
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
                     
                     document.scrim.destroy();
+
                     positionField.fillItems(document.positions.filter((position, index, positions)=>{
                         var i = 0;
                         while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
@@ -1936,7 +1723,6 @@ class MPASIS_App
                     degreeTable.setInitFunctions(function(inputEx){
                         inputEx["td"].style.border = "1px solid";
                         inputEx.setWidth("100%");
-                        // inputEx.fillItemsFromServer("/mpasis/php/process.php", "app=mpasis&a=fetch&f=univEducLevel", "educational_attainment", "index", "description");
                         inputEx.fillItems(document.enumEducationalAttainment, "educational_attainment", "index", "description");
                         for (const option of Array.from(inputEx.fields[0].children))
                         {
@@ -1985,8 +1771,6 @@ class MPASIS_App
                         inputEx.disable();
                         var unitsEarnedChange = unitsEarnedEvent=>{
                             var setting = (inputEx.getValue() == "" && inputEx["tr"]["inputRow"]["units_earned"].getValue() == "");
-                            // inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
-                            // inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
                             inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
                             inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
                             attainedEducIncrement.innerHTML = computeEducIncrementLevel();
@@ -2012,8 +1796,6 @@ class MPASIS_App
                         inputEx.disable();
                         var unitsEarnedChange = unitsEarnedEvent=>{
                             var setting = (inputEx.getValue() == "" && inputEx["tr"]["inputRow"]["year_level_completed"].getValue() == "");
-                            // inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
-                            // inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
                             inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
                             inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
                             attainedEducIncrement.innerHTML = computeEducIncrementLevel();
@@ -2039,7 +1821,6 @@ class MPASIS_App
                             var setting = !inputEx.isChecked();
                             inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
                             inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
-                            // inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
                             inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
                             attainedEducIncrement.innerHTML = computeEducIncrementLevel();
                         };
@@ -2061,7 +1842,6 @@ class MPASIS_App
                             inputEx["tr"]["inputRow"]["year_level_completed"].enable(null, setting);
                             inputEx["tr"]["inputRow"]["units_earned"].enable(null, setting);
                             inputEx["tr"]["inputRow"]["complete_academic_requirements"].enable(null, setting && inputEx["tr"]["inputRow"]["degree_typeIndex"].getValue() != "Bachelor's Degree");
-                            // inputEx["tr"]["inputRow"]["graduation_year"].enable(null, setting);
                             attainedEducIncrement.innerHTML = computeEducIncrementLevel();
                         };
                         inputEx.addEvent("change", gradChange);
@@ -2079,37 +1859,13 @@ class MPASIS_App
             MPASIS_App.selectPosition(positionField, parenField, plantillaField);
         });
 
-        // positionField.addEvent("change", (changeEvent)=>{
-        //     parenField.setValue("");
-        //     parenField.clearList();
-        // //     await parenField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=parenTitles&positionTitle=" + positionField.getValue(), "parenthetical_title", "", "");
-        //     parenField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && position["parenthetical_title"] != null && position["parenthetical_title"] != "")), "parenthetical_title", "plantilla_item_number");
-            
-        //     plantillaField.setValue("");
-        //     plantillaField.clearList();
-        // //     await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
-        //     plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "plantilla_item_number");
-        //     var option = plantillaField.addItem("ANY");
-        //     option.parentElement.insertBefore(option, option.parentElement.children[0]);
-        // });
-
         parenField.addEvent("change", parenChangeEvent=>{
             MPASIS_App.selectParen(positionField, parenField, plantillaField);
         });
 
-        // parenField.addEvent("change", changeEvent=>{
-        //     plantillaField.setValue("");
-        //     plantillaField.clearList();
-        //     // await plantillaField.fillItemsFromServer(this.processURL, "app=mpasis&a=fetch&f=plantilla&positionTitle=" + positionField.getValue() + (parenField.getValue().trim() == "" ? "" : "&parenTitle=" + parenField.getValue()), "plantilla_item_number", "", "");
-        //     plantillaField.fillItems(document.positions.filter(position=>(position["position_title"] == positionField.getValue() && (parenField.getValue() == "" || position["parenthetical_title"] == parenField.getValue()))), "plantilla_item_number", "", "");
-        //     var option = plantillaField.addItem("ANY");
-        //     option.parentElement.insertBefore(option, option.parentElement.children[0]);
-        // });
-
         plantillaField.addEvent("change", plantillaChangeEvent=>{
             MPASIS_App.selectPlantilla(positionField, parenField, plantillaField);
         });
-
 
         var plantillaChange = changeEvent=>{
             var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
@@ -2184,7 +1940,6 @@ class MPASIS_App
                 reqCompetency.innerHTML = "NONE";
                 competencyAttained.disable();
             }
-            // requiredEducIncrement.innerHTML = document.mpsEducIncrement.find(increment=>increment["baseline_educational_attainment"] == appliedPosition["required_educational_attainment"])["education_increment_level"];
             requiredEducIncrement.innerHTML = ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []);
             requiredTrainingIncrement.innerHTML = Math.trunc(appliedPosition["required_training_hours"] / 8) + 1;
             requiredWorkExpIncrement.innerHTML = Math.trunc(appliedPosition["required_work_experience_years"] * 12 / 6) + 1;
@@ -2200,8 +1955,6 @@ class MPASIS_App
         applicantDataBtnGrp.inputExs[0].setLabelText("Save");
         applicantDataBtnGrp.inputExs[0].setTooltipText("");
         applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-            // var applicantDataForm = applicantDataForm;
-
             if (applicantDataForm.dbInputEx["position_title_applied"].getValue() == "" || applicantDataForm.dbInputEx["plantilla_item_number_applied"].getValue() == "" || applicantDataForm.dbInputEx["application_code"].getValue() == "" || applicantDataForm.dbInputEx["given_name"].getValue() == "")
             {
                 new MsgBox(applicantDataForm.container, "Please fill out some of the fields before submission");
@@ -2219,7 +1972,6 @@ class MPASIS_App
             jobApplication["relevantWorkExp"] = [];
             jobApplication["relevantEligibility"] = [];
 
-            // console.log(colName);
             for (const colName in applicantDataForm.dbInputEx) {
                 var tableName = applicantDataForm.dbTableName[colName];
                 var dbInputEx = applicantDataForm.dbInputEx[colName];
@@ -2233,10 +1985,6 @@ class MPASIS_App
                     else if (colName == "ethnicity")
                     {
                         jobApplication["personalInfo"][colName] = dbInputEx.getValue();
-                        // jobApplication["personalInfo"][colName] = {
-                        //     "ethnicityId":(dbInputEx.getDataValue() ?? null),
-                        //     "ethnic_group":dbInputEx.getValue()
-                        // };
                     }
                     else if (colName == "eligibilityId" || colName == "postgraduate_units" && dbInputEx.isDisabled())
                     {
@@ -2273,7 +2021,6 @@ class MPASIS_App
                 }
                 else // if (tableName == "Job_Application")
                 {
-                    console.log(colName.indexOf("has_specific_"), dbInputEx.isDisabled());
                     if (colName.indexOf("has_specific_") == 0 && !dbInputEx.isDisabled())
                     {
                         jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
@@ -2309,7 +2056,7 @@ class MPASIS_App
                 jobApplication["has_more_unrecorded_work_experience"] = (moreWorkExp.isChecked() ? 1 : 0);
             }
 
-            console.log(applicantDataForm.dataLoaded);
+            // console.log(applicantDataForm.dataLoaded);
             // if (applicantDataBtnGrp.inputExs[0].getLabelText() == "Update")
             if ("personId" in applicantDataForm.dataLoaded)
             {
@@ -2335,7 +2082,7 @@ class MPASIS_App
             // DEBUG
 
             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-            postData(this.processURL, "app=mpasis&a=add&jobApplication=" + packageData(jobApplication), (event)=>{
+            postData(MPASIS_App.processURL, "app=mpasis&a=add&jobApplication=" + packageData(jobApplication), (event)=>{
                 var response;
 
                 if (event.target.readyState == 4 && event.target.status == 200)
@@ -2344,7 +2091,7 @@ class MPASIS_App
 
                     if (response.type == "Error")
                     {
-                        new MsgBox(applicantDataForm.container, response.content, "OK");
+                        new MsgBox(applicantDataForm.container, "ERROR: " + response.content, "OK");
                     }
                     else if (response.type == "Success")
                     {
@@ -2521,8 +2268,6 @@ class MPASIS_App
             return newDisplayEx;
         };
 
-        // scoreSheet.loadedApplicant = null;
-
         scoreSheet.addHeader("Score Sheet (Old)", 2, "scoresheet-title", true);
 
         var loadApplicant = scoreSheet.addInputEx("Load Application", "buttonEx");
@@ -2553,7 +2298,6 @@ class MPASIS_App
             var inputEx = scoreSheet.addInputEx(obj.label, "text", "", "", obj.colName);
             inputEx.setVertical();
             applicantInfo.addContent(inputEx.container);
-            // inputEx.container.style.gridColumn = "span 1";
             inputEx.enable(null, inputEx != scoreSheet.dbInputEx["application_code"] && inputEx != scoreSheet.dbInputEx["applicant_name"] && inputEx != scoreSheet.dbInputEx["position_title_applied"]);
             inputEx.fields[0].style.color = "black";
         });
@@ -2575,9 +2319,6 @@ class MPASIS_App
             {
                 displayEx.setFullWidth();
                 displayEx.setVertical();
-                // displayEx.content.style.display = "grid";
-                // displayEx.content.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
-                // displayEx.content.style.gridGap = "0.5em";
                 displayEx.content.style.border = "0.15em solid gray";
                 displayEx.content.style.borderRadius = "1em";
                 displayEx.content.style.margin = "1em 0";
@@ -2602,7 +2343,6 @@ class MPASIS_App
             var displayEx = new DisplayEx(div.content, "span", "education", "", obj.label);
             displayEx.showColon();
             displayEx.setFullWidth();
-            // div.displays.push(displayEx);
             div.displays[obj.colName] = displayEx;
         });
 
@@ -2624,7 +2364,6 @@ class MPASIS_App
             var displayEx = new DisplayEx(div.content, "span", "training", "", obj.label);
             displayEx.showColon();
             displayEx.setFullWidth();
-            // div.displays.push(displayEx);
             div.displays[obj.colName] = displayEx;
         });
 
@@ -2646,7 +2385,6 @@ class MPASIS_App
             var displayEx = new DisplayEx(div.content, "span", "experience", "", obj.label);
             displayEx.showColon();
             displayEx.setFullWidth();
-            // div.displays.push(displayEx);
             div.displays[obj.colName] = displayEx;
         });
 
@@ -2660,7 +2398,6 @@ class MPASIS_App
         field.setStep(0.1);
         field.setWidth("3.5em");
         field.fields[0].classList.add("right");
-        // div.fields.push(field);
         div.fields["most_recent_performance_rating"] = field;
         div.addContent(field.container);
 
@@ -2713,44 +2450,6 @@ class MPASIS_App
 
         div.addContent(scoreSheet.addHeader("c. Outstanding Employee Award MOVs", 5));
 
-        // MAY NEED TO ADD MULTIPLE AWARDS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        // var awardCategoryfield = scoreSheet.addInputEx("", "combo", "", "", "applicant_category_outstanding_employee_movs");
-        // awardCategoryfield.showColon();
-        // awardCategoryfield.setBlankStyle();
-        // awardCategoryfield.setPlaceholderText("Choose the applicant's category");
-        // awardCategoryfield.setTooltipText("Select a category to see more options");
-        // awardCategoryfield.setWidth("20em");
-        // awardCategoryfield.setFullWidth();
-        // awardCategoryfield.addItem("Applicant from an external institution", "1");
-        // awardCategoryfield.addItem("Applicant from the Central Office", "2");
-        // awardCategoryfield.addItem("Applicant from the Regional Office", "3");
-        // awardCategoryfield.addItem("Applicant from the SDO", "4");
-        // awardCategoryfield.addItem("Applicant from School", "5");
-        // div.addContent(awardCategoryfield.container);
-
-        // var awardTypeField = scoreSheet.addInputEx("", "radio-select");
-        // awardTypeField.addItem("low", "2");
-        // awardTypeField.addItem("high", "4");
-        // awardTypeField.setVertical();
-        // awardTypeField.reverse();
-        // awardTypeField.hide();
-        // div.addContent(awardTypeField.container);
-
-        // awardCategoryfield.addEvent("change", awarderChangeEvent=>{
-        //     var category = awardCategoryfield.getDataValue();
-        //     var [a, b] = [awardTypeField.fields[0].inputEx, awardTypeField.fields[1].inputEx];
-        //     if (category != null && category != undefined)
-        //     {
-        //         a.setLabelText(category == 1 ? "Local Office Search" : (category == 2 ? "Central Office Search" : (category == 3 ? "Regional Office Search" : (category == 4 ? "Division/Provincial/City Level Search" : "School/Municipality/District Level Search"))));
-        //         b.setLabelText(category == 1 ? "Organizational Level Search or Higher" : (category < 5 ? "National Level Search or Higher" : "Division Level Search or Higher"));
-        //         awardTypeField.show();
-        //     }
-        //     else
-        //     {
-        //         awardTypeField.hide();
-        //     }
-        // });
-
         [
             "Number of awards from external institution",
             {colName:"number_of_awards_external_office_search", label:"Local office search", weight:2, subcriteria:"awards"},
@@ -2797,17 +2496,6 @@ class MPASIS_App
 
         div.fields["subcriteria"]["research"] = [];
 
-        // MAY NEED TO ADD MULTIPLE PAPERS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        // var researchField = scoreSheet.addInputEx("", "checkbox-select");
-        // researchField.addItem("Proposal", "A");
-        // researchField.addItem("Accomplishment Report", "B");
-        // researchField.addItem("Certification of Utilization", "C");
-        // researchField.addItem("Certification of Adoption", "D");
-        // researchField.addItem("Proof of Citation by Other Researchers", "E");
-        // researchField.setVertical();
-        // researchField.reverse();
-        // div.addContent(researchField.container);
-
         subDiv = scoreSheet.addDisplayEx("div", "researchCriteriaGuide");
 
         div.addContent(scoreSheet.addHeader("Guide:", 6));
@@ -2852,17 +2540,6 @@ class MPASIS_App
 
         div.fields["subcriteria"]["smetwg"] = [];
 
-        // // MAY NEED TO ADD MULTIPLE MEMBERSHIP OR EXPERTISE ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        // var smeTwgField = scoreSheet.addInputEx("", "checkbox-select");
-        // smeTwgField.addItem("Issuance/Memorandum", "A");
-        // smeTwgField.addItem("Certificate", "B");
-        // smeTwgField.addItem("Output/Adoption by the Organization", "C");
-        // smeTwgField.setVertical();
-        // smeTwgField.reverse();
-        // div.addContent(smeTwgField.container);
-
-        // subDiv = scoreSheet.addDisplayEx("div", "smeTwgCriteriaGuide");
-
         div.addContent(scoreSheet.addHeader("Guide:", 6));
 
         var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
@@ -2899,43 +2576,6 @@ class MPASIS_App
         div.addContent(scoreSheet.addHeader("4. Resource Speakership/Learning Facilitation", 4));
 
         div.fields["subcriteria"]["speakership"] = [];
-
-        // // MAY NEED TO ADD MULTIPLE SPEAKERSHIP ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        // var speakershipCategoryfield = scoreSheet.addInputEx("", "combo");
-        // speakershipCategoryfield.showColon();
-        // speakershipCategoryfield.setBlankStyle();
-        // speakershipCategoryfield.setPlaceholderText("Choose the applicant's category");
-        // speakershipCategoryfield.setTooltipText("Select a category to see more options");
-        // speakershipCategoryfield.setWidth("20em");
-        // speakershipCategoryfield.setFullWidth();
-        // speakershipCategoryfield.addItem("Applicant from an external institution", "1");
-        // speakershipCategoryfield.addItem("Applicant from the Central Office", "2");
-        // speakershipCategoryfield.addItem("Applicant from the Regional Office", "3");
-        // speakershipCategoryfield.addItem("Applicant from the SDO", "4");
-        // div.addContent(speakershipCategoryfield.container);
-
-        // var speakershipTypeField = scoreSheet.addInputEx("", "radio-select");
-        // speakershipTypeField.addItem("low", "1");
-        // speakershipTypeField.addItem("high", "2");
-        // speakershipTypeField.setVertical();
-        // speakershipTypeField.reverse();
-        // speakershipTypeField.hide();
-        // div.addContent(speakershipTypeField.container);
-
-        // speakershipCategoryfield.addEvent("change", speakershipChangeEvent=>{
-        //     var category = speakershipCategoryfield.getDataValue();
-        //     var [a, b] = [speakershipTypeField.fields[0].inputEx, speakershipTypeField.fields[1].inputEx];
-        //     if (category != null && category != undefined)
-        //     {
-        //         a.setLabelText(category == 1 ? "Local Office" : (category == 2 ? "Central Office Level" : (category == 3 ? "Regional Office Level" : "School/Municipal/District Level")));
-        //         b.setLabelText(category == 1 ? "Organizational Level" : (category < 4 ? "National Level or Higher" : "Division Level or Higher"));
-        //         speakershipTypeField.show();
-        //     }
-        //     else
-        //     {
-        //         speakershipTypeField.hide();
-        //     }
-        // });
 
         [
             "Number of resource speakership/learning facilitation from external institution",
@@ -2989,7 +2629,6 @@ class MPASIS_App
         field.setVertical();
         field.reverse();
         field.setDefaultValue(0, true);
-        // field.setValue(0);
         div.fields["neap_facilitator_accreditation"] = field;
         div.fields["subcriteria"]["neap"]["neap_facilitator_accreditation"] = field;
         div.addContent(field.container);
@@ -3015,9 +2654,6 @@ class MPASIS_App
                     {
                         value = (value > 3 ? 4 : (value > 0 ? value + 1 : 0));
                     }
-
-                    // console.log(awardKey, key);
-                    // console.log(value, weight);
 
                     switch (awardKey)
                     {
@@ -3064,31 +2700,6 @@ class MPASIS_App
         }
 
         div = scoreSheet.displayExs.educationApp;
-
-        // // MAY NEED TO ADD MULTIPLE PROJECTS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        // var appEducWithExp = scoreSheet.addInputEx("Please select the Application of Education MOVs presented by the applicant", "checkbox-select");
-        // appEducWithExp.addItem("Action Plan approved by the Head of Office", "A", "Application of Education MOVs for Positions with Experience Requirement");
-        // appEducWithExp.addItem("Accomplishment Report verified by the Head of Office", "B", "Application of Education MOVs for Positions with Experience Requirement");
-        // appEducWithExp.addItem("Certification of Utilization/Adoption signed by the Head of Office", "C", "Application of Education MOVs for Positions with Experience Requirement");
-        // appEducWithExp.setTooltipText("Application of Education MOVs for Positions with Experience Requirement");
-        // appEducWithExp.setVertical();
-        // appEducWithExp.reverse();
-        // appEducWithExp.showColon();
-        // appEducWithExp.hide();
-        // div.addContent(appEducWithExp.container);
-
-        // var appEducWithNoExp = scoreSheet.addInputEx("Applicant's GWA in the highest academic earned TOR", "number", "1");
-        // appEducWithNoExp.setTooltipText("Application of Education MOV for Positions with No Experience Requirement");
-        // appEducWithNoExp.setBlankStyle();
-        // appEducWithNoExp.setFullWidth();
-        // appEducWithNoExp.setMin(1);
-        // appEducWithNoExp.setMax(5);
-        // appEducWithNoExp.setStep(0.1);
-        // appEducWithNoExp.setWidth("3.5em");
-        // appEducWithNoExp.fields[0].classList.add("right");
-        // appEducWithNoExp.showColon();
-        // appEducWithNoExp.hide();
-        // div.addContent(appEducWithNoExp.container);
 
         div = scoreSheet.displayExs.trainingApp;
 
@@ -3151,16 +2762,6 @@ class MPASIS_App
             });
         });
 
-        // // MAY NEED TO ADD MULTIPLE TRAININGS WITH RELATED PROJECTS ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        // var appEducWithExp = scoreSheet.addInputEx("Please select the Application of L & D MOVs presented by the applicant", "checkbox-select", "", "Application of Learning and Development MOVs for Positions with Experience Requirement");
-        // appEducWithExp.addItem("Action Plan approved by the Head of Office", "A", "Application of Learning and Development MOVs for Positions with Experience Requirement");
-        // appEducWithExp.addItem("Accomplishment Report verified by the Head of Office", "B", "Application of Learning and Development MOVs for Positions with Experience Requirement");
-        // appEducWithExp.addItem("Certification of Utilization/Adoption signed by the Head of Office", "C", "Application of Learning and Development MOVs for Positions with Experience Requirement");
-        // appEducWithExp.setVertical();
-        // appEducWithExp.reverse();
-        // appEducWithExp.showColon();
-        // div.addContent(appEducWithExp.container);
-
         div = scoreSheet.displayExs.potential;
 
         [
@@ -3201,18 +2802,6 @@ class MPASIS_App
             });
         });
 
-        // div = scoreSheet.displayExs.psych;
-
-        // field = scoreSheet.addInputEx("Please select the psychosocial attributes observed in the applicant", "checkbox-select", "", "Psychosocial Attributes");
-        // field.addItem("Human Relations", "2");
-        // field.addItem("Decisiveness", "2");
-        // field.addItem("Stress Tolerance", "1");
-        // field.setVertical();
-        // field.reverse();
-        // field.showColon();
-        // div.fields.push(field);
-        // div.addContent(field.container);
-
         for (const key in scoreSheet.displayExs["performance"].fields)
         {
             var field = scoreSheet.displayExs["performance"].fields[key];
@@ -3226,32 +2815,6 @@ class MPASIS_App
                 scoreSheet.displayExs["performance"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
             });
         }
-
-        // for (const field of scoreSheet.displayExs["potential"].fields)
-        // {
-        //     field.addEvent("change", changeEvent=>{
-        //         var values = [];
-
-        //         values.push(scoreSheet.displayExs["potential"].fields[0].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.exam.weight);
-        //         values.push(scoreSheet.displayExs["potential"].fields[1].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.skillTest.weight);
-        //         values.push(scoreSheet.displayExs["potential"].fields[2].getValue());
-
-        //         var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
-
-        //         scoreSheet.displayExs["potential"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
-        //     });
-        // }
-
-        // for (const field of scoreSheet.displayExs["psych"].fields)
-        // {
-        //     field.addEvent("change", changeEvent=>{
-        //         var values = field.getValue();
-                
-        //         var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseInt(total) + Number.parseInt(nextValue); }) : 0);
-    
-        //         scoreSheet.displayExs["psych"].totalPoints.setHTMLContent(value.toString());
-        //     });
-        // }
 
         // Add total points line
         for (const key in scoreSheet.displayExs) {
@@ -3319,7 +2882,6 @@ class MPASIS_App
                     retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
                         if (searchResult.getValue() == "" || searchResult.getValue() == null)
                         {
-                            // console.log(scoreSheet);
                             retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
                             return;
                         }
@@ -3329,9 +2891,6 @@ class MPASIS_App
                         scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.dataLoaded["application_code"], true);
                         scoreSheet.dbInputEx["applicant_name"].setDefaultValue(scoreSheet.dataLoaded["applicant_name"], true);
                         scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.dataLoaded["position_title_applied"], true);
-                        
-                        // console.log(scoreSheet);
-                        // console.log(scoreSheet.dataLoaded);
                         
                         var educAttainment = scoreSheet.dataLoaded["educational_attainmentIndex"];
                         var degreeTaken = scoreSheet.dataLoaded["degree_taken"];
@@ -3500,7 +3059,6 @@ class MPASIS_App
                             field.setStep(0.1);
                             field.setWidth("3.5em");
                             field.fields[0].classList.add("right");
-                            // div.fields.push(field);
                             div.fields["app_educ_gwa"] = field;
                             div.addContent(field.container);                   
                             
@@ -3581,7 +3139,6 @@ class MPASIS_App
                                 case "score_exam":
                                 case "score_skill":
                                 case "score_bei":
-                                    // console.log(key);
                                     if (key in scoreSheet.dbInputEx)
                                     {
                                         scoreSheet.dbInputEx[key].setDefaultValue(scoreSheet.dataLoaded[key] ?? "", true);
@@ -3673,7 +3230,7 @@ class MPASIS_App
             // DEBUG
 
             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-            postData(this.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
+            postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
                 var response;
 
                 if (event.target.readyState == 4 && event.target.status == 200)
@@ -3682,7 +3239,7 @@ class MPASIS_App
 
                     if (response.type == "Error")
                     {
-                        new MsgBox(scoreSheet.container, response.content, "OK");
+                        new MsgBox(scoreSheet.container, "ERROR: " + response.content, "OK");
                     }
                     else if (response.type == "Success")
                     {
@@ -3702,7 +3259,7 @@ class MPASIS_App
 
         document.scrim = new ScrimEx(this.main);
 
-        postData(this.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
+        postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
             var response;
 
             if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
@@ -3711,12 +3268,11 @@ class MPASIS_App
 
                 if (response.type == "Error")
                 {
-                    new MsgBox(this.forms["applicantData"].container, "Error: " + response.content, "CLOSE");
+                    new MsgBox(this.forms["scoreSheetOld"].container, "ERROR: " + response.content, "CLOSE");
                 }
                 else if (response.type == "Data")
                 {
                     var data = JSON.parse(response.content);
-                    // console.log(data);
                     document.positions = data["positions"];
                     document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
@@ -3761,6 +3317,17 @@ class MPASIS_App
     constructIES()
     {
         this.mainSections["main-ies"].innerHTML = "<h2>Individual Evaluation Sheet (IES)</h2>";
+    }
+
+    showScrim()
+    {
+        this.scrim = new ScrimEx(this.main);
+        this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
+    }
+
+    closeScrim()
+    {
+        this.scrim.destroy();
     }
 
     setCookie(cname, cvalue, exdays)

@@ -170,9 +170,12 @@ body, .app > main {
     /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
+/*
+REINSTATE FOR PRINTOUT
 .ier-form > h2 {
     text-transform: uppercase;
 }
+*/
 
 .ier-position-info > .display-ex {
     display: block;
