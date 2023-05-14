@@ -7,6 +7,7 @@ TO DO:
 * [x] Fix bug found in Applicant Data Entry form that causes duplicate personal data to be generated
 * [x] Generalize the location of the processURL variable
 * [x] Remove "commented" code
+* [x] Fix bug found in Applicant Data Entry form that causes duplicate job application data to be generated when application code is edited
 * [ ] Create PHP functions that will further generalize adding and updating of specific database records
 * [ ] Create a printout template for the IER
 * [ ] Add a FormEx-derived IES class 
@@ -39,7 +40,7 @@ TO DO:
 * [ ] Add a better User editing form, with option to add either a permanent or a temporary user account
 * [ ] Create a printout template for the IER
 
-I started to restructure my local database along with the hosted database to accomodate more user management features. However, when I went on creating a new user editing form class, I had some difficulties in figuring out how to implement the logic and the styling. So, I first tried to set up the name and username fields along with the system access levels. I had issues in placing the elements, especially when using grid display style. I might use the Mozilla Firefox browser tomorrow to better implement the styling, as that browser is more standards compliant than Microsoft Edge or Google Chrome.
+I started to restructure my local database along with the hosted database to accommodate more user management features. However, when I went on creating a new user editing form class, I had some difficulties in figuring out how to implement the logic and the styling. So, I first tried to set up the name and username fields along with the system access levels. I had issues in placing the elements, especially when using grid display style. I might use the Mozilla Firefox browser tomorrow to better implement the styling, as that browser is more standards compliant than Microsoft Edge or Google Chrome.
 
 ## 5/9/2023
 TO DO:

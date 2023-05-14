@@ -1569,7 +1569,7 @@ class MPASIS_App
                                         {
                                             applicantDataForm.dbInputEx[key].check(applicationObj[key] == 1);
                                         }
-                                        else //if (!newApplication || key != "application_code") // application code is not auto-generated as of this moment
+                                        else if (!newApplication || key != "application_code")
                                         {
                                             applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key] ?? "", true);
                                         }
@@ -1634,7 +1634,14 @@ class MPASIS_App
                             }
                         }
 
+                        if (!newApplication)
+                        {
+                            applicantDataForm.dbInputEx["application_code"].disable();
+                        }
+
                         applicantDataBtnGrp.inputExs[0].setLabelText(newApplication ? "Save" : "Update");
+
+                        loadApplicant.setLabelText("Reset Form");
                 };
 
                 searchResult.runAfterFilling = ()=>{
@@ -1678,12 +1685,12 @@ class MPASIS_App
 
                     searchResult.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + searchBox.getValue(), "applicant_option_label", "application_code");
                 });
-
-                // clickEvent.target.innerHTML = "Reset Form";
             }
             else if (loadApplicantClickEvent.target.innerHTML == "Reset Form")
             {
-                applicantDataForm.resetForm();
+                // applicantDataForm.resetForm();
+                this.showScrim();
+                window.location.reload(true);
 
                 loadApplicantClickEvent.target.innerHTML = "Load Existing Applicant";
             }

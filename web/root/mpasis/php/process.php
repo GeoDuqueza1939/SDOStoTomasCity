@@ -1108,7 +1108,7 @@ if (isValidUserSession())
                         {
                             if ($updateJobApplication)
                             {
-                                $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "$key='$value'";
+                                $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "$key=" . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             }
                             else
                             {
