@@ -278,7 +278,6 @@ REINSTATE FOR PRINTOUT
     text-align: center;
 }
 
-
 .query-results-users {
     display: block;
     max-width: 100%;
@@ -497,3 +496,127 @@ REINSTATE FOR PRINTOUT
     text-align: center;
 }
 
+.ies-form {
+    display: block;
+    font-family: "Bookman Old Style", "URW Bookman", serif;
+}
+
+.ies-load-application {
+    display: block;
+    text-align: right;
+}
+
+.ies-load-application > .fields > .status-pane {
+    display: block;
+}
+
+.ies-form .applicant-info {
+    display: inline-block;
+    /* max-width: 50%; */
+}
+
+.ies-form .applicant-info > .content {
+    display: block;
+}
+
+.ies-form .applicant-info > .content > .display-ex {
+    display: grid;
+}
+
+.ies-form .applicant-info > .content > .display-ex.application_code {
+    grid-template-columns: 9.5em auto auto;
+    position: absolute;
+    right: 2em;
+}
+
+.ies-form .applicant-info > .content > .display-ex.applicant_name {
+    grid-template-columns: 10em auto auto;
+}
+
+.ies-form .applicant-info > .content > .display-ex.position_title_applied {
+    grid-template-columns: 11em auto auto;
+}
+
+.ies-form .applicant-info > .content > .display-ex.office {
+    grid-template-columns: 3.5em auto auto;
+}
+
+.ies-form .applicant-info > .content > .display-ex.contact_number {
+    grid-template-columns: 9em auto auto;
+}
+
+.ies-form .applicant-info > .content > .display-ex.job_group_salary_grade {
+    grid-template-columns: 11em auto auto;
+}
+
+.ies-form .applicant-info > .content > .display-ex > * {
+    display: inline;
+}
+
+.ies-form .applicant-info > .content > .display-ex > label {
+    
+}
+
+.ies-form .applicant-info > .content > .display-ex > .content {
+    border-bottom: 0.02em solid;
+    /* white-space: nowrap; */
+    /* min-width: 5em; */
+    grid-column: span 2;
+    padding: 0 1em;
+    text-align: center;
+}
+
+.ies-table {
+    display: block;
+    margin-top: 1em;
+}
+
+.ies-table > .content {
+    display: block;
+}
+
+.ies-table > .content > table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.ies-table > .content > table > * > tr > * {
+    border: 0.05em solid black;
+    padding: 0.3em 0.15em;
+
+}
+
+.ies-table > .content > table > thead > tr > * {
+    background-color: gray;
+    color: white;
+}
+
+.ies-table > .content > table > thead > tr > * > .subhead {
+    font-size: 0.85em;
+    font-weight: normal;
+    font-style: italic;
+}
+
+.ies-table > .content > table > tfoot > tr > * {
+    background-color: gray;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ies-table > .content > table > tfoot > tr > :first-child {
+    text-transform: uppercase;
+}
+
+.ies-table > .content > table > tfoot > tr > :last-child {
+    background-color: unset;
+    color: unset;
+}
+
+.ies-table > .content > table > tbody > tr > :nth-child(2) {
+    text-align: center;
+}
+
+.ies-table > .content > table > * > tr > :nth-child(5) {
+    text-align: right;
+}

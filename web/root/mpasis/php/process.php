@@ -418,6 +418,14 @@ if (isValidUserSession())
                                     return;
                                 }
 
+                                $positionCategory = $dbconn->select('Position_Category', '*', '');
+
+                                if (!is_null($dbconn->lastException))
+                                {
+                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    return;
+                                }
+
                                 $educIncrementTable = $dbconn->select('MPS_Increment_Table_Education', '*', '');
 
                                 if (!is_null($dbconn->lastException))
@@ -430,7 +438,7 @@ if (isValidUserSession())
 
                                 if (is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment]))));
+                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory]))));
                                 }
                                 else
                                 {

@@ -1,5 +1,20 @@
 # Work Log
 
+## 5/15/2023
+TO DO:
+* [x] Add a FormEx-derived IES class
+* [x] Add IES styling
+* [ ] Render either or both the details of applicant's qualifications and the computation of the score
+* [ ] Add a FormEx-derived Comparative Assessment Result
+* [ ] Create PHP functions that will further generalize adding and updating of specific database records
+* [ ] Create a printout template for the IER
+* [ ] Create a printout template for the IES
+* [x] Added favicon
+
+I have started constructing the IESForm class just this morning, and it was almost finished, as most of the code I needed were similar to those in the score sheet. However, 2 columns were quite unclear to me. First is the Details of Applicant's Qualifications column, which may consist of remarks about the relevant documents submitted. To implement this, I might need to revisit the Applicant Data Entry form and even the score sheet and add a few more text fields. Next is the Computation column, which Ms. Cathy said is not always filled. However, although it doesn't need to be automatically filled, I think it might be easier to implement than the other column is. I might look into this tomorrow or I could also dive directly into te CAR form design instead. I just need to rest right now first, as my headache is killing me.
+
+By the way, I have also added some favicons to the site.
+
 ## 5/14/2023
 TO DO:
 * [x] Implement app behavior wherein a user will be asked to define a new password after first login

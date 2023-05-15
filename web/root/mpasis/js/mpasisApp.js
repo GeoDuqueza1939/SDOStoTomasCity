@@ -86,6 +86,7 @@ class MPASIS_App
                     document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
+                    document.positionCategory = data["position_category"];
             
                     if (this.getCookie("current_view") == "" || this.getCookie("current_view") == undefined)
                     {
@@ -1715,6 +1716,7 @@ class MPASIS_App
                     document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
+                    document.positionCategory = data["position_category"];
                     
                     document.scrim.destroy();
 
@@ -3284,6 +3286,7 @@ class MPASIS_App
                     document.salaryGrade = data["salary_grade"];
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
+                    document.positionCategory = data["position_category"];
                     
                     document.scrim.destroy();
                 }
@@ -3316,14 +3319,21 @@ class MPASIS_App
             return this.forms["ier"];
         }
 
-        this.forms["ier"] = new IERForm(this.mainSections["main-ier"]);
+        this.forms["ier"] = new IERForm(this.mainSections["main-ier"], "ier-form");
 
         return this.forms["ier"];
     }
 
     constructIES()
     {
-        this.mainSections["main-ies"].innerHTML = "<h2>Individual Evaluation Sheet (IES)</h2>";
+        if (this.forms["ies"] != null && this.forms["ies"] != undefined)
+        {
+            return this.forms["ies"];
+        }
+
+        this.forms["ies"] = new IESForm(this.mainSections["main-ies"], "ies-form");
+
+        return this.forms["ies"];
     }
 
     showScrim()

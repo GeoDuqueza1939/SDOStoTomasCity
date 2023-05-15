@@ -114,20 +114,20 @@ function getValidCredentials(string $username, string $password)
 
 function isValidUserSession()
 {
-    return isset($_SESSION['user']) && isset($_COOKIE['user']) && $_SESSION['user']['username'] == json_decode($_COOKIE['user'], true)['username'];
+    return isset($_SESSION['user']) && isset($_COOKIE['user']) && isset($_SESSION['user']['username']) && isset(json_decode($_COOKIE['user'], true)['username']) && $_SESSION['user']['username'] == json_decode($_COOKIE['user'], true)['username'];
 }
 
-function userExists(DatabaseConnection $dbconn, $username, $isTempUser = false) // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+function userExists(DatabaseConnection $dbconn, $username, $isTempUser = false)
 {
     return recordExists($dbconn, ($isTempUser ? 'Temp_' : '') . 'User', 'username', $username);
 }
 
-function employeeExists(DatabaseConnection $dbconn, $employeeId) // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+function employeeExists(DatabaseConnection $dbconn, $employeeId)
 {
     return recordExists($dbconn, 'Employee', 'employeeId', $employeeId);
 }
 
-function addUser(DatabaseConnection $dbconn, $user, $person, $calledByUpdateUser = false) // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+function addUser(DatabaseConnection $dbconn, $user, $person, $calledByUpdateUser = false)
 {
     $isTempUser = $user['temp_user'];
     $username = $user['username'];
@@ -203,7 +203,7 @@ function addUser(DatabaseConnection $dbconn, $user, $person, $calledByUpdateUser
     }
 }
 
-function updateUser(DatabaseConnection $dbconn, $user, $person) // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+function updateUser(DatabaseConnection $dbconn, $user, $person)
 {
     $isTempUser = $user['temp_user'];
     $username = $user['username'];
@@ -263,7 +263,7 @@ function updateUser(DatabaseConnection $dbconn, $user, $person) // SHOULD BE MOV
     }
 }
 
-function fetchUser($dbconn, $username = '', $criteriaStr = 'all') // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+function fetchUser($dbconn, $username = '', $criteriaStr = 'all')
 {
     $criteria = '';
 
@@ -295,7 +295,7 @@ function fetchUser($dbconn, $username = '', $criteriaStr = 'all') // SHOULD BE M
     }
 }
 
-function changePassword($dbconn, $passwordDetails) // SHOULD BE MOVED TO A FILE IN HTDOCS_LOCAL
+function changePassword($dbconn, $passwordDetails)
 {
     $requireCurrentPassword = $passwordDetails['requireCurrentPassword'];
     $password = $passwordDetails['password'];
