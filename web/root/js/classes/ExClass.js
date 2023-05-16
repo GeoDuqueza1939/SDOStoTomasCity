@@ -1713,9 +1713,9 @@ class InputEx
         {
             if (this.labels.length == 0)
             {
-                if (this.useFieldSet && this.isMultipleInput)
+                if (this.useFieldSet) // && this.isMultipleInput) // fieldset will now always be paired with a legend
                 {
-                    this.labels.push(createElementEx(NO_NS, "legend", this.fieldWrapper));
+                    this.labels.push(createElementEx(NO_NS, "legend", this.fieldWrapper, this.fields[0] ?? null));
                 }
                 else
                 {
@@ -3180,7 +3180,7 @@ class ScoreSheetElementUI
                     uiEx.addContent(this.label, null, true);
                     if (this.type == "criteria1")
                     {
-                        this.totalScoreDisplay = new DisplayEx(this.contentWrapper, "div", "", "n/a", "Total Points");
+                        this.totalScoreDisplay = new DisplayEx(this.contentWrapper, "div", "", "N/A", "Total Points");
                         this.totalScoreDisplay.showColon();
                         this.totalScoreDisplay.container.classList.add("main-criteria-points");
                         uiEx.container.classList.add("main-criteria");
@@ -3286,6 +3286,20 @@ class ScoreSheetElementUI
                 }
                 break;
             case "input-text":
+            case "textarea":
+                uiEx = scoreSheet.addInputEx(scoreSheetElement.label, (this.type == "input-text" ? "text" : this.type), "", "", scoreSheetElement.dbColName, scoreSheetElement.dbTableName);
+                this.container = uiEx.container;
+                this.contentWrapper = uiEx.fieldWrapper;
+                this.label = uiEx.labels[0];
+                this.container.scoreSheetElementUI = this;
+                this.contentWrapper.scoreSheetElementUI = this;
+                if (this.label != null)
+                {
+                    this.label.scoreSheetElementUI = this;
+                }
+                uiEx.fields[0].scoreSheetElementUI = this;
+                uiEx.showColon();
+                this.inputEx = uiEx;
                 break;
             case "input-number":
                 uiEx = scoreSheet.addInputEx(scoreSheetElement.label, "number", 0, "", scoreSheetElement.dbColName, scoreSheetElement.dbTableName);
@@ -3507,8 +3521,6 @@ class ScoreSheetElementUI
 
 class ScoreSheet extends FormEx
 {
-    static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
-
     constructor(parentEl = null, id = "", useFormElement = true)
     {
         super(parentEl, id, useFormElement);
@@ -3686,13 +3698,13 @@ class ScoreSheet extends FormEx
                         var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"])[0];
 
                         // Education
-                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
+                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
                         
                         // Training
-                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
+                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
 
                         // Experience
-                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
+                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
 
                         // Performance
                         scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
@@ -3896,6 +3908,8 @@ class ScoreSheet extends FormEx
                     {id:"degrees_taken",type:"display-list-bullet-disc",label:"Degrees taken",dbColName:"degrees_taken",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"has_specific_education_required",type:"display",label:"Has taken education required for the position",dbColName:"has_specific_education_required",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"educ_notes",type:"display",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"educ_notes",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"educIncrements",type:"display",label:"Number of increments above the Qualification Standard",dbColName:"educIncrements",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"isEducQualified",type:"display-check",label:"Applicant is qualified",dbColName:"isEducQualified",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -3906,12 +3920,14 @@ class ScoreSheet extends FormEx
                 min:0,
                 max:0,
                 step:0,
+                notesId:"educ_notes",
                 getPointsManually:function(mode = 0){
                     var score = 0, scoreSheetElementUI = null;
                     
                     var educAttainment = jobApplication["educational_attainmentIndex"];
                     var degreeTaken = jobApplication["degree_taken"];
-                    var hasSpecEduc = (jobApplication["has_specific_education_required"] == null ? "n/a" : (jobApplication["has_specific_education_required"] == 1 ? "Yes" : "No"));
+                    var educNotes = jobApplication["educ_notes"] ?? "none";
+                    var hasSpecEduc = (jobApplication["has_specific_education_required"] == null ? "N/A" : (jobApplication["has_specific_education_required"] == 1 ? "Yes" : "No"));
                     
                     var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
                     var incrementObj = document.mpsEducIncrement.filter(increment=>(increment["baseline_educational_attainment"] == positionObj["required_educational_attainment"]));
@@ -3935,8 +3951,9 @@ class ScoreSheet extends FormEx
                             scoreSheetElementUI.displays["degrees_taken"].contentWrapper.parentElement.appendChild(document.createTextNode("(no info)"));
                         }
                         scoreSheetElementUI.displays["has_specific_education_required"].displayEx.setHTMLContent(hasSpecEduc);
+                        scoreSheetElementUI.displays["educ_notes"].displayEx.setHTMLContent(educNotes);
                         scoreSheetElementUI.displays["educIncrements"].displayEx.setHTMLContent(educIncrementAboveQS.toString());
-                        scoreSheetElementUI.displays["isEducQualified"].displayEx.check((hasSpecEduc == "n/a" || hasSpecEduc == "Yes") && applicantEducIncrement >= requiredEducIncrement);
+                        scoreSheetElementUI.displays["isEducQualified"].displayEx.check((hasSpecEduc == "N/A" || hasSpecEduc == "Yes") && applicantEducIncrement >= requiredEducIncrement);
                     }
 
                     score = ScoreSheet.getEducScore(educIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
@@ -3956,6 +3973,8 @@ class ScoreSheet extends FormEx
                     {id:"has_specific_training",type:"display",label:"Has undergone required training for the position",dbColName:"has_specific_training",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"has_more_unrecorded_training",type:"display",label:"Has unconsidered trainings",dbColName:"has_more_unrecorded_training",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"train_notes",type:"display",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"train_notes",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"trainIncrements",type:"display",label:"Number of increments above the Qualification Standard",dbColName:"trainIncrements",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"isTrainingQualified",type:"display-check",label:"Applicant is qualified",dbColName:"isTrainingQualified",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -3966,14 +3985,16 @@ class ScoreSheet extends FormEx
                 min:0,
                 max:0,
                 step:0,
+                notesId:"train_notes",
                 getPointsManually:function(mode = 0){
                     var score = 0, scoreSheetElementUI = null;
 
                     var relevantTrainings = jobApplication["relevant_training"];
+                    var trainNotes = jobApplication["train_notes"] ?? "none";
                     var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
                     var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
-                    var hasSpecTraining = (jobApplication["has_specific_training"] == null ? "n/a" : (jobApplication["has_specific_training"] == 1 ? "Yes" : "No"));
-                    var hasMoreTraining = (jobApplication["has_more_unrecorded_training"] == null ? "n/a" : (jobApplication["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
+                    var hasSpecTraining = (jobApplication["has_specific_training"] == null ? "N/A" : (jobApplication["has_specific_training"] == 1 ? "Yes" : "No"));
+                    var hasMoreTraining = (jobApplication["has_more_unrecorded_training"] == null ? "N/A" : (jobApplication["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
                     var requiredTrainingHours = positionObj["required_training_hours"];
                     var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
                     var trainingIncrementAboveQS = applicantTrainingIncrement - requiredTrainingIncrement;
@@ -3985,8 +4006,9 @@ class ScoreSheet extends FormEx
                         scoreSheetElementUI.displays["relevant_training_count"].displayEx.setHTMLContent(relevantTrainings.length.toString());
                         scoreSheetElementUI.displays["has_specific_training"].displayEx.setHTMLContent(hasSpecTraining);
                         scoreSheetElementUI.displays["has_more_unrecorded_training"].displayEx.setHTMLContent(hasMoreTraining);
+                        scoreSheetElementUI.displays["train_notes"].displayEx.setHTMLContent(trainNotes);
                         scoreSheetElementUI.displays["trainIncrements"].displayEx.setHTMLContent(trainingIncrementAboveQS.toString());
-                        scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "n/a" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
+                        scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "N/A" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
                     }
 
                     score = ScoreSheet.getTrainingScore(trainingIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
@@ -4006,6 +4028,8 @@ class ScoreSheet extends FormEx
                     {id:"has_specific_work_experience",type:"display",label:"Has the required work experience for the position",dbColName:"has_specific_work_experience",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"has_more_unrecorded_work_experience",type:"display",label:"Has unconsidered employment",dbColName:"has_more_unrecorded_work_experience",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"work_exp_notes",type:"display",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"work_exp_notes",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"expIncrements",type:"display",label:"Number of increments above the Qualification Standard",dbColName:"expIncrements",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"isWorkExpQualified",type:"display-check",label:"Applicant is qualified",dbColName:"isWorkExpQualified",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -4016,14 +4040,16 @@ class ScoreSheet extends FormEx
                 min:0,
                 max:0,
                 step:0,
+                notesId:"work_exp_notes",
                 getPointsManually:function(mode = 0){
                     var score = 0, scoreSheetElementUI = null;
 
                     var relevantWorkExp = jobApplication["relevant_work_experience"];
-                    var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? ScoreSheet.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
+                    var workExpNotes = jobApplication["work_exp_notes"] ?? "none";
+                    var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? MPASIS_App.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
                     var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
-                    var hasSpecWorkExp = (jobApplication["has_specific_work_experience"] == null ? "n/a" : (jobApplication["has_specific_work_experience"] == 1 ? "Yes" : "No"));
-                    var hasMoreWorkExp = (jobApplication["has_more_unrecorded_work_experience"] == null ? "n/a" : (jobApplication["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
+                    var hasSpecWorkExp = (jobApplication["has_specific_work_experience"] == null ? "N/A" : (jobApplication["has_specific_work_experience"] == 1 ? "Yes" : "No"));
+                    var hasMoreWorkExp = (jobApplication["has_more_unrecorded_work_experience"] == null ? "N/A" : (jobApplication["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
                     var requiredWorkExpYears = positionObj["required_work_experience_years"];
                     var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
                     var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
@@ -4035,8 +4061,9 @@ class ScoreSheet extends FormEx
                         scoreSheetElementUI.displays["relevant_work_experience_count"].displayEx.setHTMLContent(relevantWorkExp.length.toString());
                         scoreSheetElementUI.displays["has_specific_work_experience"].displayEx.setHTMLContent(hasSpecWorkExp);
                         scoreSheetElementUI.displays["has_more_unrecorded_work_experience"].displayEx.setHTMLContent(hasMoreWorkExp);
+                        scoreSheetElementUI.displays["work_exp_notes"].displayEx.setHTMLContent(workExpNotes);
                         scoreSheetElementUI.displays["expIncrements"].displayEx.setHTMLContent(workExpIncrementAboveQS.toString());
-                        scoreSheetElementUI.displays["isWorkExpQualified"].displayEx.check((hasSpecWorkExp == "n/a" || hasSpecWorkExp == "Yes") && applicantWorkExpIncrement >= requiredWorkExpIncrement);
+                        scoreSheetElementUI.displays["isWorkExpQualified"].displayEx.check((hasSpecWorkExp == "N/A" || hasSpecWorkExp == "Yes") && applicantWorkExpIncrement >= requiredWorkExpIncrement);
                     }
 
                     score = ScoreSheet.getWorkExpScore(workExpIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
@@ -4054,8 +4081,8 @@ class ScoreSheet extends FormEx
                     {id:"position_req_work_exp",type:"display-check",label:"Position applied requires prior work experience (non-entry level)",dbColName:"position_req_work_exp",dbTableName:"",content:[],parentId:"performance",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"applicant_has_prior_exp",type:"display-check",label:"Applicant has prior work experience",dbColName:"applicant_has_prior_exp",dbTableName:"",content:[],parentId:"performance",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"performance",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
-                    {id:"most_recent_performance_rating",type:"input-number",label:"Most recent relevant 1-year Performance Rating attained",dbColName:"most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:(positionCategory == 1 || !(positionRequiresExp || applicantHasPriorWorkExp) ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),maxPoints:0,min:0,max:5,step:0.1},
-                    {id:"performance_cse_gwa_rating",type:"input-number",label:"CSE Rating/GWA in the highest academic/grade level earned (actual/equivalent)",dbColName:"performance_cse_gwa_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:(positionCategory == 1 || positionRequiresExp || applicantHasPriorWorkExp ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),maxPoints:0,min:0,max:100,step:0.1,getPointsManually:function(mode = 0){
+                    {id:"most_recent_performance_rating",type:"input-number",label:"Most recent relevant 1-year Performance Rating attained",shortLabel:"Perf. Rating",dbColName:"most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:(positionCategory == 1 || !(positionRequiresExp || applicantHasPriorWorkExp) ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),maxPoints:0,min:0,max:5,step:0.1},
+                    {id:"performance_cse_gwa_rating",type:"input-number",label:"CSE Rating/GWA in the highest academic/grade level earned (actual/equivalent)", shortLabel:"CSE Rating/GWA",dbColName:"performance_cse_gwa_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:(positionCategory == 1 || positionRequiresExp || applicantHasPriorWorkExp ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),maxPoints:0,min:0,max:100,step:0.1,getPointsManually:function(mode = 0){
                         var value = (mode == 0 ? this.inputEx.getValue() : jobApplication[this.dbColName]);
                         var obj = (mode == 0 ? this.scoreSheetElement : this);
 
@@ -4080,6 +4107,7 @@ class ScoreSheet extends FormEx
                         id:"performance_cse_honor_grad",
                         type:"input-radio-select",
                         label:"Please select the applicable item if applicant is an honor graduate",
+                        label:"Honor Grad.",
                         dbColName:"performance_cse_honor_grad",
                         dbTableName:"Job_Application",
                         content:[
@@ -4116,7 +4144,9 @@ class ScoreSheet extends FormEx
     
                             return obj.score * value / (obj.weight < 0 ? 1 : obj.max / obj.weight);
                         }
-                    }
+                    },
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"performance",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"performance_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"performance_notes",dbTableName:"Job_Application",content:[],parentId:"performance",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4124,7 +4154,8 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"performance_notes"
             },
             {
                 id:"lept",
@@ -4133,7 +4164,9 @@ class ScoreSheet extends FormEx
                 dbColName:"lept",
                 dbTableName:"",
                 content:[
-                    {id:"lept_rating",type:"input-number",label:"Applicant's PBET/LET/LEPT Rating",dbColName:"lept_rating",dbTableName:"Job_Application",content:[],parentId:"lept",score:1,weight:(positionCategory == 1 ? 10 : 0),maxPoints:0,min:0,max:100,step:0.1}
+                    {id:"lept_rating",type:"input-number",label:"Applicant's PBET/LET/LEPT Rating",shortLabel:"LEPT Rating",dbColName:"lept_rating",dbTableName:"Job_Application",content:[],parentId:"lept",score:1,weight:(positionCategory == 1 ? 10 : 0),maxPoints:0,min:0,max:100,step:0.1},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"lept",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"lept_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"lept_notes",dbTableName:"Job_Application",content:[],parentId:"lept",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4141,16 +4174,20 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 ? 10 : 0),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"lept_notes"
             },
             {
                 id:"coi",
                 type:"criteria1",
                 label:"PPST Classroom Observable Indicators",
+                sublabel:"Demonstration Teaching using COT-RSP",
                 dbColName:"coi",
                 dbTableName:"",
                 content:[
-                    {id:"ppstcoi",type:"input-number",label:"Applicant's COT Rating",dbColName:"ppstcoi",dbTableName:"Job_Application",content:[],parentId:"coi",score:1,weight:(positionCategory == 1 ? 35 : 0),maxPoints:0,min:0,max:30,step:0.1}
+                    {id:"ppstcoi",type:"input-number",label:"Applicant's COT Rating",shortLabel:"COT Rating",dbColName:"ppstcoi",dbTableName:"Job_Application",content:[],parentId:"coi",score:1,weight:(positionCategory == 1 ? 35 : 0),maxPoints:0,min:0,max:30,step:0.1},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"coi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"coi_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"coi_notes",dbTableName:"Job_Application",content:[],parentId:"coi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4158,16 +4195,20 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 ? 35 : 0),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"coi_notes"
             },
             {
                 id:"ncoi",
                 type:"criteria1",
                 label:"PPST Non-Classroom Observable Indicators",
+                sublabel:"Teacher Reflection",
                 dbColName:"ncoi",
                 dbTableName:"",
                 content:[
-                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:20,step:0.1}
+                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:20,step:0.1},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"ncoi_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"ncoi_notes",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4175,7 +4216,8 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 ? 25 : 0),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"ncoi_notes"
             },
             {
                 id:"accomplishments",
@@ -4601,7 +4643,9 @@ class ScoreSheet extends FormEx
                         min:0,
                         max:0,
                         step:0
-                    }        
+                    },
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"accomplishments",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"accomplishments_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"accomplishments_notes",dbTableName:"Job_Application",content:[],parentId:"accomplishments",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4609,7 +4653,8 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 ? 0 : (positionCategory == 5 || (positionCategory == 3 && 16 <= salaryGrade && salaryGrade <= 23)? 5 : 10)),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"accomplishments_notes"
             },
             {
                 id:"educationApp",
@@ -4707,7 +4752,9 @@ class ScoreSheet extends FormEx
                         min:0,
                         max:0,
                         step:0
-                    }
+                    },
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"educationApp",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"education_app_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"education_app_notes",dbTableName:"Job_Application",content:[],parentId:"educationApp",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4715,7 +4762,8 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 || positionCategory == 5 ? 0 : (positionCategory == 3 && 16 <= salaryGrade && salaryGrade <= 23 ? 15 : 10)),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"education_app_notes"
             },
             {
                 id:"trainingApp",
@@ -4781,7 +4829,9 @@ class ScoreSheet extends FormEx
                         min:0,
                         max:0,
                         step:0
-                    }
+                    },
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"trainingApp",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"training_app_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"training_app_notes",dbTableName:"Job_Application",content:[],parentId:"trainingApp",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4789,18 +4839,22 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 || positionCategory == 5 ? 0 : 10),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"training_app_notes"
             },
             {
                 id:"potential",
                 type:"criteria1",
                 label:"Potential",
+                sublabel:"Written Test, BEI" + (positionCategory < 3 ? "" : ", Work Sample Test"),
                 dbColName:"potential",
                 dbTableName:"",
                 content:[
-                    {id:"score_exam",type:"input-number",label:"Written Examination",dbColName:"score_exam",dbTableName:"Job_Application",content:[],parentId:"potential",score:1,weight:(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade < 20 ? 10 : 5))),maxPoints:0,min:0,max:100,step:0.1},
-                    {id:"score_skill",type:"input-number",label:"Skills or Work Sample Test",dbColName:"score_skill",dbTableName:"Job_Application",content:[],parentId:"potential",score:1,weight:(positionCategory < 3 ? 0 : (positionCategory == 5 ? -1 : (positionCategory == 3 && salaryGrade == 24 ? 5 : 10))),maxPoints:0,min:0,max:100,step:0.1},
-                    {id:"score_bei",type:"input-number",label:"Behavioral Events Interview",dbColName:"score_bei",dbTableName:"Job_Application",content:[],parentId:"potential",score:1,weight:(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 5))),maxPoints:0,min:0,max:(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 5))),step:0.1}
+                    {id:"score_exam",type:"input-number",label:"Written Examination",shortLabel:"Exam",dbColName:"score_exam",dbTableName:"Job_Application",content:[],parentId:"potential",score:1,weight:(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade < 20 ? 10 : 5))),maxPoints:0,min:0,max:100,step:0.1},
+                    {id:"score_skill",type:"input-number",label:"Skills or Work Sample Test",shortLabel:"Skills Test",dbColName:"score_skill",dbTableName:"Job_Application",content:[],parentId:"potential",score:1,weight:(positionCategory < 3 ? 0 : (positionCategory == 5 ? -1 : (positionCategory == 3 && salaryGrade == 24 ? 5 : 10))),maxPoints:0,min:0,max:100,step:0.1},
+                    {id:"score_bei",type:"input-number",label:"Behavioral Events Interview",shortLabel:"BEI",dbColName:"score_bei",dbTableName:"Job_Application",content:[],parentId:"potential",score:1,weight:(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 5))),maxPoints:0,min:0,max:(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 5))),step:0.1},
+                    {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"potential",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"potential_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"potential_notes",dbTableName:"Job_Application",content:[],parentId:"potential",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
@@ -4808,7 +4862,8 @@ class ScoreSheet extends FormEx
                 maxPoints:(positionCategory == 1 ? 0 : (positionCategory == 5 ? 55 : (positionCategory == 2 || (positionCategory == 3 && salaryGrade == 24) ? 15 : 20))),
                 min:0,
                 max:0,
-                step:0
+                step:0,
+                notesId:"potential_notes"
             },
         ];
 
@@ -5414,7 +5469,7 @@ class IERForm extends FormEx
                                                 
                                                 for (const relevantWorkExp of jobApplication[key])
                                                 {
-                                                    duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? ScoreSheet.defaultEndDate);
+                                                    duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
                                                     row["experience_details"] += "<li>" + relevantWorkExp["descriptive_name"] + " (" + ScoreSheet.convertDurationToString(duration) + ")</li>\n";
                                                     totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
                                                 }
@@ -5652,8 +5707,10 @@ class IESForm extends FormEx
                                 totalWeight += criteria.weight;
 
                                 iesForm.displayExs["ies_table"].addRow({
-                                    "ies_criteria":criteria.label,
+                                    "ies_criteria":criteria.label + ("sublabel" in criteria ? " <i>(" + criteria.sublabel + ")</i>" : ""),
                                     "ies_weight":criteria.weight,
+                                    "ies_details":iesForm.jobApplication[criteria.notesId],
+                                    "ies_computation":IESForm.getComputationString(criteria, iesForm.jobApplication).replace(/(?:<br><br><br><br>)+/, "<br><br>").replace(/^(?:<br>)+/, ""),
                                     "ies_score":score.toFixed(3)
                                 });
                             }
@@ -5864,10 +5921,9 @@ class IESForm extends FormEx
                 }
                 else
                 {
-                    for (const scoreSheetElement of criteria.content)
+                    for (const subcriteria of criteria.content)
                     {
-                        // console.log(scoreSheetElement);
-                        points += IESForm.getPoints(scoreSheetElement, jobApplication);
+                        points += IESForm.getPoints(subcriteria, jobApplication);
                         if (criteria.maxPoints > 0 && points > criteria.maxPoints)
                         {
                             points = criteria.maxPoints;
@@ -5880,6 +5936,68 @@ class IESForm extends FormEx
         }
 
         return points;
+    }
+
+    static getComputationString(criteria, jobApplication){
+        var computationString = "";
+        var points = 0;
+
+        switch (criteria.type)
+        {
+            case "":
+                break;
+            case "input-number":
+            case "input-radio-select":
+                if (MPASIS_App.isDefined(criteria.getComputationStringManually) && type(criteria.getComputationStringManually) == "function")
+                {
+                    points = criteria.getPointsManually(1);
+                    computationString = criteria.getComputationStringManually(1);
+                }
+                else if (criteria.weight > 0 && criteria.score > 0)
+                {
+                    points = IESForm.getPoints(criteria, jobApplication);
+                    computationString = ("shortLabel" in criteria ? criteria.shortLabel : criteria.label) + ": " + (criteria.score == 1 ? "" : criteria.score + " &times;&nbsp;") + (jobApplication[criteria.dbColName] ?? 0) + " &divide;&nbsp;" + criteria.max + " &times;&nbsp;" + criteria.weight + " =&nbsp;" + (points == 0 ? points : points.toFixed(4));
+                }
+                if (points < 0)
+                {
+                    computationString += " (reset to 0)";
+                }
+                break;
+            case "criteria1":
+            case "criteria2":
+            case "criteria3":
+            case "criteria4":
+                if (type(criteria.getComputationStringManually) == "function")
+                {
+                    points = criteria.getPointsManually(1);
+                    computationString = criteria.getComputationStringManually(1);
+                    if (criteria.maxPoints > 0 && points > criteria.maxPoints && criteria.weight < 0)
+                    {
+                        computationString += " (reset to " + criteria.maxPoints + " max)";
+                    }
+                }
+                else
+                {
+                    for (const subcriteria of criteria.content)
+                    {
+                        points += IESForm.getPoints(subcriteria, jobApplication);
+                        if (subcriteria.weight > 0)
+                        {
+                            computationString += IESForm.getComputationString(subcriteria, jobApplication);
+                        }
+                    }
+
+                    if (criteria.maxPoints > 0 && points > criteria.maxPoints)
+                    {
+                        computationString += " (reset to " + criteria.maxPoints + " max)";
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        return (computationString.trim() == "" ? "" : "<br><br>" + computationString);
     }
 
     resetForm()

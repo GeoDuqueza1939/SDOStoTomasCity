@@ -27,6 +27,7 @@ function getUnicodeCharacter(cp) {
 class MPASIS_App
 {
     static processURL = "/mpasis/php/process.php";
+    static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
 
     constructor(container)
     {
@@ -35,10 +36,9 @@ class MPASIS_App
         this.main = Array.from(container.querySelectorAll("main"))[0];
         this.mainSections = {};
         this.mainSections["main-dashboard"] = document.getElementById("main-dashboard");
-        this.defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
         this.scrim = null;
         this.temp = {};
-        this.currentUser = JSON.parse(this.getCookie("user"));
+        this.currentUser = JSON.parse(MPASIS_App.getCookie("user"));
         
         var app = this;
 
@@ -46,7 +46,6 @@ class MPASIS_App
             jobData:null,
             applicantData:null,
             scoreSheet:null,
-            scoreSheetOld:null,
             ier:null,
             ies:null
         };
@@ -88,12 +87,12 @@ class MPASIS_App
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
                     document.positionCategory = data["position_category"];
             
-                    if (this.getCookie("current_view") == "" || this.getCookie("current_view") == undefined)
+                    if (MPASIS_App.getCookie("current_view") == "" || MPASIS_App.getCookie("current_view") == undefined)
                     {
-                        this.setCookie("current_view", "dashboard", 1);
+                        MPASIS_App.setCookie("current_view", "dashboard", 1);
                     }
             
-                    this.activateView(this.getCookie("current_view"));
+                    this.activateView(MPASIS_App.getCookie("current_view"));
             
                     this.closeScrim();
                 }                    
@@ -107,17 +106,17 @@ class MPASIS_App
         {
             case "sdo-home":
                 console.log("Going Home");
-                this.setCookie("current_view", "", -1);
+                MPASIS_App.setCookie("current_view", "", -1);
                 window.location = "/";
                 break;
             case "signout":
                 postData(window.location.href, "app=mpasis&a=logout", (postEvent)=>{
-                    this.setCookie("user", "", -1);
-                    this.setCookie("current_view", "", -1);
+                    MPASIS_App.setCookie("user", "", -1);
+                    MPASIS_App.setCookie("current_view", "", -1);
                     window.location.reload(true);
                 });
             default:
-                this.setCookie("current_view", viewId, 1);
+                MPASIS_App.setCookie("current_view", viewId, 1);
                 this.activateView(viewId);
                 break;
         }
@@ -167,9 +166,6 @@ class MPASIS_App
                 break;
             case "applicant-data-entry":
                 this.constructApplicantDataForm();
-                break;
-            case "scoresheet-old":
-                this.constructScoreSheetOld();
                 break;
             case "scoresheet":
                 this.constructScoreSheet();
@@ -321,6 +317,7 @@ class MPASIS_App
                                     var controlButtons = new InputEx(null, "", "buttonExs");
                                     controlButtons.container.classList.add("account-controls");
                                     controlButtons.addItem("<span class=\"material-icons-round blue\">edit</span>", "", "Edit Account");
+                                    controlButtons.addItem("<span class=\"material-icons-round red\">lock_open</span>", "", "Reset Password");
                                     controlButtons.addItem("<span class=\"material-icons-round red\">close</span>", "", "Delete Account");
                                     controlButtons.inputExs.forEach((btn, index)=>{
                                         switch (index)
@@ -332,6 +329,35 @@ class MPASIS_App
                                                 });
                                                 break;
                                             case 1:
+                                                btn.addEvent("click", clickEditAccountEvent=>{
+                                                    this.temp["searchButton"] = btnGrp.inputExs[0];
+                                                    var resetPass = new MsgBox(this.main, "Do you want to reset the password of " + row["username"] + "?", "YESNO", ()=>{
+                                                        postData(MPASIS_App.processURL, "a=resetPassd&username=" + row["username"], updatePasswordEvent=>{
+                                                            var response;
+                                            
+                                                            if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)
+                                                            {
+                                                                response = JSON.parse(updatePasswordEvent.target.responseText);
+                                            
+                                                                if (response.type == "Error")
+                                                                {
+                                                                    new MsgBox(app.main, "ERROR: " + response.content, "Close");
+                                                                }
+                                                                else if (response.type == "Debug")
+                                                                {
+                                                                    new MsgBox(app.main, response.content, "Close");
+                                                                    console.log(response.content);
+                                                                }
+                                                                else if (response.type == "Success")
+                                                                {
+                                                                    new MsgBox(app.main, response.content, "Close");
+                                                                }
+                                                            }
+                                                        });                                            
+                                                    });
+                                                });
+                                                break;
+                                            case 2:
                                                 btn.addEvent("click", clickEditAccountEvent=>{
                                                     this.temp["searchButton"] = btnGrp.inputExs[0];
                                                     var deleteUserDialog = new MsgBox(this.main, "Do you really want to delete the user: " + row["username"] + "?", "YESNO", ()=>{
@@ -922,6 +948,10 @@ class MPASIS_App
         specEducAttained.reverse();
         specEducAttained.disable();
 
+        var educNotes = applicantDataForm.addInputEx("Relevant documents or requirements submitted/Other remarks", "textarea", "", "", "educ_notes", "Job_Application", true);
+        educNotes.setFullWidth();
+        educNotes.container.style.gridColumn = "1 / span 12";
+
         var displayEducIncrement = new DisplayEx(applicantDataForm.fieldWrapper, "div", "educ-increment-display-ex", "", "Education Increment Level");
         displayEducIncrement.container.style.gridColumn = "1 / span 12";
         displayEducIncrement.container.style.fontSize = "1.2em";
@@ -1137,6 +1167,10 @@ class MPASIS_App
             attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
         });
 
+        var trainNotes = applicantDataForm.addInputEx("Relevant documents or requirements submitted/Other remarks", "textarea", "", "", "train_notes", "Job_Application", true);
+        trainNotes.setFullWidth();
+        trainNotes.container.style.gridColumn = "1 / span 12";
+
         var displayTrainingIncrement = new DisplayEx(applicantDataForm.fieldWrapper, "div", "training-increment-display-ex", "", "Training Increment Level");
         displayTrainingIncrement.container.style.gridColumn = "1 / span 12";
         displayTrainingIncrement.container.style.fontSize = "1.2em";
@@ -1196,6 +1230,10 @@ class MPASIS_App
         specWorkExpAttained.reverse();
         specWorkExpAttained.disable();
 
+        var workExpNotes = applicantDataForm.addInputEx("Relevant documents or requirements submitted/Other remarks", "textarea", "", "", "work_exp_notes", "Job_Application", true);
+        workExpNotes.setFullWidth();
+        workExpNotes.container.style.gridColumn = "1 / span 12";
+
         var displayWorkExpIncrement = new DisplayEx(applicantDataForm.fieldWrapper, "div", "work-exp-increment-display-ex", "", "Work Experience Increment Level");
         displayWorkExpIncrement.container.style.gridColumn = "1 / span 12";
         displayWorkExpIncrement.container.style.fontSize = "1.2em";
@@ -1219,7 +1257,7 @@ class MPASIS_App
             var totals = workExpInputExs.map(workExp=>{
                 var start = workExp["workExpStartDateInputEx"].getValue();
                 var end = workExp["workExpEndDateInputEx"].getValue();
-                end = (end == "" ? this.defaultEndDate : end);
+                end = (end == "" ? MPASIS_App.defaultEndDate : end);
 
                 var dur = ScoreSheet.getDuration(start, end);
 
@@ -2126,1180 +2164,6 @@ class MPASIS_App
         return applicantDataForm;
     }
 
-    constructScoreSheetOld()
-    {
-        var scoreSheet = null, field = null, div = null, subDiv = null;
-
-        if (this.forms["scoreSheetOld"] != null && this.forms["scoreSheetOld"] != undefined)
-        {
-            return this.forms["scoreSheet"];
-        }
-
-        scoreSheet = this.forms["scoreSheetOld"] = new FormEx(this.mainSections["main-scoresheet-old"], "score-sheet-old");
-        scoreSheet.setFullWidth();
-        scoreSheet["displayExs"] = [];
-        scoreSheet["data"] = [];
-        scoreSheet["dataLoaded"] = null;
-
-        scoreSheet.criteria = {
-            education:{
-                type:"regular",
-                name:"Education",
-                weight:5,
-                raw:false
-            },
-            training:{
-                type:"regular",
-                name:"Training",
-                weight:10,
-                raw:false
-            },
-            experience:{
-                type:"regular",
-                name:"Experience",
-                weight:15,
-                raw:false
-            },
-            performance:{
-                type:"regular",
-                name:"Performance",
-                weight:20,
-                raw:true
-            },
-            accomplishments:{
-                type:"category",
-                name:"Outstanding Accomplishments",
-                weight:10, // maximum
-                raw:false,
-                subcriteria:{
-                    awards:{
-                        type:"category",
-                        name:"Awards and Recognition",
-                        weight:4,
-                        raw:false,
-                        subcriteria:{
-                            citation:{
-                                type:"regular",
-                                name:"Citation or Commendation",
-                                weight:4,
-                                raw:false
-                            },    
-                            academicAward:{
-                                type:"regular",
-                                name:"Academic or Inter-School Award MOVs",
-                                weight:4,
-                                raw:false
-                            },   
-                            outstandingEmployee:{
-                                type:"regular",
-                                name:"Outstanding Employee Award MOVs",
-                                weight:4,
-                                raw:false
-                            }    
-                        }
-                    },
-                    research:{
-                        type:"regular",
-                        name:"Research and Innovation",
-                        weight:4,
-                        raw:false
-                    },
-                    smetwg:{
-                        type:"regular",
-                        name:"Subject Matter Expert/Membership in National Technical Working Groups (TWGs) or Committees",
-                        weight:3,
-                        raw:false
-                    },
-                    speakership:{
-                        type:"regular",
-                        name:"Resource Speakership/Learning Facilitation",
-                        weight:2,
-                        raw:false
-                    },
-                    neap:{
-                        type:"regular",
-                        name:"NEAP Accredited Learning Facilitator",
-                        weight:2,
-                        raw:false
-                    }
-                }
-            },
-            educationApp:{
-                type:"regular",
-                name:"Application of Education",
-                weight:10,
-                raw:false // true for position with no experience requirement
-            },
-            trainingApp:{
-                type:"regular",
-                name:"Application of Learning and Development",
-                weight:10,
-                raw:false
-            },
-            potential:{
-                type:"category",
-                name:"Potential",
-                weight:20,
-                raw:false,
-                subcriteria:{
-                    exam:{
-                        type:"regular",
-                        name:"Writtem Examination",
-                        weight:5,
-                        raw:true
-                    },
-                    skillTest:{
-                        type:"regular",
-                        name:"Skills or Work Sample Tests",
-                        weight:10,
-                        raw:true
-                    },
-                    bei:{
-                        type:"regular",
-                        name:"Behavioral Events Interview",
-                        weight:5,
-                        raw:false
-                    }
-                }
-            }
-        };
-
-        scoreSheet.addDisplayEx = function(typeText = "div", id = "", contentText = "", labelText = "", tooltip = ""){
-            var newDisplayEx = new DisplayEx(this.fieldWrapper, typeText, id, contentText, labelText, tooltip);
-            if (typeof(id) == "string" && id != "")
-            {
-                this.displayExs[id] = newDisplayEx;
-            }
-            else
-            {
-                this.displayExs.push(new DisplayEx(this.fieldWrapper, typeText, this.id + this.displayExs.length, contentText, labelText, tooltip));
-            }
-            return newDisplayEx;
-        };
-
-        scoreSheet.addHeader("Score Sheet (Old)", 2, "scoresheet-title", true);
-
-        var loadApplicant = scoreSheet.addInputEx("Load Application", "buttonEx");
-        loadApplicant.setFullWidth();
-        loadApplicant.fieldWrapper.classList.add("right");
-
-        var applicantInfo = scoreSheet.addDisplayEx("div", "applicantInfo");
-        applicantInfo.setFullWidth();
-        applicantInfo.content.style.display = "grid";
-        applicantInfo.content.style.gridTemplateColumns = "auto auto";
-        applicantInfo.content.style.gridGap = "0.5em";
-
-        [
-            {colName:"application_code", label:"Application Code"},
-            "",
-            {colName:"applicant_name", label:"Applicant's Name"},
-            {colName:"present_school", label:"School"},
-            {colName:"present_position", label:"Present Position"},
-            {colName:"present_designation", label:"Designation"},
-            {colName:"present_district", label:"District"},
-            {colName:"position_title_applied", label:"Position Applied For"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                applicantInfo.addLineBreak();
-                return;
-            }
-            var inputEx = scoreSheet.addInputEx(obj.label, "text", "", "", obj.colName);
-            inputEx.setVertical();
-            applicantInfo.addContent(inputEx.container);
-            inputEx.enable(null, inputEx != scoreSheet.dbInputEx["application_code"] && inputEx != scoreSheet.dbInputEx["applicant_name"] && inputEx != scoreSheet.dbInputEx["position_title_applied"]);
-            inputEx.fields[0].style.color = "black";
-        });
-
-        for (const key in scoreSheet.criteria)
-        {
-            var mainDisplayEx = scoreSheet.addDisplayEx("div", key)
-            mainDisplayEx.addContent(scoreSheet.addHeader(scoreSheet.criteria[key].name + " <i>(" + scoreSheet.criteria[key].weight + " points)</i>", 3));
-            scoreSheet.headers[scoreSheet.headers.length - 1].style.marginTop = 0;
-            scoreSheet.headers[scoreSheet.headers.length - 1].style.borderBottom = "1px solid";
-            mainDisplayEx.displays = [];
-            mainDisplayEx.fields = [];
-        }
-
-        for (const key in scoreSheet.displayExs)
-        {
-            var displayEx = scoreSheet.displayExs[key];
-            if (key !== "applicantInfo")
-            {
-                displayEx.setFullWidth();
-                displayEx.setVertical();
-                displayEx.content.style.border = "0.15em solid gray";
-                displayEx.content.style.borderRadius = "1em";
-                displayEx.content.style.margin = "1em 0";
-                displayEx.content.style.padding = "1em";
-            }
-        }
-
-        div = scoreSheet.displayExs.education;
-
-        [
-            {colName:"educational_attainment", label:"Highest level of education attained"},
-            {colName:"postgraduate_units", label:"Units taken towards the completion of a Postgraduate Degree"},
-            {colName:"has_specific_education_required", label:"Has taken education required for the position"},
-            "",
-            {colName:"educIncrements", label:"Number of increments above the Qualification Standard"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            var displayEx = new DisplayEx(div.content, "span", "education", "", obj.label);
-            displayEx.showColon();
-            displayEx.setFullWidth();
-            div.displays[obj.colName] = displayEx;
-        });
-
-        div = scoreSheet.displayExs.training;
-
-        [
-            {colName:"relevant_training_hours", label:"Total number of relevant training hours"},
-            {colName:"relevant_training_count", label:"Number of relevant trainings considered"},
-            {colName:"has_specific_training", label:"Has undergone required training for the position"},
-            {colName:"has_more_unrecorded_training", label:"Has unconsidered trainings"},
-            "",
-            {colName:"trainIncrements", label:"Number of Increments above the Qualification Standard"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            var displayEx = new DisplayEx(div.content, "span", "training", "", obj.label);
-            displayEx.showColon();
-            displayEx.setFullWidth();
-            div.displays[obj.colName] = displayEx;
-        });
-
-        div = scoreSheet.displayExs.experience;
-
-        [
-            {colName:"relevant_work_experience_years", label:"Total number of years of relevant work experience"},
-            {colName:"relevant_work_experience_count", label:"Number of relevant employment considered"},
-            {colName:"has_specific_work_experience", label:"Has the required work experience for the position"},
-            {colName:"has_more_unrecorded_work_experience", label:"Has unconsidered employment"},
-            "",
-            {colName:"expIncrements", label:"Number of Increments above the Qualification Standard"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            var displayEx = new DisplayEx(div.content, "span", "experience", "", obj.label);
-            displayEx.showColon();
-            displayEx.setFullWidth();
-            div.displays[obj.colName] = displayEx;
-        });
-
-        div = scoreSheet.displayExs.performance;
-
-        field = scoreSheet.addInputEx("Most recent relevant 1-year Performance Rating attained", "number", "", "", "most_recent_performance_rating");
-        field.showColon();
-        field.setBlankStyle();
-        field.setMin(1);
-        field.setMax(5);
-        field.setStep(0.1);
-        field.setWidth("3.5em");
-        field.fields[0].classList.add("right");
-        div.fields["most_recent_performance_rating"] = field;
-        div.addContent(field.container);
-
-        field.addEvent("change", changeEvent=>{
-            var values = [];
-
-            values.push(scoreSheet.displayExs["performance"].fields["most_recent_performance_rating"].getValue() / 5 * scoreSheet.criteria["performance"].weight);
-
-            var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
-
-            scoreSheet.displayExs["performance"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
-        });
-
-        div = scoreSheet.displayExs.accomplishments;
-        
-        div.fields["subcriteria"] = [];
-
-        div.addContent(scoreSheet.addHeader("1. Awards and Recognition", 4));
-
-        div.fields["subcriteria"]["awards"] = [];
-
-        div.addContent(scoreSheet.addHeader("a. Citation and Commendation", 5));
-        
-
-        field = scoreSheet.addInputEx("Number of letters of citation/commendation presented by applicant", "number", "0", "", "number_of_citation_movs");
-        field.setFullWidth();
-        field.showColon();
-        field.setBlankStyle();
-        field.setMin(0);
-        field.setMax(999);
-        field.setWidth("4em");
-        field.fields[0].classList.add("right");
-        div.fields["number_of_citation_movs"] = field;
-        div.fields["subcriteria"]["awards"]["number_of_citation_movs"] = field;
-        div.addContent(field.container);
-
-        div.addContent(scoreSheet.addHeader("b. Academic or Inter-School Award MOVs", 5));
-
-        field = scoreSheet.addInputEx("Number of award certificates/MOVs presented by applicant", "number", "0", "", "number_of_academic_award_movs");
-        field.setFullWidth();
-        field.showColon();
-        field.setBlankStyle();
-        field.setMin(0);
-        field.setMax(999);
-        field.setWidth("4em");
-        field.fields[0].classList.add("right");
-        div.fields["number_of_academic_award_movs"] = field;
-        div.fields["subcriteria"]["awards"]["number_of_academic_award_movs"] = field;
-        div.addContent(field.container);
-
-        div.addContent(scoreSheet.addHeader("c. Outstanding Employee Award MOVs", 5));
-
-        [
-            "Number of awards from external institution",
-            {colName:"number_of_awards_external_office_search", label:"Local office search", weight:2, subcriteria:"awards"},
-            {colName:"number_of_awards_external_org_level_search", label:"Organization-level search or higher", weight:4, subcriteria:"awards"},
-            "Number of awards from the Central Office",
-            {colName:"number_of_awards_central_co_level_search", label:"Central Office search", weight:2, subcriteria:"awards"},
-            {colName:"number_of_awards_central_national_search", label:"National-level search or higher", weight:4, subcriteria:"awards"},
-            "Number of awards from the Regional Office",
-            {colName:"number_of_awards_regional_ro_level_search", label:"Regional Office search", weight:2, subcriteria:"awards"},
-            {colName:"number_of_awards_regional_national_search", label:"National-level search or higher", weight:4, subcriteria:"awards"},
-            "Number of awards from the Schools Division Office",
-            {colName:"number_of_awards_division_sdo_level_search", label:"Division-/provincial-/city-level search", weight:2, subcriteria:"awards"},
-            {colName:"number_of_awards_division_national_search", label:"National-level search or higher", weight:4, subcriteria:"awards"},
-            "Number of awards from schools",
-            {colName:"number_of_awards_school_school_level_search", label:"School-/municipality-/district-level search", weight:2, subcriteria:"awards"},
-            {colName:"number_of_awards_school_sdo_level_search", label:"Division-level search or higher", weight:4, subcriteria:"awards"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            else if (typeof(obj) == "string")
-            {
-                div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
-                return;
-            }
-            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
-            field.showColon();
-            field.setFullWidth();
-            field.setMin(0);
-            field.setMax(999);
-            field.setWidth("3em");
-            field.setLabelWidth("20em");
-            field.setBlankStyle();
-            field.fields[0].classList.add("right");
-            field["weight"] = obj.weight;
-            div.fields[obj.colName] = field;
-            div.fields["subcriteria"][obj.subcriteria][obj.colName] = field;
-            div.addContent(field.container);
-        });
-
-        div.addContent(scoreSheet.addHeader("2. Research and Innovation", 4));
-
-        div.fields["subcriteria"]["research"] = [];
-
-        subDiv = scoreSheet.addDisplayEx("div", "researchCriteriaGuide");
-
-        div.addContent(scoreSheet.addHeader("Guide:", 6));
-
-        var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
-
-        div.addContent(list);
-
-        [
-            "Proposal",
-            "Accomplishment Report",
-            "Certification of Utilization",
-            "Certification of Adoption",
-            "Proof of Citation by Other Researchers"
-        ].forEach(text=>{
-            addText(text, createElementEx(NO_NS, "li", list));
-        });
-
-        [
-            {colName:"number_of_research_proposal_only", label:"A only", weight:1, subcriteria:"research"},
-            {colName:"number_of_research_proposal_ar", label:"A and B", weight:2, subcriteria:"research"},
-            {colName:"number_of_research_proposal_ar_util", label:"A, B, and C", weight:3, subcriteria:"research"},
-            {colName:"number_of_research_proposal_ar_util_adopt", label:"A, B, C, and D", weight:4, subcriteria:"research"},
-            {colName:"number_of_research_proposal_ar_util_cite", label:"A, B, C, and E", weight:4, subcriteria:"research"},
-        ].forEach(obj=>{
-            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
-            field.setFullWidth();
-            field.showColon();
-            field.setBlankStyle();
-            field.setMin(0);
-            field.setMax(999);
-            field.setWidth("3em");
-            field.setLabelWidth("9em");
-            field.fields[0].classList.add("right");
-            field["weight"] = obj.weight;
-            div.fields[obj.colName] = field;
-            div.fields["subcriteria"][obj.subcriteria][obj.colName] = field;
-            div.addContent(field.container);
-        });
-
-        div.addContent(scoreSheet.addHeader("3. Subject Matter Expert/Membership in National TWGs or Committees", 4));
-
-        div.fields["subcriteria"]["smetwg"] = [];
-
-        div.addContent(scoreSheet.addHeader("Guide:", 6));
-
-        var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
-
-        div.addContent(list);
-
-        [
-            "Issuance/Memorandum",
-            "Certificate",
-            "Output/Adoption by the organization"
-        ].forEach(text=>{
-            addText(text, createElementEx(NO_NS, "li", list));
-        });
-
-        [
-            {colName:"number_of_smetwg_issuance_cert", label:"A and B only", weight:2, subcriteria:"smetwg"},
-            {colName:"number_of_smetwg_issuance_cert_output", label:"All MOVs", weight:3, subcriteria:"smetwg"}
-        ].forEach(obj=>{
-            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
-            field.setFullWidth();
-            field.showColon();
-            field.setBlankStyle();
-            field.setMin(0);
-            field.setMax(999);
-            field.setWidth("3em");
-            field.setLabelWidth("9em");
-            field.fields[0].classList.add("right");
-            field["weight"] = obj.weight;
-            div.fields[obj.colName] = field;
-            div.fields["subcriteria"][obj.subcriteria][obj.colName] = field;
-            div.addContent(field.container);
-        });
-
-        div.addContent(scoreSheet.addHeader("4. Resource Speakership/Learning Facilitation", 4));
-
-        div.fields["subcriteria"]["speakership"] = [];
-
-        [
-            "Number of resource speakership/learning facilitation from external institution",
-            {colName:"number_of_speakership_external_office_search", label:"Local office-level", weight:1, subcriteria:"speakership"},
-            {colName:"number_of_speakership_external_org_level_search", label:"Organization-level", weight:2, subcriteria:"speakership"},
-            "Number of resource speakership/learning facilitation from the Central Office",
-            {colName:"number_of_speakership_central_co_level_search", label:"Central Office-level", weight:1, subcriteria:"speakership"},
-            {colName:"number_of_speakership_central_national_search", label:"National-level or higher", weight:2, subcriteria:"speakership"},
-            "Number of resource speakership/learning facilitation from the Regional Office",
-            {colName:"number_of_speakership_regional_ro_level_search", label:"Regional Office level", weight:1, subcriteria:"speakership"},
-            {colName:"number_of_speakership_regional_national_search", label:"National-level or higher", weight:2, subcriteria:"speakership"},
-            "Number of resource speakership/learning facilitation from the Schools Division Office",
-            {colName:"number_of_speakership_division_sdo_level_search", label:"School/municipal/district", weight:1, subcriteria:"speakership"},
-            {colName:"number_of_speakership_division_national_search", label:"Division-level or higher", weight:2, subcriteria:"speakership"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            else if (typeof(obj) == "string")
-            {
-                div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
-                return;
-            }
-            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
-            field.showColon();
-            field.setFullWidth();
-            field.setMin(0);
-            field.setMax(999);
-            field.setWidth("3em");
-            field.setLabelWidth("13.5em");
-            field.setBlankStyle();
-            field.fields[0].classList.add("right");
-            field["weight"] = obj.weight;
-            div.fields[obj.colName] = field;
-            div.fields["subcriteria"][obj.subcriteria][obj.colName] = field;
-            div.addContent(field.container);
-        });
-        
-        div.addContent(scoreSheet.addHeader("5. NEAP-Accredited Learning Facilitator", 4));
-        
-        div.fields["subcriteria"]["neap"] = [];
-
-        // MAY NEED TO ADD MULTIPLE FACILITATOR INSTANCES ALONG WITH DESCRIPTIVE NAMES OR DETAILS
-        field = scoreSheet.addInputEx("Please select the applicant's highest level of accreditation as NEAP Learning Facilitator", "radio-select", "", "", "neap_facilitator_accreditation");
-        field.addItem("None", "0");
-        field.addItem("Accredited by Regional Trainer", "1");
-        field.addItem("Accredited by National Trainer", "1.5");
-        field.addItem("Accredited by National Assessor", "2");
-        field.setVertical();
-        field.reverse();
-        field.setDefaultValue(0, true);
-        div.fields["neap_facilitator_accreditation"] = field;
-        div.fields["subcriteria"]["neap"]["neap_facilitator_accreditation"] = field;
-        div.addContent(field.container);
-
-        scoreSheet.displayExs["accomplishments"]["computeScore"] = fields=>{
-            var total = 0;
-            
-            for (const awardKey in fields) {
-                var subtotal = 0;
-                var value = 0, max = 0;
-
-                if (awardKey == "subcriteria")
-                {
-                    break;
-                }
-                for (const key in fields[awardKey]) {
-                    var weight = (isNaN(Number.parseFloat(fields[awardKey][key].weight)) ? 1 : Number.parseFloat(fields[awardKey][key].weight));
-
-                    value = Number.parseFloat(fields[awardKey][key].getValue());
-                    value = (value == "" ? 0 : value);
-
-                    if (key == "number_of_citation_movs" || key == "number_of_academic_award_movs")
-                    {
-                        value = (value > 3 ? 4 : (value > 0 ? value + 1 : 0));
-                    }
-
-                    switch (awardKey)
-                    {
-                        case "awards": case "research":
-                            max = 4;
-                            break;
-                        case "smetwg":
-                            max = 3;
-                            break;
-                        default:
-                            max = 2;
-                            break;
-                    }
-
-                    subtotal += value * weight;
-                    
-                    if (subtotal >= max)
-                    {
-                        subtotal = max;
-                        break;
-                    }
-                }
-
-
-                total += subtotal;
-
-                if (total >= 10)
-                {
-                    total = 10;
-                    break;
-                }
-            }
-
-            scoreSheet.displayExs["accomplishments"].totalPoints.setHTMLContent(total.toString());
-        };
-
-        for (const colName in scoreSheet.displayExs["accomplishments"].fields) {
-            if (colName != "subcriteria")
-            {
-                div.fields[colName].addEvent("change", changeEvent=>{
-                    scoreSheet.displayExs["accomplishments"]["computeScore"](scoreSheet.displayExs["accomplishments"].fields["subcriteria"]);
-                });
-            }
-        }
-
-        div = scoreSheet.displayExs.educationApp;
-
-        div = scoreSheet.displayExs.trainingApp;
-
-        div.addContent(scoreSheet.addHeader("Guide:", 6));
-
-        var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
-
-        div.addContent(list);
-
-        [
-            "Certificate of Training",
-            "Action Plan/Re-entry Action Plan/Job Embedded Learning/Impact Project signed by Head of Office",
-            "Accomplishment Report adopted by local level",
-            "Accomplisment Report adopted by different local level/higher level"
-        ].forEach(text=>{
-            addText(text, createElementEx(NO_NS, "li", list));
-        });
-
-        [
-            "Relevant",
-            {colName:"number_of_app_train_relevant_cert_ap", label:"A and B"},
-            {colName:"number_of_app_train_relevant_cert_ap_arlocal", label:"A, B, and C"},
-            {colName:"number_of_app_train_relevant_cert_ap_arlocal_arother", label:"All MOVs"},
-            "Not Relevant",
-            {colName:"number_of_app_train_not_relevant_cert_ap", label:"A and B"},
-            {colName:"number_of_app_train_not_relevant_cert_ap_arlocal", label:"A, B, and C"},
-            {colName:"number_of_app_train_not_relevant_cert_ap_arlocal_arother", label:"All MOVs"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            else if (typeof(obj) == "string")
-            {
-                div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
-                return;
-            }
-            var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
-            field.setFullWidth();
-            field.showColon();
-            field.setBlankStyle();
-            field.setMin(0);
-            field.setMax(999);
-            field.setWidth("3em");
-            field.setLabelWidth("7em");
-            field.fields[0].classList.add("right");
-            div.fields[obj.colName] = field;
-            div.addContent(field.container);
-
-            div.fields[obj.colName].addEvent("change", changeEvent=>{
-                var total = scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_relevant_cert_ap"].getValue() * 5
-                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_relevant_cert_ap_arlocal"].getValue() * 7
-                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_relevant_cert_ap_arlocal_arother"].getValue() * 10
-                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_not_relevant_cert_ap"].getValue() * 1
-                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_not_relevant_cert_ap_arlocal"].getValue() * 3
-                    + scoreSheet.displayExs["trainingApp"].fields["number_of_app_train_not_relevant_cert_ap_arlocal_arother"].getValue() * 5;
-
-                scoreSheet.displayExs["trainingApp"].totalPoints.setHTMLContent((total > scoreSheet.criteria["educationApp"].weight ? 10 : total).toString());
-            });
-        });
-
-        div = scoreSheet.displayExs.potential;
-
-        [
-            {colName:"score_exam", label:"Written Examination", tooltip:"Score in the written examination"},
-            "",
-            {colName:"score_skill", label:"Skills or Work Sample Test", tooltip:"Score in the skills test"},
-            "",
-            {colName:"score_bei", label:"Behavioral Events Interview", tooltip:"Score in the interview"}
-        ].forEach(obj=>{
-            if (obj == "")
-            {
-                div.addLineBreak();
-                return;
-            }
-            var field = scoreSheet.addInputEx(obj.label, "number", "0", obj.tooltip, obj.colName);
-            field.setFullWidth();
-            field.setBlankStyle();
-            field.setMin(0);
-            field.setMax(obj.colName == "score_bei" ? scoreSheet.criteria["potential"].subcriteria.bei.weight : 100);
-            field.setStep(0.1);
-            field.setWidth("3.5em");
-            field.setLabelWidth("15em");
-            field.fields[0].classList.add("right");
-            field.showColon();
-            div.fields.push(field);
-            div.addContent(field.container);
-
-            field.addEvent("change", changeEvent=>{
-                var values = [];
-
-                values.push(scoreSheet.displayExs["potential"].fields[0].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.exam.weight);
-                values.push(scoreSheet.displayExs["potential"].fields[1].getValue() / 100 * scoreSheet.criteria["potential"].subcriteria.skillTest.weight);
-                values.push(scoreSheet.displayExs["potential"].fields[2].getValue());
-
-                var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
-
-                scoreSheet.displayExs["potential"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
-            });
-        });
-
-        for (const key in scoreSheet.displayExs["performance"].fields)
-        {
-            var field = scoreSheet.displayExs["performance"].fields[key];
-            field.addEvent("change", changeEvent=>{
-                var values = [];
-
-                values.push(scoreSheet.displayExs["performance"].fields[key].getValue() / 5 * scoreSheet.criteria["performance"].weight);
-
-                var value = (values.length > 0 ? values.reduce((total, nextValue)=>{ return Number.parseFloat(total) + Number.parseFloat(nextValue); }) : 0);
-
-                scoreSheet.displayExs["performance"].totalPoints.setHTMLContent((isNaN(value) ? "0" : Math.round(value).toString()));
-            });
-        }
-
-        // Add total points line
-        for (const key in scoreSheet.displayExs) {
-            if (key != "applicantInfo" && key != "researchCriteriaGuide" && key != "smeTwgCriteriaGuide")
-            {
-                scoreSheet.displayExs[key]["totalPoints"] = new DisplayEx(scoreSheet.displayExs[key].content, "span", "", "", "Total Points");
-                var displayEx = scoreSheet.displayExs[key]["totalPoints"];
-                displayEx.showColon();
-                displayEx.setFullWidth();
-                displayEx.setHTMLContent("0");
-                displayEx.container.classList.add("right");
-                displayEx.container.style.marginTop = "1em";
-                displayEx.container.style.borderTop = "1px solid";
-                displayEx.container.style.fontSize = "1.1em";
-                displayEx.container.style.fontStyle = "italic";
-                displayEx.content.style.fontWeight = "bold";
-
-                scoreSheet.displayExs[key].setPoints = (pointValue, runAfter = null, params = null)=>{
-                    displayEx.setHTMLContent(pointValue);
-                    if (typeof(runAfter) && runAfter != null)
-                    {
-                        runAfter(params);
-                    }
-                };
-
-                scoreSheet.displayExs[key].getPoints = ()=>{
-                    displayEx.getContent();
-                };
-
-                scoreSheet.displayExs[key].displays.push(displayEx);
-            }
-        }
-
-        loadApplicant.addEvent("click", loadApplicantClickEvent=>{
-            var retrieveApplicantDialog = null;
-            if (loadApplicantClickEvent.target.innerHTML == "Load Application")
-            {
-                retrieveApplicantDialog = new DialogEx(scoreSheet.fieldWrapper, "scoresheet-load-applicant");
-                var form = retrieveApplicantDialog.addFormEx();
-                
-                var searchBox = form.addInputEx("Enter an applicant name or code", "text", "", "Type to populate list");
-                searchBox.setFullWidth();
-                searchBox.showColon();
-
-                var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
-                searchResult.setFullWidth();
-                searchResult.setVertical();
-                searchResult.reverse();
-                searchResult.hide();
-
-                var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(2);
-                retrieveApplicantDialogBtnGrp.setFullWidth();
-                retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
-                retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("Load");
-                retrieveApplicantDialogBtnGrp.inputExs[0].setTooltipText("Load Selected");
-                retrieveApplicantDialogBtnGrp.inputExs[0].disable();
-
-                retrieveApplicantDialogBtnGrp.inputExs[1].setLabelText("Cancel");
-                retrieveApplicantDialogBtnGrp.inputExs[1].setTooltipText("");
-                retrieveApplicantDialogBtnGrp.inputExs[1].addEvent("click", cancelRetrieveDialogClickEvent=>{
-                    retrieveApplicantDialog.close();
-                });
-
-                searchResult.runAfterFilling = ()=>{
-                    retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
-                        if (searchResult.getValue() == "" || searchResult.getValue() == null)
-                        {
-                            retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
-                            return;
-                        }
-                        
-                        // Education
-                        scoreSheet.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
-                        scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.dataLoaded["application_code"], true);
-                        scoreSheet.dbInputEx["applicant_name"].setDefaultValue(scoreSheet.dataLoaded["applicant_name"], true);
-                        scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.dataLoaded["position_title_applied"], true);
-                        
-                        var educAttainment = scoreSheet.dataLoaded["educational_attainmentIndex"];
-                        var degreeTaken = scoreSheet.dataLoaded["degree_taken"];
-
-                        var highestPostGradDegrees = degreeTaken.filter(degree=>{ // in terms of education increment
-                            switch (educAttainment)
-                            {
-                                case 0: case 1: case 2: case 3: case 4: case 5:
-                                    return false;
-                                    break;
-                                case 6:
-                                    return degree["degree_typeIndex"] > 6 && degree["degree_typeIndex"] < 8;
-                                    break;
-                                case 7:
-                                    return degree["degree_typeIndex"] > 7 && degree["degree_typeIndex"] < 9;
-                                    break;
-                                default: // highest educational increment
-                                    break;
-                            }
-                        });
-                        var highestPostGradDegree = (highestPostGradDegrees.length == 0 ? null : highestPostGradDegrees.reduce((prevRow, nextRow)=>{
-                            var test = prevRow["degree_typeIndex"] < nextRow["degree_typeIndex"]
-                            || prevRow["degree_typeIndex"] == nextRow["degree_typeIndex"]
-                            && (prevRow["units_earned"] <= nextRow["units_earned"] || prevRow["units_earned"] == "")
-                            || (nextRow["complete_academic_requirements"] ?? 0);
-            
-                            return ( test
-                                ? nextRow
-                                : prevRow
-                            );
-                        }));
-            
-                        var postGradUnits = (highestPostGradDegree == null || educAttainment <= 5 || educAttainment >= 8 ? null : highestPostGradDegree["units_earned"]);
-                        postGradUnits = (postGradUnits == "" ? null : postGradUnits);
-                        var completeAcadReq = (highestPostGradDegree == null ? 0 : highestPostGradDegree["complete_academic_requirements"]); //TEMPORARY
-                        // var completeAcadReq = highestPostGradDegree["complete_academic_requirements"]; // DO NOT DELETE!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                        var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.dataLoaded["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.dataLoaded["plantilla_item_number_applied"])[0];
-                        var hasSpecEduc = (scoreSheet.dataLoaded["has_specific_education_required"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_education_required"] == 1 ? "Yes" : "No"));
-                        
-                        var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
-                        var requiredEducIncrement = ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []);
-                        var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
-
-                        scoreSheet.displayExs["education"].displays["educational_attainment"].setHTMLContent(scoreSheet.dataLoaded["educational_attainment"]);
-                        scoreSheet.displayExs["education"].displays["postgraduate_units"].setHTMLContent(postGradUnits == null ? "none" : postGradUnits.toString());
-                        scoreSheet.displayExs["education"].displays["has_specific_education_required"].setHTMLContent(hasSpecEduc);
-                        scoreSheet.displayExs["education"].displays["educIncrements"].setHTMLContent(educIncrementAboveQS.toString());
-
-                        scoreSheet.displayExs["education"].totalPoints.setHTMLContent(ScoreSheet.getEducScore(educIncrementAboveQS, appliedPosition).toString());
-
-                        // Training
-                        var relevantTrainings = scoreSheet.dataLoaded["relevant_training"];
-                        var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
-                        var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
-                        var hasSpecTraining = (scoreSheet.dataLoaded["has_specific_training"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_training"] == 1 ? "Yes" : "No"));
-                        var hasMoreTraining = (scoreSheet.dataLoaded["has_more_unrecorded_training"] == null ? "n/a" : (scoreSheet.dataLoaded["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
-                        var requiredTrainingHours = appliedPosition["required_training_hours"];
-                        var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
-                        var trainingIncrementAboveQS = applicantTrainingIncrement - requiredTrainingIncrement;
-                        
-                        scoreSheet.displayExs["training"].displays["relevant_training_hours"].setHTMLContent(relevantTrainingHours.toString());
-                        scoreSheet.displayExs["training"].displays["relevant_training_count"].setHTMLContent(relevantTrainings.length.toString());
-                        scoreSheet.displayExs["training"].displays["has_specific_training"].setHTMLContent(hasSpecTraining);
-                        scoreSheet.displayExs["training"].displays["has_more_unrecorded_training"].setHTMLContent(hasMoreTraining);
-                        scoreSheet.displayExs["training"].displays["trainIncrements"].setHTMLContent(trainingIncrementAboveQS.toString());
-
-                        scoreSheet.displayExs["training"].totalPoints.setHTMLContent(ScoreSheet.getTrainingScore(trainingIncrementAboveQS, appliedPosition).toString());
-                        
-                        // Experience
-                        var relevantWorkExp = scoreSheet.dataLoaded["relevant_work_experience"];
-                        var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? this.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
-                        var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
-                        var hasSpecWorkExp = (scoreSheet.dataLoaded["has_specific_work_experience"] == null ? "n/a" : (scoreSheet.dataLoaded["has_specific_work_experience"] == 1 ? "Yes" : "No"));
-                        var hasMoreWorkExp = (scoreSheet.dataLoaded["has_more_unrecorded_work_experience"] == null ? "n/a" : (scoreSheet.dataLoaded["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
-                        var requiredWorkExpYears = appliedPosition["required_work_experience_years"];
-                        var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
-                        var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
-                        
-                        scoreSheet.displayExs["experience"].displays["relevant_work_experience_years"].setHTMLContent(ScoreSheet.convertDurationToString(relevantWorkExpDuration));
-                        scoreSheet.displayExs["experience"].displays["relevant_work_experience_count"].setHTMLContent(relevantWorkExp.length.toString());
-                        scoreSheet.displayExs["experience"].displays["has_specific_work_experience"].setHTMLContent(hasSpecWorkExp);
-                        scoreSheet.displayExs["experience"].displays["has_more_unrecorded_work_experience"].setHTMLContent(hasMoreWorkExp);
-                        scoreSheet.displayExs["experience"].displays["expIncrements"].setHTMLContent(workExpIncrementAboveQS.toString());
-
-                        scoreSheet.displayExs["experience"].totalPoints.setHTMLContent(ScoreSheet.getWorkExpScore(workExpIncrementAboveQS, appliedPosition).toString());
-
-                        var div = scoreSheet.displayExs["educationApp"];
-
-                        var divHeader = div.content.children[0];
-                        
-                        div.container.appendChild(divHeader);
-                        div.container.appendChild(div.totalPoints.container);
-                        div.content.innerHTML = "";
-                        div.content.appendChild(divHeader);
-                        div.totalPoints.setHTMLContent("0");
-                        div.fields = [];
-
-                        if (appliedPosition["required_work_experience_years"] != null && appliedPosition["required_work_experience_years"] != 0 || appliedPosition["specific_work_experience_required"] != null)
-                        {
-                            div.addContent(scoreSheet.addHeader("Guide (for positions with experience requirement):", 6));
-
-                            var list = createElementEx(NO_NS, "ol", null, null, "type", "A", "style", "font-size: 0.8em");
-                    
-                            div.addContent(list);
-                    
-                            [
-                                "Action Plan approved by the Head of Office",
-                                "Accomplishment Report verified by the Head of Office",
-                                "Certification of utilization/adoption signed by the Head of Office"
-                            ].forEach(text=>{
-                                addText(text, createElementEx(NO_NS, "li", list));
-                            });
-                    
-                            [
-                                "Relevant",
-                                {colName:"number_of_app_educ_r_actionplan", label:"A only"},
-                                {colName:"number_of_app_educ_r_actionplan_ar", label:"A and B"},
-                                {colName:"number_of_app_educ_r_actionplan_ar_adoption", label:"All MOVs"},
-                                "Not Relevant",
-                                {colName:"number_of_app_educ_nr_actionplan", label:"A only"},
-                                {colName:"number_of_app_educ_nr_actionplan_ar", label:"A and B"},
-                                {colName:"number_of_app_educ_nr_actionplan_ar_adoption", label:"All MOVs"}
-                            ].forEach(obj=>{
-                                if (obj == "")
-                                {
-                                    div.addLineBreak();
-                                    return;
-                                }
-                                else if (typeof(obj) == "string")
-                                {
-                                    div.addContent(scoreSheet.addHeader("<big>" + obj + ":</big>", 6));
-                                    return;
-                                }
-                                var field = scoreSheet.addInputEx(obj.label, "number", "0", "", obj.colName);
-                                field.setFullWidth();
-                                field.showColon();
-                                field.setBlankStyle();
-                                field.setMin(0);
-                                field.setMax(999);
-                                field.setWidth("3em");
-                                field.setLabelWidth("9em");
-                                field.fields[0].classList.add("right");
-                                div.fields[obj.colName] = field;
-                                div.addContent(field.container);
-
-                                div.fields[obj.colName].addEvent("change", changeEvent=>{
-                                    var total = scoreSheet.displayExs["educationApp"].fields["number_of_app_nr_educ_actionplan"].getValue() * 1
-                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_nr_actionplan_ar"].getValue() * 3
-                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_nr_actionplan_ar_adoption"].getValue() * 5
-                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_r_educ_actionplan"].getValue() * 5
-                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_r_actionplan_ar"].getValue() * 7
-                                        + scoreSheet.displayExs["educationApp"].fields["number_of_app_educ_r_actionplan_ar_adoption"].getValue() * 10;
-
-                                    scoreSheet.displayExs["educationApp"].totalPoints.setHTMLContent((total > scoreSheet.criteria["educationApp"].weight ? 10 : total).toString());
-                                });
-                            });
-                        }
-                        else
-                        {
-                            var field = scoreSheet.addInputEx("GWA in the highest academic level earned", "number", "1", "", "app_educ_gwa");
-                            field.showColon();
-                            field.setBlankStyle();
-                            field.setMin(1);
-                            field.setMax(100);
-                            field.setStep(0.1);
-                            field.setWidth("3.5em");
-                            field.fields[0].classList.add("right");
-                            div.fields["app_educ_gwa"] = field;
-                            div.addContent(field.container);                   
-                            
-                            div.fields["app_educ_gwa"].addEvent("change", changeEvent=>{
-                                scoreSheet.displayExs["educationApp"].totalPoints.setHTMLContent((Math.round(div.fields["app_educ_gwa"].getValue() / 100 * scoreSheet.criteria["educationApp"].weight * 100) / 100).toString());
-                            });
-                        }
-
-                        div.addContent(div.totalPoints.container);
-
-                        for (const key in scoreSheet.dataLoaded)
-                        {
-                            switch (key)
-                            {
-                                case "applicant_name": case "applicant_option_label": case "application_code":
-                                case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
-                                case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
-                                case "ethnicityId":
-                                case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
-                                case "has_more_unrecorded_training":
-                                case "has_more_unrecorded_work_experience":
-                                case "has_specific_competency_required":
-                                case "has_specific_education_required":
-                                case "has_specific_training":
-                                case "has_specific_work_experience":
-                                case "parenthetical_title_applied":
-                                case "permanent_addressId":
-                                case "personId":
-                                case "plantilla_item_number_applied":
-                                case "position_title_applied":
-                                case "present_addressId":
-                                case "relevant_eligibility":
-                                case "relevant_training":
-                                case "relevant_work_experience":
-                                case "religionId":
-                                case "sex":
-                                    // do nothing
-                                    break;
-                                case "most_recent_performance_rating":
-                                case "number_of_citation_movs":
-                                case "number_of_academic_award_movs":
-                                case "number_of_awards_external_office_search":
-                                case "number_of_awards_external_org_level_search":
-                                case "number_of_awards_central_co_level_search":
-                                case "number_of_awards_central_national_search":
-                                case "number_of_awards_regional_ro_level_search":
-                                case "number_of_awards_regional_national_search":
-                                case "number_of_awards_division_sdo_level_search":
-                                case "number_of_awards_division_national_search":
-                                case "number_of_awards_school_school_level_search":
-                                case "number_of_awards_school_sdo_level_search":
-                                case "number_of_research_proposal_only":
-                                case "number_of_research_proposal_ar":
-                                case "number_of_research_proposal_ar_util":
-                                case "number_of_research_proposal_ar_util_adopt":
-                                case "number_of_research_proposal_ar_util_cite":
-                                case "number_of_smetwg_issuance_cert":
-                                case "number_of_smetwg_issuance_cert_output":
-                                case "number_of_speakership_external_office_search":
-                                case "number_of_speakership_external_org_level_search":
-                                case "number_of_speakership_central_co_level_search":
-                                case "number_of_speakership_central_national_search":
-                                case "number_of_speakership_regional_ro_level_search":
-                                case "number_of_speakership_regional_national_search":
-                                case "number_of_speakership_division_sdo_level_search":
-                                case "number_of_speakership_division_national_search":
-                                case "neap_facilitator_accreditation":
-                                case "app_educ_gwa":
-                                case "number_of_app_educ_actionplan":
-                                case "number_of_app_educ_actionplan_ar":
-                                case "number_of_app_educ_actionplan_ar_adoption":
-                                case "number_of_app_train_relevant_cert_ap":
-                                case "number_of_app_train_relevant_cert_ap_arlocal":
-                                case "number_of_app_train_relevant_cert_ap_arlocal_arother":
-                                case "number_of_app_train_not_relevant_cert_ap":
-                                case "number_of_app_train_not_relevant_cert_ap_arlocal":
-                                case "number_of_app_train_not_relevant_cert_ap_arlocal_arother":
-                                case "score_exam":
-                                case "score_skill":
-                                case "score_bei":
-                                    if (key in scoreSheet.dbInputEx)
-                                    {
-                                        scoreSheet.dbInputEx[key].setDefaultValue(scoreSheet.dataLoaded[key] ?? "", true);
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-
-                        retrieveApplicantDialog.close();
-                    });
-                };
-                
-                searchBox.addEvent("keyup", keyupEvent=>{
-                    searchResult.clearList();
-
-                    searchResult.show();
-                    retrieveApplicantDialogBtnGrp.inputExs[0].enable();
-
-                    searchResult.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + searchBox.getValue(), "applicant_option_label", "application_code");
-                });
-
-                // clickEvent.target.innerHTML = "Reset Form";
-            }
-            else if (clickEvent.target.innerHTML == "Reset Form")
-            {
-                scoreSheet.resetForm();
-
-                clickEvent.target.innerHTML = "Load Application";
-            }
-        });
-
-        var applicantDataBtnGrp = scoreSheet.addFormButtonGrp(2);
-        applicantDataBtnGrp.setFullWidth();
-        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
-        applicantDataBtnGrp.inputExs[0].setLabelText("Save");
-        applicantDataBtnGrp.inputExs[0].setTooltipText("");
-        applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-            var jobApplication = {};
-
-            if (scoreSheet.dbInputEx["application_code"].getValue() == "")
-            {
-                new MsgBox(scoreSheet.container, "Please load an application to use the scoresheet.", "OK");
-
-                return;
-            }
-
-            for (const colName in scoreSheet.dbInputEx) {
-                var tableName = scoreSheet.dbTableName[colName];
-                var dbInputEx = scoreSheet.dbInputEx[colName];
-
-                switch (colName)
-                {
-                    case "applicant_name": case "applicant_option_label":
-                    case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
-                    case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
-                    case "ethnicityId":
-                    case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
-                    case "has_more_unrecorded_training":
-                    case "has_more_unrecorded_work_experience":
-                    case "has_specific_competency_required":
-                    case "has_specific_education_required":
-                    case "has_specific_training":
-                    case "has_specific_work_experience":
-                    case "permanent_addressId":
-                    case "personId":
-                    case "present_addressId":
-                    case "relevant_eligibility":
-                    case "relevant_training":
-                    case "relevant_work_experience":
-                    case "religionId":
-                    case "sex":
-                        break;
-                    default:
-                        jobApplication[colName] = dbInputEx.getValue();
-                        break;
-                }
-            }
-            
-            // console.log(scoreSheet.dbTableName, scoreSheet.dbInputEx);
-
-            // DEBUG
-            // console.log(jobApplication);
-            
-            // new MsgBox(scoreSheet.container, "Application Code:" + jobApplication["application_code"] + " has been updated!", "OK");
-
-            // return;
-            // DEBUG
-
-            // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-            postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
-                var response;
-
-                if (event.target.readyState == 4 && event.target.status == 200)
-                {
-                    response = JSON.parse(event.target.responseText);
-
-                    if (response.type == "Error")
-                    {
-                        new MsgBox(scoreSheet.container, "ERROR: " + response.content, "OK");
-                    }
-                    else if (response.type == "Success")
-                    {
-                        new MsgBox(scoreSheet.container, response.content, "OK");
-                    }
-                }
-            });
-        });
-        applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
-        applicantDataBtnGrp.inputExs[1].setTooltipText("");
-        applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{
-            window.location.reload(true);
-        }); // TO IMPLEMENT IN FORMEX/INPUTEX
-        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
-        applicantDataBtnGrp.fieldWrapper.classList.add("right");
-        applicantDataBtnGrp.setStatusMsgTimeout(20);
-
-        document.scrim = new ScrimEx(this.main);
-
-        postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=initial-data", (postEvent)=>{
-            var response;
-
-            if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
-            {
-                response = JSON.parse(postEvent.target.responseText);
-
-                if (response.type == "Error")
-                {
-                    new MsgBox(this.forms["scoreSheetOld"].container, "ERROR: " + response.content, "CLOSE");
-                }
-                else if (response.type == "Data")
-                {
-                    var data = JSON.parse(response.content);
-                    document.positions = data["positions"];
-                    document.salaryGrade = data["salary_grade"];
-                    document.mpsEducIncrement = data["mps_increment_table_education"];
-                    document.enumEducationalAttainment = data["enum_educational_attainment"];
-                    document.positionCategory = data["position_category"];
-                    
-                    document.scrim.destroy();
-                }
-            }
-        });
-
-        scoreSheet.func["reset"] = function(){
-            
-        };
-
-        return scoreSheet;
-    }
-
     constructScoreSheet()
     {
         if (this.forms["scoreSheet"] != null && this.forms["scoreSheet"] != undefined)
@@ -3347,7 +2211,7 @@ class MPASIS_App
         this.scrim.destroy();
     }
 
-    setCookie(cname, cvalue, exdays)
+    static setCookie(cname, cvalue, exdays)
     {
         const d = new Date();
         d.setTime(d.getTime() + (exdays*24*60*60*1000));
@@ -3355,7 +2219,7 @@ class MPASIS_App
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/;samesite=strict";
     }
     
-    getCookie(cname)
+    static getCookie(cname)
     {
         let name = cname + "=";
         let decodedCookie = decodeURIComponent(document.cookie);

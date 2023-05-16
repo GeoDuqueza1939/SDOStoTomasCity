@@ -174,6 +174,14 @@ table.bordered > tr > *, table.bordered > * > tr > *, .table.bordered > .tr > *,
     color: blue;
 }
 
+.yellow {
+    color: yellow;
+}
+
+.crimson {
+    color:crimson;
+}
+
 a.js-link {
     color: blue;
     cursor: pointer;

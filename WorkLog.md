@@ -1,5 +1,22 @@
 # Work Log
 
+## 5/16/2023
+TO DO:
+* [x] Add remarks fields to all score sheet-related items
+* [x] Render the details of applicant's qualifications
+* [x] Render some of the score computations
+* [x] Remove the source code for the old Score Sheet
+* [ ] Add a FormEx-derived Comparative Assessment Result
+* [x] Enable resetting of passwords in user management
+* [ ] Create a printout template for the IER
+* [ ] Create a printout template for the IES
+* [ ] Add a LoadJobApplication dialog class
+* [ ] Add abbreviations to eligibilities
+* [ ] Add Honor Graduate to eligibilities
+* [ ] Create PHP functions that will further generalize adding and updating of specific database records
+
+
+
 ## 5/15/2023
 TO DO:
 * [x] Add a FormEx-derived IES class

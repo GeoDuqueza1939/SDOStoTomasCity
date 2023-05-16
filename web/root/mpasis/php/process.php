@@ -52,6 +52,7 @@ function sendDebug($data)
 function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
     $query = "SELECT
+        application_code,
         pe.personId as personId,
         given_name,
         middle_name,
@@ -74,19 +75,32 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         presAdd.address as present_address,
         eea.index as educational_attainmentIndex,
         eea.educational_attainment as educational_attainment,
-        application_code,
         position_title_applied,
         parenthetical_title_applied,
         plantilla_item_number_applied,
+        present_school,
+        present_district,
+        present_position,
+        present_designation,
         has_specific_education_required,
+        educ_notes,
         has_specific_training,
         has_more_unrecorded_training,
+        train_notes,
         has_specific_work_experience,
         has_more_unrecorded_work_experience,
+        work_exp_notes,
         has_specific_competency_required,
         most_recent_performance_rating,
         performance_cse_gwa_rating,
         performance_cse_honor_grad,
+        performance_notes,
+        lept_rating,
+        lept_notes,
+        ppstcoi,
+        coi_notes,
+        ppstncoi,
+        ncoi_notes,
         number_of_citation_movs,
         number_of_academic_award_movs,
         number_of_awards_external_office_search,
@@ -99,6 +113,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         number_of_awards_division_national_search,
         number_of_awards_school_school_level_search,
         number_of_awards_school_sdo_level_search,
+        trainer_award_level,
         number_of_research_proposal_only,
         number_of_research_proposal_ar,
         number_of_research_proposal_ar_util,
@@ -117,6 +132,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         number_of_speakership_school_school_level,
         number_of_speakership_school_sdo_level,
         neap_facilitator_accreditation,
+        accomplishments_notes,
         number_of_app_educ_r_actionplan,
         number_of_app_educ_r_actionplan_ar,
         number_of_app_educ_r_actionplan_ar_adoption,
@@ -124,15 +140,18 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         number_of_app_educ_nr_actionplan_ar,
         number_of_app_educ_nr_actionplan_ar_adoption,
         app_educ_gwa,
+        education_app_notes,
         number_of_app_train_relevant_cert_ap,
         number_of_app_train_relevant_cert_ap_arlocal,
         number_of_app_train_relevant_cert_ap_arlocal_arother,
         number_of_app_train_not_relevant_cert_ap,
         number_of_app_train_not_relevant_cert_ap_arlocal,
         number_of_app_train_not_relevant_cert_ap_arlocal_arother,
+        training_app_notes,
         score_exam,
         score_skill,
-        score_bei
+        score_bei,
+        potential_notes
     FROM SDOStoTomas.Person pe
     INNER JOIN SDOStoTomas.Job_Application ja ON ja.personId = pe.personId
     LEFT JOIN SDOStoTomas.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
@@ -1416,6 +1435,25 @@ if (isValidUserSession())
                     return;
                 }
 
+                break;
+            case 'resetPassd':
+                if (isset($_POST['username']))
+                {
+                    $user = fetchUser($dbconn, $_POST['username'])[0];
+                    $isTempUser = ($user['temp_user'] || $user['temp_user'] != 0);
+
+                    $dbconn->update(($isTempUser ? 'Temp_' : '') . 'User', 'first_signin=TRUE, password="' . hash('ripemd320', '1234') . '"', 'WHERE username="' . $user['username'] . '"');
+
+                    if (is_null($dbconn->lastException))
+                    {
+                        echo(json_encode(new ajaxResponse('Success', $user['username'] . '\'s password has been successfully reset')));
+                    }
+                    else
+                    {
+                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    }
+                }
+                return;
                 break;
         }
     }

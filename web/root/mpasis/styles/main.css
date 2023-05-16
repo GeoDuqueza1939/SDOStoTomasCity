@@ -110,7 +110,7 @@ body, .app > main {
     max-width: 100%;
 }
 
-.display-ex.criteria1.potential .input-ex > .fields > label {
+.display-ex.criteria1.potential .input-ex:not(.full-width) > .fields > label {
     display: inline-block;
     width: 16em;
     max-width: 100%;
