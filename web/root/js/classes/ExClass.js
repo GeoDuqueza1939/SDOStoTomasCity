@@ -3124,6 +3124,63 @@ class PasswordEditor extends DialogEx
     }
 }
 
+class PositionSelectorDialog extends DialogEx
+{
+    constructor(parent = null, id = "", callbackOnSelect = positionSelectorDialogEvent=>{}, callbackOnCancel = positionSelectorDialogEvent=>{this.close();})
+    {
+        var selPosition = null, selParen = null, selPlantilla = null;
+
+        super(parent, id);
+
+        this.scrim.classList.add("position-selector");
+        this.addFormEx();
+        this.formEx.setTitle("Select Position", 3);
+        this.callbacks = [callbackOnSelect, callbackOnCancel];
+
+        [
+            {id:"selected-position", label:"Position Title"},
+            {id:"selected-paren-position", label:"Parenthetical Position"},
+            {id:"selected-plantilla", label:"Plantilla Item Number"}
+        ].forEach(field=>{
+            [this.formEx.addInputEx(field.label, "select", "", "", field.id)].forEach(inputEx=>{
+                inputEx.showColon();
+                inputEx.addStatusPane();
+            });
+        });
+
+        selPosition = this.formEx.dbInputEx["selected-position"];
+        selParen = this.formEx.dbInputEx["selected-paren-position"];
+        selPlantilla = this.formEx.dbInputEx["selected-plantilla"];
+
+        var btnGrp = this.formEx.addFormButtonGrp(2);
+        btnGrp.container.classList.add("position-selector-buttons");
+        
+        ["Select", "Cancel"].forEach((btnTxt, btnIndex)=>{
+            btnGrp.inputExs[btnIndex].setLabelText(btnTxt);
+            btnGrp.inputExs[btnIndex].setTooltipText(btnTxt);
+            btnGrp.inputExs[btnIndex].addEvent("click", this.callbacks[btnIndex]);
+        })
+
+        btnGrp.inputExs[0].disable();
+
+        selPosition.setStatusMsgTimeout(-1);
+        selPosition.showWait("Loading");
+
+        selPosition.fillItems(document.positions.filter((position, index, positions)=>{
+            var i = 0;
+            while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
+            return i == index && position["filled"] == 0;
+        }), "position_title", "plantilla_item_number");
+
+        selPosition.resetStatus();
+
+        selPosition.addEvent("change", positionChangeEvent=>btnGrp.inputExs[0].enable(null, selPosition.getValue() != ""));
+        selPosition.addEvent("change", positionChangeEvent=>MPASIS_App.selectPosition(selPosition, selParen, selPlantilla));
+        selParen.addEvent("change", parenChangeEvent=>MPASIS_App.selectParen(selPosition, selParen, selPlantilla));
+        selPlantilla.addEvent("change", plantillaChangeEvent=>MPASIS_App.selectPlantilla(selPosition, selParen, selPlantilla));
+    }
+}
+
 class ScoreSheetElementUI
 {
     constructor(scoreSheet = new ScoreSheet(), scoreSheetElement, parentScoreSheetElementUI = null)
@@ -3552,6 +3609,8 @@ class ScoreSheet extends FormEx
         this.loadButton.showInfo("Click to begin");
         // this.loadButton.container.classList.add("right");
         this.loadButton.statusPane.style.display = "block";
+
+        this.loadButton.fields[0].click();
     }
 
     loadApplicationBtn_Click(event) // inherits the scope of the clicked button/element
@@ -5291,65 +5350,10 @@ class IERForm extends FormEx
         this.displayExs["ier-table"].isHeaderCustomized = true;
 
         this.dbInputEx["ier-select-position-button"].addEvent("click", selectPositionEvent=>{
-            var selectPositionDialog = new DialogEx(app.main, "ier-select-position-dialog");
-            selectPositionDialog.addFormEx();
-            selectPositionDialog.formEx.setTitle("Select Position", 3);
-            selectPositionDialog.formEx.headers[0].style = "margin: 0 0 0.5em; text-align: center;";
-
-            [
-                {id:"ier-selected-position", label:"Position Title"},
-                {id:"ier-selected-paren-position", label:"Parenthetical Position"},
-                {id:"ier-selected-plantilla", label:"Plantilla Item Number"}
-            ].forEach(field=>{
-                selectPositionDialog.formEx.addInputEx(field.label, "select", "", "", field.id);
-                selectPositionDialog.formEx.dbInputEx[field.id].setFullWidth();
-                selectPositionDialog.formEx.dbInputEx[field.id].showColon();
-                selectPositionDialog.formEx.dbInputEx[field.id].addStatusPane();
-                selectPositionDialog.formEx.dbInputEx[field.id].container.style.gridColumn = "span 3";
-                selectPositionDialog.formEx.dbInputEx[field.id].fieldWrapper.style = "display: grid; align-items: center; column-gap: 0.5em; grid-template-columns: auto auto 0.5em;";
-                selectPositionDialog.formEx.dbInputEx[field.id].labels[0].style.gridColumn = "1 / span 1";
-                selectPositionDialog.formEx.dbInputEx[field.id].fields[0].style.gridColumn = "2 / span 1";
-                selectPositionDialog.formEx.dbInputEx[field.id].fields[0].style.minWidth = "15em";
-            });
-    
-            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].setStatusMsgTimeout(-1);
-            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].showWait("Loading");
-    
-            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].fillItems(document.positions.filter((position, index, positions)=>{
-                var i = 0;
-                while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
-                return i == index && position["filled"] == 0;
-            }), "position_title", "plantilla_item_number");
-    
-            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].resetStatus();
-    
-            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].addEvent("change", positionChange=>{
-                btnGrp.inputExs[0].enable(null, selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue() != "");
-            });
-
-            selectPositionDialog.formEx.dbInputEx["ier-selected-position"].addEvent("change", positionChangeEvent=>{
-                MPASIS_App.selectPosition(selectPositionDialog.formEx.dbInputEx["ier-selected-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"]);
-            });
-
-            selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].addEvent("change", parenChangeEvent=>{
-                MPASIS_App.selectParen(selectPositionDialog.formEx.dbInputEx["ier-selected-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"]);
-            });
-
-            selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].addEvent("change", plantillaChangeEvent=>{
-                MPASIS_App.selectPlantilla(selectPositionDialog.formEx.dbInputEx["ier-selected-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"], selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"]);
-            });
-
-            var btnGrp = selectPositionDialog.formEx.addFormButtonGrp(2);
-            btnGrp.setFullWidth();
-            btnGrp.fieldWrapper.classList.add("center");
-            
-            btnGrp.inputExs[0].setLabelText("Select");
-            btnGrp.inputExs[0].setTooltipText("Select");
-            btnGrp.inputExs[0].disable();
-            btnGrp.inputExs[0].addEvent("click", selectPositionDialogEvent=>{
-                var positionTitle = selectPositionDialog.formEx.dbInputEx["ier-selected-position"].getValue().trim();
-                var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["ier-selected-paren-position"].getValue().trim();
-                var plantilla = selectPositionDialog.formEx.dbInputEx["ier-selected-plantilla"].getValue().trim();
+            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", positionSelectEvent=>{
+                var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
                 var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                 this.dbInputEx["ier-select-position-button"].container.remove();
@@ -5526,14 +5530,10 @@ class IERForm extends FormEx
                 });
 
                 selectPositionDialog.close();
-            });
-            
-            btnGrp.inputExs[1].setLabelText("Cancel");
-            btnGrp.inputExs[1].setTooltipText("Cancel");
-            btnGrp.inputExs[1].addEvent("click", selectPositionDialogEvent=>{
-                selectPositionDialog.close();
-            });
+            });    
         });
+
+        this.dbInputEx["ier-select-position-button"].fields[0].click();
     }
 }
 
@@ -5556,6 +5556,8 @@ class IESForm extends FormEx
         this.loadButton.addEvent("click", this.loadApplicationBtn_Click);
         this.loadButton.setStatusMsgTimeout(-1);
         this.loadButton.showInfo("Click to begin");
+
+        this.loadButton.fields[0].click();
     }
 
     loadApplicationBtn_Click(event) // inherits the scope of the clicked button/element
@@ -5669,7 +5671,7 @@ class IESForm extends FormEx
                         iesForm.displayExs["ies_table"].setHeaders([
                             {colHeaderName:"ies_criteria", colHeaderText:"Criteria"},
                             {colHeaderName:"ies_weight", colHeaderText:"Weight Allocation"},
-                            {colHeaderName:"ies_details", colHeaderText:"Details of Applicant's Qualifications<br><span class=\"subhead\">(Relevant documents submitted; additional requirements; notes of HRMPSB Members)</span>"},
+                            {colHeaderName:"ies_details", colHeaderText:"Details of Applicant's Qualifications<br> <span class=\"subhead\">(Relevant documents submitted; additional requirements; notes of HRMPSB Members)</span>"},
                             {colHeaderName:"ies_computation", colHeaderText:"Computation"},
                             {colHeaderName:"ies_score", colHeaderText:"Actual Score"},
                         ]);
@@ -5720,138 +5722,6 @@ class IESForm extends FormEx
                         iesForm.displayExs["ies_table"].fRows[0].td["weight_allocation_total"].innerHTML = totalWeight;
                         iesForm.displayExs["ies_table"].fRows[0].data["total_score"] = totalScore.toFixed(3);
                         iesForm.displayExs["ies_table"].fRows[0].td["total_score"].innerHTML = totalScore.toFixed(3);
-
-                        // iesForm.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_weight"].innerHTML = weight + "%";
-
-                        // var appliedPosition = document.positions.filter(position=>position["position_title"] == iesForm.jobApplication["position_title_applied"] || position["plantilla_item_number"] == iesForm.jobApplication["plantilla_item_number_applied"])[0];
-
-                        // // Education
-                        // scoreSheetElementUI = iesForm.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
-                        
-                        // // Training
-                        // scoreSheetElementUI = iesForm.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
-
-                        // // Experience
-                        // scoreSheetElementUI = iesForm.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
-
-                        // // Performance
-                        // scoreSheetElementUI = iesForm.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
-
-                        // scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(iesForm.positionApplied["required_work_experience_years"] != null && iesForm.positionApplied["required_work_experience_years"] > 0);
-                        // scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(iesForm.jobApplication["relevant_work_experience"].length > 0);
-
-                        // for (const key in iesForm.dbInputEx)
-                        // {
-                        //     switch (key)
-                        //     {
-                        //         case "application_code":
-                        //         case "applicant_name":
-                        //         case "position_title_applied":
-                        //         case "present_designation":
-                        //         case "present_district":
-                        //         case "present_position":
-                        //         case "present_school":
-                        //             // do nothing
-                        //             break;
-                        //         default:
-                        //             if (key in iesForm.jobApplication)
-                        //             {
-                        //                 iesForm.dbInputEx[key].setDefaultValue(iesForm.jobApplication[key] ?? (iesForm.dbInputEx[key].type == "number" || iesForm.dbInputEx[key].type == "radio-select" ? 0 : ""), true);
-                        //             }
-                        //             else
-                        //             {
-                        //                 console.log(key, " is not in jobApplication");
-                        //             }
-                        //             break;
-                        //     }
-                        // }
-
-                        // var applicantDataBtnGrp = iesForm.addFormButtonGrp(2);
-                        // applicantDataBtnGrp.setFullWidth();
-                        // applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
-                        // applicantDataBtnGrp.inputExs[0].setLabelText("Save");
-                        // applicantDataBtnGrp.inputExs[0].setTooltipText("");
-                        // applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                        //     var jobApplication = {};
-                
-                        //     if (iesForm.dbInputEx["application_code"].getValue() == "")
-                        //     {
-                        //         new MsgBox(iesForm.container, "Please load an application to use the scoresheet.", "OK");
-                
-                        //         return;
-                        //     }
-                
-                        //     for (const colName in iesForm.dbInputEx) {
-                        //         var tableName = iesForm.dbTableName[colName];
-                        //         var dbInputEx = iesForm.dbInputEx[colName];
-                
-                        //         switch (colName)
-                        //         {
-                        //             case "applicant_name": case "applicant_option_label":
-                        //             case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
-                        //             case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
-                        //             case "ethnicityId":
-                        //             case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
-                        //             case "has_more_unrecorded_training":
-                        //             case "has_more_unrecorded_work_experience":
-                        //             case "has_specific_competency_required":
-                        //             case "has_specific_education_required":
-                        //             case "has_specific_training":
-                        //             case "has_specific_work_experience":
-                        //             case "permanent_addressId":
-                        //             case "personId":
-                        //             case "present_addressId":
-                        //             case "relevant_eligibility":
-                        //             case "relevant_training":
-                        //             case "relevant_work_experience":
-                        //             case "religionId":
-                        //             case "sex":
-                        //                 break;
-                        //             default:
-                        //                 jobApplication[colName] = dbInputEx.getValue();
-                        //                 break;
-                        //         }
-                        //     }
-                            
-                        //     // console.log(iesForm.dbTableName, iesForm.dbInputEx);
-                
-                        //     // DEBUG
-                        //     // console.log(jobApplication);
-                            
-                        //     // new MsgBox(iesForm.container, "Application Code:" + jobApplication["application_code"] + " has been updated!", "OK");
-                
-                        //     // return;
-                        //     // DEBUG
-                
-                        //     // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-                        //     postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
-                        //         var response;
-                
-                        //         if (event.target.readyState == 4 && event.target.status == 200)
-                        //         {
-                        //             response = JSON.parse(event.target.responseText);
-                
-                        //             if (response.type == "Error")
-                        //             {
-                        //                 new MsgBox(iesForm.container, response.content, "Close");
-                        //             }
-                        //             else if (response.type == "Success")
-                        //             {
-                        //                 new MsgBox(iesForm.container, response.content, "OK");
-                        //             }
-                        //         }
-                        //     });
-                        // });
-                        // applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
-                        // applicantDataBtnGrp.inputExs[1].setTooltipText("");
-                        // applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{
-                        //     window.location.reload(true);
-                        // }); // TO IMPLEMENT IN FORMEX/INPUTEX
-                        // applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
-                        // applicantDataBtnGrp.fieldWrapper.classList.add("right");
-                        // applicantDataBtnGrp.setStatusMsgTimeout(20);                
-                                        
-                        // iesForm.summaryUI.getPoints();
 
                         retrieveApplicantDialog.close();
                         this.innerHTML = "Reset IES Form";
@@ -6003,6 +5873,121 @@ class IESForm extends FormEx
     resetForm()
     {
         window.location.reload(true);
+    }
+}
+
+class CARForm extends FormEx
+{
+    constructor(parentEl = null, id = "", useFormElement = true)
+    {
+        var posInfo = null;
+
+        super(parentEl, id, useFormElement);
+
+        this.container.classList.add("car-form");
+
+        this.setTitle("Comparative Assessment Result (CAR)", 2);
+
+        this.position = null;
+        this.jobApplications = [];
+        this.scoreSheetElements = [];
+        this.carTable = null;
+
+        this.addInputEx("Select Position", "button", "", "", "car-select-position-button");
+        this.dbInputEx["car-select-position-button"].container.classList.add("car-select-position-button");
+
+        posInfo = this.addBox("car-position-info", false);
+        posInfo.classList.add("car-position-info");
+
+        [
+            {id:"position",type:"div",label:"Position",tooltip:"Selected position"},
+            {type:"spacer-div"},
+            {id:"plantilla_item_numbers",type:"div",label:"Plantilla Item Number",tooltip:"Plantilla item number(s)"},
+            {id:"place_of_assignment",type:"div",label:"Office/Bureau/Service/Unit where the vacancy exists",tooltip:"Place of Assignment"},
+            {type:"spacer-div"},
+            {id:"final_deliberation_date",type:"date",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"}
+        ].forEach(field=>{
+            if (field.type == "div")
+            {
+                posInfo.appendChild(this.addDisplayEx("div", field.id, "", field.label, field.tooltip).container);
+                this.displayExs[field.id].showColon();
+                this.displayExs[field.id].container.classList.add(field.id);
+            }
+            else if (field.type == "spacer-div")
+            {
+                posInfo.appendChild(htmlToElement("<span class=\"spacer\"></span>"));
+            }
+            else
+            {
+                posInfo.appendChild(this.addInputEx(field.label, field.type, "", field.tooltip, field.id, "Position").container);
+                this.dbInputEx[field.id].showColon();
+                this.dbInputEx[field.id].container.classList.add(field.id);
+            }
+        });
+
+        this.carTable = this.addDisplayEx("div-table", "car-table");
+        this.carTable.container.classList.add("car-table");
+
+        this.carTable.setHeaders([
+            {colHeaderName:"number",colHeaderText:"No."},
+            {colHeaderName:"applicant_name",colHeaderText:"Name of Applicant"},
+            {colHeaderName:"applicantion_code",colHeaderText:"Application Code"},
+            {colHeaderName:"education",colHeaderText:"Education"},
+            {colHeaderName:"training",colHeaderText:"Training"},
+            {colHeaderName:"experience",colHeaderText:"Experience"},
+            {colHeaderName:"performance",colHeaderText:"Performance"},
+            {colHeaderName:"accomplishments",colHeaderText:"Outstanding Accomplishments"},
+            {colHeaderName:"education_app",colHeaderText:"Application of Education"},
+            {colHeaderName:"training_app",colHeaderText:"Application of L&D"},
+            {colHeaderName:"potential",colHeaderText:"Potential"},
+            {colHeaderName:"total",colHeaderText:"Total"},
+            {colHeaderName:"remarks",colHeaderText:"Remarks"},
+            {colHeaderName:"for_bi",colHeaderText:"Yes"},
+            {colHeaderName:"not_for_bi",colHeaderText:"No"},
+            {colHeaderName:"for_appointment",colHeaderText:"For Appointment<br> <span class=\"subhead\">(To be filled-out by the Appointing Officer/Authority; Please sign opposite the name of the applicant)</span>"},
+            {colHeaderName:"for_probation",colHeaderText:"For Probation<br> <span class=\"subhead\">Please identify period of Probation (6 months or 1 year) in accordance with section F of DO 019, s.2022</span>"}
+        ]);
+
+        this.carTable.isHeaderCustomized = true;
+
+        this.carTable.thead.insertBefore(htmlToElement("<tr></tr>"), this.carTable.thead.children[0]);
+        this.carTable.thead.children[1].children[0].setAttribute("rowspan", 2);
+        this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[0]);
+        this.carTable.thead.children[1].children[0].setAttribute("rowspan", 2);
+        this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[0]);
+        this.carTable.thead.children[1].children[0].setAttribute("rowspan", 2);
+        this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[0]);
+        this.carTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"9\">Comparative Assessment Results</th>"));
+        this.carTable.thead.children[1].children[9].setAttribute("rowspan", 2);
+        this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[9]);
+        this.carTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"2\">For Background Investigation (Y/N)</th>"));
+        this.carTable.thead.children[1].children[11].setAttribute("rowspan", 2);
+        this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[11]);
+        this.carTable.thead.children[1].children[11].setAttribute("rowspan", 2);
+        this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[11]);
+
+        this.addInputEx("Update", "button", "", "", "car-update");
+        this.dbInputEx["car-update"].container.classList.add("car-update");
+
+        this.dbInputEx["car-select-position-button"].addEvent("click", clickEvent=>{
+            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", positionSelectEvent=>{
+                var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+                var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
+
+                var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+
+                console.log(positions);
+
+                this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
+                this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
+                this.displayExs["plantilla_item_numbers"].setHTMLContent(positions.map(position=>position["plantilla_item_number"]).reduce((prev, next)=>prev + "; " + next));
+                this.displayExs["plantilla_item_numbers"].setTooltipText(positions.map(position=>position["plantilla_item_number"]).reduce((prev, next)=>prev + "; " + next));
+
+                selectPositionDialog.close();
+            });
+        });
     }
 }
 

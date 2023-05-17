@@ -385,33 +385,15 @@ if (isValidUserSession())
                                 'SELECT
                                     required_eligibilityId,
                                     plantilla_item_number,
-                                    re2.eligibilityId,
-                                    re2.eligibility,
-                                    eligibilityId2,
-                                    eligibility2,
-                                    eligibilityId3,
-                                    e3.eligibility as eligibility3
-                                FROM
-                                    (SELECT
-                                        required_eligibilityId,
-                                        plantilla_item_number,
-                                        re.eligibilityId,
-                                        re.eligibility,
-                                        eligibilityId2,
-                                        e2.eligibility as eligibility2,
-                                        eligibilityId3
-                                    FROM 
-                                        (SELECT
-                                            required_eligibilityId,
-                                            plantilla_item_number,
-                                            Required_Eligibility.eligibilityId,
-                                            eligibility,
-                                            eligibilityId2,
-                                            eligibilityId3
-                                        FROM Required_Eligibility
-                                        INNER JOIN Eligibility ON Required_Eligibility.eligibilityId = Eligibility.eligibilityId) re
-                                    LEFT JOIN Eligibility e2 ON re.eligibilityId2 = e2.eligibilityId) re2
-                                LEFT JOIN Eligibility e3 on re2.eligibilityId3 = e3.eligibilityId
+                                    re.eligibilityId,
+                                    e1.eligibility,
+                                    re.eligibilityId2,
+                                    e2.eligibility AS eligibility2,
+                                    re.eligibilityId3,
+                                    e3.eligibility AS eligibility3
+                                FROM Required_Eligibility re INNER JOIN Eligibility e1 ON re.eligibilityId=e1.eligibilityId
+                                LEFT JOIN Eligibility e2 ON re.eligibilityId2=e2.eligibilityId
+                                LEFT JOIN Eligibility e3 ON re.eligibilityId3=e3.eligibilityId
                                 ;'
                             );
 

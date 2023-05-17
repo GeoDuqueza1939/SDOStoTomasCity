@@ -47,7 +47,8 @@ class MPASIS_App
             applicantData:null,
             scoreSheet:null,
             ier:null,
-            ies:null
+            ies:null,
+            car:null
         };
 
         for (const navLI of Array.from(this.navbar.querySelectorAll("li"))) {
@@ -110,10 +111,29 @@ class MPASIS_App
                 window.location = "/";
                 break;
             case "signout":
-                postData(window.location.href, "app=mpasis&a=logout", (postEvent)=>{
-                    MPASIS_App.setCookie("user", "", -1);
-                    MPASIS_App.setCookie("current_view", "", -1);
-                    window.location.reload(true);
+                postData(MPASIS_App.processURL, "app=mpasis&a=logout", postEvent=>{
+                    var response;
+
+                    if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
+                    {
+                        response = JSON.parse(postEvent.target.responseText);
+
+                        if (response.type == "Error")
+                        {
+                            console.log("ERROR: " + response.content);
+                        }
+                        if (response.type == "Debug")
+                        {
+                            console.log("DEBUG: " + response.content);
+                        }
+                        else if (response.type == "Success")
+                        {
+                            console.log(response.content);
+                            MPASIS_App.setCookie("user", "", -1);
+                            MPASIS_App.setCookie("current_view", "", -1);
+                            window.location.reload(true);
+                        }
+                    }
                 });
             default:
                 MPASIS_App.setCookie("current_view", viewId, 1);
@@ -160,7 +180,7 @@ class MPASIS_App
                     var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
                     addText(obj.label, itemLink);
                     itemLink.addEventListener("click", event=>{
-                        this.activateView(obj.viewId);
+                        this.navClick(obj.viewId);
                     });
                 });
                 break;
@@ -181,7 +201,7 @@ class MPASIS_App
                     var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
                     addText(obj.label, itemLink);
                     itemLink.addEventListener("click", event=>{
-                        this.activateView(obj.viewId);
+                        this.navClick(obj.viewId);
                     });
                 });
                 break;
@@ -198,13 +218,15 @@ class MPASIS_App
                 [
                     {viewId:"scoresheet", label:"Score Sheet"},
                     {viewId:"ier", label:"Initial Evaluation Result (IER)"},
-                    {viewId:"ies", label:"Individual Evaluation Sheet (IES)"}
+                    {viewId:"ies", label:"Individual Evaluation Sheet (IES)"},
+                    {viewId:"car", label:"Comparative Assessment Result (CAR)"},
+                    {viewId:"car-rqa", label:"Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA)"}
                 ].forEach(obj=>{
                     var item = createElementEx(NO_NS, "li", el);
                     var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
                     addText(obj.label, itemLink);
                     itemLink.addEventListener("click", event=>{
-                        this.activateView(obj.viewId);
+                        this.navClick(obj.viewId);
                     });
                 });
                 break;
@@ -216,6 +238,12 @@ class MPASIS_App
                 break;
             case "ies":
                 this.constructIES();
+                break;
+            case "car":
+                this.constructCAR();
+                break;
+            case "car-rqa":
+                this.constructCARRQA();
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
@@ -229,14 +257,7 @@ class MPASIS_App
                     var item = createElementEx(NO_NS, "li", el);
                     var itemLink = createElementEx(NO_NS, "a", item, null, "class", "js-link");
                     addText(obj.label, itemLink);
-                    if (obj.viewId == "signout")
-                    {
-                        itemLink.addEventListener("click", event=>this.navClick(obj.viewId));
-                    }
-                    else
-                    {
-                        itemLink.addEventListener("click", event=>this.activateView(obj.viewId));
-                    }
+                    itemLink.addEventListener("click", event=>this.navClick(obj.viewId));
                 });
                 break;
             case "my-account":
@@ -2166,38 +2187,47 @@ class MPASIS_App
 
     constructScoreSheet()
     {
-        if (this.forms["scoreSheet"] != null && this.forms["scoreSheet"] != undefined)
+        if (this.forms["scoreSheet"] == null || this.forms["scoreSheet"] == undefined)
         {
-            return this.forms["scoreSheet"];
+            this.forms["scoreSheet"] = new ScoreSheet(this.mainSections["main-scoresheet"], "score-sheet");
         }
-
-        this.forms["scoreSheet"] = new ScoreSheet(this.mainSections["main-scoresheet"], "score-sheet");
 
         return this.forms["scoreSheet"];
     }
 
     constructIER()
     {
-        if (this.forms["ier"] != null && this.forms["ier"] != undefined)
+        if (this.forms["ier"] == null || this.forms["ier"] == undefined)
         {
-            return this.forms["ier"];
+            this.forms["ier"] = new IERForm(this.mainSections["main-ier"], "ier-form");
         }
-
-        this.forms["ier"] = new IERForm(this.mainSections["main-ier"], "ier-form");
 
         return this.forms["ier"];
     }
 
     constructIES()
     {
-        if (this.forms["ies"] != null && this.forms["ies"] != undefined)
+        if (this.forms["ies"] == null || this.forms["ies"] == undefined)
         {
-            return this.forms["ies"];
+            this.forms["ies"] = new IESForm(this.mainSections["main-ies"], "ies-form");
         }
 
-        this.forms["ies"] = new IESForm(this.mainSections["main-ies"], "ies-form");
-
         return this.forms["ies"];
+    }
+
+    constructCAR()
+    {
+        if (this.forms["car"] == null || this.forms["car"] == undefined)
+        {
+            this.forms["car"] = new CARForm(this.mainSections["main-car"], "car-form");
+        }
+
+        return this.forms["car"];
+    }
+
+    constructCARRQA()
+    {
+        alert("TO BE IMPLEMENTED");
     }
 
     showScrim()
