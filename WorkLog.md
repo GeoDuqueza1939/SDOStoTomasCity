@@ -1,5 +1,25 @@
 # Work Log
 
+## 5/17/2023
+TO DO:
+* [x] Fixed a security issue where session user data is not completely unset on sign out
+* [ ] Add a FormEx-derived Comparative Assessment Result
+* [ ] Add a FormEx-derived Comparative Assessment Result-Registry of Qualified Applicants
+* [x] Add a PositionSelectorDialog class
+* [ ] Add a Place of Assignment field to the Job Data/QS Entry form and Position DB table
+* [ ] Add a Date of Final Deliberation field to both the CAR form and the Position DB table
+* [ ] Add a LoadJobApplication dialog class
+* [ ] Create a printout template for the IER
+* [ ] Create a printout template for the IES
+* [ ] Create a printout template for the CAR
+* [ ] Create a printout template for the CAR-RQA
+* [ ] Add abbreviations to eligibilities
+* [ ] Add Honor Graduate to eligibilities
+* [ ] Create PHP functions that will further generalize adding and updating of specific database records
+* [ ] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
+
+At the start of the workday, I found a bug that could prove to be a security issue, which I was able to fix quickly. As a went about trying to implement the CAR form, I encountered some hurdles along the way. First, I had to generalize the position selector as a class. Next, I also needed to add the place of assignment and the date of final deliberation in several places, so I had to be careful in modifying code. I will have to resume this tomorrow. I was able to complete most of CAR form's UI, but I was unable to proceed without adding the aforementioned fields in both the app and the database.
+
 ## 5/16/2023
 TO DO:
 * [x] Add remarks fields to all score sheet-related items
@@ -7,15 +27,19 @@ TO DO:
 * [x] Render some of the score computations
 * [x] Remove the source code for the old Score Sheet
 * [ ] Add a FormEx-derived Comparative Assessment Result
+* [ ] Add a FormEx-derived Comparative Assessment Result-Registry of Qualified Applicants
 * [x] Enable resetting of passwords in user management
 * [ ] Create a printout template for the IER
 * [ ] Create a printout template for the IES
+* [ ] Create a printout template for the CAR
+* [ ] Create a printout template for the CARRQA
 * [ ] Add a LoadJobApplication dialog class
 * [ ] Add abbreviations to eligibilities
 * [ ] Add Honor Graduate to eligibilities
 * [ ] Create PHP functions that will further generalize adding and updating of specific database records
+* [ ] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
 
-
+Today, I focused on rendering applicant qualification details and score computations. I resorted to just adding fields in both applicant data entry and score sheet forms that correspond to the qualification details and HRMPSB member's remarks. For the score computations, I used the `getScore` and `getScoreManually` methods to create `getComputationString` and `getComputationStringManually` methods which would generate the computation strings. So far, the criteria that returns computation strings were those that uses weights in computations. I also tried to remove the old Score Sheet code to further streamline both the maintenance of the source code and the source code itself. I also quickly implemented the password resetting feature in the the user management interface. The feature uses the first_signin column value in the User and Temp_User tables. When resetting the password, the password is first set to the default initial password and, once the user signs in next, a prompt will appear asking the user to supply a new password. Finally, I started to add stubs for the CAR and RQA form classes.
 
 ## 5/15/2023
 TO DO:
