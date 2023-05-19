@@ -47,9 +47,7 @@ if (isValidUserSession())
 {
     if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout' || !isset($_COOKIE['user']))
     {
-        logAction('mpasis', 24, array(
-            ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username']
-        ));
+        $redirectToLogin = true;
         require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
     }
     // elseif (isset($_COOKIE['user']))

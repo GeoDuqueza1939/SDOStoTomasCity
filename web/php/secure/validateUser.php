@@ -38,37 +38,13 @@ function getValidCredentials(string $username, string $password)
 
     $dbconn = new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl);
 
-    // $join = '(SELECT given_name, middle_name, family_name, spouse_name, ext_name, birth_date, birth_place, employeeId, is_temporary_empno FROM `SDOStoTomas`.`Person` INNER JOIN `SDOStoTomas`.`Employee` ON Person.personId=Employee.personId) as E INNER JOIN `SDOStoTomas`.`User` ON E.employeeId=User.employeeId';
-
-    // $fields = 'given_name, middle_name, family_name, spouse_name, ext_name, birth_date, birth_place, E.employeeId as employeeId, is_temporary_empno, username, sergs_access_level, opms_access_level';
-
-    // $dbResults = $dbconn->select($join, $fields, "WHERE username='$username' AND password='" . hash('ripemd320', $password) ."'"); // THIS FIRES AN ERROR
-    // $dbResults = $dbconn->executeQuery("SELECT $fields FROM $join WHERE username='$username' AND password='" . hash('ripemd320', $password) ."'");
     $dbResults = $dbconn->executeQuery(getUserFetchQuery(true) . " WHERE username='$username' AND password='" . hash('ripemd320', $password) . "'");
-
-    // die(json_encode(array('type'=>'Error', 'content'=>$dbResults)));
 
     if (is_null($dbconn->lastException))
     {
         if (is_null($dbResults) || count($dbResults) == 0)
         {
-            // $join = '`SDOStoTomas`.`Person` INNER JOIN `SDOStoTomas`.`Temp_User` ON Person.personId=Temp_User.personId';
-    
-            // $fields = 'given_name, middle_name, family_name, spouse_name, ext_name, birth_date, birth_place, username, sergs_access_level, opms_access_level, mpasis_access_level';
-    
-            // $dbResults = $dbconn->executeStatement("SELECT $fields FROM $join WHERE username='$username' AND password='" . hash('ripemd320', $password) ."'");
-
-            // // var_dump($dbResults);
-            // // die();
-
-            // if (is_null($dbconn->lastException) && !is_null ($dbResults) && count($dbResults) > 0)
-            // {
-            //     $dbResults[0]["is_temporary_user"] = true;
-            // }
-            // else
-            // {
-                $dbResults = null;
-            // }
+            $dbResults = null;
         }
         elseif (count($dbResults) > 0)
         {
@@ -77,8 +53,6 @@ function getValidCredentials(string $username, string $password)
                 $dbResults[$i]["is_temporary_user"] = ($dbResults[$i]['temp_user'] != 0);
                 unset($dbResults[$i]["password"]);
             }
-            // die(json_encode($dbResults));
-            // $dbResults[0]["is_temporary_user"] = ($dbResults[0]['temp_user'] != 0);
         }
         else
         {
@@ -208,9 +182,6 @@ function updateUser(DatabaseConnection $dbconn, $user, $person)
     $isTempUser = $user['temp_user'];
     $username = $user['username'];
     $fieldValueStr = '';
-    // sendDebug($username);
-
-    // sendDebug([$user, $person]);
 
     if (userExists($dbconn, $username, $isTempUser))
     {

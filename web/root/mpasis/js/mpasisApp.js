@@ -48,7 +48,8 @@ class MPASIS_App
             scoreSheet:null,
             ier:null,
             ies:null,
-            car:null
+            car:null,
+            rqa:null
         };
 
         for (const navLI of Array.from(this.navbar.querySelectorAll("li"))) {
@@ -523,13 +524,21 @@ class MPASIS_App
         this.forms["jobData"].addSpacer();
 
         field = this.forms["jobData"].addInputEx("Please select the position category", "radio-select", "", "", "position_categoryId", "Position", true);
-        field.container.style.gridColumn = "1 / span 12";
+        field.container.style.gridColumn = "1 / span 6";
         field.reverse();
+        field.setVertical();
         field.runAfterFilling = function(){
             this.inputExs[0].check();
         };
         field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=positionCategory", "position_category", "position_categoryId", "description");
         
+        this.forms["jobData"].addSpacer();
+
+        field = this.forms["jobData"].addInputEx("Place of Assignment", "text", "", "", "place_of_assignment", "Position");
+        field.container.style.gridColumn = "7 / span 6";
+        field.setVertical();
+        field.showColon();
+
         this.forms["jobData"].addSpacer();
         
         header = this.forms["jobData"].addHeader("Qualification Standards", 3);
@@ -763,6 +772,12 @@ class MPASIS_App
                 
                 positions.push(position);
             });
+
+            // DEBUG
+            console.log(packageData(positions));
+            
+            return;
+            // DEBUG
             
             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
             postData(MPASIS_App.processURL, "app=mpasis&a=add&positions=" + packageData(positions), (event)=>{
@@ -1087,6 +1102,7 @@ class MPASIS_App
         var moreTraining = new InputEx(trainingDiv, "has_more_unrecorded_training", "checkbox");    
         moreTraining.setLabelText("There are more training certificates and/or MOVs presented for this application that were no longer included in this list for encoding.");
         moreTraining.reverse();
+        moreTraining.setFullWidth();
 
         var displaySpecTraining = new DisplayEx(applicantDataForm.fieldWrapper, "fieldset", "", "", "Specific Training Requirements of the Position", "The position applied requires this specific training.");
         displaySpecTraining.setFullWidth();
@@ -1238,6 +1254,7 @@ class MPASIS_App
         var moreWorkExp = new InputEx(workExpDiv, "has_more_unrecorded_work_experience", "checkbox");    
         moreWorkExp.setLabelText("There are more work experience information that were no longer included in this list for encoding.");
         moreWorkExp.reverse();
+        moreWorkExp.setFullWidth();
 
         var displaySpecWorkExp = new DisplayEx(applicantDataForm.fieldWrapper, "fieldset", "", "", "Specific Work Experience Requirements of the Position", "The position applied requires this specific work experience.");
         displaySpecWorkExp.setFullWidth();
@@ -1541,171 +1558,135 @@ class MPASIS_App
             var retrieveApplicantDialog = null;
             if (loadApplicantClickEvent.target.innerHTML == "Load Existing Applicant")
             {
-                retrieveApplicantDialog = new DialogEx(applicantDataForm.fieldWrapper, "scoresheet-load-applicant");
-                var form = retrieveApplicantDialog.addFormEx();
-                
-                var searchBox = form.addInputEx("Enter an applicant name or application code", "text", "", "Type to populate list");
-                searchBox.setFullWidth();
-                searchBox.showColon();
-                searchBox.container.style.marginBottom = "0.5em";
-                searchBox.fields[0].style.display = "block";
-                searchBox.fields[0].style.width = "100%";
-    
-                var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
-                searchResult.setFullWidth();
-                searchResult.setVertical();
-                searchResult.reverse();
-                searchResult.hide();
-
-                searchResult.fieldWrapper.style.maxHeight = "15em";
-                searchResult.fieldWrapper.style.overflowY = "auto";
-    
-                var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(3);
-                retrieveApplicantDialogBtnGrp.setFullWidth();
-                retrieveApplicantDialogBtnGrp.container.style.marginTop = "0.5em";
-                retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
-
-                retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("New Application");
-                retrieveApplicantDialogBtnGrp.inputExs[0].setTooltipText("Load selected applicant information for a new application");
-                retrieveApplicantDialogBtnGrp.inputExs[0].disable();
-
-                retrieveApplicantDialogBtnGrp.inputExs[1].setLabelText("Edit Application");
-                retrieveApplicantDialogBtnGrp.inputExs[1].setTooltipText("Load selected applicant information for updating");
-                retrieveApplicantDialogBtnGrp.inputExs[1].disable();
-
-                retrieveApplicantDialogBtnGrp.inputExs[2].setLabelText("Cancel");
-                retrieveApplicantDialogBtnGrp.inputExs[2].setTooltipText("");
-                retrieveApplicantDialogBtnGrp.inputExs[2].addEvent("click", cancelRetrieveDialogClickEvent=>{
-                    retrieveApplicantDialog.close();
-                });
-
                 var retrieveApplicant = (applicationObj, newApplication = false)=>{
                         
-                        console.log(applicationObj, applicantDataForm.dbInputEx);
+                    console.log(applicationObj, applicantDataForm.dbInputEx);
 
-                        if (!newApplication)
+                    if (!newApplication)
+                    {
+                        applicantDataForm.dbInputEx["position_title_applied"].setDefaultValue(applicationObj["position_title_applied"] ?? "", true);
+                        applicantDataForm.dbInputEx["parenthetical_title_applied"].setDefaultValue(applicationObj["parenthetical_title_applied"] ?? "", true);
+                        applicantDataForm.dbInputEx["plantilla_item_number_applied"].setDefaultValue(applicationObj["plantilla_item_number_applied"] ?? "ANY", true);
+                        plantillaChange();
+                    }
+
+                    for (const key in applicationObj)
+                    {
+                        if (key in applicantDataForm.dbInputEx)
                         {
-                            applicantDataForm.dbInputEx["position_title_applied"].setDefaultValue(applicationObj["position_title_applied"] ?? "", true);
-                            applicantDataForm.dbInputEx["parenthetical_title_applied"].setDefaultValue(applicationObj["parenthetical_title_applied"] ?? "", true);
-                            applicantDataForm.dbInputEx["plantilla_item_number_applied"].setDefaultValue(applicationObj["plantilla_item_number_applied"] ?? "ANY", true);
-                            plantillaChange();
-                        }
-
-                        for (const key in applicationObj)
-                        {
-                            if (key in applicantDataForm.dbInputEx)
+                            switch (key)
                             {
-                                switch (key)
-                                {
-                                    case "position_title_applied":
-                                    case "parenthetical_title_applied":
-                                    case "plantilla_item_number_applied":
-                                        // do nothing; whatever needs to be done here needs to be done earlier
-                                        break;
-                                    case "sex":
-                                        applicantDataForm.dbInputEx[key].setDefaultValue((applicationObj[key] == "Male" ? 1 : (applicationObj[key] == "Female" ? 2 : "")), true);
-                                        break;
-                                    case "civil_status":
-                                        applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["civil_statusIndex"], true);
-                                        break;
-                                    case "disability":
-                                    case "email_address":
-                                    case "contact_number":
-                                        if (applicationObj[key].length > 0)
-                                        {
-                                            applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key].map(number=>number[key]).join(";"), true);
-                                        }
-                                        break;
-                                    case "degree_taken":
-                                        break;
-                                    case "educational_attainment":
-                                        applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["educational_attainmentIndex"], true);
-                                        applicantDataForm.dbInputEx["degree_taken"].setDefaultValue(applicationObj["degree_taken"]);
-                                        applicantDataForm.dbInputEx["degree_taken"].setValue("degree_takenId", applicationObj["degree_taken"]);
-                                        attainedEducIncrement.innerHTML = computeEducIncrementLevel();
-                                        break;
-                                    default:
-                                        if (!newApplication && !applicantDataForm.dbInputEx[key].isDisabled() && (applicantDataForm.dbInputEx[key].type == "checkbox" || applicantDataForm.dbInputEx[key] == "radio"))
-                                        {
-                                            applicantDataForm.dbInputEx[key].check(applicationObj[key] == 1);
-                                        }
-                                        else if (!newApplication || key != "application_code")
-                                        {
-                                            applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key] ?? "", true);
-                                        }
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                switch (key)
-                                {
-                                    case "present_address":
-                                        applicantDataForm.dbInputEx["address"].setDefaultValue(applicationObj["permanent_address"] ?? applicationObj["present_address"] ?? "", true);
-                                        break;
-                                    case "ethnic_group":
-                                        applicantDataForm.dbInputEx["ethnicity"].setDefaultValue(applicationObj[key] ?? "", true);
-                                        break;
-                                    case "relevant_training":
-                                        while(trainingInputExs.length > 0)
-                                        {
-                                            trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"]["removeRowBtn"].removeRowOverride = true;
-                                            trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"]["removeRowBtn"].fields[0].click();
-                                        }
-
-                                        for (const training of applicationObj[key])
-                                        {
-                                            addTrainingBtn.fields[0].click();
-                                            trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"].setDefaultValue(training["descriptive_name"], true);
-                                            trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].setDefaultValue(training["hours"], true);
-                                        }
-                                        attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
-                                        break;
-                                    case "has_more_unrecorded_training":
-                                        moreTraining.check(applicationObj[key] == 1);
-                                        break;
-                                    case "has_more_unrecorded_work_experience":
-                                        moreWorkExp.check(applicationObj[key] == 1);
-                                        break;
-                                    case "relevant_work_experience":
-                                        while(workExpInputExs.length > 0)
-                                        {
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"]["removeRowBtn"].removeRowOverride = true;
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"]["removeRowBtn"].fields[0].click();
-                                        }
-
-                                        for (const workExp of applicationObj[key])
-                                        {
-                                            addWorkExpBtn.fields[0].click();
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"].setDefaultValue(workExp["descriptive_name"], true);
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpStartDateInputEx"].setDefaultValue(workExp["start_date"], true);
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].setDefaultValue(workExp["end_date"], true);
-                                            workExpInputExs[workExpInputExs.length - 1]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
-                                        }
-                                        attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
-                                        break;
-                                    case "relevant_eligibility":
-                                        applicantDataForm.dbInputEx["eligibilityId"].setDefaultValue(applicationObj[key].map(elig=>elig["eligibilityId"]), true);
-                                        applicantDataForm.dbInputEx["eligibilityId"].inputExs[1]["changeElig"]();
-                                        break;
-                                    default:
-                                        break;
-                                }
+                                case "position_title_applied":
+                                case "parenthetical_title_applied":
+                                case "plantilla_item_number_applied":
+                                    // do nothing; whatever needs to be done here needs to be done earlier
+                                    break;
+                                case "sex":
+                                    applicantDataForm.dbInputEx[key].setDefaultValue((applicationObj[key] == "Male" ? 1 : (applicationObj[key] == "Female" ? 2 : "")), true);
+                                    break;
+                                case "civil_status":
+                                    applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["civil_statusIndex"], true);
+                                    break;
+                                case "disability":
+                                case "email_address":
+                                case "contact_number":
+                                    if (applicationObj[key].length > 0)
+                                    {
+                                        applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key].map(number=>number[key]).join(";"), true);
+                                    }
+                                    break;
+                                case "degree_taken":
+                                    break;
+                                case "educational_attainment":
+                                    applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["educational_attainmentIndex"], true);
+                                    applicantDataForm.dbInputEx["degree_taken"].setDefaultValue(applicationObj["degree_taken"]);
+                                    applicantDataForm.dbInputEx["degree_taken"].setValue("degree_takenId", applicationObj["degree_taken"]);
+                                    attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+                                    break;
+                                default:
+                                    if (!newApplication && !applicantDataForm.dbInputEx[key].isDisabled() && (applicantDataForm.dbInputEx[key].type == "checkbox" || applicantDataForm.dbInputEx[key] == "radio"))
+                                    {
+                                        applicantDataForm.dbInputEx[key].check(applicationObj[key] == 1);
+                                    }
+                                    else if (!newApplication || key != "application_code")
+                                    {
+                                        applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key] ?? "", true);
+                                    }
+                                    break;
                             }
                         }
-
-                        if (!newApplication)
+                        else
                         {
-                            applicantDataForm.dbInputEx["application_code"].disable();
+                            switch (key)
+                            {
+                                case "present_address":
+                                    applicantDataForm.dbInputEx["address"].setDefaultValue(applicationObj["permanent_address"] ?? applicationObj["present_address"] ?? "", true);
+                                    break;
+                                case "ethnic_group":
+                                    applicantDataForm.dbInputEx["ethnicity"].setDefaultValue(applicationObj[key] ?? "", true);
+                                    break;
+                                case "relevant_training":
+                                    while(trainingInputExs.length > 0)
+                                    {
+                                        trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"]["removeRowBtn"].removeRowOverride = true;
+                                        trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"]["removeRowBtn"].fields[0].click();
+                                    }
+
+                                    for (const training of applicationObj[key])
+                                    {
+                                        addTrainingBtn.fields[0].click();
+                                        trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"].setDefaultValue(training["descriptive_name"], true);
+                                        trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].setDefaultValue(training["hours"], true);
+                                    }
+                                    attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
+                                    break;
+                                case "has_more_unrecorded_training":
+                                    moreTraining.check(applicationObj[key] == 1);
+                                    break;
+                                case "has_more_unrecorded_work_experience":
+                                    moreWorkExp.check(applicationObj[key] == 1);
+                                    break;
+                                case "relevant_work_experience":
+                                    while(workExpInputExs.length > 0)
+                                    {
+                                        workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"]["removeRowBtn"].removeRowOverride = true;
+                                        workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"]["removeRowBtn"].fields[0].click();
+                                    }
+
+                                    for (const workExp of applicationObj[key])
+                                    {
+                                        addWorkExpBtn.fields[0].click();
+                                        workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"].setDefaultValue(workExp["descriptive_name"], true);
+                                        workExpInputExs[workExpInputExs.length - 1]["workExpStartDateInputEx"].setDefaultValue(workExp["start_date"], true);
+                                        workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].setDefaultValue(workExp["end_date"], true);
+                                        workExpInputExs[workExpInputExs.length - 1]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
+                                    }
+                                    attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
+                                    break;
+                                case "relevant_eligibility":
+                                    applicantDataForm.dbInputEx["eligibilityId"].setDefaultValue(applicationObj[key].map(elig=>elig["eligibilityId"]), true);
+                                    applicantDataForm.dbInputEx["eligibilityId"].inputExs[1]["changeElig"]();
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
+                    }
 
-                        applicantDataBtnGrp.inputExs[0].setLabelText(newApplication ? "Save" : "Update");
+                    if (!newApplication)
+                    {
+                        applicantDataForm.dbInputEx["application_code"].disable();
+                    }
 
-                        loadApplicant.setLabelText("Reset Form");
+                    applicantDataBtnGrp.inputExs[0].setLabelText(newApplication ? "Save" : "Update");
+
+                    loadApplicant.setLabelText("Reset Form");
                 };
 
-                searchResult.runAfterFilling = ()=>{
-                    retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
+                retrieveApplicantDialog = new JobApplicationSelectorDialog(app.main, "applicant-data-job-application-selector-dialog", [
+                    {label:"New", tooltip:"Create a new application from the selected application's data", callbackOnClick:event=>{                
+                        var searchResult = retrieveApplicantDialog.getApplicantListBox();
+                        
                         if (typeof(searchResult.getValue()) == "string" && searchResult.getValue() == "" || searchResult.getValue() == null)
                         {
                             retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
@@ -1718,9 +1699,10 @@ class MPASIS_App
                         }
                         
                         retrieveApplicantDialog.close();
-                    });
-
-                    retrieveApplicantDialogBtnGrp.inputExs[1].addEvent("click", loadApplicationDialogClickEvent=>{
+                    }},
+                    {label:"Edit", tooltip:"Load selected application for editing", callbackOnClick:event=>{                
+                        var searchResult = retrieveApplicantDialog.getApplicantListBox();
+                        
                         if (typeof(searchResult.getValue()) == "string" && searchResult.getValue() == "" || searchResult.getValue() == null)
                         {
                             retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
@@ -1733,23 +1715,30 @@ class MPASIS_App
                         }
                         
                         retrieveApplicantDialog.close();
-                    });
-                };
-                
-                searchBox.addEvent("keyup", keyupEvent=>{
-                    searchResult.clearList();
+                    }},
+                    {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+                        retrieveApplicantDialog.close();
+                    }}
+                ]);
 
-                    searchResult.show();
-                    retrieveApplicantDialogBtnGrp.inputExs[0].enable();
-                    retrieveApplicantDialogBtnGrp.inputExs[1].enable();
+                retrieveApplicantDialog.getDialogButton(0).disable();
+                retrieveApplicantDialog.getDialogButton(1).disable();
 
-                    searchResult.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + searchBox.getValue(), "applicant_option_label", "application_code");
+                ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
+                    retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(0).disable());
+                    retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(1).disable());
+                });
+    
+                retrieveApplicantDialog.getApplicantListBox().addEvent("click", selectOptionEvent=>{
+                    retrieveApplicantDialog.getDialogButton(0).enable();
+                    retrieveApplicantDialog.getDialogButton(1).enable();
                 });
             }
             else if (loadApplicantClickEvent.target.innerHTML == "Reset Form")
             {
-                // applicantDataForm.resetForm();
                 this.showScrim();
+                
+                // applicantDataForm.resetForm();
                 window.location.reload(true);
 
                 loadApplicantClickEvent.target.innerHTML = "Load Existing Applicant";
@@ -2227,7 +2216,12 @@ class MPASIS_App
 
     constructCARRQA()
     {
-        alert("TO BE IMPLEMENTED");
+        if (this.forms["rqa"] == null || this.forms["rqa"] == undefined)
+        {
+            this.forms["rqa"] = new RQAForm(this.mainSections["main-car-rqa"], "rqa-form");
+        }
+
+        return this.forms["rqa"];
     }
 
     showScrim()
@@ -2381,6 +2375,11 @@ class MPASIS_App
         {
             parenField.setValue(selectedPlantilla);
         }
+    }
+
+    static filterPosition(positions, positionTitle, parenTitle, plantilla)
+    {
+
     }
 }
 

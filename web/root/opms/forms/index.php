@@ -21,6 +21,7 @@ if (isset($_SESSION['user']))
 {
     if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout' || !isset($_COOKIE['user']))
     {
+        $redirectToLogin = true;
         require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
     }
 }

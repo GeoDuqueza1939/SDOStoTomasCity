@@ -1,5 +1,39 @@
 # Work Log
 
+## 5/19/2023
+TO DO:
+* [x] Add a FormEx-derived Comparative Assessment Result-Registry of Qualified Applicants
+* [x] Add a LoadJobApplication dialog class to generalize code
+* [ ] Create a printout template for the IER
+* [ ] Create a printout template for the IES
+* [ ] Create a printout template for the CAR
+* [ ] Create a printout template for the CAR-RQA
+* [ ] Add abbreviations to eligibilities
+* [ ] Add Honor Graduate to eligibilities
+* [ ] Create PHP functions that will further generalize adding and updating of specific database records
+* [ ] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
+
+I finally finished the LoadJobApplication dialog class this morning. Now, code for loading job applications is as reusable as can be. I have made the necessary modifications in the Applicant Data Entry, the Score Sheet, and the Individual Evaluation Sheet forms so they could use the new dialog class which asks the user for any name or application code and offers job application matches based on the provided data. I have also completed the CAR-RQA form, which displays a list of qualified teacher applicants. When I asked if the other CAR and RQA fields should be filled up online and how they should be filled up, they told me that some columns could only be filled by the appointing authority, who, in our case, is the SDS. As such, I see that the HRMPSB online forms are basically done. I will just have to work on the printout templates and add a few more customizations and code optimizations in the following days.
+
+## 5/18/2023
+TO DO:
+* [x] Increase coverage of MPASIS auditing in process.php
+* [x] Add a FormEx-derived Comparative Assessment Result
+* [ ] Add a FormEx-derived Comparative Assessment Result-Registry of Qualified Applicants
+* [x] Add a Place of Assignment field to the Job Data/QS Entry form and Position DB table
+* [x] Add a Date of Final Deliberation field to both the CAR form and the Position DB table
+* [ ] Add a LoadJobApplication dialog class to generalize code
+* [ ] Create a printout template for the IER
+* [ ] Create a printout template for the IES
+* [ ] Create a printout template for the CAR
+* [ ] Create a printout template for the CAR-RQA
+* [ ] Add abbreviations to eligibilities
+* [ ] Add Honor Graduate to eligibilities
+* [ ] Create PHP functions that will further generalize adding and updating of specific database records
+* [ ] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
+
+I started working on adding more activity-logging code in the PHP processor script. After a somewhat extended, I completed most of the features of the CAR form, culminating with adding the place of assignment and the date of final deliberation field to their respective places in the forms and the Position table in the database. The place of assignment can now be saved when adding a job position. The final deliberation date, on the other hand, will only be saved once the CAR is saved/updated, the code for which shall be added soon. I then started creating the LoadJobApplication dialog class and reached until completing just the UI and the basic logic. I will have to add more code for this tomorrow.
+
 ## 5/17/2023
 TO DO:
 * [x] Fixed a security issue where session user data is not completely unset on sign out
@@ -8,7 +42,7 @@ TO DO:
 * [x] Add a PositionSelectorDialog class
 * [ ] Add a Place of Assignment field to the Job Data/QS Entry form and Position DB table
 * [ ] Add a Date of Final Deliberation field to both the CAR form and the Position DB table
-* [ ] Add a LoadJobApplication dialog class
+* [ ] Add a LoadJobApplication dialog class to generalize code
 * [ ] Create a printout template for the IER
 * [ ] Create a printout template for the IES
 * [ ] Create a printout template for the CAR
@@ -33,7 +67,7 @@ TO DO:
 * [ ] Create a printout template for the IES
 * [ ] Create a printout template for the CAR
 * [ ] Create a printout template for the CARRQA
-* [ ] Add a LoadJobApplication dialog class
+* [ ] Add a LoadJobApplication dialog class to generalize code
 * [ ] Add abbreviations to eligibilities
 * [ ] Add Honor Graduate to eligibilities
 * [ ] Create PHP functions that will further generalize adding and updating of specific database records

@@ -3126,16 +3126,20 @@ class PasswordEditor extends DialogEx
 
 class PositionSelectorDialog extends DialogEx
 {
-    constructor(parent = null, id = "", callbackOnSelect = positionSelectorDialogEvent=>{}, callbackOnCancel = positionSelectorDialogEvent=>{this.close();})
+    constructor(parent = null, id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}], customPositionFilterCallback = (position, index, positions)=>{
+        var i = 0;
+        while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
+        return i == index && position["filled"] == 0;
+    })
     {
-        var selPosition = null, selParen = null, selPlantilla = null;
+        var selPosition = null, selParen = null, selPlantilla = null, btnGrp = null;
 
         super(parent, id);
 
         this.scrim.classList.add("position-selector");
         this.addFormEx();
         this.formEx.setTitle("Select Position", 3);
-        this.callbacks = [callbackOnSelect, callbackOnCancel];
+        this.callbacks = buttonConfig.map(btn=>btn.callbackOnClick);
 
         [
             {id:"selected-position", label:"Position Title"},
@@ -3148,17 +3152,17 @@ class PositionSelectorDialog extends DialogEx
             });
         });
 
-        selPosition = this.formEx.dbInputEx["selected-position"];
-        selParen = this.formEx.dbInputEx["selected-paren-position"];
-        selPlantilla = this.formEx.dbInputEx["selected-plantilla"];
+        this.selPosition = selPosition = this.formEx.dbInputEx["selected-position"];
+        this.selParen = selParen = this.formEx.dbInputEx["selected-paren-position"];
+        this.selPlantilla = selPlantilla = this.formEx.dbInputEx["selected-plantilla"];
 
-        var btnGrp = this.formEx.addFormButtonGrp(2);
+        btnGrp = this.formEx.addFormButtonGrp(buttonConfig.length);
         btnGrp.container.classList.add("position-selector-buttons");
         
-        ["Select", "Cancel"].forEach((btnTxt, btnIndex)=>{
-            btnGrp.inputExs[btnIndex].setLabelText(btnTxt);
-            btnGrp.inputExs[btnIndex].setTooltipText(btnTxt);
-            btnGrp.inputExs[btnIndex].addEvent("click", this.callbacks[btnIndex]);
+        buttonConfig.forEach((btn, btnIndex)=>{
+            btnGrp.inputExs[btnIndex].setLabelText(btn.label);
+            btnGrp.inputExs[btnIndex].setTooltipText(btn.tooltip);
+            btnGrp.inputExs[btnIndex].addEvent("click", btn.callbackOnClick);
         })
 
         btnGrp.inputExs[0].disable();
@@ -3166,11 +3170,7 @@ class PositionSelectorDialog extends DialogEx
         selPosition.setStatusMsgTimeout(-1);
         selPosition.showWait("Loading");
 
-        selPosition.fillItems(document.positions.filter((position, index, positions)=>{
-            var i = 0;
-            while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
-            return i == index && position["filled"] == 0;
-        }), "position_title", "plantilla_item_number");
+        selPosition.fillItems(document.positions.filter(customPositionFilterCallback), "position_title", "plantilla_item_number");
 
         selPosition.resetStatus();
 
@@ -3178,6 +3178,74 @@ class PositionSelectorDialog extends DialogEx
         selPosition.addEvent("change", positionChangeEvent=>MPASIS_App.selectPosition(selPosition, selParen, selPlantilla));
         selParen.addEvent("change", parenChangeEvent=>MPASIS_App.selectParen(selPosition, selParen, selPlantilla));
         selPlantilla.addEvent("change", plantillaChangeEvent=>MPASIS_App.selectPlantilla(selPosition, selParen, selPlantilla));
+    }
+}
+
+class JobApplicationSelectorDialog extends DialogEx
+{
+    constructor(parent = null, id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}])
+    {
+        super(parent, id);
+
+        this.scrim.classList.add("job-application-selector");
+        this.addFormEx();
+        this.formEx.setTitle("Select Job Application", 3);
+
+        this.formEx.addInputEx("Enter an applicant name or application code", "text", "", "Type to populate list", "applicantQueryBox");
+        this.getApplicantQueryBox().showColon();
+        this.getApplicantQueryBox().container.classList.add("applicant-query-box");
+
+        this.formEx.addInputEx("Choose the job application to load", "radio-select", "", "", "applicantListBox", "", true);
+        this.getApplicantListBox().reverse();
+        this.getApplicantListBox().setStatusMsgTimeout(-1);
+        this.getApplicantListBox().showInfo("None to show");
+        this.getApplicantListBox().container.classList.add("applicant-list-box");
+
+        this.controlButtons = this.formEx.addFormButtonGrp(buttonConfig.length);
+        this.controlButtons.container.classList.add("job-application-selector-buttons");
+        buttonConfig.forEach((btn, btnIndex)=>{
+            this.controlButtons.inputExs[btnIndex].setLabelText(btn.label);
+            this.controlButtons.inputExs[btnIndex].setTooltipText(btn.tooltip ?? "");
+            this.controlButtons.inputExs[btnIndex].addEvent("click", btn.callbackOnClick);
+        });
+
+        this.getApplicantListBox().runAfterFilling = ()=>{
+
+        };
+
+        var keyEventFunc = keyEvent=>{
+            this.getApplicantListBox().clearList();
+
+            this.getApplicantListBox().show();
+
+            this.getApplicantListBox().setStatusMsgTimeout = -1;
+            this.getApplicantListBox().showWait("Retrieving . . .");
+
+            this.getApplicantListBox().fillItemsFromServer(MPASIS_App.processURL, "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + this.getApplicantQueryBox().getValue(), "applicant_option_label", "application_code");
+        }
+
+        // this.getApplicantQueryBox().addEvent("change", keyEventFunc);
+        this.getApplicantQueryBox().addEvent("keyup", keyEventFunc);
+        // this.getApplicantQueryBox().addEvent("keydown", keyEventFunc);
+        // this.getApplicantQueryBox().addEvent("keypress", keyEventFunc);
+    }
+
+    getApplicantListBox()
+    {
+        return this.formEx.dbInputEx["applicantListBox"];
+    }
+
+    getApplicantQueryBox()
+    {
+        return this.formEx.dbInputEx["applicantQueryBox"];
+    }
+
+    getDialogButton(index = 0)
+    {
+        if (type(index) == "number" && index >= 0 && index < this.controlButtons.inputExs.length)
+        {
+            return this.controlButtons.inputExs[index];
+        }
     }
 }
 
@@ -3581,9 +3649,8 @@ class ScoreSheet extends FormEx
     constructor(parentEl = null, id = "", useFormElement = true)
     {
         super(parentEl, id, useFormElement);
-        this.setTitle("Score Sheet", 2); //.style.gridColumn = "span 12";
+        this.setTitle("Score Sheet", 2);
         this.setFullWidth();
-        // this.gridDisplay(true, "auto auto auto auto auto auto auto auto auto auto auto auto");
 
         this.displayExs = [];
         this.data = [];
@@ -3600,14 +3667,12 @@ class ScoreSheet extends FormEx
 
         this.loadButton = this.addInputEx("Load Application", "buttonEx");
         this.loadButton.setFullWidth();
-        // this.loadButton.container.style.gridColumn = "span 12";
         this.loadButton.fieldWrapper.classList.add("right");
 
         this.loadButton.addEvent("click", this.loadApplicationBtn_Click);
 
         this.loadButton.setStatusMsgTimeout(-1);
         this.loadButton.showInfo("Click to begin");
-        // this.loadButton.container.classList.add("right");
         this.loadButton.statusPane.style.display = "block";
 
         this.loadButton.fields[0].click();
@@ -3615,316 +3680,271 @@ class ScoreSheet extends FormEx
 
     loadApplicationBtn_Click(event) // inherits the scope of the clicked button/element
     {
-        var scoreSheet = null, clickedElement = null, div = null;
+        var scoreSheet = null, clickedElement = null, div = null, retrieveApplicantDialog = null;
 
         scoreSheet = this.inputEx.parentFormEx;
         clickedElement = this; //event.srcElement; // event.target;
 
         this.inputEx.resetStatus();
 
-        var retrieveApplicantDialog = null;
         if (this.innerHTML == "Load Application")
         {
-            retrieveApplicantDialog = new DialogEx(app.main);
-            var form = retrieveApplicantDialog.addFormEx();
-            form.setFullWidth();
-            
-            var searchBox = form.addInputEx("Enter an applicant name or code", "text", "", "Type to populate list");
-            searchBox.setFullWidth();
-            // searchBox.setVertical();
-            searchBox.showColon();
-            searchBox.container.style.marginBottom = "0.5em";
-            searchBox.fields[0].style.display = "block";
-            searchBox.fields[0].style.width = "100%";
+            retrieveApplicantDialog = new JobApplicationSelectorDialog(app.main, "scoresheet-job-application-selector-dialog", [
+                {label:"Load", tooltip:"Load selected", callbackOnClick:event=>{
+                    var scoreSheetElementUI = null, weight = 0;
+                    var searchResult = retrieveApplicantDialog.getApplicantListBox();
 
-            var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
-            searchResult.setFullWidth();
-            searchResult.setVertical();
-            searchResult.reverse();
-            searchResult.hide();
-
-            searchResult.fieldWrapper.style.maxHeight = "15em";
-            searchResult.fieldWrapper.style.overflowY = "auto";
-
-            var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(2);
-            retrieveApplicantDialogBtnGrp.setFullWidth();
-            retrieveApplicantDialogBtnGrp.container.style.marginTop = "0.5em";
-            retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
-
-            retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("Load");
-            retrieveApplicantDialogBtnGrp.inputExs[0].setTooltipText("Load Selected");
-            retrieveApplicantDialogBtnGrp.inputExs[0].disable();
-
-            retrieveApplicantDialogBtnGrp.inputExs[1].setLabelText("Cancel");
-            retrieveApplicantDialogBtnGrp.inputExs[1].setTooltipText("");
-            retrieveApplicantDialogBtnGrp.inputExs[1].addEvent("click", cancelRetrieveDialogClickEvent=>{
-                retrieveApplicantDialog.close();
-            });
-
-            searchResult.runAfterFilling = ()=>{
-                if (!retrieveApplicantDialogBtnGrp.inputExs[0].isClickListenerAttached)
-                {
-                    retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
-                        var scoreSheetElementUI = null, weight = 0;
-
-                        if (searchResult.getValue() == "" || searchResult.getValue() == null)
-                        {
-                            retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
-                            return;
-                        }
-
-                        retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
-                        retrieveApplicantDialog.formEx.showWait("Loading");
-                        
-                        this.scrim = new ScrimEx(this.inputEx.parentFormEx.container);
-                        this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
-            
-                        scoreSheet.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
-                        
-                        if (!("applicantInfo" in scoreSheet.displayExs))
-                        {
-                            div = scoreSheet.addDisplayEx("div", "applicantInfo");
-                            div.setFullWidth();
-                            div.container.style.gridColumn = "span 12";
-                            div.content.style.display = "grid";
-                            div.content.style.gridTemplateColumns = "auto auto";
-                            div.content.style.gridGap = "0.5em 1em";            
-        
-                            [
-                                {colName:"application_code", label:"Application Code"},
-                                {colName:"applicant_name", label:"Applicant's Name"},
-                                {colName:"present_school", label:"School", tableName:"Job_Application"},
-                                {colName:"present_position", label:"Present Position", tableName:"Job_Application"},
-                                {colName:"present_designation", label:"Designation", tableName:"Job_Application"},
-                                {colName:"present_district", label:"District", tableName:"Job_Application"},
-                                {colName:"position_title_applied", label:"Position Applied For"}
-                            ].forEach(obj=>{
-                                if (obj == "")
-                                {
-                                    div.addLineBreak();
-                                    return;
-                                }
-                                var inputEx = scoreSheet.addInputEx(obj.label, "text", "", "", obj.colName, obj.tableName);
-                                inputEx.setVertical();
-                                div.addContent(inputEx.container);
-                                inputEx.enable(null, inputEx != scoreSheet.dbInputEx["application_code"] && inputEx != scoreSheet.dbInputEx["applicant_name"] && inputEx != scoreSheet.dbInputEx["position_title_applied"]);
-                                inputEx.fields[0].style.color = "black";
-
-                                if (obj.colName == "application_code")
-                                {
-                                    div.addContent(this.inputEx.container);
-                                    this.inputEx.container.style.gridColumn = "span 1";        
-                                }
-                            });
-                        }
-                
-                        scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.jobApplication["application_code"], true);
-                        scoreSheet.dbInputEx["applicant_name"].setDefaultValue(scoreSheet.jobApplication["applicant_name"], true);
-                        scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"], true);
-
-                        scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
-                        scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication);
-
-                        for (const criteria of scoreSheet.scoreSheetElements)
-                        {
-                            if (criteria.weight != 0)
+                    retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
+                    retrieveApplicantDialog.formEx.showWait("Loading");
+                    
+                    this.scrim = new ScrimEx(this.inputEx.parentFormEx.container);
+                    this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
+                    
+                    scoreSheet.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
+                    
+                    if (!("applicantInfo" in scoreSheet.displayExs))
+                    {
+                        div = scoreSheet.addDisplayEx("div", "applicantInfo");
+                        div.setFullWidth();
+                        div.container.style.gridColumn = "span 12";
+                        div.content.style.display = "grid";
+                        div.content.style.gridTemplateColumns = "auto auto";
+                        div.content.style.gridGap = "0.5em 1em";            
+    
+                        [
+                            {colName:"application_code", label:"Application Code"},
+                            {colName:"applicant_name", label:"Applicant's Name"},
+                            {colName:"present_school", label:"School", tableName:"Job_Application"},
+                            {colName:"present_position", label:"Present Position", tableName:"Job_Application"},
+                            {colName:"present_designation", label:"Designation", tableName:"Job_Application"},
+                            {colName:"present_district", label:"District", tableName:"Job_Application"},
+                            {colName:"position_title_applied", label:"Position Applied For"}
+                        ].forEach(obj=>{
+                            if (obj == "")
                             {
-                                div = new ScoreSheetElementUI(scoreSheet, criteria);
+                                div.addLineBreak();
+                                return;
+                            }
+                            var inputEx = scoreSheet.addInputEx(obj.label, "text", "", "", obj.colName, obj.tableName);
+                            inputEx.setVertical();
+                            div.addContent(inputEx.container);
+                            inputEx.enable(null, inputEx != scoreSheet.dbInputEx["application_code"] && inputEx != scoreSheet.dbInputEx["applicant_name"] && inputEx != scoreSheet.dbInputEx["position_title_applied"]);
+                            inputEx.fields[0].style.color = "black";
 
-                                if (div.scoreSheetElement.id == "summary")
+                            if (obj.colName == "application_code")
+                            {
+                                div.addContent(this.inputEx.container);
+                                this.inputEx.container.style.gridColumn = "span 1";        
+                            }
+                        });
+                    }
+            
+                    scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.jobApplication["application_code"], true);
+                    scoreSheet.dbInputEx["applicant_name"].setDefaultValue(scoreSheet.jobApplication["applicant_name"], true);
+                    scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"], true);
+
+                    scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
+                    scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication);
+
+                    for (const criteria of scoreSheet.scoreSheetElements)
+                    {
+                        if (criteria.weight != 0)
+                        {
+                            div = new ScoreSheetElementUI(scoreSheet, criteria);
+
+                            if (div.scoreSheetElement.id == "summary")
+                            {
+                                scoreSheet.summaryUI = div;
+
+                                scoreSheet.summary["summary_total_score"] = scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_score"];
+                            }
+                            else
+                            {
+                                scoreSheet.scoreSheetElementUIs.push(div);
+                                scoreSheet.fieldWrapper.appendChild(scoreSheet.summaryUI.container);
+
+                                if (scoreSheet.summaryUI != null && scoreSheet.summaryUI != undefined)
                                 {
-                                    scoreSheet.summaryUI = div;
+                                    scoreSheet.summaryUI.container.displayTableEx.addRow({"summary_criteria":criteria.label, "summary_weight":criteria.weight + "%","summary_score":0});
+                                    scoreSheet.summary[criteria.id] = scoreSheet.summaryUI.container.displayTableEx.rows[scoreSheet.summaryUI.container.displayTableEx.rows.length - 1]["td"]["summary_score"];
+                                    weight += criteria.weight;
+                                }
+                            }                                
+                        }
+                    }
 
-                                    scoreSheet.summary["summary_total_score"] = scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_score"];
+                    scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_weight"].innerHTML = weight + "%";
+
+                    var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"])[0];
+
+                    // Education
+                    scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
+                    
+                    // Training
+                    scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
+
+                    // Experience
+                    scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
+
+                    // Performance
+                    scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
+
+                    if (MPASIS_App.isDefined(scoreSheetElementUI))
+                    {
+                        scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
+                        scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
+                    }
+
+                    for (const key in scoreSheet.dbInputEx)
+                    {
+                        switch (key)
+                        {
+                            case "application_code":
+                            case "applicant_name":
+                            case "position_title_applied":
+                            case "present_designation":
+                            case "present_district":
+                            case "present_position":
+                            case "present_school":
+                                // do nothing
+                                break;
+                            default:
+                                if (key in scoreSheet.jobApplication)
+                                {
+                                    scoreSheet.dbInputEx[key].setDefaultValue(scoreSheet.jobApplication[key] ?? (scoreSheet.dbInputEx[key].type == "number" || scoreSheet.dbInputEx[key].type == "radio-select" ? 0 : ""), true);
                                 }
                                 else
                                 {
-                                    scoreSheet.scoreSheetElementUIs.push(div);
-                                    scoreSheet.fieldWrapper.appendChild(scoreSheet.summaryUI.container);
-
-                                    if (scoreSheet.summaryUI != null && scoreSheet.summaryUI != undefined)
-                                    {
-                                        scoreSheet.summaryUI.container.displayTableEx.addRow({"summary_criteria":criteria.label, "summary_weight":criteria.weight + "%","summary_score":0});
-                                        scoreSheet.summary[criteria.id] = scoreSheet.summaryUI.container.displayTableEx.rows[scoreSheet.summaryUI.container.displayTableEx.rows.length - 1]["td"]["summary_score"];
-                                        weight += criteria.weight;
-                                    }
-                                }                                
-                            }
+                                    console.log(key, " is not in jobApplication");
+                                }
+                                break;
                         }
+                    }
 
-                        scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_weight"].innerHTML = weight + "%";
-
-                        var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"])[0];
-
-                        // Education
-                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
-                        
-                        // Training
-                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
-
-                        // Experience
-                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
-
-                        // Performance
-                        scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
-
-                        scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
-                        scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
-
-                        for (const key in scoreSheet.dbInputEx)
+                    var applicantDataBtnGrp = scoreSheet.addFormButtonGrp(2);
+                    applicantDataBtnGrp.setFullWidth();
+                    applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+                    applicantDataBtnGrp.inputExs[0].setLabelText("Save");
+                    applicantDataBtnGrp.inputExs[0].setTooltipText("");
+                    applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+                        var jobApplication = {};
+            
+                        if (scoreSheet.dbInputEx["application_code"].getValue() == "")
                         {
-                            switch (key)
+                            new MsgBox(scoreSheet.container, "Please load an application to use the scoresheet.", "OK");
+            
+                            return;
+                        }
+            
+                        for (const colName in scoreSheet.dbInputEx) {
+                            var tableName = scoreSheet.dbTableName[colName];
+                            var dbInputEx = scoreSheet.dbInputEx[colName];
+            
+                            switch (colName)
                             {
-                                case "application_code":
-                                case "applicant_name":
-                                case "position_title_applied":
-                                case "present_designation":
-                                case "present_district":
-                                case "present_position":
-                                case "present_school":
-                                    // do nothing
+                                case "applicant_name": case "applicant_option_label":
+                                case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
+                                case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
+                                case "ethnicityId":
+                                case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
+                                case "has_more_unrecorded_training":
+                                case "has_more_unrecorded_work_experience":
+                                case "has_specific_competency_required":
+                                case "has_specific_education_required":
+                                case "has_specific_training":
+                                case "has_specific_work_experience":
+                                case "permanent_addressId":
+                                case "personId":
+                                case "present_addressId":
+                                case "relevant_eligibility":
+                                case "relevant_training":
+                                case "relevant_work_experience":
+                                case "religionId":
+                                case "sex":
                                     break;
                                 default:
-                                    if (key in scoreSheet.jobApplication)
-                                    {
-                                        scoreSheet.dbInputEx[key].setDefaultValue(scoreSheet.jobApplication[key] ?? (scoreSheet.dbInputEx[key].type == "number" || scoreSheet.dbInputEx[key].type == "radio-select" ? 0 : ""), true);
-                                    }
-                                    else
-                                    {
-                                        console.log(key, " is not in jobApplication");
-                                    }
+                                    jobApplication[colName] = dbInputEx.getValue();
                                     break;
                             }
                         }
-
-                        var applicantDataBtnGrp = scoreSheet.addFormButtonGrp(2);
-                        applicantDataBtnGrp.setFullWidth();
-                        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
-                        applicantDataBtnGrp.inputExs[0].setLabelText("Save");
-                        applicantDataBtnGrp.inputExs[0].setTooltipText("");
-                        applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
-                            var jobApplication = {};
-                
-                            if (scoreSheet.dbInputEx["application_code"].getValue() == "")
+                        
+                        // console.log(scoreSheet.dbTableName, scoreSheet.dbInputEx);
+            
+                        // DEBUG
+                        // console.log(jobApplication);
+                        
+                        // new MsgBox(scoreSheet.container, "Application Code:" + jobApplication["application_code"] + " has been updated!", "OK");
+            
+                        // return;
+                        // DEBUG
+            
+                        // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
+                        postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
+                            var response;
+            
+                            if (event.target.readyState == 4 && event.target.status == 200)
                             {
-                                new MsgBox(scoreSheet.container, "Please load an application to use the scoresheet.", "OK");
-                
-                                return;
-                            }
-                
-                            for (const colName in scoreSheet.dbInputEx) {
-                                var tableName = scoreSheet.dbTableName[colName];
-                                var dbInputEx = scoreSheet.dbInputEx[colName];
-                
-                                switch (colName)
+                                response = JSON.parse(event.target.responseText);
+            
+                                if (response.type == "Error")
                                 {
-                                    case "applicant_name": case "applicant_option_label":
-                                    case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
-                                    case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
-                                    case "ethnicityId":
-                                    case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
-                                    case "has_more_unrecorded_training":
-                                    case "has_more_unrecorded_work_experience":
-                                    case "has_specific_competency_required":
-                                    case "has_specific_education_required":
-                                    case "has_specific_training":
-                                    case "has_specific_work_experience":
-                                    case "permanent_addressId":
-                                    case "personId":
-                                    case "present_addressId":
-                                    case "relevant_eligibility":
-                                    case "relevant_training":
-                                    case "relevant_work_experience":
-                                    case "religionId":
-                                    case "sex":
-                                        break;
-                                    default:
-                                        jobApplication[colName] = dbInputEx.getValue();
-                                        break;
+                                    new MsgBox(scoreSheet.container, response.content, "Close");
+                                }
+                                else if (response.type == "Success")
+                                {
+                                    new MsgBox(scoreSheet.container, response.content, "OK");
                                 }
                             }
-                            
-                            // console.log(scoreSheet.dbTableName, scoreSheet.dbInputEx);
-                
-                            // DEBUG
-                            // console.log(jobApplication);
-                            
-                            // new MsgBox(scoreSheet.container, "Application Code:" + jobApplication["application_code"] + " has been updated!", "OK");
-                
-                            // return;
-                            // DEBUG
-                
-                            // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
-                            postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
-                                var response;
-                
-                                if (event.target.readyState == 4 && event.target.status == 200)
-                                {
-                                    response = JSON.parse(event.target.responseText);
-                
-                                    if (response.type == "Error")
-                                    {
-                                        new MsgBox(scoreSheet.container, response.content, "Close");
-                                    }
-                                    else if (response.type == "Success")
-                                    {
-                                        new MsgBox(scoreSheet.container, response.content, "OK");
-                                    }
-                                }
-                            });
                         });
-                        applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
-                        applicantDataBtnGrp.inputExs[1].setTooltipText("");
-                        applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{
-                            window.location.reload(true);
-                        }); // TO IMPLEMENT IN FORMEX/INPUTEX
-                        applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
-                        applicantDataBtnGrp.fieldWrapper.classList.add("right");
-                        applicantDataBtnGrp.setStatusMsgTimeout(20);                
-                                        
-                        // update total points for all criteria
-                        // for (const criteria of scoreSheet.scoreSheetElementUIs)
-                        // {
-                        //     if (criteria.scoreSheetElement.id != "education" && criteria.scoreSheetElement.id != "training" && criteria.scoreSheetElement.id != "experience")
-                        //     {
-                        //         criteria.getPoints();
-                        //     }
-                        // }
-
-                        scoreSheet.summaryUI.getPoints();
-
-                        retrieveApplicantDialog.close();
-                        this.innerHTML = "Reset Score Sheet";
-
-                        this.scrim.destroy();
                     });
-                }
-                retrieveApplicantDialogBtnGrp.inputExs[0].isClickListenerAttached = true;
-            };
+                    applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
+                    applicantDataBtnGrp.inputExs[1].setTooltipText("");
+                    applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{
+                        window.location.reload(true);
+                    }); // TO IMPLEMENT IN FORMEX/INPUTEX
+                    applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+                    applicantDataBtnGrp.fieldWrapper.classList.add("right");
+                    applicantDataBtnGrp.setStatusMsgTimeout(20);                
+                                    
+                    // update total points for all criteria
+                    // for (const criteria of scoreSheet.scoreSheetElementUIs)
+                    // {
+                    //     if (criteria.scoreSheetElement.id != "education" && criteria.scoreSheetElement.id != "training" && criteria.scoreSheetElement.id != "experience")
+                    //     {
+                    //         criteria.getPoints();
+                    //     }
+                    // }
 
-            searchBox.addEvent("keyup", keyupEvent=>{
-                searchResult.clearList();
+                    scoreSheet.summaryUI.getPoints();
 
-                searchResult.show();
-                retrieveApplicantDialogBtnGrp.inputExs[0].enable();
+                    retrieveApplicantDialog.close();
+                    this.innerHTML = "Reset Score Sheet";
 
-                searchResult.setStatusMsgTimeout = -1;
-                searchResult.showWait("Retrieving . . .");
+                    this.scrim.destroy();
+                }},
+                {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+                    retrieveApplicantDialog.close();
+                }}
+            ]);
+            
+            retrieveApplicantDialog.getDialogButton(0).disable();
 
-                searchResult.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + searchBox.getValue(), "applicant_option_label", "application_code");
+            ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
+                retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(0).disable());
+            });
+
+            retrieveApplicantDialog.getApplicantListBox().addEvent("click", selectOptionEvent=>{
+                retrieveApplicantDialog.getDialogButton(0).enable();
             });
         }
         else if (this.innerHTML == "Reset Score Sheet")
         {
-
-            this.scrim = new ScrimEx(this.inputEx.parentFormEx.container);
-            this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));    
+            app.showScrim();
 
             scoreSheet.resetForm();
 
             this.innerHTML = "Load Application";
         }
-
     }
 
     static getScoreSheetElements(positionObj, jobApplication) // COMPUTATION INCLUDES NON-EXISTENT SALARY GRADES IN THE NON-TEACHING POSITIONS (23, 25-26); CONSIDER IN FUTURE ISSUES; MAY ALSO CONFUSE DEVELOPERS DURING USE, ESPECIALLY WHEN THE NAME OF VARIABLE IS `scoreSheet`
@@ -5350,187 +5370,190 @@ class IERForm extends FormEx
         this.displayExs["ier-table"].isHeaderCustomized = true;
 
         this.dbInputEx["ier-select-position-button"].addEvent("click", selectPositionEvent=>{
-            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", positionSelectEvent=>{
-                var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
-                var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
-                var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
-                var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
-
-                this.dbInputEx["ier-select-position-button"].container.remove();
-                this.displayExs["ier-position"].setHTMLContent(positionString);
-                this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
-                
-                var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
-                
-                this.displayExs["ier-position-salary-grade"].setHTMLContent("SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")");
-                
-                var eligString = "";
-                
-                position["required_eligibility"].forEach(eligSet=>{
-                    eligString += (eligSet["eligibility"] == null || eligSet["eligibility"] == "" ? "" : (eligString.trim() == "" ? "" : "; ") + eligSet["eligibility"]);
-                    eligString += (eligSet["eligibility2"] == null || eligSet["eligibility2"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility2"]);
-                    eligString += (eligSet["eligibility3"] == null || eligSet["eligibility3"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility3"]);
-                });
-
-                // this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? "" : " (" + position["specific_education_required"] + ")") + "</b>");
-                // this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training") + (position["specific_training_required"] == null || position["specific_training_required"] == "" ? "" : " (" + position["specific_training_required"] + ")") + "</b>");
-                // this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") + (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? "" : " (" + position["specific_work_experience_required"] + ")") + "</b>");
-                [
-                    {id:"ier-position-qs-education", text:(position["specific_education_required"] == null || position["specific_education_required"] == "" ? document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] : position["specific_education_required"])},
-                    {id:"ier-position-qs-training", text:(position["required_training_hours"] <= 0 ? "None required" : (position["specific_training_required"] == null || position["specific_training_required"] == "" ? position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training" : position["specific_training_required"]))},
-                    {id:"ier-position-qs-experience", text:(position["required_work_experience_years"] <= 0 ? "None required" : (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience" : position["specific_work_experience_required"]))},
-                    {id:"ier-position-qs-eligibility",text:eligString}
-                ].forEach(obj=>{
-                    this.displayExs[obj.id].setHTMLContent(obj.text);
-                    this.displayExs[obj.id].container.title = obj.text;
-                });
-                
-                postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
-                    var response = null, rows = [], row = null, isQualified = true;
-
-                    if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
-                    {
-                        response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
-
-                        // console.log(response);
+            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
+                {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
+                    var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                    var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                    var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+                    var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
     
-                        if (response.type == "Error")
+                    this.dbInputEx["ier-select-position-button"].container.remove();
+                    this.displayExs["ier-position"].setHTMLContent(positionString);
+                    this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
+                    
+                    var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
+                    
+                    this.displayExs["ier-position-salary-grade"].setHTMLContent("SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")");
+                    
+                    var eligString = "";
+                    
+                    position["required_eligibility"].forEach(eligSet=>{
+                        eligString += (eligSet["eligibility"] == null || eligSet["eligibility"] == "" ? "" : (eligString.trim() == "" ? "" : "; ") + eligSet["eligibility"]);
+                        eligString += (eligSet["eligibility2"] == null || eligSet["eligibility2"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility2"]);
+                        eligString += (eligSet["eligibility3"] == null || eligSet["eligibility3"] == "" ? "" : (eligString.trim() == "" ? "" : "/") + eligSet["eligibility3"]);
+                    });
+    
+                    // this.displayExs["ier-position-qs-education"].setHTMLContent("<b>" + document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] + (position["specific_education_required"] == null || position["specific_education_required"] == "" ? "" : " (" + position["specific_education_required"] + ")") + "</b>");
+                    // this.displayExs["ier-position-qs-training"].setHTMLContent("<b>" + (position["required_training_hours"] <= 0 ? "None required" : position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training") + (position["specific_training_required"] == null || position["specific_training_required"] == "" ? "" : " (" + position["specific_training_required"] + ")") + "</b>");
+                    // this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") + (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? "" : " (" + position["specific_work_experience_required"] + ")") + "</b>");
+                    [
+                        {id:"ier-position-qs-education", text:(position["specific_education_required"] == null || position["specific_education_required"] == "" ? document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] : position["specific_education_required"])},
+                        {id:"ier-position-qs-training", text:(position["required_training_hours"] <= 0 ? "None required" : (position["specific_training_required"] == null || position["specific_training_required"] == "" ? position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training" : position["specific_training_required"]))},
+                        {id:"ier-position-qs-experience", text:(position["required_work_experience_years"] <= 0 ? "None required" : (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience" : position["specific_work_experience_required"]))},
+                        {id:"ier-position-qs-eligibility",text:eligString}
+                    ].forEach(obj=>{
+                        this.displayExs[obj.id].setHTMLContent(obj.text);
+                        this.displayExs[obj.id].container.title = obj.text;
+                    });
+                    
+                    postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
+                        var response = null, rows = [], row = null, isQualified = true;
+    
+                        if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                         {
-                            new MsgBox(thisIERForm.container, response.content, "Close");
-                        }
-                        else if (response.type == "Data")
-                        {
-                            thisIERForm.fetchedApplications = JSON.parse(response.content);
-
-                            // console.log(thisIERForm.fetchedApplications);
-
-                            this.displayExs["ier-table"].removeAllRows();
-
-                            for (const jobApplication of thisIERForm.fetchedApplications)
+                            response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
+    
+                            // console.log(response);
+        
+                            if (response.type == "Error")
                             {
-                                row = {};
-                            
-                                for (const key in jobApplication)
+                                new MsgBox(thisIERForm.container, response.content, "Close");
+                            }
+                            else if (response.type == "Data")
+                            {
+                                thisIERForm.fetchedApplications = JSON.parse(response.content);
+    
+                                // console.log(thisIERForm.fetchedApplications);
+    
+                                this.displayExs["ier-table"].removeAllRows();
+    
+                                for (const jobApplication of thisIERForm.fetchedApplications)
                                 {
-                                    switch (key)
-                                    {
-                                        case "degree_taken":
-                                        case "permanent_address":
-                                            // DO NOTHING
-                                            break;
-                                        case "present_address":
-                                            row["address"] = jobApplication["present_address"] ?? jobApplication["permanent_address"] ?? "";
-                                            break;
-                                        case "disability":
-                                        case "email_address":
-                                        case "contact_number":
-                                            row[key] = (jobApplication[key].length > 0 ? jobApplication[key].map(obj=>obj[key]).join("; ") : "");
-                                            break;
-                                        case "educational_attainment":
-                                            if (jobApplication["degree_taken"].length > 0)
-                                            {
-                                                row["education"] = "<ul>\n";
-                                                
-                                                for (const degree of jobApplication["degree_taken"])
-                                                {
-                                                    row["education"] += "<li>" + MPASIS_App.convertDegreeObjToStr(degree) + "</li>\n";
-                                                }
-
-                                                row["education"] += "</ul>\n";
-                                            }
-                                            else
-                                            {
-                                                row["education"] = jobApplication[key];
-                                            }
-
-                                            isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
-                                            isQualified &&= (position["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
-                                            break;
-                                        case "relevant_training":
-                                            var totalHours = 0;
-                                            if (jobApplication[key].length > 0)
-                                            {
-                                                row["training_title"] = "<ul>\n";
-                                                
-                                                for (const relevantTraining of jobApplication[key])
-                                                {
-                                                    row["training_title"] += "<li>" + relevantTraining["descriptive_name"] + " (" + relevantTraining["hours"] + (relevantTraining["hours"] == 1 ? " hour" : " hours") + ")</li>\n";
-                                                    totalHours += (relevantTraining["hours"] ?? 0);
-                                                }
-
-                                                row["training_title"] += "</ul>\n";
-                                                row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
-                                            }
-                                        
-                                            isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                            isQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
-                                            break;
-                                        case "relevant_work_experience":
-                                            var totalDuration = null, duration = null;
-                                            if (jobApplication[key].length > 0)
-                                            {
-                                                row["experience_details"] = "<ul>\n";
-                                                
-                                                for (const relevantWorkExp of jobApplication[key])
-                                                {
-                                                    duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
-                                                    row["experience_details"] += "<li>" + relevantWorkExp["descriptive_name"] + " (" + ScoreSheet.convertDurationToString(duration) + ")</li>\n";
-                                                    totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
-                                                }
-
-                                                row["experience_details"] += "</ul>\n";
-                                                row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
-                                            }
-                                            
-                                            isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(position["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                            isQualified &&= (position["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
-                                            break;
-                                        case "relevant_eligibility":
-                                            if (jobApplication[key].length > 0)
-                                            {
-                                                row["eligibility"] = "<ul>\n";
-
-                                                for (const relevantEligibility of jobApplication[key])
-                                                {
-                                                    row["eligibility"] += "<li>" + relevantEligibility["eligibility"] + "</li>\n";
-                                                }
-
-                                                row["eligibility"] += "</ul>\n";
-                                            }
-
-                                            var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), position["required_eligibility"]);
-
-                                            isQualified &&= (valElig != 0);
-                                            break;
-                                        default:
-                                            row[key] = jobApplication[key];
-                                            break;
-                                    }                                    
-                                }
-
-                                row["remarks"] = (isQualified ? "Qualified" : "Disqualified");
+                                    row = {};
                                 
-                                rows.push(row);
-
-                                row["row_number"] = this.displayExs["ier-table"].rows.length + 1;
-
-                                this.displayExs["ier-table"].addRow(row);
+                                    for (const key in jobApplication)
+                                    {
+                                        switch (key)
+                                        {
+                                            case "degree_taken":
+                                            case "permanent_address":
+                                                // DO NOTHING
+                                                break;
+                                            case "present_address":
+                                                row["address"] = jobApplication["present_address"] ?? jobApplication["permanent_address"] ?? "";
+                                                break;
+                                            case "disability":
+                                            case "email_address":
+                                            case "contact_number":
+                                                row[key] = (jobApplication[key].length > 0 ? jobApplication[key].map(obj=>obj[key]).join("; ") : "");
+                                                break;
+                                            case "educational_attainment":
+                                                if (jobApplication["degree_taken"].length > 0)
+                                                {
+                                                    row["education"] = "<ul>\n";
+                                                    
+                                                    for (const degree of jobApplication["degree_taken"])
+                                                    {
+                                                        row["education"] += "<li>" + MPASIS_App.convertDegreeObjToStr(degree) + "</li>\n";
+                                                    }
+    
+                                                    row["education"] += "</ul>\n";
+                                                }
+                                                else
+                                                {
+                                                    row["education"] = jobApplication[key];
+                                                }
+    
+                                                isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
+                                                isQualified &&= (position["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                break;
+                                            case "relevant_training":
+                                                var totalHours = 0;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    row["training_title"] = "<ul>\n";
+                                                    
+                                                    for (const relevantTraining of jobApplication[key])
+                                                    {
+                                                        row["training_title"] += "<li>" + relevantTraining["descriptive_name"] + " (" + relevantTraining["hours"] + (relevantTraining["hours"] == 1 ? " hour" : " hours") + ")</li>\n";
+                                                        totalHours += (relevantTraining["hours"] ?? 0);
+                                                    }
+    
+                                                    row["training_title"] += "</ul>\n";
+                                                    row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
+                                                }
+                                            
+                                                isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                break;
+                                            case "relevant_work_experience":
+                                                var totalDuration = null, duration = null;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    row["experience_details"] = "<ul>\n";
+                                                    
+                                                    for (const relevantWorkExp of jobApplication[key])
+                                                    {
+                                                        duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
+                                                        row["experience_details"] += "<li>" + relevantWorkExp["descriptive_name"] + " (" + ScoreSheet.convertDurationToString(duration) + ")</li>\n";
+                                                        totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
+                                                    }
+    
+                                                    row["experience_details"] += "</ul>\n";
+                                                    row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
+                                                }
+                                                
+                                                isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(position["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= (position["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                break;
+                                            case "relevant_eligibility":
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    row["eligibility"] = "<ul>\n";
+    
+                                                    for (const relevantEligibility of jobApplication[key])
+                                                    {
+                                                        row["eligibility"] += "<li>" + relevantEligibility["eligibility"] + "</li>\n";
+                                                    }
+    
+                                                    row["eligibility"] += "</ul>\n";
+                                                }
+    
+                                                var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), position["required_eligibility"]);
+    
+                                                isQualified &&= (valElig != 0);
+                                                break;
+                                            default:
+                                                row[key] = jobApplication[key];
+                                                break;
+                                        }                                    
+                                    }
+    
+                                    row["remarks"] = (isQualified ? "Qualified" : "Disqualified");
+                                    
+                                    rows.push(row);
+    
+                                    row["row_number"] = this.displayExs["ier-table"].rows.length + 1;
+    
+                                    this.displayExs["ier-table"].addRow(row);
+                                }
+                            }
+                            // else if (response.type == "Success")
+                            // {
+                            //     new MsgBox(thisIERForm.container, response.content, "OK");
+                            // }
+                            else if (response.type == "Debug")
+                            {
+                                new MsgBox(thisIERForm.container, response.content, "OK");
+                                console.log(response.content);
                             }
                         }
-                        // else if (response.type == "Success")
-                        // {
-                        //     new MsgBox(thisIERForm.container, response.content, "OK");
-                        // }
-                        else if (response.type == "Debug")
-                        {
-                            new MsgBox(thisIERForm.container, response.content, "OK");
-                            console.log(response.content);
-                        }
-                    }
-                });
-
-                selectPositionDialog.close();
-            });    
+                    });
+    
+                    selectPositionDialog.close();
+                }},
+                {label:"Cancel", tooltip:"Close dialog", callbackOnClick:positionSelectEvent=>selectPositionDialog.close()}
+            ]);
         });
 
         this.dbInputEx["ier-select-position-button"].fields[0].click();
@@ -5562,186 +5585,146 @@ class IESForm extends FormEx
 
     loadApplicationBtn_Click(event) // inherits the scope of the clicked button/element
     {
-        var iesForm = null, clickedElement = null, div = null;
+        var iesForm = null, clickedElement = null, div = null, retrieveApplicantDialog = null;
 
         iesForm = this.inputEx.parentFormEx;
         clickedElement = this; //event.srcElement; // event.target;
 
         this.inputEx.resetStatus();
 
-        var retrieveApplicantDialog = null;
         if (this.innerHTML == "Load Application")
         {
-            retrieveApplicantDialog = new DialogEx(app.main);
-            var form = retrieveApplicantDialog.addFormEx();
-            form.setFullWidth();
-            
-            var searchBox = form.addInputEx("Enter an applicant name or code", "text", "", "Type to populate list");
-            searchBox.setFullWidth();
-            searchBox.showColon();
-            searchBox.container.style.marginBottom = "0.5em";
-            searchBox.fields[0].style.display = "block";
-            searchBox.fields[0].style.width = "100%";
+            retrieveApplicantDialog = new JobApplicationSelectorDialog(app.main, "ies-job-application-selector-dialog", [
+                {label:"Load", tooltip:"Load selected", callbackOnClick:event=>{
+                    var searchResult = retrieveApplicantDialog.getApplicantListBox();
 
-            var searchResult = form.addInputEx("Choose the job application to load", "radio-select", "load-applicant", "", "", "", true);
-            searchResult.setFullWidth();
-            searchResult.setVertical();
-            searchResult.reverse();
-            searchResult.hide();
+                    retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
+                    retrieveApplicantDialog.formEx.showWait("Loading");
 
-            searchResult.fieldWrapper.style.maxHeight = "15em";
-            searchResult.fieldWrapper.style.overflowY = "auto";
+                    app.showScrim();
 
-            var retrieveApplicantDialogBtnGrp = form.addFormButtonGrp(2);
-            retrieveApplicantDialogBtnGrp.setFullWidth();
-            retrieveApplicantDialogBtnGrp.container.style.marginTop = "0.5em";
-            retrieveApplicantDialogBtnGrp.fieldWrapper.classList.add("right");
+                    iesForm.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
 
-            retrieveApplicantDialogBtnGrp.inputExs[0].setLabelText("Load");
-            retrieveApplicantDialogBtnGrp.inputExs[0].setTooltipText("Load Selected");
-            retrieveApplicantDialogBtnGrp.inputExs[0].disable();
+                    var filteredPositions = document.positions.filter(position=>{
+                        return position["plantilla_item_number"] == iesForm.jobApplication["plantilla_item_number_applied"]
+                        || (position["parenthetical_title"] == iesForm.jobApplication["parenthetical_title_applied"] && position["position_title"] == iesForm.jobApplication["position_title_applied"])
+                        || position["position_title"] == iesForm.jobApplication["position_title_applied"];
+                    });
 
-            retrieveApplicantDialogBtnGrp.inputExs[1].setLabelText("Cancel");
-            retrieveApplicantDialogBtnGrp.inputExs[1].setTooltipText("");
-            retrieveApplicantDialogBtnGrp.inputExs[1].addEvent("click", cancelRetrieveDialogClickEvent=>{
-                retrieveApplicantDialog.close();
-            });
+                    iesForm.position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
 
-            searchResult.runAfterFilling = ()=>{
-                if (!retrieveApplicantDialogBtnGrp.inputExs[0].isClickListenerAttached)
-                {
-                    retrieveApplicantDialogBtnGrp.inputExs[0].addEvent("click", loadApplicationDialogClickEvent=>{
-                        var scoreSheetElementUI = null, weight = 0;
-
-                        if (searchResult.getValue() == "" || searchResult.getValue() == null)
-                        {
-                            retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
-                            return;
-                        }
-
-                        retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
-                        retrieveApplicantDialog.formEx.showWait("Loading");
-
-                        app.showScrim();
-
-                        iesForm.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
-
+                    if (!("applicantInfo" in iesForm.displayExs))
+                    {
+                        div = iesForm.addDisplayEx("div", "applicantInfo");
+                        div.container.classList.add("applicant-info");
+    
                         console.log(iesForm.jobApplication);
-                        
-                        if (!("applicantInfo" in iesForm.displayExs))
-                        {
-                            div = iesForm.addDisplayEx("div", "applicantInfo");
-                            div.container.classList.add("applicant-info");
-        
-                            [
-                                {colName:"application_code", label:"Application Code"},
-                                {colName:"applicant_name", label:"Name of Applicant"},
-                                {colName:"position_title_applied", label:"Position Applied For"},
-                                {colName:"office", label:(iesForm.jobApplication["position_category"] == 1 ? "Schools Division " : "") + "Office"},
-                                {colName:"contact_number", label:"Contact Number"},
-                                {colName:"job_group_salary_grade", label:"Job Group/SG-Level"}
-                            ].forEach(obj=>{
-                                if (obj == "")
-                                {
-                                    div.addLineBreak();
-                                    return;
-                                }
-                                var displayEx = iesForm.addDisplayEx("div", obj.colName, (obj.colName in iesForm.jobApplication ? iesForm.jobApplication[obj.colName] : ""), obj.label);
-                                div.addContent(displayEx.container);
-                                displayEx.showColon();
-                                displayEx.container.classList.add(obj.colName);
-                            });
-                        }
-
-                        var filteredPositions = document.positions.filter(position=>{
-                            return position["plantilla_item_number"] == iesForm.jobApplication["plantilla_item_number_applied"]
-                            || (position["parenthetical_title"] == iesForm.jobApplication["parenthetical_title_applied"] && position["position_title"] == iesForm.jobApplication["position_title_applied"])
-                            || position["position_title"] == iesForm.jobApplication["position_title_applied"];
-                        });
-
-                        iesForm.position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
-
-                        iesForm.displayExs["contact_number"].setHTMLContent(iesForm.jobApplication["contact_number"].length > 0 ? iesForm.jobApplication["contact_number"].map(num=>num["contact_number"]).reduce((prev, next)=>prev + "; " + next) : "");
-                        iesForm.displayExs["job_group_salary_grade"].setHTMLContent(document.positionCategory.filter(cat=>cat["position_categoryId"] == iesForm.position["position_categoryId"])[0]["position_category"] + " / SG-" + iesForm.position["salary_grade"]);
-                
-                        iesForm.addDisplayEx("div-table", "ies_table");
-
-                        iesForm.displayExs["ies_table"].container.classList.add("ies-table");
-                        
-                        iesForm.displayExs["ies_table"].setHeaders([
-                            {colHeaderName:"ies_criteria", colHeaderText:"Criteria"},
-                            {colHeaderName:"ies_weight", colHeaderText:"Weight Allocation"},
-                            {colHeaderName:"ies_details", colHeaderText:"Details of Applicant's Qualifications<br> <span class=\"subhead\">(Relevant documents submitted; additional requirements; notes of HRMPSB Members)</span>"},
-                            {colHeaderName:"ies_computation", colHeaderText:"Computation"},
-                            {colHeaderName:"ies_score", colHeaderText:"Actual Score"},
-                        ]);
-
-                        iesForm.displayExs["ies_table"].thead.insertBefore(htmlToElement("<tr></tr>"), iesForm.displayExs["ies_table"].thead.children[0]);
-                        iesForm.displayExs["ies_table"].thead.children[1].children[0].setAttribute("rowspan", 2);
-                        iesForm.displayExs["ies_table"].thead.children[0].appendChild(iesForm.displayExs["ies_table"].thead.children[1].children[0]);
-                        iesForm.displayExs["ies_table"].thead.children[1].children[0].setAttribute("rowspan", 2);
-                        iesForm.displayExs["ies_table"].thead.children[0].appendChild(iesForm.displayExs["ies_table"].thead.children[1].children[0]);
-                        iesForm.displayExs["ies_table"].thead.children[0].appendChild(htmlToElement("<th colspan=\"3\">Applicant's Actual Qualifications</th>"));
 
                         [
-                            {footerName:"total_label", footerText:"Total"},
-                            {footerName:"weight_allocation_total", footerText:""},
-                            {footerName:"", footerText:""},
-                            {footerName:"", footerText:""},
-                            {footerName:"total_score", footerText:""},
-                        ].forEach(footer=>{
-                            iesForm.displayExs["ies_table"].addFooter(footer.footerName, footer.footerText);
-                        });
-
-                        iesForm.displayExs["ies_table"].isHeaderCustomized = true;
-
-                        iesForm.scoreSheetElements = ScoreSheet.getScoreSheetElements(iesForm.position, iesForm.jobApplication);
-
-                        var totalWeight = 0;
-                        var totalScore = 0;
-
-                        for (const criteria of iesForm.scoreSheetElements)
-                        {
-                            if (criteria.weight != 0 && criteria.id != "summary")
+                            {colName:"application_code", label:"Application Code"},
+                            {colName:"applicant_name", label:"Name of Applicant"},
+                            {colName:"position_title_applied", label:"Position Applied For"},
+                            {colName:"place_of_assignment", label:(iesForm.position["position_categoryId"] == 1 ? "Schools Division " : "") + "Office"},
+                            {colName:"contact_number", label:"Contact Number"},
+                            {colName:"job_group_salary_grade", label:"Job Group/SG-Level"}
+                        ].forEach(obj=>{
+                            if (obj == "")
                             {
-                                var score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, iesForm.jobApplication));
-                                totalScore += score;
-                                totalWeight += criteria.weight;
-
-                                iesForm.displayExs["ies_table"].addRow({
-                                    "ies_criteria":criteria.label + ("sublabel" in criteria ? " <i>(" + criteria.sublabel + ")</i>" : ""),
-                                    "ies_weight":criteria.weight,
-                                    "ies_details":iesForm.jobApplication[criteria.notesId],
-                                    "ies_computation":IESForm.getComputationString(criteria, iesForm.jobApplication).replace(/(?:<br><br><br><br>)+/, "<br><br>").replace(/^(?:<br>)+/, ""),
-                                    "ies_score":score.toFixed(3)
-                                });
+                                div.addLineBreak();
+                                return;
                             }
-                        }
+                            var displayEx = iesForm.addDisplayEx("div", obj.colName, (obj.colName in iesForm.jobApplication ? iesForm.jobApplication[obj.colName] : ""), obj.label);
+                            div.addContent(displayEx.container);
+                            displayEx.showColon();
+                            displayEx.container.classList.add(obj.colName);
+                            if (obj.colName == "place_of_assignment" && iesForm.position["position_categoryId"] == 1)
+                            {
+                                displayEx.container.classList.add("sdo");
+                            }
+                        });
+                    }
 
-                        iesForm.displayExs["ies_table"].fRows[0].data["weight_allocation_total"] = totalWeight;
-                        iesForm.displayExs["ies_table"].fRows[0].td["weight_allocation_total"].innerHTML = totalWeight;
-                        iesForm.displayExs["ies_table"].fRows[0].data["total_score"] = totalScore.toFixed(3);
-                        iesForm.displayExs["ies_table"].fRows[0].td["total_score"].innerHTML = totalScore.toFixed(3);
+                    iesForm.displayExs["place_of_assignment"].setHTMLContent(iesForm.position["place_of_assignment"]);
+                    iesForm.displayExs["contact_number"].setHTMLContent(iesForm.jobApplication["contact_number"].length > 0 ? iesForm.jobApplication["contact_number"].map(num=>num["contact_number"]).reduce((prev, next)=>prev + "; " + next) : "");
+                    iesForm.displayExs["job_group_salary_grade"].setHTMLContent(document.positionCategory.filter(cat=>cat["position_categoryId"] == iesForm.position["position_categoryId"])[0]["position_category"] + " / SG-" + iesForm.position["salary_grade"]);
+            
+                    iesForm.addDisplayEx("div-table", "ies_table");
 
-                        retrieveApplicantDialog.close();
-                        this.innerHTML = "Reset IES Form";
+                    iesForm.displayExs["ies_table"].container.classList.add("ies-table");
+                    
+                    iesForm.displayExs["ies_table"].setHeaders([
+                        {colHeaderName:"ies_criteria", colHeaderText:"Criteria"},
+                        {colHeaderName:"ies_weight", colHeaderText:"Weight Allocation"},
+                        {colHeaderName:"ies_details", colHeaderText:"Details of Applicant's Qualifications<br> <span class=\"subhead\">(Relevant documents submitted; additional requirements; notes of HRMPSB Members)</span>"},
+                        {colHeaderName:"ies_computation", colHeaderText:"Computation"},
+                        {colHeaderName:"ies_score", colHeaderText:"Actual Score"},
+                    ]);
 
-                        app.closeScrim();
+                    iesForm.displayExs["ies_table"].thead.insertBefore(htmlToElement("<tr></tr>"), iesForm.displayExs["ies_table"].thead.children[0]);
+                    iesForm.displayExs["ies_table"].thead.children[1].children[0].setAttribute("rowspan", 2);
+                    iesForm.displayExs["ies_table"].thead.children[0].appendChild(iesForm.displayExs["ies_table"].thead.children[1].children[0]);
+                    iesForm.displayExs["ies_table"].thead.children[1].children[0].setAttribute("rowspan", 2);
+                    iesForm.displayExs["ies_table"].thead.children[0].appendChild(iesForm.displayExs["ies_table"].thead.children[1].children[0]);
+                    iesForm.displayExs["ies_table"].thead.children[0].appendChild(htmlToElement("<th colspan=\"3\">Applicant's Actual Qualifications</th>"));
+
+                    [
+                        {footerName:"total_label", footerText:"Total"},
+                        {footerName:"weight_allocation_total", footerText:""},
+                        {footerName:"", footerText:""},
+                        {footerName:"", footerText:""},
+                        {footerName:"total_score", footerText:""},
+                    ].forEach(footer=>{
+                        iesForm.displayExs["ies_table"].addFooter(footer.footerName, footer.footerText);
                     });
-                }
-                retrieveApplicantDialogBtnGrp.inputExs[0].isClickListenerAttached = true;
-            };
 
-            searchBox.addEvent("keyup", keyupEvent=>{
-                searchResult.clearList();
+                    iesForm.displayExs["ies_table"].isHeaderCustomized = true;
 
-                searchResult.show();
-                retrieveApplicantDialogBtnGrp.inputExs[0].enable();
+                    iesForm.scoreSheetElements = ScoreSheet.getScoreSheetElements(iesForm.position, iesForm.jobApplication);
 
-                searchResult.setStatusMsgTimeout = -1;
-                searchResult.showWait("Retrieving . . .");
+                    var totalWeight = 0;
+                    var totalScore = 0;
 
-                searchResult.fillItemsFromServer("/mpasis/php/process.php", "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + searchBox.getValue(), "applicant_option_label", "application_code");
+                    for (const criteria of iesForm.scoreSheetElements)
+                    {
+                        if (criteria.weight != 0 && criteria.id != "summary")
+                        {
+                            var score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, iesForm.jobApplication));
+                            totalScore += score;
+                            totalWeight += criteria.weight;
+
+                            iesForm.displayExs["ies_table"].addRow({
+                                "ies_criteria":criteria.label + ("sublabel" in criteria ? " <i>(" + criteria.sublabel + ")</i>" : ""),
+                                "ies_weight":criteria.weight,
+                                "ies_details":iesForm.jobApplication[criteria.notesId],
+                                "ies_computation":IESForm.getComputationString(criteria, iesForm.jobApplication).replace(/(?:<br><br><br><br>)+/, "<br><br>").replace(/^(?:<br>)+/, ""),
+                                "ies_score":score.toFixed(3)
+                            });
+                        }
+                    }
+
+                    iesForm.displayExs["ies_table"].fRows[0].data["weight_allocation_total"] = totalWeight;
+                    iesForm.displayExs["ies_table"].fRows[0].td["weight_allocation_total"].innerHTML = totalWeight;
+                    iesForm.displayExs["ies_table"].fRows[0].data["total_score"] = totalScore.toFixed(3);
+                    iesForm.displayExs["ies_table"].fRows[0].td["total_score"].innerHTML = totalScore.toFixed(3);
+
+                    retrieveApplicantDialog.close();
+                    this.innerHTML = "Reset IES Form";
+
+                    app.closeScrim();
+                }},
+                {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+                    retrieveApplicantDialog.close();
+                }}
+            ]);
+
+            retrieveApplicantDialog.getDialogButton(0).disable();
+
+            ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
+                retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(0).disable());
+            });
+
+            retrieveApplicantDialog.getApplicantListBox().addEvent("click", selectOptionEvent=>{
+                retrieveApplicantDialog.getDialogButton(0).enable();
             });
         }
         else if (this.innerHTML == "Reset IES Form")
@@ -5752,7 +5735,6 @@ class IESForm extends FormEx
 
             this.innerHTML = "Load Application";
         }
-
     }
 
     static getPoints(criteria, jobApplication){
@@ -5880,9 +5862,11 @@ class CARForm extends FormEx
 {
     constructor(parentEl = null, id = "", useFormElement = true)
     {
-        var posInfo = null;
+        var posInfo = null, thisCARForm = null;
 
         super(parentEl, id, useFormElement);
+
+        thisCARForm = this;
 
         this.container.classList.add("car-form");
 
@@ -5929,16 +5913,16 @@ class CARForm extends FormEx
         this.carTable.container.classList.add("car-table");
 
         this.carTable.setHeaders([
-            {colHeaderName:"number",colHeaderText:"No."},
+            {colHeaderName:"row_number",colHeaderText:"No."},
             {colHeaderName:"applicant_name",colHeaderText:"Name of Applicant"},
-            {colHeaderName:"applicantion_code",colHeaderText:"Application Code"},
+            {colHeaderName:"application_code",colHeaderText:"Application Code"},
             {colHeaderName:"education",colHeaderText:"Education"},
             {colHeaderName:"training",colHeaderText:"Training"},
             {colHeaderName:"experience",colHeaderText:"Experience"},
             {colHeaderName:"performance",colHeaderText:"Performance"},
             {colHeaderName:"accomplishments",colHeaderText:"Outstanding Accomplishments"},
-            {colHeaderName:"education_app",colHeaderText:"Application of Education"},
-            {colHeaderName:"training_app",colHeaderText:"Application of L&D"},
+            {colHeaderName:"educationApp",colHeaderText:"Application of Education"},
+            {colHeaderName:"trainingApp",colHeaderText:"Application of L&D"},
             {colHeaderName:"potential",colHeaderText:"Potential"},
             {colHeaderName:"total",colHeaderText:"Total"},
             {colHeaderName:"remarks",colHeaderText:"Remarks"},
@@ -5968,24 +5952,429 @@ class CARForm extends FormEx
 
         this.addInputEx("Update", "button", "", "", "car-update");
         this.dbInputEx["car-update"].container.classList.add("car-update");
+        this.dbInputEx["car-update"].disable();
 
         this.dbInputEx["car-select-position-button"].addEvent("click", clickEvent=>{
-            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", positionSelectEvent=>{
-                var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
-                var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
-                var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
-                var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
+            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
+                {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
+                    var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                    var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                    var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+                    var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
-                var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
 
-                console.log(positions);
+                    this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
+                    this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
+                    this.displayExs["plantilla_item_numbers"].setHTMLContent(positions.map(position=>position["plantilla_item_number"]).reduce((prev, next)=>prev + "; " + next));
+                    this.displayExs["plantilla_item_numbers"].setTooltipText(positions.map(position=>position["plantilla_item_number"]).reduce((prev, next)=>prev + "; " + next));
 
-                this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
-                this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
-                this.displayExs["plantilla_item_numbers"].setHTMLContent(positions.map(position=>position["plantilla_item_number"]).reduce((prev, next)=>prev + "; " + next));
-                this.displayExs["plantilla_item_numbers"].setTooltipText(positions.map(position=>position["plantilla_item_number"]).reduce((prev, next)=>prev + "; " + next));
+                    this.displayExs["place_of_assignment"].setHTMLContent(positions[0]["place_of_assignment"]);
+                    this.displayExs["place_of_assignment"].setTooltipText(positions[0]["place_of_assignment"]);
+                    this.dbInputEx["final_deliberation_date"].setDefaultValue(positions[0]["final_deliberation_date"] ?? "", true);
+                    this.dbInputEx["final_deliberation_date"].setTooltipText(positions[0]["final_deliberation_date"] ?? "");
 
-                selectPositionDialog.close();
+
+                    postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
+                        var response = null, rows = [], row = null, isQualified = true;
+
+                        if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
+                        {
+                            response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
+
+                            // console.log(response);
+        
+                            if (response.type == "Error")
+                            {
+                                new MsgBox(app.main, response.content, "Close");
+                            }
+                            else if (response.type == "Data")
+                            {
+                                thisCARForm.jobApplications = JSON.parse(response.content);
+
+                                thisCARForm.carTable.removeAllRows();
+
+                                thisCARForm.jobApplications = thisCARForm.jobApplications.filter(jobApplication=>{
+                                    for (const key in jobApplication)
+                                    {
+                                        switch (key)
+                                        {
+                                            case "educational_attainment":
+                                                isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
+                                                isQualified &&= (positions[0]["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                break;
+                                            case "relevant_training":
+                                                var totalHours = 0;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantTraining of jobApplication[key])
+                                                    {
+                                                        totalHours += (relevantTraining["hours"] ?? 0);
+                                                    }
+                                                }
+                                            
+                                                isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= (positions[0]["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                break;
+                                            case "relevant_work_experience":
+                                                var totalDuration = null, duration = null;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantWorkExp of jobApplication[key])
+                                                    {
+                                                        duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
+                                                        totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
+                                                    }
+                                                }
+                                                
+                                                isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(positions[0]["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= (positions[0]["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                break;
+                                            case "relevant_eligibility":
+                                                var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), positions[0]["required_eligibility"]);
+
+                                                isQualified &&= (valElig != 0);
+                                                break;
+                                            default:
+                                                break;
+                                        }                                    
+                                    }
+
+                                    return isQualified;
+                                });
+
+                                for (const jobApplication of thisCARForm.jobApplications)
+                                {
+                                    var score = 0;
+                                    row = {};
+                                    row["total"] = 0;
+
+                                    row["applicant_name"] = jobApplication["applicant_name"];
+                                    row["application_code"] = jobApplication["application_code"];
+
+                                    var filteredPositions = [];
+                                    
+                                    filteredPositions = document.positions.filter(position=>position["plantilla_item_number"] == jobApplication["plantilla_item_number_applied"]);
+
+                                    if (filteredPositions.length <= 0)
+                                    {
+                                        filteredPositions = document.positions.filter(position=>(position["parenthetical_title"] == jobApplication["parenthetical_title_applied"] && position["position_title"] == jobApplication["position_title_applied"]));
+                                    }
+            
+                                    if (filteredPositions.length <= 0)
+                                    {
+                                        filteredPositions = document.positions.filter(position=>position["position_title"] == jobApplication["position_title_applied"]);
+                                    }
+            
+                                    var position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
+
+                                    thisCARForm.scoreSheetElements = ScoreSheet.getScoreSheetElements(position, jobApplication); // criteria needs to be reselected for every position to properly return all scores
+
+                                    for (const criteria of thisCARForm.scoreSheetElements)
+                                    {
+                                        if (criteria.id != "summary" && criteria.weight != 0)
+                                        {
+                                            score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication));
+                                            row[criteria.id] = score.toFixed(3);
+                                            row["total"] += score;
+                                        }
+
+                                    }
+                                
+                                    rows.push(row);
+                                }
+
+                                rows.sort((row1, row2)=>row2["total"] - row1["total"]);
+                                
+                                for (const row of rows)
+                                {      
+                                    var isTopRank = false;
+
+                                    row["row_number"] = thisCARForm.carTable.rows.length + 1;
+                                    isTopRank = (row["row_number"] <= positions.length * 5 && row["total"] > 0); // also don't include "zero" totals; MAY CHANGE DEPENDING ON HR POLICY
+                                    row["total"] = "<b>" + row["total"].toFixed(3) + "</b>";
+                                    thisCARForm.carTable.addRow(row);
+
+                                    if (isTopRank)
+                                    {
+                                        thisCARForm.carTable.rows[thisCARForm.carTable.rows.length - 1]["tr"].classList.add("top-rank");
+                                    }
+                                }
+
+                                selectPositionDialog.close();
+                            }
+                            // else if (response.type == "Success")
+                            // {
+                            //     new MsgBox(thisIERForm.container, response.content, "OK");
+                            // }
+                            else if (response.type == "Debug")
+                            {
+                                new MsgBox(thisCARForm.container, response.content, "OK");
+                                console.log(response.content);
+                            }
+                        }
+                    });
+                }},
+                {label:"Cancel", tooltip:"Close dialog", callbackOnClick:positionSelectEvent=>selectPositionDialog.close()}
+            ]);
+        });
+    }
+}
+
+class RQAForm extends FormEx
+{
+    constructor(parentEl = null, id = "", useFormElement = true)
+    {
+        var posInfo = null, thisRQAForm = null;
+
+        super(parentEl, id, useFormElement);
+
+        thisRQAForm = this;
+
+        this.container.classList.add("rqa-form");
+
+        this.setTitle("Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA)", 2);
+
+        this.position = null;
+        this.jobApplications = [];
+        this.scoreSheetElements = [];
+        this.rqaTable = null;
+
+        this.addInputEx("Select Position", "button", "", "", "rqa-select-position-button");
+        this.dbInputEx["rqa-select-position-button"].container.classList.add("rqa-select-position-button");
+
+        posInfo = this.addBox("rqa-position-info", false);
+        posInfo.classList.add("rqa-position-info");
+
+        [
+            {id:"position",type:"div",label:"Position",tooltip:"Selected position"},
+            {type:"spacer-div"},
+            {id:"final_deliberation_date",type:"date",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"},
+            {id:"place_of_assignment",type:"div",label:"Schools Division Office",tooltip:"Place of Assignment"},
+            {type:"spacer-div"},
+            {type:"spacer-div"}
+        ].forEach(field=>{
+            if (field.type == "div")
+            {
+                posInfo.appendChild(this.addDisplayEx("div", field.id, "", field.label, field.tooltip).container);
+                this.displayExs[field.id].showColon();
+                this.displayExs[field.id].container.classList.add(field.id);
+            }
+            else if (field.type == "spacer-div")
+            {
+                posInfo.appendChild(htmlToElement("<span class=\"spacer\"></span>"));
+            }
+            else
+            {
+                posInfo.appendChild(this.addInputEx(field.label, field.type, "", field.tooltip, field.id, "Position").container);
+                this.dbInputEx[field.id].showColon();
+                this.dbInputEx[field.id].container.classList.add(field.id);
+            }
+        });
+
+        this.rqaTable = this.addDisplayEx("div-table", "rqa-table");
+        this.rqaTable.container.classList.add("rqa-table");
+
+        this.rqaTable.setHeaders([
+            {colHeaderName:"row_number",colHeaderText:"No."},
+            {colHeaderName:"applicant_name",colHeaderText:"Name of Applicant"},
+            {colHeaderName:"application_code",colHeaderText:"Application Code"},
+            {colHeaderName:"education",colHeaderText:"Education (10 pts)"},
+            {colHeaderName:"training",colHeaderText:"Training (10 pts)"},
+            {colHeaderName:"experience",colHeaderText:"Experience (10 pts)"},
+            {colHeaderName:"lept",colHeaderText:"PBET/LET/LEPT Rating (10 pts)"},
+            {colHeaderName:"coi",colHeaderText:"PPST COIs (Classroom Observation) (35 pts)"},
+            {colHeaderName:"ncoi",colHeaderText:"PPST NCOIs (Teacher Reflection) (25 pts)"},
+            {colHeaderName:"total",colHeaderText:"Total (100 pts)"},
+            {colHeaderName:"remarks",colHeaderText:"Remarks"},
+            {colHeaderName:"for_bi",colHeaderText:"Yes"},
+            {colHeaderName:"not_for_bi",colHeaderText:"No"},
+            {colHeaderName:"for_appointment",colHeaderText:"For Appointment<br> <span class=\"subhead\">(To be filled-out by the Appointing Officer/Authority; Please sign opposite the name of the applicant)</span>"},
+            {colHeaderName:"for_probation",colHeaderText:"Status of Appointment<br> <span class=\"subhead\">(Based on availability of PBET/LET/LEPT)</span>"}
+        ]);
+
+        this.rqaTable.isHeaderCustomized = true;
+
+        this.rqaTable.thead.insertBefore(htmlToElement("<tr></tr>"), this.rqaTable.thead.children[0]);
+        this.rqaTable.thead.children[1].children[0].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[0]);
+        this.rqaTable.thead.children[1].children[0].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[0]);
+        this.rqaTable.thead.children[1].children[0].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[0]);
+        this.rqaTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"7\">Comparative Assessment Results</th>"));
+        this.rqaTable.thead.children[1].children[7].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[7]);
+        this.rqaTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"2\">For Background Investigation (Y/N)</th>"));
+        this.rqaTable.thead.children[1].children[9].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[9]);
+        this.rqaTable.thead.children[1].children[9].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[9]);
+
+        this.addInputEx("Update", "button", "", "", "rqa-update");
+        this.dbInputEx["rqa-update"].container.classList.add("rqa-update");
+        this.dbInputEx["rqa-update"].disable();
+
+        this.dbInputEx["rqa-select-position-button"].addEvent("click", clickEvent=>{
+            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
+                {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
+                    var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                    var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                    var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+                    var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
+
+                    var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+
+                    this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
+                    this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
+
+                    this.displayExs["place_of_assignment"].setHTMLContent(positions[0]["place_of_assignment"]);
+                    this.displayExs["place_of_assignment"].setTooltipText(positions[0]["place_of_assignment"]);
+                    this.dbInputEx["final_deliberation_date"].setDefaultValue(positions[0]["final_deliberation_date"] ?? "", true);
+                    this.dbInputEx["final_deliberation_date"].setTooltipText(positions[0]["final_deliberation_date"] ?? "");
+
+                    postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
+                        var response = null, rows = [], row = null, isQualified = true;
+
+                        if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
+                        {
+                            response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
+
+                            // console.log(response);
+        
+                            if (response.type == "Error")
+                            {
+                                new MsgBox(app.main, response.content, "Close");
+                            }
+                            else if (response.type == "Data")
+                            {
+                                thisRQAForm.jobApplications = JSON.parse(response.content);
+
+                                thisRQAForm.rqaTable.removeAllRows();
+
+                                thisRQAForm.jobApplications = thisRQAForm.jobApplications.filter(jobApplication=>{
+                                    for (const key in jobApplication)
+                                    {
+                                        switch (key)
+                                        {
+                                            case "educational_attainment":
+                                                isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
+                                                isQualified &&= (positions[0]["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                break;
+                                            case "relevant_training":
+                                                var totalHours = 0;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantTraining of jobApplication[key])
+                                                    {
+                                                        totalHours += (relevantTraining["hours"] ?? 0);
+                                                    }
+                                                }
+                                            
+                                                isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= (positions[0]["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                break;
+                                            case "relevant_work_experience":
+                                                var totalDuration = null, duration = null;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantWorkExp of jobApplication[key])
+                                                    {
+                                                        duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
+                                                        totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
+                                                    }
+                                                }
+                                                
+                                                isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(positions[0]["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= (positions[0]["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                break;
+                                            case "relevant_eligibility":
+                                                var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), positions[0]["required_eligibility"]);
+
+                                                isQualified &&= (valElig != 0);
+                                                break;
+                                            default:
+                                                break;
+                                        }                                    
+                                    }
+
+                                    return isQualified;
+                                });
+
+                                for (const jobApplication of thisRQAForm.jobApplications)
+                                {
+                                    var score = 0;
+                                    row = {};
+                                    row["total"] = 0;
+
+                                    row["applicant_name"] = jobApplication["applicant_name"];
+                                    row["application_code"] = jobApplication["application_code"];
+
+                                    var filteredPositions = [];
+                                    
+                                    filteredPositions = document.positions.filter(position=>position["plantilla_item_number"] == jobApplication["plantilla_item_number_applied"]);
+
+                                    if (filteredPositions.length <= 0)
+                                    {
+                                        filteredPositions = document.positions.filter(position=>(position["parenthetical_title"] == jobApplication["parenthetical_title_applied"] && position["position_title"] == jobApplication["position_title_applied"]));
+                                    }
+            
+                                    if (filteredPositions.length <= 0)
+                                    {
+                                        filteredPositions = document.positions.filter(position=>position["position_title"] == jobApplication["position_title_applied"]);
+                                    }
+            
+                                    var position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
+
+                                    thisRQAForm.scoreSheetElements = ScoreSheet.getScoreSheetElements(position, jobApplication); // criteria needs to be reselected for every position to properly return all scores
+
+                                    for (const criteria of thisRQAForm.scoreSheetElements)
+                                    {
+                                        if (criteria.id != "summary" && criteria.weight != 0)
+                                        {
+                                            score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication));
+                                            row[criteria.id] = score.toFixed(3);
+                                            row["total"] += score;
+                                        }
+
+                                    }
+                                
+                                    rows.push(row);
+                                }
+
+                                rows.sort((row1, row2)=>row2["total"] - row1["total"]);
+                                
+                                for (const row of rows)
+                                {      
+                                    var isQualified = (row["total"] >= 70); // MAY CHANGE DEPENDING ON HR POLICY
+                                    
+                                    if (isQualified)
+                                    {
+                                        row["row_number"] = thisRQAForm.rqaTable.rows.length + 1;
+                                        row["total"] = "<b>" + row["total"].toFixed(3) + "</b>";
+                                        thisRQAForm.rqaTable.addRow(row);
+                                    }
+                                }
+
+                                selectPositionDialog.close();
+                            }
+                            // else if (response.type == "Success")
+                            // {
+                            //     new MsgBox(thisIERForm.container, response.content, "OK");
+                            // }
+                            else if (response.type == "Debug")
+                            {
+                                new MsgBox(thisRQAForm.container, response.content, "OK");
+                                console.log(response.content);
+                            }
+                        }
+                    });
+                }},
+                {label:"Cancel", tooltip:"Close dialog", callbackOnClick:positionSelectEvent=>selectPositionDialog.close()}
+            ], (position, index, positions)=>{
+                var i = 0;
+                while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
+                return i == index && position["filled"] == 0 && position["position_categoryId"] == 1;
             });
         });
     }

@@ -285,9 +285,10 @@ if (isValidUserSession())
 	}
     elseif (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout') // UNUSED
     {
-        session_unset();
-		session_destroy();
-		echo json_encode(new ajaxResponse('Success', 'Signed out.'));
+        $redirectToLogin = false;
+        require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
+
+        echo json_encode(new ajaxResponse('Success', 'Signed out.'));
         return;
     }
     elseif (isset($_REQUEST['a']))
@@ -302,25 +303,11 @@ if (isValidUserSession())
                     case 'users':
                         $criteriaStr = (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE All_User.username LIKE "%' . trim($_REQUEST['k']) . '%" OR given_name LIKE "%' . trim($_REQUEST['k']) . '%" OR middle_name LIKE "%' . trim($_REQUEST['k']) . '%" OR family_name LIKE "%' . trim($_REQUEST['k']) . '%" OR spouse_name LIKE "%' . trim($_REQUEST['k']) . '%" OR ext_name LIKE "%' . trim($_REQUEST['k']) . '%"');
                         
+                        logAction('mpasis', 11, array(
+                            ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+                            "username_op"=>$_REQUEST['k']
+                        ));
                         echo(json_encode(new ajaxResponse('Data', json_encode(fetchUser($dbconn, '', $criteriaStr)))));
-                        // echo(json_encode(new ajaxResponse('Data', fetchUser($dbconn, '', $criteriaStr))));
-                        // $dbResults = $dbconn->executeQuery(
-                        //     getUserFetchQuery() . $criteriaStr . ';'
-                        // );
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     logAction('mpasis', 11, array(
-                        //         ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
-                        //         // ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
-                        //         'username_op'=>$user['username']
-                        //     ));
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'tempuser':
@@ -342,6 +329,10 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
+                            logAction('mpasis', 17, array(
+                                ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
+                                "username_op"=>$_REQUEST['k']
+                            ));
                             echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
                         }
                         else
@@ -368,6 +359,10 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
+                            logAction('mpasis', 7, array(
+                                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                                'remarks'=>'Search the name: ' . $_REQUEST['name']
+                            ));
                             echo(json_encode(new ajaxResponse('Data', json_encode($results))));
                         }
                         else
@@ -462,6 +457,10 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
+                            logAction('mpasis', 3, array(
+                                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                                'remarks'=>'Retrieve all positions info'
+                            ));
                             echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
                         }
                         else
@@ -475,6 +474,10 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
+                            logAction('mpasis', 3, array(
+                                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                                'remarks'=>'Retrieve all position titles only'
+                            ));
                             echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
                         }
                         else
@@ -490,6 +493,11 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
+                            logAction('mpasis', 3, array(
+                                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                                'position_title'=>$_REQUEST['positionTitle'],
+                                'remarks'=>'Retrieve parenthetical titles with specified position title'
+                            ));
                             echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
                         }
                         else
@@ -506,6 +514,11 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
+                            logAction('mpasis', 3, array(
+                                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                                'position_title'=>$_REQUEST['positionTitle'],
+                                'remarks'=>'Retrieve plantilla item numbers with specified position title and parenthetical title'
+                            ));
                             echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
                         }
                         else
@@ -638,6 +651,10 @@ if (isValidUserSession())
                             die(json_encode(new ajaxResponse('Info', 'Blank search string')));
                         }
 
+                        logAction('mpasis', 7, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'remarks'=>"Retrieve applicant name or application code with the search string: $srcStr"
+                        ));
                         exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'", 100));
                         break;
                     case 'applicationsByPosition':
@@ -652,6 +669,12 @@ if (isValidUserSession())
 
                         $where .= ($plantilla == '' ? "position_title_applied='$positionTitle'" . ($parenTitle == '' ? '' : " AND parenthetical_title_applied=$parenTitle") : "plantilla_item_number_applied='$plantilla'");
                         
+                        logAction('mpasis', 7, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'position_title'=>$positionTitle,
+                            'plantilla_item_number'=>$plantilla,
+                            'remarks'=>"Retrieve applicants by position applied; WHERE clause: $where"
+                        ));
                         exit(selectJobApplications($dbconn, $where, 100, false));
                         break;
                     default:
@@ -675,6 +698,10 @@ if (isValidUserSession())
     
                     if (is_null($dbconn->lastException))
                     {
+                        logAction('mpasis', 0, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'remarks'=>"Added Eligibility; Value string: $valueStr"
+                        ));
                         // echo(json_encode(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
                         echo(json_encode(new ajaxResponse('Success', 'Eligibility successfully added')));
                     }
@@ -693,8 +720,7 @@ if (isValidUserSession())
                     $valueStr = '';
                     
                     foreach ($specEducs as $specEduc)
-                    {
-                        
+                    {                        
                         $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $specEduc['specific_education'] . '","' . $specEduc['description'] . '")';
                     }
     
@@ -702,6 +728,10 @@ if (isValidUserSession())
     
                     if (is_null($dbconn->lastException))
                     {
+                        logAction('mpasis', 0, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'remarks'=>"Added Specific Education; Value string: $valueStr"
+                        ));
                         echo(json_encode(new ajaxResponse('Success', 'Specific course/education successfully added')));
                     }
                     else
@@ -732,12 +762,6 @@ if (isValidUserSession())
                         $fieldStr = '(' . $fieldStr . ')';
                         $valueStr = '(' . $valueStr . ')';
 
-                        // foreach($position['required_eligibility'] as $reqElig)
-                        // {
-                        //     echo($reqElig);
-                        //     echo("x");
-                        // }
-
                         $dbconn->insert('Position', $fieldStr, $valueStr);
 
                         if (is_null($dbconn->lastException))
@@ -760,6 +784,10 @@ if (isValidUserSession())
                         }
                     }
                     
+                    logAction('mpasis', 1, array(
+                        ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                        'remarks'=>"Added Positions; Value string: $valueStr"
+                    ));
                     echo(json_encode(new ajaxResponse('Success', 'Successfully added Position details!')));
                     
                     return;
@@ -1320,6 +1348,11 @@ if (isValidUserSession())
 
                     if (is_null($dbconn->lastException))
                     {
+                        logAction('mpasis', ($isTempUser ? 21 : 15), array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            ($isTempUser ? 'temp_' : '') . 'username_op'=>$username,
+                            'application_code'=>$applicationCode
+                        ));
                         echo(json_encode(new ajaxResponse('Success', 'User: ' . $_REQUEST['username'] . ' has been deleted.')));
                     }
                     else
@@ -1428,6 +1461,10 @@ if (isValidUserSession())
 
                     if (is_null($dbconn->lastException))
                     {
+                        logAction('mpasis', ($isTempUser ? 19 : 13), array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
+                        ));
                         echo(json_encode(new ajaxResponse('Success', $user['username'] . '\'s password has been successfully reset')));
                     }
                     else
@@ -1437,14 +1474,15 @@ if (isValidUserSession())
                 }
                 return;
                 break;
+            case 'log':
+                break;
         }
     }
 }
 else // NOT SIGNED-IN
 {
-    echo(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));    
-    return;
+    die(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));
 }
 
-echo(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
+die(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
 ?>

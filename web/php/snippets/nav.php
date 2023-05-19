@@ -1,4 +1,4 @@
-<a id="nav-logo-link" href="https://sites.google.com/deped.gov.ph/sdo-sto-tomas-city/home" title="DepEd-Sto. Tomas City SDO"><img src="/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
+<a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
 <ul id="nav">
 <?php
     $dbResults = $this->getDBConn(0)->select('Nav', '*', 'WHERE information_systemId = 4 AND type = 1 AND parent_nav = 0 ORDER BY nav_index');

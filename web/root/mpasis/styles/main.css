@@ -537,8 +537,12 @@ REINSTATE FOR PRINTOUT
     grid-template-columns: 11em auto auto;
 }
 
-.ies-form .applicant-info > .content > .display-ex.office {
+.ies-form .applicant-info > .content > .display-ex.place_of_assignment {
     grid-template-columns: 3.5em auto auto;
+}
+
+.ies-form .applicant-info > .content > .display-ex.place_of_assignment.sdo {
+    grid-template-columns: 12.5em auto auto;
 }
 
 .ies-form .applicant-info > .content > .display-ex.contact_number {
@@ -649,6 +653,38 @@ REINSTATE FOR PRINTOUT
     text-align: center;
 }
 
+.job-application-selector > .dialog > .form-ex > h3 {
+    margin: 0px 0px 0.5em;
+    text-align: center;
+}
+
+.job-application-selector > .dialog > .form-ex > .fields > .applicant-query-box {
+    display: block;
+    margin-bottom: 1em;
+}
+
+.job-application-selector > .dialog > .form-ex > .fields > .applicant-query-box > .fields > input {
+    display: block;
+    width: 100%;
+}
+
+.job-application-selector > .dialog > .form-ex > .fields > .applicant-list-box {
+    display: block;
+}
+
+.job-application-selector > .dialog > .form-ex > .fields > .applicant-list-box > .fields {
+    display: flex;
+    flex-direction: column;
+    max-height: 15em;
+    overflow: auto;
+}
+
+.job-application-selector > .dialog > .form-ex > .fields > .job-application-selector-buttons {
+    display: block;
+    margin-top: 1em;
+    text-align: right;
+}
+
 .car-form {
     display: block;
     font-family: "Bookman Old Style", "URW Bookman", serif;
@@ -739,7 +775,124 @@ REINSTATE FOR PRINTOUT
     font-style: italic;
 }
 
+.car-table > .content > table > tbody > tr.top-rank > * {
+    background-color: lightgreen;
+}
+
+.car-table > .content > table > tbody > tr > * {
+    text-align: center;
+}
+
+.car-table > .content > table > tbody > tr > :nth-child(2) {
+    text-align: left;
+    white-space: nowrap;
+}
+
 .car-form > .fields > .car-update {
+    display: block;
+    text-align: right;
+}
+
+.rqa-form {
+    display: block;
+    font-family: "Bookman Old Style", "URW Bookman", serif;
+}
+
+.rqa-form > .fields > .rqa-select-position-button {
+    display: block;
+    text-align: right;
+}
+
+.rqa-position-info {
+    display: grid;
+    grid-template-columns: auto 0.5em auto;
+}
+
+.rqa-position-info > .display-ex {
+    display: grid;
+    align-items: center;
+}
+
+.rqa-position-info > .display-ex.position {
+    grid-template-columns: 5.5em auto;
+}
+
+.rqa-position-info > .display-ex.place_of_assignment {
+    grid-template-columns: 12.5em auto;
+}
+
+.rqa-position-info > .display-ex > label {
+}
+
+.rqa-position-info > .display-ex > .content {
+    display: block;
+    border-bottom: 1px solid;
+    min-height: 1.3em;
+    text-align: center;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+
+.rqa-position-info > .input-ex.final_deliberation_date {
+    display: block;
+}
+
+.rqa-position-info > .input-ex.final_deliberation_date > .fields {
+    display: grid;
+    grid-template-columns: 14em auto;
+    align-items: center;
+}
+
+.rqa-position-info > .input-ex.final_deliberation_date > .fields > input {
+    padding: unset;
+    border-radius: unset;
+    border-top: 0 none;
+    border-left: 0 none;
+    border-right: 0 none;
+}
+
+.rqa-table {
+    display: block;
+    overflow: auto;
+    margin-top: 1em;
+    background-color: white;
+    border: 0.15em inset;
+}
+
+.rqa-table > .content {
+    display: block;
+}
+
+.rqa-table > .content > table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.rqa-table > .content > table > * > tr > * {
+    border: 0.05em solid black;
+    padding: 0.3em 0.15em;
+}
+
+.rqa-table > .content > table > thead > tr > * > .subhead {
+    font-size: 0.85em;
+    font-weight: normal;
+    font-style: italic;
+}
+
+.rqa-table > .content > table > tbody > tr.top-rank > * {
+    background-color: lightgreen;
+}
+
+.rqa-table > .content > table > tbody > tr > * {
+    text-align: center;
+}
+
+.rqa-table > .content > table > tbody > tr > :nth-child(2) {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.rqa-form > .fields > .rqa-update {
     display: block;
     text-align: right;
 }

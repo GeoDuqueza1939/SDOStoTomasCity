@@ -22,7 +22,8 @@ function postData(procUrl, data, func)
 
 function packageData(objData)
 {
-    return JSON.stringify(objData).replace(/'/g, /''/);
+    // return JSON.stringify(objData).replace(/'/g, /''/);
+    return JSON.stringify(objData).replace(/'/g, "''");
 }
 
 function testAjax()
