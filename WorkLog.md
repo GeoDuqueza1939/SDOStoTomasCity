@@ -1,5 +1,30 @@
 # Work Log
 
+## 5/23/2023
+TO DO:
+* [x] Polish printout for the IER
+* [x] Create a printout template for the IES
+* [ ] Create a printout template for the CAR
+* [ ] Create a printout template for the CAR-RQA
+* [ ] Add abbreviations to eligibilities
+* [ ] Add Honor Graduate to eligibilities
+* [ ] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
+
+I struggled to polish the print layout of the IER this morning. However, once I finished that, creating and finishing the IES print layout was a lot easier. The only challenge encountered is transferring of cloned data into the print page. Before the end of the shift, I started working on the print layout for the CAR. Once I finish the CAR print layout, creating the RQA print layout would also be a breeze, just like with the IES print layout.
+
+## 5/22/2023
+TO DO:
+* [x] Create a printout template for the IER
+* [ ] Create a printout template for the IES
+* [ ] Create a printout template for the CAR
+* [ ] Create a printout template for the CAR-RQA
+* [ ] Add abbreviations to eligibilities
+* [ ] Add Honor Graduate to eligibilities
+* [x] Create PHP functions that will further generalize adding and updating of specific database records
+* [ ] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
+
+I started optimizing some backend PHP code. When I couldn't find other code that can be optimized as separate functions (at least, for now, so I might add more later, if time permits), I proceeded to add a printing function to the IER. I considered several ways on how to create a printout or a printer-friendly view of the IER form page, including printing it directly or opening another tab/window and copying each data one-by-one. I settled opening a new blank tab/window and deep-cloning the IER form into the new tab, adding or removing elements as needed. I was able to implement that cloning, but I initially had issues with applying the stylesheets that were needed. I added the stylesheets on the new tab's head element, but the styles did not apply and, since the HTML elements were generated/cloned on-the-fly, I couldn't easily troubleshoot using the network tab of the Web Developer tool. Silly me, I forgot that the links to the stylesheets, although absolute in path, did not include the web hostname and protocol (e.g., http://host.com) and that caused them to fail loading properly, as the URL in one of the browsers I used was "about:new" and not the actual hostname. So, I first tried to include the hostname on the stylesheet hrefs, which worked. I, then, used the `base` tag to set the base url for all links, and it worked as well. After that, I started to modify the styles, removed the elements (buttons) that I did not need in the cloned IER and added the signatory `div` and an instructions `div`. I might do something similar in the other forms that will need printouts. If all things go smoothly, I might even proceed creating printouts for the qualification/rejection letters, as well.
+
 ## 5/19/2023
 TO DO:
 * [x] Add a FormEx-derived Comparative Assessment Result-Registry of Qualified Applicants

@@ -266,6 +266,44 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
     return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
 }
 
+function selectRecordAllColumns(DatabaseConnection $dbconn, $tableName) // CANNOT USE JOINS!!!
+{
+    $dbResults = $dbconn->select($tableName, '*', '');
+    
+    if (is_null($dbconn->lastException))
+    {
+        return json_encode(new ajaxResponse('Data', json_encode($dbResults)));
+    }
+    else
+    {
+        die(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+    }
+}
+
+function generateFieldValueStr($values, &$fieldStr, &$valueStr, $filter = null) // does not include parenthesis; also returns a string of field='value' pairs delimited by commas
+{
+    $fieldValueStr = '';
+    $fieldStr = '';
+    $valueStr = '';
+
+    if (is_null($filter) || !is_callable($filter))
+    {
+        $filter = function($k, $v) {return true;};
+    }
+
+    foreach ($values as $key=>$value)
+    {
+        if ($filter($key, $value))
+        {
+            $valueStr .= ($fieldStr == '' ? '' : ', ') . (is_string($value) && !$value == '' ? "'" : '') . ($value == '' || is_null($value) ? 'NULL' : '$value') . (is_string($value) && !$value == '' ? "'" : '');
+            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+            $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . $key . '=' . (is_string($value) ? "'" : '') . $value . (is_string($value) ? "'" : '');
+        }
+    }
+
+    return $fieldValueStr;
+}
+
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
@@ -453,21 +491,29 @@ if (isValidUserSession())
                         return;
                         break;
                     case 'positions':
-                        $dbResults = $dbconn->select('Position', '*', '');
-    
-                        if (is_null($dbconn->lastException))
-                        {
-                            logAction('mpasis', 3, array(
-                                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                                'remarks'=>'Retrieve all positions info'
-                            ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        logAction('mpasis', 3, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'remarks'=>'Retrieve all positions info'
+                        ));
+
+                        echo(selectRecordAllColumns($dbconn, 'Position'));
                         return;
+                        // $dbResults = $dbconn->select('Position', '*', '');
+    
+                        // if (is_null($dbconn->lastException))
+                        // {
+                            // logAction('mpasis', 3, array(
+                            //     ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            //     'remarks'=>'Retrieve all positions info'
+                            // ));
+    
+                            // echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
+                        // return;
                         break;
                     case 'positionTitles':
                         $dbResults = $dbconn->select('Position', 'position_title', 'GROUP BY position_title');
@@ -528,29 +574,32 @@ if (isValidUserSession())
                         return;
                         break;
                     case 'positionCategory':
-                        $dbResults = $dbconn->select('Position_Category', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'Position_Category'));
+
+                        // $dbResults = $dbconn->select('Position_Category', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'educLevel':
-                        $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'ENUM_Educational_Attainment'));
+                        // $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'univEducLevel':
@@ -567,81 +616,87 @@ if (isValidUserSession())
                         return;
                         break;
                     case 'specEduc':
-                        $dbResults = $dbconn->select('Specific_Education', '*', '');
+                        echo(selectJobApplications($dbconn, 'Specific_Education'));
+                        // $dbResults = $dbconn->select('Specific_Education', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'civilStatus':
-                        $dbResults = $dbconn->select('ENUM_Civil_Status', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'ENUM_Civil_Status'));
+                        // $dbResults = $dbconn->select('ENUM_Civil_Status', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'disability':
-                        $dbResults = $dbconn->select('Disability', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'Disability'));
+                        // $dbResults = $dbconn->select('Disability', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'ethnicGroup':
-                        $dbResults = $dbconn->select('Ethnicity', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'Ethnicity'));
+                        // $dbResults = $dbconn->select('Ethnicity', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'religion':
-                        $dbResults = $dbconn->select('Religion', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'Religion'));
+                        // $dbResults = $dbconn->select('Religion', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'eligibilities':
-                        $dbResults = $dbconn->select('Eligibility', '*', '');
+                        echo(selectRecordAllColumns($dbconn, 'Eligibility'));
+                        // $dbResults = $dbconn->select('Eligibility', '*', '');
     
-                        if (is_null($dbconn->lastException))
-                        {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
+                        // if (is_null($dbconn->lastException))
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        // }
+                        // else
+                        // {
+                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        // }
                         return;
                         break;
                     case 'applicationsByApplicantOrCode':
@@ -751,7 +806,7 @@ if (isValidUserSession())
                         $valueStr = '';
 
                         
-                        foreach($position as $key => $value)
+                        foreach($position as $key=>$value)
                         {
                             if ($key != 'required_eligibility')
                             {
@@ -944,7 +999,7 @@ if (isValidUserSession())
 
                     $fieldValueStr = '';
 
-                    foreach($personalInfo as $key => $value)
+                    foreach($personalInfo as $key=>$value)
                     {
                         if ($key != 'personId' && $key != "addresses" && $key != "religion" && $key != "disabilities" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers" && $key != 'degree_taken')
                         {
@@ -1088,7 +1143,7 @@ if (isValidUserSession())
                             $fieldStr = '';
                             $valueStr = '';
 
-                            foreach ($degree_taken as $key => $value)
+                            foreach ($degree_taken as $key=>$value)
                             {
                                 $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                                 $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
@@ -1140,7 +1195,7 @@ if (isValidUserSession())
                         $updateJobApplication = true;
                     }
 
-                    foreach ($jobApplication as $key => $value) {
+                    foreach ($jobApplication as $key=>$value) {
                         if ($key != "personalInfo" && $key != "relevantEligibility" && $key != "relevantTraining" && $key != "relevantWorkExp")
                         {
                             if ($updateJobApplication)
@@ -1184,7 +1239,7 @@ if (isValidUserSession())
                         $fieldStr = '';
                         $valueStr = '';
                         
-                        foreach ($relevantTraining as $key => $value) {
+                        foreach ($relevantTraining as $key=>$value) {
                             $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;   
                         }
@@ -1210,7 +1265,7 @@ if (isValidUserSession())
                         $fieldStr = '';
                         $valueStr = '';
                         
-                        foreach ($relevantWorkExp as $key => $value) {
+                        foreach ($relevantWorkExp as $key=>$value) {
                             $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
                         }
@@ -1276,7 +1331,7 @@ if (isValidUserSession())
 
                     $fieldValueStr = '';
 
-                    foreach ($jobApplication as $key => $value)
+                    foreach ($jobApplication as $key=>$value)
                     {
                         switch ($key)
                         {
@@ -1371,7 +1426,7 @@ if (isValidUserSession())
                     $fieldStr = '';
                     $valueStr = '';
 
-                    foreach ($person as $key => $value) {
+                    foreach ($person as $key=>$value) {
                         $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
                         $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
                     }
@@ -1393,7 +1448,7 @@ if (isValidUserSession())
                                 $tempUser['password'] = trim(hash('ripemd320', $tempUser['password']));
                             }
 
-                            foreach ($tempUser as $key => $value) {
+                            foreach ($tempUser as $key=>$value) {
                                 $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
                                 $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
                             }

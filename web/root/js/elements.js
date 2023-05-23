@@ -139,7 +139,7 @@ function htmlToElements(html) {
  *      source: https://stackoverflow.com/a/36894871
  */
 function isElement(element) {
-    return element instanceof Element || element instanceof HTMLDocument;
+    return element instanceof Element || element instanceof HTMLDocument || type(element).includes("element");
 }
 
 // export { NO_NS, createSimpleElement, createElementEx, addText, htmlToElement, htmlToElements, isElement }

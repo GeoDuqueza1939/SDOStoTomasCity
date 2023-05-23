@@ -774,9 +774,9 @@ class MPASIS_App
             });
 
             // DEBUG
-            console.log(packageData(positions));
+            // console.log(packageData(positions));
             
-            return;
+            // return;
             // DEBUG
             
             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL

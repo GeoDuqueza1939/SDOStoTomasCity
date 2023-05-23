@@ -191,13 +191,19 @@ REINSTATE FOR PRINTOUT
     font-weight: bold;
     border-bottom: 1px solid;
     padding: 0 0.5em;
+    font-size: 0.8em;
+    display: inline-flex;
+    align-items: end;
+    justify-content: center;
 }
 
 .ier-position > .content > .input-ex {
-    float: right;
+    /* float: right; */
     /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
     /* font-family: revert; */
     /* font-family: sans-serif; */
+    position: absolute;
+    right: 2em;
 }
 
 .ier-position-qs {
@@ -228,6 +234,10 @@ REINSTATE FOR PRINTOUT
     white-space: nowrap;
     overflow: hidden;
     font-weight: bold;
+    font-size: 0.8em;
+    display: flex;
+    align-items: end;
+    justify-content: center;
 }
 
 .ier-table {
@@ -498,7 +508,7 @@ REINSTATE FOR PRINTOUT
 
 .ies-form {
     display: block;
-    font-family: "Bookman Old Style", "URW Bookman", serif;
+    /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
 .ies-load-application {
@@ -525,8 +535,8 @@ REINSTATE FOR PRINTOUT
 
 .ies-form .applicant-info > .content > .display-ex.application_code {
     grid-template-columns: 9.5em auto auto;
-    position: absolute;
-    right: 2em;
+    /* position: absolute; ADD IN PRINT.CSS
+    right: 2em; */
 }
 
 .ies-form .applicant-info > .content > .display-ex.applicant_name {
@@ -568,6 +578,10 @@ REINSTATE FOR PRINTOUT
     grid-column: span 2;
     padding: 0 1em;
     text-align: center;
+    font-size: 0.8em;
+    display: flex;
+    align-items: end;
+    justify-content: center;
 }
 
 .ies-table {
@@ -687,7 +701,7 @@ REINSTATE FOR PRINTOUT
 
 .car-form {
     display: block;
-    font-family: "Bookman Old Style", "URW Bookman", serif;
+    /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
 .car-form > .fields > .car-select-position-button {
@@ -795,7 +809,7 @@ REINSTATE FOR PRINTOUT
 
 .rqa-form {
     display: block;
-    font-family: "Bookman Old Style", "URW Bookman", serif;
+    /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
 .rqa-form > .fields > .rqa-select-position-button {

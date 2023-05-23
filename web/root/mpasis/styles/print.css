@@ -1,0 +1,321 @@
+/* @page {
+    size: A4 landscape;
+    width: 297mm;
+    height: 210;
+} */
+
+@media only screen {
+    body.print {
+        margin-top: 6em;
+        padding: 1em;
+    }
+
+    .ies-form .applicant-info > .content > .display-ex.application_code {
+        right: 1em;
+    }
+}
+
+@media only print {
+    body.print {
+        padding: 0em;
+    }
+
+    body.print .print-controls {
+        display: none;
+        visibility: hidden;
+    }
+
+    .ies-form .applicant-info > .content > .display-ex.application_code {
+        right: 0em;
+    }
+}
+
+*  {
+    font-size: 1em;
+}
+
+body.print {
+    background-color: unset;
+    font-family: "Bookman Old Style", "URW Bookman", serif;
+}
+
+.print .print-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    font-size: 18pt;
+    text-align: right;
+    background-color: navy;
+    padding: 1em;
+    z-index: 1;
+}
+
+.print .print-controls > .fields > .input-ex > .fields > button {
+    margin: 0;
+    padding: 0;
+    border-width: 1px;
+}
+
+.print .print-controls > .fields > .input-ex > .fields > button > [class^=material-] {
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+    height: 1.5em;
+    width: 1.6em;
+}
+
+.ier-form {
+    font-size: 1em;
+}
+
+.ier-form > h2 {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 12pt;
+    margin-bottom: 24pt;
+}
+
+.ier-position-info {
+    font-size: 10pt;
+}
+
+.ier-table {
+    margin-top: 18pt;
+    overflow: visible;
+    font-size: 8pt;
+    border: unset;
+}
+
+.ier-table > .content,
+.ier-table > .content > table,
+.ier-table > .content > table > *,
+.ier-table > .content > table > * > tr,
+.ier-table > .content > table > * > tr > *,
+.ier-table > .content > table > * > tr > * ul,
+.ier-table > .content > table > * > tr > * li {
+    font-size: 1em;
+}
+
+.ier-table > .content > table > * > tr > * {
+    border: 1px solid;
+}
+
+.ier-printout-signatory {
+    margin-top: 12pt;
+    font-size: 10pt;
+    float: right;
+    padding: 0 4em;
+}
+
+.ier-printout-signatory > label {
+    display: block;
+}
+
+.ier-printout-signatory > .content {
+    text-align: center;
+    display: block;
+}
+
+.ier-printout-signatory > .content > .name {
+    display: flex;
+    height: 4em;
+    align-items: end;
+    justify-content: center;
+    min-height: 1.2em;
+}
+
+.ier-printout-signatory > .content > .position {
+    border-top: 1px solid;
+    padding: 0 1em;
+    width: 21em;
+    min-height: 1.2em;
+}
+
+.ier-printout-signatory > .content > .date {
+    width: 7em;
+    border-bottom: 1px solid;
+    display: inline-block;
+    text-align: left;
+    margin-left: 3em;
+}
+
+.ier-printout-signatory > .content > .date::before {
+    content: "Date: ";
+    float: left;
+    text-align: left;
+    width: 3em;
+    margin-left:-3em;
+}
+
+.ier-printout-instructions {
+    font-size: 6pt;
+    clear: right;
+    margin-right: 55em;
+}
+
+.ier-printout-instructions > label {
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.ier-printout-instructions > .content {
+    font-style: italic;
+    font-size: 1em;
+}
+
+.ier-printout-instructions > .content > ol {
+    list-style: none;
+    list-style-position: inside;
+    font-size: 1em;
+    padding: 0;
+    counter-reset: ier-notes;
+}
+
+.ier-printout-instructions > .content > ol > li {
+    font-size: 1em;
+    counter-increment: ier-notes;
+}
+
+.ier-printout-instructions > .content > ol > li::before {
+    content: counter(ier-notes, lower-alpha) ") ";
+}
+
+.ies-form {
+    font-size: 10.33pt;
+}
+
+.ies-form > h2 {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 1em;
+    margin-bottom: 12pt;
+}
+
+.ies-form .applicant-info {
+    font-size: 1em;
+}
+
+.ies-form .applicant-info > .content > .display-ex.application_code {
+    position: absolute;
+    z-index: 0;
+}
+
+.ies-table {
+    margin-top: 12pt;
+    overflow: visible;
+    font-size: 1em;
+    border: unset;
+}
+
+.ies-table > .content,
+.ies-table > .content > table,
+.ies-table > .content > table > *,
+.ies-table > .content > table > * > tr,
+.ies-table > .content > table > * > tr > *,
+.ies-table > .content > table > * > tr > * ul,
+.ies-table > .content > table > * > tr > * li {
+    font-size: 1em;
+}
+
+.ies-table > .content > table > * > tr > * {
+    border: 1px solid black;
+}
+
+.ies-printout-conforme {
+    margin-top: 18pt;
+    font-size: 1em;
+    text-align: justify;
+}
+
+.ies-printout-signatory-applicant {
+    display: block;
+    margin-top: 12pt;
+    margin-bottom: 12pt;
+    font-size: 1em;
+    float: right;
+    padding: 0;
+}
+
+.ies-printout-signatory-applicant > label {
+    display: block;
+}
+
+.ies-printout-signatory-applicant > .content {
+    text-align: center;
+    display: block;
+}
+
+.ies-printout-signatory-applicant > .content > .name {
+    display: flex;
+    height: 4em;
+    align-items: end;
+    justify-content: center;
+    min-height: 1.2em;
+}
+
+.ies-printout-signatory-applicant > .content > .name::after {
+    content: "Name and Signature of Applicant";
+    display: block;
+    border-top: 1px solid;
+    padding: 0.1em 1.5em 0;
+    /* width: 21em; */
+    min-height: 1.2em;
+}
+
+.ies-printout-signatory-applicant > .content > .date {
+    width: 7em;
+    text-align: left;
+}
+
+.ies-printout-signatory-applicant > .content > .date::before {
+    content: "Date: ";
+    text-align: left;
+}
+
+.ies-printout-signatory-hrmpsb {
+    display: block;
+    margin-top: 12pt;
+    font-size: 1em;
+    padding: 0;
+    clear: right;
+}
+
+.ies-printout-signatory-hrmpsb > label {
+    display: block;
+}
+
+.ies-printout-signatory-hrmpsb > .content {
+    text-align: left;
+}
+
+.ies-printout-signatory-hrmpsb > .content > .name {
+    display: flex;
+    height: 4em;
+    align-items: end;
+    justify-content: center;
+    min-height: 1.2em;
+}
+
+.ies-printout-signatory-hrmpsb > .content > .name::after {
+    content: "HRMPSB Chair";
+    display: block;
+    border-top: 1px solid;
+    padding: 0.1em 0 0;
+    width: 14em;
+    min-height: 1.2em;
+}
+
+.ies-printout-signatory-hrmpsb > .content > .date {
+    display: none;
+    visibility: hidden;
+    width: 7em;
+    text-align: left;
+}
+
+.ies-printout-signatory-hrmpsb > .content > .date::before {
+    content: "Date: ";
+    text-align: left;
+}
+

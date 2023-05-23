@@ -435,6 +435,11 @@ class InputEx
         var invalidArgsStr = "";
         var nextSibling = null;
 
+        if (!(parentEl == null || isElement(parentEl)))
+        {
+            console.log(parentEl, isElement(parentEl), type(parentEl));
+        }
+
         invalidArgsStr += (parentEl == null || isElement(parentEl) ? "" : "parentEl:" + parentEl);
         invalidArgsStr += (typeof(idStr) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "idStr:" + idStr);
         invalidArgsStr += (typeof(typeStr) == "string" ? "" : (invalidArgsStr == "" ? "" : "; ") + "typeStr:" + typeStr);
@@ -5233,7 +5238,7 @@ class ScoreSheet extends FormEx
 
     static validateEligibility(eligibilities = [], requiredEligibilities = [[]])
     {
-        var isEligibleInAll = [], requiredEligibilitySet = null;
+        var isEligibleInAll = [], requiredEligibilitySet = null, csProEligs = [];
 
         for (const requiredEligibilitySetConst of requiredEligibilities) {
             var isEligibleInOne = false;
@@ -5262,7 +5267,7 @@ class ScoreSheet extends FormEx
                 for (const requiredEligibility of requiredEligibilitySet) {
                     isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 1); // CS Sub-Pro    
                     isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 2 && eligibility >= 2); // CS Pro
-                    isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 3 && eligibility > 3); // Any PRC License    
+                    isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == 3 && eligibility > 3 && !(csProEligs.includes(eligibility) || csProEligs.includes(eligibility.toString()))); // Any PRC License (MAY CAUSE ISSUES WHEN NEWLY ADDED ELIGIBILITIES ARE ONLY ON THE LEVEL OF CS PRO; TO AVOID, ADD TO csProElig ARRAY)
                     isEligibleInOne = isEligibleInOne || (!isEligibleInOne && requiredEligibility == eligibility); // exact PRC License
                     if (isEligibleInOne)
                     {
@@ -5302,7 +5307,8 @@ class IERForm extends FormEx
         this.setTitle("Initial Evaluation Result (IER)", 2);
         // this.setFullWidth();
 
-        thisIERForm.fetchedApplications = null; // variable to hold the fetched job applications data
+        this.fetchedApplications = null; // variable to hold the fetched job applications data
+        this.rowData = [];
 
         posInfo = this.addBox("ier-position-info", false);
         posInfo.classList.add("ier-position-info");
@@ -5556,7 +5562,77 @@ class IERForm extends FormEx
             ]);
         });
 
+        this.addInputEx("Print", "buttonEx", "Print", "Print the Initial Evaluation Result form", "ier-print-button");
+
+        this.dbInputEx["ier-print-button"].addEvent("click", this.generatePrinterFriendly);
+
         this.dbInputEx["ier-select-position-button"].fields[0].click();
+    }
+
+    generatePrinterFriendly(ierPrintClickEvent)
+    {
+        var thisIERForm = ierPrintClickEvent.target.inputEx.parentFormEx, ierForPrint = window.open("", "_blank");
+
+        var nodeDoctype = ierForPrint.document.implementation.createDocumentType("html", "", "");
+        if(ierForPrint.document.doctype) {
+            ierForPrint.document.replaceChild(nodeDoctype, ierForPrint.document.doctype);
+        } else {
+            ierForPrint.document.insertBefore(nodeDoctype, ierForPrint.document.childNodes[0]);
+        }
+        ierForPrint.document.title = "Initial Evaluation Report (IER) [printer-friendly version]";
+        ierForPrint.document.body.classList.add("print");
+
+        createElementEx(NO_NS, "base", ierForPrint.document.head, null, "href", window.location.origin);
+
+        [
+            "/styles/default.css",
+            "/styles/main.css",
+            "/styles/ExClass.css",
+            "/styles/print.css",
+            "/styles/material.io/material-icons.css",
+            "/mpasis/styles/main.css",
+            "/mpasis/styles/print.css"
+        ].forEach(cssURL=>{
+            ierForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
+        });
+
+        
+        var ierFormClone = thisIERForm.container.cloneNode(true);
+        ierForPrint.document.body.appendChild(ierFormClone);
+
+        var ierFormCloneFields = ierFormClone.querySelector(".fields");
+
+        var signatory = new DisplayEx(ierFormCloneFields, "div", "ier-printout-signatory", "", "Prepared and certified correct by");
+        signatory.showColon();
+        htmlToElements("<div class=\"name\"></div> <div class=\"position\"></div> <div class=\"date\"></div>").forEach(node=>{
+            signatory.addContent(node);
+            signatory.addContent(document.createTextNode(" "));
+        });
+        signatory.container.classList.add("ier-printout-signatory");
+
+        var instructions = new DisplayEx(ierFormCloneFields, "div", "ier-printout-instructions", "", "Notes and Instructions for the HRMO");
+        instructions.container.classList.add("ier-printout-instructions");
+        instructions.showColon();
+
+        [createElementEx(NO_NS, "ol", instructions.content)].forEach(list=>{
+            [
+                "For the purpose of posting the IER, <b>columns D to M</b> shall be concealed in accordance with RA No. 10163 (Data Privacy Act). The only information that shall be made public are the application codes, qualifications of the applicants in terms of Education, Training, Experience, Eligibility, and Competency (if applicable), and remark on whether Qualified or Disqualified.",
+                "If the information does not apply to the applicant, please put N/A."
+            ].forEach(itemText=>{
+                list.appendChild(htmlToElement("<li>" + itemText + "</li>"));
+            });
+        });
+
+        ierForPrint.document.getElementById("ier-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+
+        var printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
+        ierForPrint.document.body.insertBefore(printButtonGroup.container, ierForPrint.document.body.children[0]);
+        printButtonGroup.container.classList.add("print-controls");
+        printButtonGroup.addItem("<span class=\"material-icons-round green\">print</span>", "", "Print").addEvent("click", clickPrintEvent=>{ierForPrint.print()});
+        printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{ierForPrint.close()});
+
+        ierForPrint.alert("Please click on the print button to continue");
     }
 }
 
@@ -5693,7 +5769,7 @@ class IESForm extends FormEx
                             totalWeight += criteria.weight;
 
                             iesForm.displayExs["ies_table"].addRow({
-                                "ies_criteria":criteria.label + ("sublabel" in criteria ? " <i>(" + criteria.sublabel + ")</i>" : ""),
+                                "ies_criteria":criteria.label + ("sublabel" in criteria ? (iesForm.position["position_categoryId"] == 1 ? "<br>" : "") + " <i>(" + criteria.sublabel + ")</i>" : ""),
                                 "ies_weight":criteria.weight,
                                 "ies_details":iesForm.jobApplication[criteria.notesId],
                                 "ies_computation":IESForm.getComputationString(criteria, iesForm.jobApplication).replace(/(?:<br><br><br><br>)+/, "<br><br>").replace(/^(?:<br>)+/, ""),
@@ -5706,6 +5782,10 @@ class IESForm extends FormEx
                     iesForm.displayExs["ies_table"].fRows[0].td["weight_allocation_total"].innerHTML = totalWeight;
                     iesForm.displayExs["ies_table"].fRows[0].data["total_score"] = totalScore.toFixed(3);
                     iesForm.displayExs["ies_table"].fRows[0].td["total_score"].innerHTML = totalScore.toFixed(3);
+
+
+                    iesForm.addInputEx("Print", "buttonEx", "Print", "Print the Individual Evaluation Sheet form", "ies-print-button");
+                    iesForm.dbInputEx["ies-print-button"].addEvent("click", iesForm.generatePrinterFriendly);
 
                     retrieveApplicantDialog.close();
                     this.innerHTML = "Reset IES Form";
@@ -5856,6 +5936,69 @@ class IESForm extends FormEx
     {
         window.location.reload(true);
     }
+
+    generatePrinterFriendly(iesPrintClickEvent)
+    {
+        var thisIESForm = iesPrintClickEvent.target.inputEx.parentFormEx, iesForPrint = window.open("", "_blank");
+        
+        var nodeDoctype = iesForPrint.document.implementation.createDocumentType("html", "", "");
+        if(iesForPrint.document.doctype) {
+            iesForPrint.document.replaceChild(nodeDoctype, iesForPrint.document.doctype);
+        } else {
+            iesForPrint.document.insertBefore(nodeDoctype, iesForPrint.document.childNodes[0]);
+        }
+        iesForPrint.document.title = "Individual Evaluation Sheet (IES) [printer-friendly version]";
+        iesForPrint.document.body.classList.add("print");
+        
+        createElementEx(NO_NS, "base", iesForPrint.document.head, null, "href", window.location.origin);
+        
+        [
+            "/styles/default.css",
+            "/styles/main.css",
+            "/styles/ExClass.css",
+            "/styles/print.css",
+            "/styles/material.io/material-icons.css",
+            "/mpasis/styles/main.css",
+            "/mpasis/styles/print.css"
+        ].forEach(cssURL=>{
+            iesForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
+        });
+        
+        var iesFormClone = thisIESForm.container.cloneNode(true);
+        iesForPrint.document.body.appendChild(iesFormClone);
+        
+        var iesFormCloneFields = iesFormClone.querySelector(".fields");
+
+        var conforme = new DisplayEx(iesFormCloneFields, "div", "ies-printout-conforme", "", "");
+        conforme.setHTMLContent("<p>I hereby attest to the coduct of the application and assessment process in accordance with the applicable&nbsp;guidelines; and acknowledge, upon discussion with the Human Reource Merit Promotion and Selection Board (HRMPSB), the results of the comparative assessment and the points given to me based on my qualifications and submitted documentary requirements for the <strong>" + thisIESForm.displayExs["position_title_applied"].getHTMLContent() + "</strong> under <strong>" + (thisIESForm.displayExs["place_of_assignment"].getHTMLContent() == "" ? "__________" : thisIESForm.displayExs["place_of_assignment"].getHTMLContent()) +".</strong></p>" + " <p>Furthermore, I hereby affix my signature in this Form to attest to the objective and judicious conduct of the HRMPSB evaluation through Open Ranking System.</p>");
+        conforme.container.classList.add("ies-printout-conforme");
+        
+        var signatoryApplicant = new DisplayEx(iesFormCloneFields, "div", "ies-printout-signatory-applicant", "", "");
+        htmlToElements("<div class=\"name\"></div> <div class=\"date\"></div>").forEach(node=>{
+            signatoryApplicant.addContent(node);
+            signatoryApplicant.addContent(document.createTextNode(" "));
+        });
+        signatoryApplicant.container.classList.add("ies-printout-signatory-applicant");
+
+        var signatoryHRMPSBChair = new DisplayEx(iesFormCloneFields, "div", "ies-printout-signatory-hrmpsb", "", "Attested");
+        signatoryHRMPSBChair.showColon();
+        htmlToElements("<div class=\"name\"></div> <div class=\"date\"></div>").forEach(node=>{
+            signatoryHRMPSBChair.addContent(node);
+            signatoryHRMPSBChair.addContent(document.createTextNode(" "));
+        });
+        signatoryHRMPSBChair.container.classList.add("ies-printout-signatory-hrmpsb");
+
+        iesForPrint.document.getElementById("ies-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        iesForPrint.document.getElementById("ies-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        
+        var printButtonGroup = new InputEx(null, "print-ies-controls", "buttonExs");
+        iesForPrint.document.body.insertBefore(printButtonGroup.container, iesForPrint.document.body.children[0]);
+        printButtonGroup.container.classList.add("print-controls");
+        printButtonGroup.addItem("<span class=\"material-icons-round green\">print</span>", "", "Print").addEvent("click", clickPrintEvent=>{iesForPrint.print()});
+        printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{iesForPrint.close()});
+
+        iesForPrint.alert("Please click on the print button to continue");
+    }
 }
 
 class CARForm extends FormEx
@@ -5949,10 +6092,6 @@ class CARForm extends FormEx
         this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[11]);
         this.carTable.thead.children[1].children[11].setAttribute("rowspan", 2);
         this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[11]);
-
-        this.addInputEx("Update", "button", "", "", "car-update");
-        this.dbInputEx["car-update"].container.classList.add("car-update");
-        this.dbInputEx["car-update"].disable();
 
         this.dbInputEx["car-select-position-button"].addEvent("click", clickEvent=>{
             var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
@@ -6118,6 +6257,83 @@ class CARForm extends FormEx
                 {label:"Cancel", tooltip:"Close dialog", callbackOnClick:positionSelectEvent=>selectPositionDialog.close()}
             ]);
         });
+
+        var carControlButtons = this.addInputEx("", "buttonExs", "", "", "car-control-buttons");
+        carControlButtons.container.classList.add("car-control-buttons");
+        carControlButtons.addItem("Update", "Update", "Update field values to database").disable();
+        carControlButtons.addItem("Print", "Print", "Print the Comparative Assessment Result form").addEvent("click", this.generatePrinterFriendly);
+
+        // this.addInputEx("Print", "buttonEx", "Print", "Print the Comparative Assessment Result form", "car-print-button");
+
+        // this.dbInputEx["car-print-button"].addEvent("click", this.generatePrinterFriendly);
+    }
+
+    generatePrinterFriendly(carPrintClickEvent)
+    {
+        var thisCARForm = carPrintClickEvent.target.inputEx.parentInputEx.parentFormEx, carForPrint = window.open("", "_blank");
+        
+        var nodeDoctype = carForPrint.document.implementation.createDocumentType("html", "", "");
+        if(carForPrint.document.doctype) {
+            carForPrint.document.replaceChild(nodeDoctype, carForPrint.document.doctype);
+        } else {
+            carForPrint.document.insertBefore(nodeDoctype, carForPrint.document.childNodes[0]);
+        }
+        carForPrint.document.title = "Comparative Assessment Result (CAR) [printer-friendly version]";
+        carForPrint.document.body.classList.add("print");
+        
+        createElementEx(NO_NS, "base", carForPrint.document.head, null, "href", window.location.origin);
+        
+        [
+            "/styles/default.css",
+            "/styles/main.css",
+            "/styles/ExClass.css",
+            "/styles/print.css",
+            "/styles/material.io/material-icons.css",
+            "/mpasis/styles/main.css",
+            "/mpasis/styles/print.css"
+        ].forEach(cssURL=>{
+            carForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
+        });
+        
+        var carFormClone = thisCARForm.container.cloneNode(true);
+        carForPrint.document.body.appendChild(carFormClone);
+        
+        var carFormCloneFields = carFormClone.querySelector(".fields");
+        /*
+
+        var signatory = new DisplayEx(ierFormCloneFields, "div", "ier-printout-signatory", "", "Prepared and certified correct by");
+        signatory.showColon();
+        htmlToElements("<div class=\"name\"></div> <div class=\"position\"></div> <div class=\"date\"></div>").forEach(node=>{
+            signatory.addContent(node);
+            signatory.addContent(document.createTextNode(" "));
+        });
+        signatory.container.classList.add("ier-printout-signatory");
+
+        var instructions = new DisplayEx(ierFormCloneFields, "div", "ier-printout-instructions", "", "Notes and Instructions for the HRMO");
+        instructions.container.classList.add("ier-printout-instructions");
+        instructions.showColon();
+
+        [createElementEx(NO_NS, "ol", instructions.content)].forEach(list=>{
+            [
+                "For the purpose of posting the IER, <b>columns D to M</b> shall be concealed in accordance with RA No. 10163 (Data Privacy Act). The only information that shall be made public are the application codes, qualifications of the applicants in terms of Education, Training, Experience, Eligibility, and Competency (if applicable), and remark on whether Qualified or Disqualified.",
+                "If the information does not apply to the applicant, please put N/A."
+            ].forEach(itemText=>{
+                list.appendChild(htmlToElement("<li>" + itemText + "</li>"));
+            });
+        });
+
+        */
+        carForPrint.document.getElementById("car-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        carForPrint.document.getElementById("car-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        
+        var printButtonGroup = new InputEx(null, "print-car-controls", "buttonExs");
+        carForPrint.document.body.insertBefore(printButtonGroup.container, carForPrint.document.body.children[0]);
+        printButtonGroup.container.classList.add("print-controls");
+        printButtonGroup.addItem("<span class=\"material-icons-round green\">print</span>", "", "Print").addEvent("click", clickPrintEvent=>{carForPrint.print()});
+        printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{carForPrint.close()});
+/*
+        ierForPrint.alert("Please click on the print button to continue");
+    */
     }
 }
 
