@@ -319,3 +319,273 @@ body.print {
     text-align: left;
 }
 
+.car-form {
+    font-size: 10pt;
+}
+
+.car-form > h2 {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 1em;
+    margin-bottom: 12pt;
+}
+
+.car-position-info {
+    display: grid;
+    grid-template-columns: 45% auto 45%;
+    font-size: 0.8em;
+}
+
+.car-position-info > .display-ex > label {
+    font-weight: bold;
+}
+
+.car-position-info > .display-ex.position {
+    grid-template-columns: 5em auto;
+}
+
+.car-position-info > .display-ex.plantilla_item_numbers {
+    grid-template-columns: 12em auto;
+}
+
+.car-position-info > .display-ex.place_of_assignment {
+    grid-template-columns: 28.75em auto;
+}
+
+.car-position-info > .input-ex.final_deliberation_date > .fields {
+    grid-template-columns: 14em auto;
+}
+
+.car-position-info > .input-ex.final_deliberation_date > .fields > label {
+    font-weight: bold;
+}
+
+.car-table {
+    margin-top: 1em;
+    overflow: visible;
+    font-size: 0.8em;
+    border: unset;
+}
+
+.car-table > .content,
+.car-table > .content > table,
+.car-table > .content > table > *,
+.car-table > .content > table > * > tr,
+.car-table > .content > table > * > tr > *,
+.car-table > .content > table > * > tr > * ul,
+.car-table > .content > table > * > tr > * li {
+    font-size: 1em;
+}
+
+.car-table > .content > table > * > tr > * {
+    border: 1px solid black;
+}
+
+.car-printout-signatory {
+    display: block;
+    font-size: 0.8em;
+    margin-top: 2.5em;
+}
+
+.car-printout-signatory > .content {
+    display: block;
+}
+
+.car-printout-signatory > .content > .hrmpsb {
+    float: left;
+    width: 70%;
+}
+
+.car-printout-signatory > .content > .hrmpsb > .content {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.car-printout-signatory > .content > .hrmpsb > .content > * {
+    display: inline-block;
+    width: 12em;
+}
+
+.car-printout-signatory > .content > .hrmpsb > .content > * > .content {
+    display: block;
+    text-align: center;
+}
+
+.car-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 4em;
+}
+
+.car-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position::after {
+    width: 100%;
+    border-top: 1px solid;
+    content: "Name and Position";
+    display: block;
+}
+
+.car-printout-signatory > .content > .appointer {
+    margin-right: 10%;
+    float: right;
+}
+
+.car-printout-signatory > .content > .appointer > .content {
+    display: block;
+    text-align: center;
+}
+
+.car-printout-signatory > .content > .appointer > .content > .name-position {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 4em;
+}
+
+.car-printout-signatory > .content > .appointer > .content > .name-position::after {
+    width: 100%;
+    border-top: 1px solid;
+    content: "Name and Position";
+    display: block;
+}
+
+.rqa-form {
+    font-size: 10pt;
+}
+
+.rqa-form > h2 {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 1em;
+    margin-bottom: 12pt;
+}
+
+.rqa-position-info {
+    display: grid;
+    grid-template-columns: 45% auto 45%;
+    font-size: 0.8em;
+}
+
+.rqa-position-info > * {
+    grid-column-end: span 1;
+}
+
+.rqa-position-info > .display-ex > label {
+    font-weight: bold;
+}
+
+.rqa-position-info > .display-ex.position {
+    grid-column-start: 1;
+    grid-row: 1;
+    grid-template-columns: 5em auto;
+}
+
+/* .rqa-position-info > .display-ex.plantilla_item_numbers {
+    grid-template-columns: 11.5em auto;
+}
+ */
+.rqa-position-info > .display-ex.place_of_assignment {
+    grid-row: 2;
+    grid-template-columns: 12.75em auto;
+}
+
+.rqa-position-info > .input-ex.final_deliberation_date {
+    grid-column-start: 3;
+}
+
+.rqa-position-info > .input-ex.final_deliberation_date > .fields {
+    grid-template-columns: 14em auto;
+}
+
+.rqa-position-info > .input-ex.final_deliberation_date > .fields > label {
+    font-weight: bold;
+}
+
+.rqa-table {
+    margin-top: 1em;
+    overflow: visible;
+    font-size: 0.8em;
+    border: unset;
+}
+
+.rqa-table > .content,
+.rqa-table > .content > table,
+.rqa-table > .content > table > *,
+.rqa-table > .content > table > * > tr,
+.rqa-table > .content > table > * > tr > *,
+.rqa-table > .content > table > * > tr > * ul,
+.rqa-table > .content > table > * > tr > * li {
+    font-size: 1em;
+}
+
+.rqa-table > .content > table > * > tr > * {
+    border: 1px solid black;
+}
+
+.rqa-printout-signatory {
+    display: block;
+    font-size: 0.8em;
+    margin-top: 2.5em;
+}
+
+.rqa-printout-signatory > .content {
+    display: block;
+}
+
+.rqa-printout-signatory > .content > .hrmpsb {
+    float: left;
+    width: 70%;
+}
+
+.rqa-printout-signatory > .content > .hrmpsb > .content {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.rqa-printout-signatory > .content > .hrmpsb > .content > * {
+    display: inline-block;
+    width: 12em;
+}
+
+.rqa-printout-signatory > .content > .hrmpsb > .content > * > .content {
+    display: block;
+    text-align: center;
+}
+
+.rqa-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 4em;
+}
+
+.rqa-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position::after {
+    width: 100%;
+    border-top: 1px solid;
+    content: "Name and Position";
+    display: block;
+}
+
+.rqa-printout-signatory > .content > .appointer {
+    margin-right: 10%;
+    float: right;
+}
+
+.rqa-printout-signatory > .content > .appointer > .content {
+    display: block;
+    text-align: center;
+}
+
+.rqa-printout-signatory > .content > .appointer > .content > .name-position {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 4em;
+}
+
+.rqa-printout-signatory > .content > .appointer > .content > .name-position::after {
+    width: 100%;
+    border-top: 1px solid;
+    content: "Name and Position";
+    display: block;
+}

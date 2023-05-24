@@ -234,7 +234,7 @@ function updateUser(DatabaseConnection $dbconn, $user, $person)
     }
 }
 
-function fetchUser($dbconn, $username = '', $criteriaStr = 'all')
+function fetchUser(DatabaseConnection $dbconn, $username = '', $criteriaStr = 'all')
 {
     $criteria = '';
 
@@ -266,7 +266,7 @@ function fetchUser($dbconn, $username = '', $criteriaStr = 'all')
     }
 }
 
-function changePassword($dbconn, $passwordDetails)
+function changePassword(DatabaseConnection $dbconn, $passwordDetails)
 {
     $requireCurrentPassword = $passwordDetails['requireCurrentPassword'];
     $password = $passwordDetails['password'];
@@ -307,5 +307,29 @@ function changePassword($dbconn, $passwordDetails)
     }
 
     return json_encode(new ajaxResponse('Success', 'Password successfully updated!<br><br>You will now be signed out of your session.'));
+}
+
+function resetPassword(DatabaseConnection $dbconn)
+{
+    if (isset($_POST['username']))
+    {
+        $user = fetchUser($dbconn, $_POST['username'])[0];
+        $isTempUser = ($user['temp_user'] || $user['temp_user'] != 0);
+
+        $dbconn->update(($isTempUser ? 'Temp_' : '') . 'User', 'first_signin=TRUE, password="' . hash('ripemd320', '1234') . '"', 'WHERE username="' . $user['username'] . '"');
+
+        if (is_null($dbconn->lastException))
+        {
+            logAction('mpasis', ($isTempUser ? 19 : 13), array(
+                ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
+            ));
+            return json_encode(new ajaxResponse('Success', $user['username'] . '\'s password has been successfully reset'));
+        }
+        else
+        {
+            return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr));
+        }
+    }
 }
 ?>

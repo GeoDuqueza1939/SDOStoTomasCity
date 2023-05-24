@@ -1,5 +1,20 @@
 # Work Log
 
+## 5/24/2023
+TO DO:
+* [x] Fix Training score bug
+* [x] Fix Education score bug
+* [x] Fix Work Experience score bug
+* [x] Add details in Score Sheet
+* [x] Create a printout template for the CAR
+* [x] Create a printout template for the CAR-RQA
+* [x] Add abbreviations to eligibilities (local)
+* [ ] Add abbreviations to eligibilities (hosted)
+* [ ] Add Honor Graduate to eligibilities
+* [x] Implement the default user password as either a variable in the secure local PHP scripts or as a default value in the password fields.
+
+I worked with Mr. James today for some random testing and we have found a few bugs related to the Trainings score in the score sheet. After investigation, I found out that it not only affected the trainings score but the education and the experience scores, as well. I started fixing it right away and, while on it, I also added a few more details in the Score Sheet regarding the applicant's increment level in the three criteria in question and the base increment level set in the position's Qualification Standard. Afterwards, I resumed my work on the CAR form printout, which helped me later when I worked on the CAR-RQA printout later on. Later on, I went to remove the default user password from the main MPASIS PHP processor and, instead of just setting the default password as a variable, I moved the entire password reset procedure into a function in the local secure folder for PHP scripts.
+
 ## 5/23/2023
 TO DO:
 * [x] Polish printout for the IER

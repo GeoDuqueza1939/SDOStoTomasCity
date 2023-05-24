@@ -3994,6 +3994,8 @@ class ScoreSheet extends FormEx
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"educ_notes",type:"display",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"educ_notes",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"educIncrementsApplicant",type:"display",label:"Applicant's education increment level",dbColName:"educIncrementsApplicant",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"educIncrementsQS",type:"display",label:"Base increment level (Qualification Standard)",dbColName:"educIncrementsQS",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"educIncrements",type:"display",label:"Number of increments above the Qualification Standard",dbColName:"educIncrements",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"isEducQualified",type:"display-check",label:"Applicant is qualified",dbColName:"isEducQualified",dbTableName:"",content:[],parentId:"education",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -4036,6 +4038,8 @@ class ScoreSheet extends FormEx
                         }
                         scoreSheetElementUI.displays["has_specific_education_required"].displayEx.setHTMLContent(hasSpecEduc);
                         scoreSheetElementUI.displays["educ_notes"].displayEx.setHTMLContent(educNotes);
+                        scoreSheetElementUI.displays["educIncrementsApplicant"].displayEx.setHTMLContent(applicantEducIncrement.toString());
+                        scoreSheetElementUI.displays["educIncrementsQS"].displayEx.setHTMLContent(requiredEducIncrement.toString());
                         scoreSheetElementUI.displays["educIncrements"].displayEx.setHTMLContent(educIncrementAboveQS.toString());
                         scoreSheetElementUI.displays["isEducQualified"].displayEx.check((hasSpecEduc == "N/A" || hasSpecEduc == "Yes") && applicantEducIncrement >= requiredEducIncrement);
                     }
@@ -4059,6 +4063,8 @@ class ScoreSheet extends FormEx
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"train_notes",type:"display",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"train_notes",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"trainIncrementsApplicant",type:"display",label:"Applicant's training increment level",dbColName:"trainIncrementsApplicant",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"trainIncrementsQS",type:"display",label:"Base increment level (Qualification Standard)",dbColName:"trainIncrementsQS",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"trainIncrements",type:"display",label:"Number of increments above the Qualification Standard",dbColName:"trainIncrements",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"isTrainingQualified",type:"display-check",label:"Applicant is qualified",dbColName:"isTrainingQualified",dbTableName:"",content:[],parentId:"training",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -4091,6 +4097,8 @@ class ScoreSheet extends FormEx
                         scoreSheetElementUI.displays["has_specific_training"].displayEx.setHTMLContent(hasSpecTraining);
                         scoreSheetElementUI.displays["has_more_unrecorded_training"].displayEx.setHTMLContent(hasMoreTraining);
                         scoreSheetElementUI.displays["train_notes"].displayEx.setHTMLContent(trainNotes);
+                        scoreSheetElementUI.displays["trainIncrementsApplicant"].displayEx.setHTMLContent(applicantTrainingIncrement.toString());
+                        scoreSheetElementUI.displays["trainIncrementsQS"].displayEx.setHTMLContent(requiredTrainingIncrement.toString());
                         scoreSheetElementUI.displays["trainIncrements"].displayEx.setHTMLContent(trainingIncrementAboveQS.toString());
                         scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "N/A" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
                     }
@@ -4114,6 +4122,8 @@ class ScoreSheet extends FormEx
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"work_exp_notes",type:"display",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"work_exp_notes",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"expIncrementsApplicant",type:"display",label:"Applicant's work experience increment level",dbColName:"expIncrementsApplicant",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"expIncrementsQS",type:"display",label:"Base increment level (Qualification Standard)",dbColName:"expIncrementsQS",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"expIncrements",type:"display",label:"Number of increments above the Qualification Standard",dbColName:"expIncrements",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"isWorkExpQualified",type:"display-check",label:"Applicant is qualified",dbColName:"isWorkExpQualified",dbTableName:"",content:[],parentId:"experience",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -4146,6 +4156,8 @@ class ScoreSheet extends FormEx
                         scoreSheetElementUI.displays["has_specific_work_experience"].displayEx.setHTMLContent(hasSpecWorkExp);
                         scoreSheetElementUI.displays["has_more_unrecorded_work_experience"].displayEx.setHTMLContent(hasMoreWorkExp);
                         scoreSheetElementUI.displays["work_exp_notes"].displayEx.setHTMLContent(workExpNotes);
+                        scoreSheetElementUI.displays["expIncrementsApplicant"].displayEx.setHTMLContent(applicantWorkExpIncrement.toString());
+                        scoreSheetElementUI.displays["expIncrementsQS"].displayEx.setHTMLContent(requiredWorkExpIncrement.toString());
                         scoreSheetElementUI.displays["expIncrements"].displayEx.setHTMLContent(workExpIncrementAboveQS.toString());
                         scoreSheetElementUI.displays["isWorkExpQualified"].displayEx.check((hasSpecWorkExp == "N/A" || hasSpecWorkExp == "Yes") && applicantWorkExpIncrement >= requiredWorkExpIncrement);
                     }
@@ -5060,9 +5072,9 @@ class ScoreSheet extends FormEx
         return 0; // increments from degree are not applicable or the degree information is incomplete or invalid
     }
 
-    static getEducScore(incrementAboveQS, positionObj)
+    static getEducScore(incrementAboveQS, positionCategory, salaryGrade)
     {
-        var positionCategory = positionObj["position_categoryId"], salaryGrade = positionObj["salary_grade"];
+        // var positionCategory = positionObj["position_categoryId"], salaryGrade = positionObj["salary_grade"];
 
         var uBoundsExclusive = [2, 4, 6, 8, 10], scores = [0, 1, 2, 3, 4, 5];
         if (positionCategory < 4)
@@ -5085,7 +5097,7 @@ class ScoreSheet extends FormEx
 
         var i = 0;
 
-        while (uBoundsExclusive[i] < incrementAboveQS)
+        while (uBoundsExclusive[i] <= incrementAboveQS)
         {
             i++;
         }
@@ -5093,9 +5105,9 @@ class ScoreSheet extends FormEx
         return scores[i];
     }
 
-    static getTrainingScore(incrementAboveQS, positionObj)
+    static getTrainingScore(incrementAboveQS, positionCategory, salaryGrade)
     {
-        var positionCategory = positionObj["position_categoryId"], salaryGrade = positionObj["salary_grade"];
+        // var positionCategory = positionObj["position_categoryId"], salaryGrade = positionObj["salary_grade"];
 
         var uBoundsExclusive = [1, 2, 3, 4, 5], scores = [0, 1, 2, 3, 4, 5];
         if (positionCategory < 4)
@@ -5110,7 +5122,7 @@ class ScoreSheet extends FormEx
 
         var i = 0;
 
-        while (uBoundsExclusive[i] < incrementAboveQS)
+        while (uBoundsExclusive[i] <= incrementAboveQS)
         {
             i++;
         }
@@ -5118,9 +5130,9 @@ class ScoreSheet extends FormEx
         return scores[i];
     }
 
-    static getWorkExpScore(incrementAboveQS, positionObj)
+    static getWorkExpScore(incrementAboveQS, positionCategory, salaryGrade)
     {
-        var positionCategory = positionObj["position_categoryId"], salaryGrade = positionObj["salary_grade"];
+        // var positionCategory = positionObj["position_categoryId"], salaryGrade = positionObj["salary_grade"];
 
         var uBoundsExclusive = [2, 4, 6, 8, 10], scores = [0, 3, 6, 9, 12, 15];
         if (positionCategory < 4)
@@ -5134,7 +5146,7 @@ class ScoreSheet extends FormEx
 
         var i = 0;
 
-        while (uBoundsExclusive[i] < incrementAboveQS)
+        while (uBoundsExclusive[i] <= incrementAboveQS)
         {
             i++;
         }
@@ -5988,8 +6000,8 @@ class IESForm extends FormEx
         });
         signatoryHRMPSBChair.container.classList.add("ies-printout-signatory-hrmpsb");
 
-        iesForPrint.document.getElementById("ies-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
-        iesForPrint.document.getElementById("ies-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        iesForPrint.document.getElementById("ies-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IES IS CODED
+        iesForPrint.document.getElementById("ies-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IES IS CODED
         
         var printButtonGroup = new InputEx(null, "print-ies-controls", "buttonExs");
         iesForPrint.document.body.insertBefore(printButtonGroup.container, iesForPrint.document.body.children[0]);
@@ -6032,7 +6044,7 @@ class CARForm extends FormEx
             {id:"plantilla_item_numbers",type:"div",label:"Plantilla Item Number",tooltip:"Plantilla item number(s)"},
             {id:"place_of_assignment",type:"div",label:"Office/Bureau/Service/Unit where the vacancy exists",tooltip:"Place of Assignment"},
             {type:"spacer-div"},
-            {id:"final_deliberation_date",type:"date",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"}
+            {id:"final_deliberation_date",type:"text",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"}
         ].forEach(field=>{
             if (field.type == "div")
             {
@@ -6051,6 +6063,9 @@ class CARForm extends FormEx
                 this.dbInputEx[field.id].container.classList.add(field.id);
             }
         });
+
+        this.dbInputEx["final_deliberation_date"].addEvent("focus", function(event){this.type = "date";});
+        this.dbInputEx["final_deliberation_date"].addEvent("blur", function(event){this.type = "text";});
 
         this.carTable = this.addDisplayEx("div-table", "car-table");
         this.carTable.container.classList.add("car-table");
@@ -6086,6 +6101,7 @@ class CARForm extends FormEx
         this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[0]);
         this.carTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"9\">Comparative Assessment Results</th>"));
         this.carTable.thead.children[1].children[9].setAttribute("rowspan", 2);
+        this.carTable.thead.children[1].children[9].style.minWidth = "8em";
         this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[9]);
         this.carTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"2\">For Background Investigation (Y/N)</th>"));
         this.carTable.thead.children[1].children[11].setAttribute("rowspan", 2);
@@ -6299,41 +6315,46 @@ class CARForm extends FormEx
         carForPrint.document.body.appendChild(carFormClone);
         
         var carFormCloneFields = carFormClone.querySelector(".fields");
-        /*
 
-        var signatory = new DisplayEx(ierFormCloneFields, "div", "ier-printout-signatory", "", "Prepared and certified correct by");
-        signatory.showColon();
-        htmlToElements("<div class=\"name\"></div> <div class=\"position\"></div> <div class=\"date\"></div>").forEach(node=>{
-            signatory.addContent(node);
-            signatory.addContent(document.createTextNode(" "));
-        });
-        signatory.container.classList.add("ier-printout-signatory");
+        var signatory = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory");
+        signatory.container.classList.add("car-printout-signatory");
 
-        var instructions = new DisplayEx(ierFormCloneFields, "div", "ier-printout-instructions", "", "Notes and Instructions for the HRMO");
-        instructions.container.classList.add("ier-printout-instructions");
-        instructions.showColon();
+        var signatoryHRMPSB = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory-hrmpsb", "", "Prepared by the HRMPSB <br><i>(All members should affix signature)</i>");
+        signatory.addContent(signatoryHRMPSB.container);
+        signatoryHRMPSB.container.classList.add("hrmpsb");
 
-        [createElementEx(NO_NS, "ol", instructions.content)].forEach(list=>{
-            [
-                "For the purpose of posting the IER, <b>columns D to M</b> shall be concealed in accordance with RA No. 10163 (Data Privacy Act). The only information that shall be made public are the application codes, qualifications of the applicants in terms of Education, Training, Experience, Eligibility, and Competency (if applicable), and remark on whether Qualified or Disqualified.",
-                "If the information does not apply to the applicant, please put N/A."
-            ].forEach(itemText=>{
-                list.appendChild(htmlToElement("<li>" + itemText + "</li>"));
+        var signatoryHRMPSBMember = [];
+
+        [0, 1, 2, 3, 4].forEach(i=>{
+            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 2 ? "chair" : "member")));
+            htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+                signatoryHRMPSBMember[i].addContent(node);
+                signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
             });
+            signatoryHRMPSBMember[i].container.classList.add(i == 2 ? "chair" : "member");
+            signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
+            signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 
-        */
-        carForPrint.document.getElementById("car-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
-        carForPrint.document.getElementById("car-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        var signatoryAppointer = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
+        htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+            signatoryAppointer.addContent(node);
+            signatoryAppointer.addContent(document.createTextNode(" "));
+        });
+        // signatoryAppointer.showColon();
+        signatory.addContent(signatoryAppointer.container);
+        signatoryAppointer.container.classList.add("appointer");
+
+        carForPrint.document.getElementById("car-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
+        carForPrint.document.getElementById("car-form-input-ex2").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
         
         var printButtonGroup = new InputEx(null, "print-car-controls", "buttonExs");
         carForPrint.document.body.insertBefore(printButtonGroup.container, carForPrint.document.body.children[0]);
         printButtonGroup.container.classList.add("print-controls");
         printButtonGroup.addItem("<span class=\"material-icons-round green\">print</span>", "", "Print").addEvent("click", clickPrintEvent=>{carForPrint.print()});
         printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{carForPrint.close()});
-/*
-        ierForPrint.alert("Please click on the print button to continue");
-    */
+    
+        carForPrint.alert("Please click on the print button to continue");
     }
 }
 
@@ -6364,11 +6385,11 @@ class RQAForm extends FormEx
 
         [
             {id:"position",type:"div",label:"Position",tooltip:"Selected position"},
-            {type:"spacer-div"},
-            {id:"final_deliberation_date",type:"date",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"},
+            // {type:"spacer-div"},
             {id:"place_of_assignment",type:"div",label:"Schools Division Office",tooltip:"Place of Assignment"},
-            {type:"spacer-div"},
-            {type:"spacer-div"}
+            {id:"final_deliberation_date",type:"text",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"},
+            // {type:"spacer-div"},
+            // {type:"spacer-div"}
         ].forEach(field=>{
             if (field.type == "div")
             {
@@ -6388,6 +6409,10 @@ class RQAForm extends FormEx
             }
         });
 
+
+        this.dbInputEx["final_deliberation_date"].addEvent("focus", function(event){this.type = "date";});
+        this.dbInputEx["final_deliberation_date"].addEvent("blur", function(event){this.type = "text";});
+
         this.rqaTable = this.addDisplayEx("div-table", "rqa-table");
         this.rqaTable.container.classList.add("rqa-table");
 
@@ -6395,13 +6420,13 @@ class RQAForm extends FormEx
             {colHeaderName:"row_number",colHeaderText:"No."},
             {colHeaderName:"applicant_name",colHeaderText:"Name of Applicant"},
             {colHeaderName:"application_code",colHeaderText:"Application Code"},
-            {colHeaderName:"education",colHeaderText:"Education (10 pts)"},
-            {colHeaderName:"training",colHeaderText:"Training (10 pts)"},
-            {colHeaderName:"experience",colHeaderText:"Experience (10 pts)"},
-            {colHeaderName:"lept",colHeaderText:"PBET/LET/LEPT Rating (10 pts)"},
-            {colHeaderName:"coi",colHeaderText:"PPST COIs (Classroom Observation) (35 pts)"},
-            {colHeaderName:"ncoi",colHeaderText:"PPST NCOIs (Teacher Reflection) (25 pts)"},
-            {colHeaderName:"total",colHeaderText:"Total (100 pts)"},
+            {colHeaderName:"education",colHeaderText:"Education <br>(10&nbsp;pts)"},
+            {colHeaderName:"training",colHeaderText:"Training <br>(10&nbsp;pts)"},
+            {colHeaderName:"experience",colHeaderText:"Experience <br>(10&nbsp;pts)"},
+            {colHeaderName:"lept",colHeaderText:"PBET/LET/LEPT Rating <br>(10&nbsp;pts)"},
+            {colHeaderName:"coi",colHeaderText:"PPST COIs (Classroom Observation) <br>(35&nbsp;pts)"},
+            {colHeaderName:"ncoi",colHeaderText:"PPST NCOIs (Teacher Reflection) <br>(25&nbsp;pts)"},
+            {colHeaderName:"total",colHeaderText:"Total <br>(100&nbsp;pts)"},
             {colHeaderName:"remarks",colHeaderText:"Remarks"},
             {colHeaderName:"for_bi",colHeaderText:"Yes"},
             {colHeaderName:"not_for_bi",colHeaderText:"No"},
@@ -6420,16 +6445,13 @@ class RQAForm extends FormEx
         this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[0]);
         this.rqaTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"7\">Comparative Assessment Results</th>"));
         this.rqaTable.thead.children[1].children[7].setAttribute("rowspan", 2);
+        this.rqaTable.thead.children[1].children[7].style.minWidth = "8em";
         this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[7]);
         this.rqaTable.thead.children[0].appendChild(htmlToElement("<th colspan=\"2\">For Background Investigation (Y/N)</th>"));
         this.rqaTable.thead.children[1].children[9].setAttribute("rowspan", 2);
         this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[9]);
         this.rqaTable.thead.children[1].children[9].setAttribute("rowspan", 2);
         this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[9]);
-
-        this.addInputEx("Update", "button", "", "", "rqa-update");
-        this.dbInputEx["rqa-update"].container.classList.add("rqa-update");
-        this.dbInputEx["rqa-update"].disable();
 
         this.dbInputEx["rqa-select-position-button"].addEvent("click", clickEvent=>{
             var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
@@ -6593,6 +6615,84 @@ class RQAForm extends FormEx
                 return i == index && position["filled"] == 0 && position["position_categoryId"] == 1;
             });
         });
+
+        var rqaControlButtons = this.addInputEx("", "buttonExs", "", "", "rqa-control-buttons");
+        rqaControlButtons.container.classList.add("rqa-control-buttons");
+        rqaControlButtons.addItem("Update", "Update", "Update field values to database").disable();
+        rqaControlButtons.addItem("Print", "Print", "Print the Comparative Assessment Result form").addEvent("click", this.generatePrinterFriendly);
+    }
+
+    generatePrinterFriendly(rqaPrintClickEvent)
+    {
+        var thisRQAForm = rqaPrintClickEvent.target.inputEx.parentInputEx.parentFormEx, rqaForPrint = window.open("", "_blank");
+        
+        var nodeDoctype = rqaForPrint.document.implementation.createDocumentType("html", "", "");
+        if(rqaForPrint.document.doctype) {
+            rqaForPrint.document.replaceChild(nodeDoctype, rqaForPrint.document.doctype);
+        } else {
+            rqaForPrint.document.insertBefore(nodeDoctype, rqaForPrint.document.childNodes[0]);
+        }
+        rqaForPrint.document.title = "Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA) [printer-friendly version]";
+        rqaForPrint.document.body.classList.add("print");
+        
+        createElementEx(NO_NS, "base", rqaForPrint.document.head, null, "href", window.location.origin);
+        
+        [
+            "/styles/default.css",
+            "/styles/main.css",
+            "/styles/ExClass.css",
+            "/styles/print.css",
+            "/styles/material.io/material-icons.css",
+            "/mpasis/styles/main.css",
+            "/mpasis/styles/print.css"
+        ].forEach(cssURL=>{
+            rqaForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
+        });
+        
+        var rqaFormClone = thisRQAForm.container.cloneNode(true);
+        rqaForPrint.document.body.appendChild(rqaFormClone);
+        
+        var rqaFormCloneFields = rqaFormClone.querySelector(".fields");
+        
+        var signatory = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory");
+        signatory.container.classList.add("rqa-printout-signatory");
+
+        var signatoryHRMPSB = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory-hrmpsb", "", "Prepared by the HRMPSB <br><i>(All members should affix signature)</i>");
+        signatory.addContent(signatoryHRMPSB.container);
+        signatoryHRMPSB.container.classList.add("hrmpsb");
+        
+        var signatoryHRMPSBMember = [];
+
+        [0, 1, 2, 3, 4].forEach(i=>{
+            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 2 ? "chair" : "member")));
+            htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+                signatoryHRMPSBMember[i].addContent(node);
+                signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
+            });
+            signatoryHRMPSBMember[i].container.classList.add(i == 2 ? "chair" : "member");
+            signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
+            signatoryHRMPSB.addContent(document.createTextNode(" "));
+        });
+
+        var signatoryAppointer = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
+        htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+            signatoryAppointer.addContent(node);
+            signatoryAppointer.addContent(document.createTextNode(" "));
+        });
+        // signatoryAppointer.showColon();
+        signatory.addContent(signatoryAppointer.container);
+        signatoryAppointer.container.classList.add("appointer");
+        
+        rqaForPrint.document.getElementById("rqa-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex2").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        
+        var printButtonGroup = new InputEx(null, "print-rqa-controls", "buttonExs");
+        rqaForPrint.document.body.insertBefore(printButtonGroup.container, rqaForPrint.document.body.children[0]);
+        printButtonGroup.container.classList.add("print-controls");
+        printButtonGroup.addItem("<span class=\"material-icons-round green\">print</span>", "", "Print").addEvent("click", clickPrintEvent=>{rqaForPrint.print()});
+        printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{rqaForPrint.close()});
+
+        rqaForPrint.alert("Please click on the print button to continue");
     }
 }
 

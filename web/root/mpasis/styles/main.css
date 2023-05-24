@@ -567,9 +567,7 @@ REINSTATE FOR PRINTOUT
     display: inline;
 }
 
-.ies-form .applicant-info > .content > .display-ex > label {
-    
-}
+.ies-form .applicant-info > .content > .display-ex > label {}
 
 .ies-form .applicant-info > .content > .display-ex > .content {
     border-bottom: 0.02em solid;
@@ -710,8 +708,9 @@ REINSTATE FOR PRINTOUT
 }
 
 .car-position-info {
-    display: grid;
-    grid-template-columns: auto 0.5em auto;
+    /* display: grid; */
+    /* grid-template-columns: auto 0.5em auto; */
+    display: inline-block;
 }
 
 .car-position-info > .display-ex {
@@ -720,27 +719,29 @@ REINSTATE FOR PRINTOUT
 }
 
 .car-position-info > .display-ex.position {
-    grid-template-columns: 5.5em auto;
+    grid-template-columns: 4.75em auto;
 }
 
 .car-position-info > .display-ex.plantilla_item_numbers {
-    grid-template-columns: 12em auto;
+    grid-template-columns: 11.5em auto;
 }
 
 .car-position-info > .display-ex.place_of_assignment {
-    grid-template-columns: 28em auto;
+    grid-template-columns: 27em auto;
 }
 
-.car-position-info > .display-ex > label {
-}
+.car-position-info > .display-ex > label {}
 
 .car-position-info > .display-ex > .content {
     display: block;
     border-bottom: 1px solid;
     min-height: 1.3em;
+    min-width: 4em;
     text-align: center;
     white-space: nowrap;
     overflow-x: hidden;
+    padding: 0 0.5em;
+    font-size: 0.8em;
 }
 
 .car-position-info > .input-ex.final_deliberation_date {
@@ -749,16 +750,19 @@ REINSTATE FOR PRINTOUT
 
 .car-position-info > .input-ex.final_deliberation_date > .fields {
     display: grid;
-    grid-template-columns: 14em auto;
+    grid-template-columns: 13.5em auto;
     align-items: center;
 }
 
 .car-position-info > .input-ex.final_deliberation_date > .fields > input {
     padding: unset;
     border-radius: unset;
-    border-top: 0 none;
-    border-left: 0 none;
-    border-right: 0 none;
+    border: 0 none;
+    border-bottom: 1px solid;
+    padding: 0 0.5em;
+    font-size: 0.8em;
+    text-align: center;
+    min-width: 4em;
 }
 
 .car-table {
@@ -784,13 +788,17 @@ REINSTATE FOR PRINTOUT
 }
 
 .car-table > .content > table > thead > tr > * > .subhead {
-    font-size: 0.85em;
+    font-size: 0.8em;
     font-weight: normal;
     font-style: italic;
 }
 
 .car-table > .content > table > tbody > tr.top-rank > * {
     background-color: lightgreen;
+}
+
+.car-table > .content > table > tbody > tr.top-rank > * + * + * + * + * + * + * + * + * + * + * + * + * {
+    background-color: unset;
 }
 
 .car-table > .content > table > tbody > tr > * {
@@ -818,8 +826,9 @@ REINSTATE FOR PRINTOUT
 }
 
 .rqa-position-info {
-    display: grid;
-    grid-template-columns: auto 0.5em auto;
+    /* display: grid; */
+    /* grid-template-columns: auto 0.5em auto; */
+    display: inline-block;
 }
 
 .rqa-position-info > .display-ex {
@@ -828,23 +837,25 @@ REINSTATE FOR PRINTOUT
 }
 
 .rqa-position-info > .display-ex.position {
-    grid-template-columns: 5.5em auto;
+    grid-template-columns: 4.5em auto;
 }
 
 .rqa-position-info > .display-ex.place_of_assignment {
-    grid-template-columns: 12.5em auto;
+    grid-template-columns: 12em auto;
 }
 
-.rqa-position-info > .display-ex > label {
-}
+.rqa-position-info > .display-ex > label {}
 
 .rqa-position-info > .display-ex > .content {
     display: block;
     border-bottom: 1px solid;
     min-height: 1.3em;
+    min-width: 4em;
     text-align: center;
     white-space: nowrap;
     overflow-x: hidden;
+    padding: 0 0.5em;
+    font-size: 0.8em;
 }
 
 .rqa-position-info > .input-ex.final_deliberation_date {
@@ -853,16 +864,19 @@ REINSTATE FOR PRINTOUT
 
 .rqa-position-info > .input-ex.final_deliberation_date > .fields {
     display: grid;
-    grid-template-columns: 14em auto;
+    grid-template-columns: 13.5em auto;
     align-items: center;
 }
 
 .rqa-position-info > .input-ex.final_deliberation_date > .fields > input {
     padding: unset;
     border-radius: unset;
-    border-top: 0 none;
-    border-left: 0 none;
-    border-right: 0 none;
+    border: 0 none;
+    border-bottom: 1px solid;
+    padding: 0 0.5em;
+    font-size: 0.8em;
+    text-align: center;
+    min-width: 4em;
 }
 
 .rqa-table {

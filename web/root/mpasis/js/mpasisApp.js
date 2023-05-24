@@ -171,7 +171,7 @@ class MPASIS_App
                 break;
             case "applications":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Applications</h2>";
-                el = htmlToElement("<ul></ul>");
+                el = htmlToElement("<ul class=\"card-link\"></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
                     {viewId:"applicant-data-entry", label:"Applicant Data Entry"},
@@ -193,7 +193,7 @@ class MPASIS_App
                 break;
             case "job":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
-                el = htmlToElement("<ul></ul>");
+                el = htmlToElement("<ul class=\"card-link\"></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
                     {viewId:"job-data-entry", label:"Data Entry"}
@@ -214,7 +214,7 @@ class MPASIS_App
                 break;
             case "evaluation":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Evaluation</h2>";
-                el = htmlToElement("<ul></ul>");
+                el = htmlToElement("<ul class=\"card-link\"></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
                     {viewId:"scoresheet", label:"Score Sheet"},
@@ -248,7 +248,7 @@ class MPASIS_App
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
-                el = htmlToElement("<ul></ul>");
+                el = htmlToElement("<ul class=\"card-link\"></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
                     {viewId:"my-account", label:"Edit My Account"},
@@ -263,7 +263,7 @@ class MPASIS_App
                 break;
             case "my-account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>My Account</h2>";
-                el = htmlToElement("<ul></ul>");
+                el = htmlToElement("<ul class=\"card-link\"></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
                     {dialogId:"edit-user", label:"Edit my account details"},

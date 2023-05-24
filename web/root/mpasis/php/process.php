@@ -1507,26 +1507,7 @@ if (isValidUserSession())
 
                 break;
             case 'resetPassd':
-                if (isset($_POST['username']))
-                {
-                    $user = fetchUser($dbconn, $_POST['username'])[0];
-                    $isTempUser = ($user['temp_user'] || $user['temp_user'] != 0);
-
-                    $dbconn->update(($isTempUser ? 'Temp_' : '') . 'User', 'first_signin=TRUE, password="' . hash('ripemd320', '1234') . '"', 'WHERE username="' . $user['username'] . '"');
-
-                    if (is_null($dbconn->lastException))
-                    {
-                        logAction('mpasis', ($isTempUser ? 19 : 13), array(
-                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
-                        ));
-                        echo(json_encode(new ajaxResponse('Success', $user['username'] . '\'s password has been successfully reset')));
-                    }
-                    else
-                    {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                    }
-                }
+                echo(resetPassword($dbconn));
                 return;
                 break;
             case 'log':

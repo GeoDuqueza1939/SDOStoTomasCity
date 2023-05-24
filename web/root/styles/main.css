@@ -197,6 +197,48 @@ span[class^=material-symbol] {
     text-align: center;
 }
 
+.card-link {
+    display: flex;
+    list-style-type: none;
+    gap: 2em;
+    margin: 2em 1em;
+    padding: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.card-link > li {
+    display: block;
+}
+
+.card-link > li > a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25em;
+    margin: 0;
+    padding: 1em;
+    border-radius: 1em;
+    background-color: darkgray;
+    color: black;
+    box-shadow: 2px 2px black;
+    width: 12em;
+    height: 9em;
+    text-align: center;
+    user-select: none;
+}
+
+.card-link > li > a:hover {
+    text-decoration: none;
+    background-color: lightgray;
+}
+
+.card-link > li > a:active {
+    background-color: gray;
+    color: white;
+    /* box-shadow: 0 0; */
+    box-shadow:-2px -2px black;
+}
 /* .app .dialog-scrim, .app .dialog-ex-scrim {
     position: fixed;
     top: 0;
