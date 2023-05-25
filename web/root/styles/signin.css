@@ -7,6 +7,8 @@
     padding: 2em;
     align-content: center;
     text-align: center;
+    height: 11em;
+    overflow: auto;
 }
 
 .login-page > header > div {
@@ -66,6 +68,14 @@
 
 .login-page > section {
     text-align: center;
+    background-image: url("/images/makiling-stotomas.jpg");
+    background-size: cover;
+    position: fixed;
+    top: 11em;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
 }
 
 .login-page form {
@@ -73,17 +83,19 @@
 
 .login-page form > fieldset {
     display: inline-block;
-    border: 1px solid blue;
+    /* border: 1px solid blue; */
+    border: 0 none;
     border-radius: 0.5em;
     margin: 2em;
     padding: 1.5em 2em 1em;
     width: 23em;
+    background-color: white;
 }
 
 .login-page form > fieldset > legend {
     display: block;
     font-size: 1em;
-    background-color: white;
+    /* background-color: white; */
 }
 
 .login-page form > fieldset .textbox,

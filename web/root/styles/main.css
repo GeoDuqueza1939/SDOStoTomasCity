@@ -3,7 +3,7 @@
     padding: 0;
 }
 
-.app > header {
+.app:not(.landing) > header {
     /* background-color: var(--header-bg);
     color: var(--header-fg); */
     background-color: goldenrod;
@@ -23,10 +23,116 @@
     border-bottom: 0.2em solid var(--nav-bg);
 }
 
-.app > header > h1 {
+.app:not(.landing) > header > h1 {
     margin: 0;
     padding: 0;
     font-size: 1.1em;
+}
+
+.app.landing {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+.app.landing > header {
+    background-color: var(--bg1);
+    padding: 2em;
+    align-content: center;
+    text-align: center;
+}
+
+.app.landing > header > div {
+    /* display: inline-table;
+    margin: 0;
+    padding: 0;
+    border-collapse: separate; */
+}
+
+.app.landing > header > div > div {
+    /* display: table-row;
+    margin: 0;
+    padding: 0; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2em;
+}
+
+.app.landing > header > div > div > span {
+    /* display: table-cell;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle; */
+}
+
+.app.landing .header-logo {
+    /* display: inline-block; */
+    /* max-width: 8em; */
+}
+
+.app.landing .header-logo > img {
+    max-width: 6em;
+}
+
+.app.landing .header-text {
+    /* padding-left: 1em;
+    text-align: left;
+    */
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    font-size: 1.25em;
+    color: beige;
+    text-shadow: 0.05em 0.05em black;
+    text-align: left;
+    gap: 0.5em;
+}
+
+.app.landing .header-text-deped {
+    font-family: 'Old English Text MT', 'Times New Roman', serif;
+    font-weight: bold;
+}
+
+.app.landing .header-text-sdo {
+    /* display: block;
+    */
+    font-family: 'Bookman Old Style', "URW Bookman", 'Book Antiqua', 'Times New Roman', Times, serif;
+    font-weight: bold;
+}
+
+.app.landing .sign-form {
+    float: right;
+    margin-top:-3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em;
+}
+
+.app.landing .sign-form > [class^=sign-][class$=-button] {
+    padding: 0.5em 0.75em;
+    border-radius: 1em;
+    border: 1px outset;
+    color: white;
+    /* box-shadow: 2px 2px gray; */
+}
+
+.app.landing .sign-form > [class^=sign-][class$=-button]:active {
+    /* box-shadow:-2px -2px gray; */
+    border: 1px inset;
+}
+
+.app.landing .sign-form > .sign-in-button {
+    background-color: green;
+}
+
+.app.landing .sign-form > .sign-out-button {
+    background-color: red;
+}
+
+.app.landing .welcome, .app.landing .please-select {
+    margin: 1em;
+    font-size: 1.25em;
+    text-align: center;
 }
 
 .app > #navbar {
@@ -226,6 +332,7 @@ span[class^=material-symbol] {
     height: 9em;
     text-align: center;
     user-select: none;
+    text-decoration: none;
 }
 
 .card-link > li > a:hover {
@@ -239,56 +346,10 @@ span[class^=material-symbol] {
     /* box-shadow: 0 0; */
     box-shadow:-2px -2px black;
 }
-/* .app .dialog-scrim, .app .dialog-ex-scrim {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background-color: #0008;
-    display: flex;
-    overflow: hidden;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.86em;
-} */
-
-/* .app .dialog, .app .dialog-ex {
-    border: 2px outset;
-    background-color: lightgray;
-    max-height: 50em;
-    max-width: 80%;
-    padding: 1.5em;
-    line-height: 2;
-} */
-
-/* .app .dialog-closeBtn, .app .dialog-ex-closeBtn {
-    break-after: always;
-    float: right;
-    padding: 0;
-    margin-top: -1.5em;
-    margin-right: -1.5em;
-} */
-
-/* .app .dialog-closeBtn > .material-icons-round, .app .dialog-ex-closeBtn > .material-icons-round {
-    font-size: 1em;
-    padding: 0;
-    margin: 0;
-} */
-
-/* .app .dialog label, .app .dialog-ex label {
-    display: inline-block;
-    width: 10em; SHOULD BE AUTO
-} */
-
-/* .app .dialog .dialog-btn-grp, .app .dialog-ex .dialog-ex-btn-grp {
-    text-align: center;
-    margin-top: 1em;
-} */
 
 /* Extra small devices (phones, 600px and below) */
 @media only screen and (max-width: 600px) {
-    .app > header {
+    .app:not(.landing) > header {
         padding-left: 3.25em;
     }    
 
@@ -299,7 +360,7 @@ span[class^=material-symbol] {
 
 /* Small devices (portrait tablets and large phones, 600px and up) */
 @media only screen and (min-width: 600px) {
-    .app > header {
+    .app:not(.landing) > header {
         padding-left: 3.25em;
     }    
 
@@ -310,7 +371,7 @@ span[class^=material-symbol] {
 
 /* Medium devices (landscape tablets, 768px and up) */
 @media only screen and (min-width: 768px) {
-    .app > header {
+    .app:not(.landing) > header {
         padding-left: 0.5em;
     }
 

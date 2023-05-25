@@ -52,7 +52,7 @@ if (isValidUserSession())
     }
     // elseif (isset($_COOKIE['user']))
     // {
-    //     setcookie('user', $_POST['unm'], time() + 500, '/'); // EXPIRE IN 500 SECONDS
+    //     setcookie('user', $_POST['unm'], time() + 50, '/'); // EXPIRE IN 500 SECONDS
     // }
 }
 else

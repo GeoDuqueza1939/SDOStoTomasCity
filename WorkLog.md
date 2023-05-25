@@ -1,5 +1,15 @@
 # Work Log
 
+## 5/25/2023
+TO DO:
+* [ ] Improve appearance of SDO Services sign-in page
+* [ ] Improve appearance of SDO Services landing page
+* [ ] Test MPaSIS for production fitness
+* [x] Add abbreviations to eligibilities (hosted)
+* [ ] Add Honor Graduate to eligibilities
+
+After experiencing and adapting to some technical issues on my laptop, I started work today by adding abbreviations to some eligibilities in the hosted version of the MPaSIS app. Afterwards, I did some system testing with Ms. Jessa. While waiting for Ms. Jessa to return on the tests, I started to clean-up both the SDO Online Services landing page and login page and apply some makeovers. I especially added some card-like styling to the list of links on the landing page. I also added a background image to the login page. I might try to improve on these styling in the next few days. Likewise, I would also need to work on some changes to make MPaSIS align with the already existing workflow and some policies such as data privacy. I also hope testing can commence anytime so I could determine the things that need to be patched up as soon as possible.
+
 ## 5/24/2023
 TO DO:
 * [x] Fix Training score bug

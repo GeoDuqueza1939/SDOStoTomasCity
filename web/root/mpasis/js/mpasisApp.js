@@ -112,30 +112,36 @@ class MPASIS_App
                 window.location = "/";
                 break;
             case "signout":
+                MPASIS_App.setCookie("user", "", -1);
+                MPASIS_App.setCookie("current_view", "", -1);
                 postData(MPASIS_App.processURL, "app=mpasis&a=logout", postEvent=>{
-                    var response;
+                    // var response;
 
-                    if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
-                    {
-                        response = JSON.parse(postEvent.target.responseText);
+                    // if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
+                    // {
+                    //     response = JSON.parse(postEvent.target.responseText);
 
-                        if (response.type == "Error")
-                        {
-                            console.log("ERROR: " + response.content);
-                        }
-                        if (response.type == "Debug")
-                        {
-                            console.log("DEBUG: " + response.content);
-                        }
-                        else if (response.type == "Success")
-                        {
-                            console.log(response.content);
-                            MPASIS_App.setCookie("user", "", -1);
-                            MPASIS_App.setCookie("current_view", "", -1);
+                    //     if (response.type == "Error")
+                    //     {
+                    //         console.log("ERROR: " + response.content);
+                    //         MPASIS_App.setCookie("user", "", -1);
+                    //         MPASIS_App.setCookie("current_view", "", -1);
+                    //         window.location.reload(true);
+                    //     }
+                    //     else if (response.type == "Debug")
+                    //     {
+                    //         console.log("DEBUG: " + response.content);
+                    //     }
+                    //     else if (response.type == "Success")
+                    //     {
+                            // console.log(response.content);
+                            // MPASIS_App.setCookie("user", "", -1);
+                            // MPASIS_App.setCookie("current_view", "", -1);
                             window.location.reload(true);
-                        }
-                    }
+                    //     }
+                    // }
                 });
+                break;
             default:
                 MPASIS_App.setCookie("current_view", viewId, 1);
                 this.activateView(viewId);

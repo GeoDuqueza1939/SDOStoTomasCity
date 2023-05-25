@@ -1,7 +1,8 @@
 :root {
     --bg2: #5c87fe; /* main */
     --fg1: #678ffe;
-    --bg1: #0247fe; /* header, nav */
+    /*--bg1: #0247fe;*/ /* header, nav */
+    --bg1: navy; /* header, nav */
     --fg2: #012998;
     --hlt: #070f26; /* footer, header (if nav is bg2) */
     /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
@@ -13,7 +14,8 @@
     --header-shadow: black;
 
     --nav-fg: white;
-    --nav-bg: #0247fe;
+    /* --nav-bg: #0247fe; */
+    --nav-bg: navy;
     --nav-shadow: black;
 
     --nav-hover-fg: white;
@@ -25,7 +27,8 @@
     --nav2-shadow: black;
 
     --nav2-hover-fg: white;
-    --nav2-hover-bg: #0247fe;
+    /* --nav2-hover-bg: #0247fe; */
+    --nav2-hover-bg: navy;
     --nav2-hover-shadow: black;
 
     --footer-fg: #678ffe;

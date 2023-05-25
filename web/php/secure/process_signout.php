@@ -13,4 +13,8 @@ if ($redirectToLogin)
 {
     header('Location: /login?src=' . $_SERVER['PHP_SELF']);
 }
+else
+{
+    header('Location: ' . $_SERVER['PHP_SELF']);
+}
 ?>

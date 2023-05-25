@@ -311,8 +311,6 @@ if (isset($_REQUEST['test']))
     return;
 }
 // TEST ONLY !!!!!!!!!!!!!
-// echo(json_encode(new ajaxResponse('Debug', json_encode($_REQUEST))));
-// exit;
 
 if (isValidUserSession())
 {    
@@ -1517,7 +1515,18 @@ if (isValidUserSession())
 }
 else // NOT SIGNED-IN
 {
-    die(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));
+    if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout') // UNUSED
+    {
+        $redirectToLogin = false;
+        require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
+
+        echo json_encode(new ajaxResponse('Success', 'Signed out.'));
+        return;
+    }
+    else
+    {
+        die(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));
+    }
 }
 
 die(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
