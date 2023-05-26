@@ -7,6 +7,10 @@ body, .app > main {
     margin-bottom: 1em;
 }
 
+.app > main > section > .form-ex {
+    display: block;
+}
+
 [class^=query-results-] {
     display: block;
     border: 2px inset;
@@ -166,7 +170,7 @@ body, .app > main {
 }
 
 .ier-form {
-    display: block;
+    /* display: block; */
     /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
@@ -507,7 +511,7 @@ REINSTATE FOR PRINTOUT
 }
 
 .ies-form {
-    display: block;
+    /* display: block; */
     /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
@@ -698,7 +702,7 @@ REINSTATE FOR PRINTOUT
 }
 
 .car-form {
-    display: block;
+    /* display: block; */
     /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 
@@ -816,7 +820,7 @@ REINSTATE FOR PRINTOUT
 }
 
 .rqa-form {
-    display: block;
+    /* display: block; */
     /* font-family: "Bookman Old Style", "URW Bookman", serif; */
 }
 

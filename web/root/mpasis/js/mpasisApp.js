@@ -24,20 +24,22 @@ function getUnicodeCharacter(cp) {
     }
 }
 
-class MPASIS_App
+class MPASIS_App extends App
 {
     static processURL = "/mpasis/php/process.php";
     static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
 
     constructor(container)
     {
+        super(container);
+
         // change nav links into click event listeners
         this.navbar = Array.from(container.querySelectorAll("#navbar"))[0];
         this.main = Array.from(container.querySelectorAll("main"))[0];
-        this.mainSections = {};
+        // this.mainSections = {};
         this.mainSections["main-dashboard"] = document.getElementById("main-dashboard");
-        this.scrim = null;
-        this.temp = {};
+        // this.scrim = null;
+        // this.temp = {};
         this.currentUser = JSON.parse(MPASIS_App.getCookie("user"));
         
         var app = this;
@@ -100,6 +102,14 @@ class MPASIS_App
                 }                    
             }
         });
+
+        if (this.currentUser["first_signin"] && this.currentUser["first_signin"] != 0)
+        {
+            var passChange = new PasswordEditor(this, "my-password-editor", false, true);
+        
+            passChange.formEx.setStatusMsgTimeout(-1);
+            passChange.formEx.showInfo("Please set your new password");
+        }
     }
 
     navClick(viewId)
@@ -269,6 +279,8 @@ class MPASIS_App
                 break;
             case "my-account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>My Account</h2>";
+                this.mainSections["main-" + viewId].appendChild(htmlToElement("<p class=\"center\">Welcome to your account settings, " + this.currentUser["username"] + "!</p>"));
+
                 el = htmlToElement("<ul class=\"card-link\"></ul>");
                 this.mainSections["main-" + viewId].appendChild(el);
                 [
@@ -282,10 +294,10 @@ class MPASIS_App
                         switch (obj.dialogId)
                         {
                             case "edit-user":
-                                new UserEditor(this.main, "my-user-editor", 1, this.currentUser);
+                                new UserEditor(this, "my-user-editor", 1, this.currentUser);
                                 break;
                             case "change-password":
-                                new PasswordEditor(this.main, "my-password-editor", true);
+                                new PasswordEditor(this, "my-password-editor", true);
                                 break;
                         }
                     });
@@ -353,7 +365,7 @@ class MPASIS_App
                                             case 0:
                                                 btn.addEvent("click", clickEditAccountEvent=>{
                                                     this.temp["searchButton"] = btnGrp.inputExs[0];
-                                                    var editUserDialog = new UserEditor(this.main, "mpasis-other-account-user-editor", 1, row);
+                                                    var editUserDialog = new UserEditor(this, "mpasis-other-account-user-editor", 1, row);
                                                 });
                                                 break;
                                             case 1:
@@ -431,7 +443,7 @@ class MPASIS_App
                 btnGrp.inputExs[1].setLabelText("Add New Account");
                 btnGrp.inputExs[1].setTooltipText("");
                 btnGrp.inputExs[1].addEvent("click", (event)=>{
-                    var addUserDialog = new UserEditor(this.main, "mpasis-other-account-user-editor", 0);
+                    var addUserDialog = new UserEditor(this, "mpasis-add-account-user-editor", 0);
                 });
 
                 otherAccountFormEx.addStatusPane();
@@ -447,7 +459,7 @@ class MPASIS_App
         
                 break;
             case "settings":
-                this.mainSections["main-" + viewId].innerHTML = "<h2>Settings</h2>";
+                this.constructSettingsForm();
                 break;
             default:
                 console.log(viewId);
@@ -2184,7 +2196,7 @@ class MPASIS_App
     {
         if (this.forms["scoreSheet"] == null || this.forms["scoreSheet"] == undefined)
         {
-            this.forms["scoreSheet"] = new ScoreSheet(this.mainSections["main-scoresheet"], "score-sheet");
+            this.forms["scoreSheet"] = new ScoreSheet(this, "score-sheet");
         }
 
         return this.forms["scoreSheet"];
@@ -2194,7 +2206,7 @@ class MPASIS_App
     {
         if (this.forms["ier"] == null || this.forms["ier"] == undefined)
         {
-            this.forms["ier"] = new IERForm(this.mainSections["main-ier"], "ier-form");
+            this.forms["ier"] = new IERForm(this, "ier-form");
         }
 
         return this.forms["ier"];
@@ -2204,7 +2216,7 @@ class MPASIS_App
     {
         if (this.forms["ies"] == null || this.forms["ies"] == undefined)
         {
-            this.forms["ies"] = new IESForm(this.mainSections["main-ies"], "ies-form");
+            this.forms["ies"] = new IESForm(this, "ies-form");
         }
 
         return this.forms["ies"];
@@ -2214,7 +2226,7 @@ class MPASIS_App
     {
         if (this.forms["car"] == null || this.forms["car"] == undefined)
         {
-            this.forms["car"] = new CARForm(this.mainSections["main-car"], "car-form");
+            this.forms["car"] = new CARForm(this, "car-form");
         }
 
         return this.forms["car"];
@@ -2224,10 +2236,20 @@ class MPASIS_App
     {
         if (this.forms["rqa"] == null || this.forms["rqa"] == undefined)
         {
-            this.forms["rqa"] = new RQAForm(this.mainSections["main-car-rqa"], "rqa-form");
+            this.forms["rqa"] = new RQAForm(this, "rqa-form");
         }
 
         return this.forms["rqa"];
+    }
+
+    constructSettingsForm()
+    {
+        if (this.forms["settings"] == null || this.forms["settings"] == undefined)
+        {
+            this.forms["settings"] = new MPASIS_Settings_Form(this, "settings");
+        }
+
+        return this.forms["settings"];
     }
 
     showScrim()
@@ -2390,11 +2412,3 @@ class MPASIS_App
 }
 
 var app = new MPASIS_App(document.getElementById("mpasis"));
-
-if (app.currentUser["first_signin"] && app.currentUser["first_signin"] != 0)
-{
-    var passChange = new PasswordEditor(app.main, "my-password-editor", false, true);
-
-    passChange.formEx.setStatusMsgTimeout(-1);
-    passChange.formEx.showInfo("Please set your new password");
-}

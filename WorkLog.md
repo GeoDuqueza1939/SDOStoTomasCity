@@ -1,5 +1,17 @@
 # Work Log
 
+## 5/26/2023
+TO DO:
+* [x] Add MPASIS_Settings class
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Improve appearance of SDO Services sign-in page
+* [ ] Improve appearance of SDO Services landing page
+* [ ] Test MPaSIS for production fitness
+* [ ] Add Honor Graduate to eligibilities
+
+I immediately started work on adding signatories to the forms. I had a choice on whether to make the signatories static or to make it dynamic, depending on who are assigned in the database. As such, I first added two more tables to the database. Later on, I had to add an MPASIS_Settings class and another database table. However, the feature redesign might need a little more time. I might need to add elements to my Ex Framework or create a better Ex Framework altogether. I think I'd be having a long weekend ahead. I hope the storm doesn't affect the power grid too much.
+
 ## 5/25/2023
 TO DO:
 * [ ] Improve appearance of SDO Services sign-in page

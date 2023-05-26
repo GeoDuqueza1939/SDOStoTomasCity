@@ -204,10 +204,14 @@ a.js-link:visited {
 
 ul {
     margin: 0;
-    padding: 0 0 0 1.5em;
+    padding: 0 0 0 1.1em;
 }
 
 ol {
     margin: 0;
     padding: 0 0 0 2em;
+}
+
+ul > li::marker {
+    text-align: center;
 }

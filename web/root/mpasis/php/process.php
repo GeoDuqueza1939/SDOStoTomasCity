@@ -248,7 +248,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
 
             // $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
-            $dbResults2 = $dbconn->executeQuery("SELECT relevant_eligibilityId, Relevant_Eligibility.eligibilityId, eligibility FROM Relevant_Eligibility INNER JOIN Eligibility ON Relevant_Eligibility.eligibilityId=Eligibility.eligibilityId WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
+            $dbResults2 = $dbconn->executeQuery("SELECT relevant_eligibilityId, Relevant_Eligibility.eligibilityId, eligibility, eligibility_abbrev FROM Relevant_Eligibility INNER JOIN Eligibility ON Relevant_Eligibility.eligibilityId=Eligibility.eligibilityId WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
 
             if (is_null($dbconn->lastException))
             {

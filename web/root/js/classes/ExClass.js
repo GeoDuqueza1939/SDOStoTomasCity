@@ -1,5 +1,17 @@
 "use strict";
 
+class App
+{
+    constructor(htmlContainer)
+    {
+        this.navbar = null;
+        this.main = null;
+        this.mainSections = {};
+        this.scrim = null;
+        this.temp = {};
+    }
+}
+
 class ScrimEx
 {
     constructor(parent = null)
@@ -2838,9 +2850,11 @@ class MsgBox extends DialogEx
 
 class UserEditor extends DialogEx
 {
-    constructor(parent = null, id = "", mode = 0, userData = null)
+    constructor(app = new App(), id = "", mode = 0, userData = null)
     {
-        super(parent, id);
+        super(app.main, id);
+
+        this.app = app;
 
         this.scrim.classList.add("user-editor");
         this.mode = mode; // 0: add user; 1: edit user
@@ -2982,7 +2996,7 @@ class UserEditor extends DialogEx
                         else if (response.type == "Success")
                         {
                             form.showSuccess(response.content);
-                            app.temp["searchButton"].fields[0].click();
+                            dialog.app.temp["searchButton"].fields[0].click();
                             await sleep(3000);
                             dialog.close();
                         }
@@ -3019,9 +3033,13 @@ class UserEditor extends DialogEx
 
 class PasswordEditor extends DialogEx
 {
-    constructor(parent = null, id = "", requireCurrentPassword = false, requireChange = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
+    constructor(app = new App(), id = "", requireCurrentPassword = false, requireChange = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
     {
-        super(parent, id);
+        super(app.main, id);
+        this.app = app;
+
+        var thisPasswordEditor = this;
+
         this.scrim.classList.add("password-editor");
 
         this.addFormEx();
@@ -3078,7 +3096,7 @@ class PasswordEditor extends DialogEx
                 requireCurrentPassword:requireCurrentPassword,
                 password:(requireCurrentPassword ? this.formEx.dbInputEx["password"].getValue() : null),
                 new_password:this.formEx.dbInputEx["new_password"].getValue(),
-                user:app.currentUser
+                user:this.app.currentUser
             }
 
             // // DEBUG
@@ -3096,17 +3114,17 @@ class PasswordEditor extends DialogEx
 
                     if (response.type == "Error")
                     {
-                        new MsgBox(app.main, response.content, "Close");
+                        new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
                     }
                     else if (response.type == "Debug")
                     {
-                        new MsgBox(app.main, response.content, "Close");
+                        new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
                         console.log(response.content);
                     }
                     else if (response.type == "Success")
                     {
-                        new MsgBox(app.main, response.content, "OK", ()=>{
-                            app.navClick("signout");
+                        new MsgBox(thisPasswordEditor.app.main, response.content, "OK", ()=>{
+                            thisPasswordEditor.app.navClick("signout");
                         });
                     }
                 }
@@ -3131,7 +3149,7 @@ class PasswordEditor extends DialogEx
 
 class PositionSelectorDialog extends DialogEx
 {
-    constructor(parent = null, id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}], customPositionFilterCallback = (position, index, positions)=>{
+    constructor(app = new MPASIS_App(), id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}], customPositionFilterCallback = (position, index, positions)=>{
         var i = 0;
         while (i < index && positions[i]["position_title"] != position["position_title"]) { i++; }
         return i == index && position["filled"] == 0;
@@ -3139,7 +3157,8 @@ class PositionSelectorDialog extends DialogEx
     {
         var selPosition = null, selParen = null, selPlantilla = null, btnGrp = null;
 
-        super(parent, id);
+        super(app.main, id);
+        this.app = app;
 
         this.scrim.classList.add("position-selector");
         this.addFormEx();
@@ -3188,9 +3207,10 @@ class PositionSelectorDialog extends DialogEx
 
 class JobApplicationSelectorDialog extends DialogEx
 {
-    constructor(parent = null, id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}])
+    constructor(app = new MPASIS_App(), id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}])
     {
-        super(parent, id);
+        super(app.main, id);
+        this.app = app;
 
         this.scrim.classList.add("job-application-selector");
         this.addFormEx();
@@ -3251,6 +3271,24 @@ class JobApplicationSelectorDialog extends DialogEx
         {
             return this.controlButtons.inputExs[index];
         }
+    }
+}
+
+class JobQSEntryForm extends FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
+{
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
+    {
+        super(app.mainSections["main-job-data-entry"], id, useFormElement);
+        this.app = app;
+    }
+}
+
+class ApplicationEntryForm extends FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
+{
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
+    {
+        super(app.mainSections["main-applicant-data-entry"], id, useFormElement);
+        this.app = app;
     }
 }
 
@@ -3651,9 +3689,10 @@ class ScoreSheetElementUI
 
 class ScoreSheet extends FormEx
 {
-    constructor(parentEl = null, id = "", useFormElement = true)
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
-        super(parentEl, id, useFormElement);
+        super(app.mainSections["main-scoresheet"], id, useFormElement);
+        this.app = app;
         this.setTitle("Score Sheet", 2);
         this.setFullWidth();
 
@@ -3694,7 +3733,7 @@ class ScoreSheet extends FormEx
 
         if (this.innerHTML == "Load Application")
         {
-            retrieveApplicantDialog = new JobApplicationSelectorDialog(app.main, "scoresheet-job-application-selector-dialog", [
+            retrieveApplicantDialog = new JobApplicationSelectorDialog(scoreSheet.app, "scoresheet-job-application-selector-dialog", [
                 {label:"Load", tooltip:"Load selected", callbackOnClick:event=>{
                     var scoreSheetElementUI = null, weight = 0;
                     var searchResult = retrieveApplicantDialog.getApplicantListBox();
@@ -3944,7 +3983,7 @@ class ScoreSheet extends FormEx
         }
         else if (this.innerHTML == "Reset Score Sheet")
         {
-            app.showScrim();
+            scoreSheet.app.showScrim();
 
             scoreSheet.resetForm();
 
@@ -5308,9 +5347,10 @@ class ScoreSheet extends FormEx
 
 class IERForm extends FormEx
 {
-    constructor(parentEl = null, id = "", useFormElement = true)
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
-        super(parentEl, id, useFormElement);
+        super(app.mainSections["main-ier"], id, useFormElement);
+        this.app = app;
 
         var posInfo = null, thisIERForm = this;
         
@@ -5387,8 +5427,8 @@ class IERForm extends FormEx
 
         this.displayExs["ier-table"].isHeaderCustomized = true;
 
-        this.dbInputEx["ier-select-position-button"].addEvent("click", selectPositionEvent=>{
-            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
+        this.dbInputEx["ier-select-position-button"].addEvent("click", clickEvent=>{
+            var selectPositionDialog = new PositionSelectorDialog(this.app, "car-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
                     var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
                     var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
@@ -5531,7 +5571,7 @@ class IERForm extends FormEx
     
                                                     for (const relevantEligibility of jobApplication[key])
                                                     {
-                                                        row["eligibility"] += "<li>" + relevantEligibility["eligibility"] + "</li>\n";
+                                                        row["eligibility"] += "<li>" + (relevantEligibility["eligibility_abbrev"] != null && type(relevantEligibility["eligibility_abbrev"]) == "string" && relevantEligibility["eligibility_abbrev"].trim() != "" ? relevantEligibility["eligibility_abbrev"] : relevantEligibility["eligibility"]) + "</li>\n";
                                                     }
     
                                                     row["eligibility"] += "</ul>\n";
@@ -5616,7 +5656,7 @@ class IERForm extends FormEx
 
         var signatory = new DisplayEx(ierFormCloneFields, "div", "ier-printout-signatory", "", "Prepared and certified correct by");
         signatory.showColon();
-        htmlToElements("<div class=\"name\"></div> <div class=\"position\"></div> <div class=\"date\"></div>").forEach(node=>{
+        htmlToElements("<div class=\"name\"></div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
             signatory.addContent(node);
             signatory.addContent(document.createTextNode(" "));
         });
@@ -5650,10 +5690,10 @@ class IERForm extends FormEx
 
 class IESForm extends FormEx
 {
-    constructor(parentEl = null, id = "", useFormElement = true)
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
-        super(parentEl, id, useFormElement);
-        
+        super(app.mainSections["main-ies"], id, useFormElement);
+        this.app = app;
         this.container.classList.add("ies-form");
 
         this.setTitle("Individual Evaluation Sheet (IES)", 2);
@@ -5682,14 +5722,14 @@ class IESForm extends FormEx
 
         if (this.innerHTML == "Load Application")
         {
-            retrieveApplicantDialog = new JobApplicationSelectorDialog(app.main, "ies-job-application-selector-dialog", [
+            retrieveApplicantDialog = new JobApplicationSelectorDialog(iesForm.app, "ies-job-application-selector-dialog", [
                 {label:"Load", tooltip:"Load selected", callbackOnClick:event=>{
                     var searchResult = retrieveApplicantDialog.getApplicantListBox();
 
                     retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
                     retrieveApplicantDialog.formEx.showWait("Loading");
 
-                    app.showScrim();
+                    iesForm.app.showScrim();
 
                     iesForm.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
 
@@ -5802,7 +5842,7 @@ class IESForm extends FormEx
                     retrieveApplicantDialog.close();
                     this.innerHTML = "Reset IES Form";
 
-                    app.closeScrim();
+                    iesForm.app.closeScrim();
                 }},
                 {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
                     retrieveApplicantDialog.close();
@@ -5821,7 +5861,7 @@ class IESForm extends FormEx
         }
         else if (this.innerHTML == "Reset IES Form")
         {
-            app.showScrim();
+            iesForm.app.showScrim();
 
             iesForm.resetForm();
 
@@ -6015,12 +6055,12 @@ class IESForm extends FormEx
 
 class CARForm extends FormEx
 {
-    constructor(parentEl = null, id = "", useFormElement = true)
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
         var posInfo = null, thisCARForm = null;
 
-        super(parentEl, id, useFormElement);
-
+        super(app.mainSections["main-car"], id, useFormElement);
+        this.app = app;
         thisCARForm = this;
 
         this.container.classList.add("car-form");
@@ -6110,7 +6150,7 @@ class CARForm extends FormEx
         this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[11]);
 
         this.dbInputEx["car-select-position-button"].addEvent("click", clickEvent=>{
-            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
+            var selectPositionDialog = new PositionSelectorDialog(this.app, "car-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
                     var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
                     var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
@@ -6360,11 +6400,12 @@ class CARForm extends FormEx
 
 class RQAForm extends FormEx
 {
-    constructor(parentEl = null, id = "", useFormElement = true)
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
         var posInfo = null, thisRQAForm = null;
 
-        super(parentEl, id, useFormElement);
+        super(app.mainSections["main-car-rqa"], id, useFormElement);
+        this.app = app;
 
         thisRQAForm = this;
 
@@ -6454,7 +6495,7 @@ class RQAForm extends FormEx
         this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[9]);
 
         this.dbInputEx["rqa-select-position-button"].addEvent("click", clickEvent=>{
-            var selectPositionDialog = new PositionSelectorDialog(app.main, "car-position-selector", [
+            var selectPositionDialog = new PositionSelectorDialog(this.app, "car-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
                     var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
                     var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
@@ -6482,7 +6523,7 @@ class RQAForm extends FormEx
         
                             if (response.type == "Error")
                             {
-                                new MsgBox(app.main, response.content, "Close");
+                                new MsgBox(thisRQAForm.app.main, response.content, "Close");
                             }
                             else if (response.type == "Data")
                             {
@@ -6696,4 +6737,25 @@ class RQAForm extends FormEx
     }
 }
 
+class MPASIS_Settings_Form extends FormEx
+{
+    constructor(app = new MPASIS_App(), id = "", useFormElement = true)
+    {
+        super(app.mainSections["main-settings"], id, useFormElement);
+        this.app = app;
+
+        this.setTitle("Settings", 2);
+        this.container.classList.add("mpasis-settings");
+
+        this.addHeader("Roles", 3);
+
+        this.addInputEx("Add/Edit Committees", "buttonEx", "Add/Edit Committees", "", "mpasis-settings-edit-committees");
+        this.addSpacer();
+        this.addInputEx("Add/Edit Roles", "buttonEx", "Add/Edit Roles", "", "mpasis-settings-edit-roles");
+        this.addSpacer();
+        this.addInputEx("Assign Roles", "buttonEx", "Assign Roles", "", "mpasis-settings-assign-roles");
+
+        
+    }
+}
 // export { ScrimEx, DisplayEx, InputEx, FormEx, DialogEx, MsgBox };
