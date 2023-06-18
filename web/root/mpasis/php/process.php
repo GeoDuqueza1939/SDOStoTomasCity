@@ -468,9 +468,27 @@ if (isValidUserSession())
 
                                 $enumEducAttainment = $dbconn->select('ENUM_Educational_Attainment', '*', '');
 
+                                $hrRoles = array(
+                                    'appointing_officer' => array('name' => 'Dr. Neil G. Angeles, Ed.D.', 'position' => 'Schools Division Superintendent'),
+                                    'hrmo' => array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO'),
+                                    'hrmpsb_chair' => array('name' => 'Dr. Roselyn Q. Golfo, Ph.D.', 'position' => 'Assistant Schools Division Superintendent'),
+                                    'hrmpsb_secretariat' => [
+                                        array('name' => 'NameA', 'position' => 'PositionA', 'level1' => true, 'level2' => false, 'level3' => false),
+                                        array('name' => 'NameB', 'position' => 'PositionB', 'level1' => false, 'level2' => true, 'level3' => false),
+                                    ],
+                                    'hrmpsb_members' => [
+                                        array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => '', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Carina V. Pedragosa', 'position' => '', 'level1' => false, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Catalina M. Calinawan', 'position' => '', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Jaime Tolentino', 'position' => '', 'level1' => true, 'level2' => false, 'level3' => false),
+                                    ]
+                                );
+
                                 if (is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory]))));
+                                    // echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory]))));
+                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]))));
                                 }
                                 else
                                 {
@@ -798,24 +816,49 @@ if (isValidUserSession())
                 {
                     $positions = json_decode($_REQUEST['positions'], true);
 
+                    if (is_null($positions) || count($positions) <= 0)
+                    {
+                        echo(json_encode(new ajaxResponse('Warning', 'Submitted positions length is zero. Please add position data along with plantilla item numbers to continue.')));
+                    
+                        return;    
+                    }
+
                     foreach($positions as $position)
                     {
                         $fieldStr = '';
                         $valueStr = '';
-
-                        
+                        $fieldValueStr = '';
+        
                         foreach($position as $key=>$value)
                         {
                             if ($key != 'required_eligibility')
                             {
-                                $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$value'";
+                                $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                                 $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
+                                $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . '$key=' . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                             }
                         }
                         $fieldStr = '(' . $fieldStr . ')';
                         $valueStr = '(' . $valueStr . ')';
 
-                        $dbconn->insert('Position', $fieldStr, $valueStr);
+                        $existingPosition = $dbconn->select('Position', 'plantilla_item_number', 'WHERE plantilla_item_number="' . $position['plantilla_item_number'] . '"');
+
+                        if (is_null($dbconn->lastException))
+                        {
+                            if (count($existingPosition) == 0)
+                            {
+                                $dbconn->insert('Position', $fieldStr, $valueStr);
+                            }
+                            else
+                            {
+                                $dbconn->update('Position', $fieldValueStr, 'WHERE plantilla_item_number="' . $position['plantilla_item_number'] . '"');
+                            }
+                        }
+                        else
+                        {
+                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                            return;
+                        }
 
                         if (is_null($dbconn->lastException))
                         {
@@ -841,7 +884,7 @@ if (isValidUserSession())
                         ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                         'remarks'=>"Added Positions; Value string: $valueStr"
                     ));
-                    echo(json_encode(new ajaxResponse('Success', 'Successfully added Position details!')));
+                    echo(json_encode(new ajaxResponse('Success', 'Successfully added/updated Position details!')));
                     
                     return;
                 }
@@ -994,7 +1037,6 @@ if (isValidUserSession())
 
                     $fieldStr = '';
                     $valueStr = '';
-
                     $fieldValueStr = '';
 
                     foreach($personalInfo as $key=>$value)
@@ -1530,4 +1572,3 @@ else // NOT SIGNED-IN
 }
 
 die(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
-?>

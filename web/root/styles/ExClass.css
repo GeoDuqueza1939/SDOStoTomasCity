@@ -324,49 +324,49 @@
 }
 */
 
-.form-ex {
+.old-form-ex {
     display: inline-block;
     /* user-select: none; */
 
 }
 
-.form-ex.full-width {
+.old-form-ex.full-width {
     display: block;
 }
 
-.form-ex > .fields {
+.old-form-ex > .fields {
     display: block;
 }
 
-.form-ex > .fields > .status-pane {
+.old-form-ex > .fields > .status-pane {
     font-size: 0.8em;
     font-style: italic;
     font-family: serif;
 }
 
-.form-ex > .fields > .status-pane.success {
+.old-form-ex > .fields > .status-pane.success {
     color: green;
 }
 
-.form-ex > .fields > .status-pane.error {
+.old-form-ex > .fields > .status-pane.error {
     color: red;
 }
 
-.form-ex > .fields > .status-pane.info {
+.old-form-ex > .fields > .status-pane.info {
     color: blue;
 }
 
-.form-ex > .fields > .status-pane.wait {
+.old-form-ex > .fields > .status-pane.wait {
     color: darkslategray;
 }
 
-.form-ex > .fields > .status-pane > .status-marker {
+.old-form-ex > .fields > .status-pane > .status-marker {
     font-style: normal;
 }
 
-.form-ex > .fields > .status-pane > .status-message {}
+.old-form-ex > .fields > .status-pane > .status-message {}
 
-.form-ex > .fields > .status-pane.wait > .status-marker:before {
+.old-form-ex > .fields > .status-pane.wait > .status-marker:before {
     content: "\231b";
     display: inline-block;
     animation-name: status-marker-anim;
@@ -375,7 +375,7 @@
     /* animation-timing-function: linear; */
 }
 
-.dialog-ex.scrim {
+.old-dialog-ex.scrim {
     /* z-index: 10; */
     position: fixed;
     top: 0;
@@ -390,7 +390,7 @@
     /* font-size: 0.86em; */
 }
 
-.dialog-ex > .dialog {
+.old-dialog-ex > .dialog {
     border: 2px outset;
     background-color: lightgray;
     max-height: 95%;
@@ -401,7 +401,7 @@
     box-shadow: 0.2em 0.2em;
 }
 
-.dialog-ex > .dialog > .close-btn {
+.old-dialog-ex > .dialog > .close-btn {
     padding: 0;
     margin:-2em -2em 0 0;
     border-radius: 50%;
@@ -410,7 +410,7 @@
     font-size: inherit;
 }
 
-.dialog-ex > .dialog > .close-btn > .material-icons-round {
+.old-dialog-ex > .dialog > .close-btn > .material-icons-round {
     margin: 0;
     padding: 0;
     font-size: 1em;

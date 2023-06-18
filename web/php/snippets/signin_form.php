@@ -1,17 +1,5 @@
-<div class="login-page">
-    <header>
-        <div>
-            <div>
-                <span class="header-logo">
-                    <img src="/images/logo-depedstotomas.webp" alt="Logo (DEPED-Sto. Tomas City SDO)" />
-                </span>
-                <span class="header-text">
-                    <span class="header-text-deped">Department of Education</span>
-                    <span class="header-text-sdo">Schools Division of Sto. Tomas City</span>
-                </span>
-            </div>
-        </div>
-    </header>
+<div class="app landing login-page">
+    <?php E_STRICT; require_once(__FILE_ROOT__ . '/php/snippets/header_full.php'); ?>
     <section>
         <form action="<?php echo $_SERVER['PHP_SELF'] . (isset($_REQUEST['src']) || isset($_REQUEST['app']) ? '?' . (isset($_REQUEST['app']) ? 'app=' . $_REQUEST['app'] : '') . (isset($_REQUEST['app']) && isset($_REQUEST['src']) ? '&' : '')  . (isset($_REQUEST['src']) ? 'src=' . $_REQUEST['src'] : '') : '');?>" method="POST">
             <fieldset>

@@ -129,6 +129,18 @@
     background-color: red;
 }
 
+.app.landing > section {
+    text-align: center;
+    background-image: url("/images/makiling-stotomas.jpg");
+    background-size: cover;
+    position: fixed;
+    top: 11em;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+}
+
 .app.landing .welcome, .app.landing .please-select {
     margin: 1em;
     font-size: 1.25em;

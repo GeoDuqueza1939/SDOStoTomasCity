@@ -2,14 +2,14 @@
 
 class App
 {
+    navbar = null;
+    main = null;
+    mainSections = {};
+    scrim = null;
+    temp = {};
+
     constructor(htmlContainer)
-    {
-        this.navbar = null;
-        this.main = null;
-        this.mainSections = {};
-        this.scrim = null;
-        this.temp = {};
-    }
+    {}
 }
 
 class ScrimEx
@@ -363,7 +363,7 @@ class DisplayTableEx extends DisplayEx
         }
 
         this.columnHeaders.push({colHeaderName:colHeaderName, colHeaderText:colHeaderText, colHeaderCell:htmlToElement("<th>" + colHeaderText + "</th>")});
-        this.theadRow.appendChild(this.columnHeaders[this.columnHeaders.length - 1]["colHeaderCell"]);
+        this.theadRow.appendChild(this.columnHeaders.slice(-1)[0]["colHeaderCell"]);
 
         this.rows.forEach((row, index)=>{ // add missing key in each row
             if (!(colHeaderName in row["data"]))
@@ -384,9 +384,9 @@ class DisplayTableEx extends DisplayEx
         });
 
         this.columnHeaders.map(header=>header.colHeaderName).forEach((headerName)=>{
-            this.rows[this.rows.length - 1]["data"][headerName] = (headerName in rowData ? rowData[headerName] ?? "" : "");
-            this.rows[this.rows.length - 1]["td"][headerName] = htmlToElement("<td>" + this.rows[this.rows.length - 1]["data"][headerName] + "</td>");
-            this.rows[this.rows.length - 1]["tr"].appendChild(this.rows[this.rows.length - 1]["td"][headerName]);
+            this.rows.slice(-1)[0]["data"][headerName] = (headerName in rowData ? rowData[headerName] ?? "" : "");
+            this.rows.slice(-1)[0]["td"][headerName] = htmlToElement("<td>" + this.rows.slice(-1)[0]["data"][headerName] + "</td>");
+            this.rows.slice(-1)[0]["tr"].appendChild(this.rows.slice(-1)[0]["td"][headerName]);
         });
     }
 
@@ -410,12 +410,12 @@ class DisplayTableEx extends DisplayEx
             throw("New footer layout length should not exceed the number of columns in the table body");
         }
 
-        this.fRows[this.fRows.length - 1]["td"][colFooterName] = htmlToElement("<td" + (type(rowspan) == "number" && rowspan > 1 ? " rowspan=\"" + rowspan + "\"" : "")  + (type(colspan) == "number" && colspan > 1 ? " rowspan=\"" + colspan + "\"" : "") + ">" + colFooterText + "</td>");
-        this.fRows[this.fRows.length - 1]["data"][colFooterName] = colFooterText;
-        this.fRows[this.fRows.length - 1]["rowspan"][colFooterName] = rowspan;
-        this.fRows[this.fRows.length - 1]["colspan"][colFooterName] = colspan;
+        this.fRows.slice(-1)[0]["td"][colFooterName] = htmlToElement("<td" + (type(rowspan) == "number" && rowspan > 1 ? " rowspan=\"" + rowspan + "\"" : "")  + (type(colspan) == "number" && colspan > 1 ? " rowspan=\"" + colspan + "\"" : "") + ">" + colFooterText + "</td>");
+        this.fRows.slice(-1)[0]["data"][colFooterName] = colFooterText;
+        this.fRows.slice(-1)[0]["rowspan"][colFooterName] = rowspan;
+        this.fRows.slice(-1)[0]["colspan"][colFooterName] = colspan;
 
-        this.fRows[this.fRows.length - 1]["tr"].appendChild(this.fRows[this.fRows.length - 1]["td"][colFooterName]);
+        this.fRows.slice(-1)[0]["tr"].appendChild(this.fRows.slice(-1)[0]["td"][colFooterName]);
     }
 
     removeRow(index = this.rows.length - 1) // default: removes last row added.
@@ -688,20 +688,20 @@ class InputEx
                     this.fieldWrapper.appendChild(document.createTextNode(" ")); // CONSIDER ADDING A REFERENCE TO THIS AS A "SPACER" JUST LIKE THE STATUSPANE SPACER BELOW
                 }
                 this.inputExs.push(new InputEx(this.fieldWrapper, this.id + (this.type.indexOf("-select") >= 0 ? this.inputExs.length : ""), (this.type.indexOf("-select") >= 0 ? this.type.slice(0, this.type.indexOf("-")) : this.type.slice(0, this.type.indexOf("s")))));
-                this.fields.push(this.inputExs[this.inputExs.length - 1].fields[0]);
-                this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
-                this.inputExs[this.inputExs.length - 1].parentInputEx = this;
+                this.fields.push(this.inputExs.slice(-1)[0].fields[0]);
+                this.inputExs.slice(-1)[0].setLabelText(labelText);
+                this.inputExs.slice(-1)[0].parentInputEx = this;
                 if (this.type.indexOf("-select") >= 0)
                 {
                     if (type(value) == "number" || value != "")
                     {
-                        this.inputExs[this.inputExs.length - 1].setDefaultValue(value, true);  // MAY CAUSE ISSUES IF DEVELOPER DOESN'T TRACK THE NUMBER OF ITEMS WITHOUT LABELS THAT WERE MIXED WITH LABELED ITEMS
+                        this.inputExs.slice(-1)[0].setDefaultValue(value, true);  // MAY CAUSE ISSUES IF DEVELOPER DOESN'T TRACK THE NUMBER OF ITEMS WITHOUT LABELS THAT WERE MIXED WITH LABELED ITEMS
                     }
-                    this.labels.push(this.inputExs[this.inputExs.length - 1].labels[0]);
+                    this.labels.push(this.inputExs.slice(-1)[0].labels[0]);
                 }
                 if (tooltipText != "")
                 {
-                    this.inputExs[this.inputExs.length - 1].setTooltipText(tooltipText);
+                    this.inputExs.slice(-1)[0].setTooltipText(tooltipText);
                 }
 
                 if (this.statusPane != null)
@@ -713,7 +713,7 @@ class InputEx
                 if (this.type == "radio-select")
                 {
                     this.setGroupName(this.id);
-                    this.inputExs[this.inputExs.length - 1].fields[0].addEventListener("change", (event)=>{
+                    this.inputExs.slice(-1)[0].fields[0].addEventListener("change", (event)=>{
                         for (const inputEx of this.inputExs)
                         {
                             if (inputEx.handleInlineTextboxExOnCheck != null)
@@ -726,18 +726,18 @@ class InputEx
 
                 if (this.isReversed())
                 {
-                    this.inputExs[this.inputExs.length - 1].reverse();
+                    this.inputExs.slice(-1)[0].reverse();
                 }
 
                 if (this.listeners.field.length > 0)
                 {
                     for (const listener of this.listeners.field)
                     {
-                        this.inputExs[this.inputExs.length - 1].addEvent(listener.eventType, listener.eventFunction);
+                        this.inputExs.slice(-1)[0].addEvent(listener.eventType, listener.eventFunction);
                     }
                 }
                 
-                return this.inputExs[this.inputExs.length - 1];
+                return this.inputExs.slice(-1)[0];
                 break;
         }
     }
@@ -1185,11 +1185,11 @@ class InputEx
             {
                 if (this.type == "table")
                 {
-                    createElementEx(NO_NS, "th", this.thead, this.thead.children[this.thead.children.length - 1], "class", "blank");
+                    createElementEx(NO_NS, "th", this.thead, this.thead.children.slice(-1)[0], "class", "blank");
                 }
                 else
                 {
-                    createElementEx(NO_NS, "b", this.thead, this.thead.children[this.thead.children.length - 1], "class", "th blank");
+                    createElementEx(NO_NS, "b", this.thead, this.thead.children.slice(-1)[0], "class", "th blank");
                 }
             }
             this.tableTypes.push(type);
@@ -2258,7 +2258,7 @@ class InputEx
 }
 
 /**
- * Class FormEx
+ * Class Old_FormEx
  * @requires NO_NS
  * @requires createElementEx
  * @requires createSimpleElement
@@ -2266,7 +2266,7 @@ class InputEx
  * @requires isElement
  * @requires InputEx
  */
-class FormEx
+class Old_FormEx
 {
     constructor(parentEl = null, id = "", useFormElement = true)
     {
@@ -2283,7 +2283,7 @@ class FormEx
 
         id = id.trim();
 
-        this.container = createElementEx(NO_NS, "div", parentEl, null, "class", "form-ex");
+        this.container = createElementEx(NO_NS, "div", parentEl, null, "class", "old-form-ex");
         this.useFormElement = useFormElement; // will contain the input element with its label or other InputEx elements
         this.fieldWrapper = createElementEx(NO_NS, (useFormElement ? "form" : "div"), this.container, null, "class", "fields");
         this.headers = [];
@@ -2383,14 +2383,14 @@ class FormEx
 
             this.headers.push(createElementEx(NO_NS, "h" + headingLevel, this.fieldWrapper));
 
-            this.headers[this.headers.length - 1].innerHTML = headerText;
+            this.headers.slice(-1)[0].innerHTML = headerText;
 
             if (id != "")
             {
-                this.headers[this.headers.length - 1].id = id;
+                this.headers.slice(-1)[0].id = id;
             }
 
-            return this.headers[this.headers.length - 1];
+            return this.headers.slice(-1)[0];
         }
     }
 
@@ -2421,22 +2421,22 @@ class FormEx
         dbColName = dbColName.trim();
         dbTableName = dbTableName.trim();
 
-        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), type, useFieldSet));
-        this.inputExs[this.inputExs.length - 1].parentFormEx = this;
+        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "old-form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), type, useFieldSet));
+        this.inputExs.slice(-1)[0].parentFormEx = this;
         
         if (labelText != "")
         {
-            this.inputExs[this.inputExs.length - 1].setLabelText(labelText);
+            this.inputExs.slice(-1)[0].setLabelText(labelText);
         }
 
         if (tooltip != "")
         {
-            this.inputExs[this.inputExs.length - 1].setTooltipText(tooltip);
+            this.inputExs.slice(-1)[0].setTooltipText(tooltip);
         }
 
         if (dbColName != "")
         {
-            this.dbInputEx[dbColName] = this.inputExs[this.inputExs.length - 1];
+            this.dbInputEx[dbColName] = this.inputExs.slice(-1)[0];
         }
 
         if (dbTableName != "")
@@ -2446,10 +2446,10 @@ class FormEx
 
         if (value != "" || typeof(value) == "number") // the number validation is needed as JS interprets 0 == "" as true
         {
-            this.inputExs[this.inputExs.length - 1].setDefaultValue(value, true);
+            this.inputExs.slice(-1)[0].setDefaultValue(value, true);
         }
 
-        return this.inputExs[this.inputExs.length - 1];
+        return this.inputExs.slice(-1)[0];
     }
 
     addDisplayEx(typeText = "div", id = "", contentText = "", labelText = "", tooltip = "")
@@ -2489,20 +2489,20 @@ class FormEx
             throw("Invalid arguments: numOfBtns:" + numOfBtns);
         }
 
-        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), "buttonExs", useFieldSet));
+        this.inputExs.push(new InputEx(this.fieldWrapper, (this.id == "" ? "old-form-ex-input-ex-" : this.id + "-input-ex" + this.inputExs.length), "buttonExs", useFieldSet));
         
-        this.inputExs[this.inputExs.length - 1].parentFormEx = this;
+        this.inputExs.slice(-1)[0].parentFormEx = this;
 
         for (var i = 0; i < numOfBtns; i++)
         {
             if (i > 0)
             {
-                this.addSpacer(this.inputExs[this.inputExs.length - 1].fieldWrapper);
+                this.addSpacer(this.inputExs.slice(-1)[0].fieldWrapper);
             }
-            this.inputExs[this.inputExs.length - 1].addItem("Button " + i, "button" + i, "Button " + i);
+            this.inputExs.slice(-1)[0].addItem("Button " + i, "button" + i, "Button " + i);
         }
 
-        return this.inputExs[this.inputExs.length - 1];
+        return this.inputExs.slice(-1)[0];
     }
 
     addBox(name = "", useSpan = false, parent = this.fieldWrapper)
@@ -2738,11 +2738,11 @@ class FormEx
     }
 }
 
-class DialogEx
+class Old_DialogEx
 {
     constructor(parent = null, id = "")
     {
-        this.scrim = createElementEx(NO_NS, "div", parent, null, "class", "dialog-ex scrim");
+        this.scrim = createElementEx(NO_NS, "div", parent, null, "class", "old-dialog-ex scrim");
         this.dialogBox = createElementEx(NO_NS, "div", this.scrim, null, "class", "dialog");
         this.closeBtn = createElementEx(NO_NS, "button", this.dialogBox, null, "type", "button", "class", "close-btn", "title", "Close");
         this.closeBtn.innerHTML = "<span class=\"material-icons-round\">close</span>";
@@ -2756,7 +2756,7 @@ class DialogEx
 
     addFormEx()
     {
-        this.formEx = new FormEx(this.dialogBox, this.id + "-form-ex", false);
+        this.formEx = new Old_FormEx(this.dialogBox, this.id + "-form-ex", false);
 
         return this.formEx;
     }
@@ -2781,7 +2781,7 @@ class DialogEx
     }
 }
 
-class MsgBox extends DialogEx
+class MsgBox extends Old_DialogEx
 {
     constructor(parent = null, message, type = "OK", ...func)
     {
@@ -2844,194 +2844,11 @@ class MsgBox extends DialogEx
             //     this.btnGrp.fields[this.btnGrp.fields.length - 1 - i].addEventListener("click", func[i - 1]);
             // }
         }
-        this.btnGrp.fields[this.btnGrp.fields.length - 1].focus();
+        this.btnGrp.fields.slice(-1)[0].focus();
     }
 }
 
-class UserEditor extends DialogEx
-{
-    constructor(app = new App(), id = "", mode = 0, userData = null)
-    {
-        super(app.main, id);
-
-        this.app = app;
-
-        this.scrim.classList.add("user-editor");
-        this.mode = mode; // 0: add user; 1: edit user
-
-        this.data = {
-            username:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["username"] : null),
-            employeeId:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["employeeId"] : null),
-            personId:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["personId"] : null)
-        }
-        
-        this.addFormEx();
-        this.formEx.setTitle((mode ? "Edit" : "Add") + " User", 3);
-
-        [
-            {label:"Employee ID", type:"input", colName:"employeeId", table:"User", tooltip:""},
-            {label:"Temporary account only", type:"checkbox", colName:"temp_user", table:"", tooltip:"Temporary accounts are accounts that are not bound to employee information"},
-            {label:"Given Name", type:"input", colName:"given_name", table:"Person", tooltip:"Enter the applicant's given name. This is required."},
-            {label:"Middle Name", type:"input", colName:"middle_name", table:"Person", tooltip:"Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none."},
-            {label:"Family Name", type:"input", colName:"family_name", table:"Person", tooltip:"Enter the applicant's family name. For married women, please enter the maiden last name."},
-            {label:"Spouse Name", type:"input", colName:"spouse_name", table:"Person", tooltip:"For married women, please enter the spouse's last name. Leave blank for none."},
-            {label:"Ext. Name", type:"input", colName:"ext_name", table:"Person", tooltip:"Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none."},
-            {label:"Username", type:"input", colName:"username", table:"All_User", tooltip:""}
-        ].forEach(field=>{
-            this.formEx.addInputEx(field.label, field.type, (mode == 1 && field.colName != "temp_user" && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? "" : ""), field.tooltip, field.colName, field.table);
-            this.formEx.dbInputEx[field.colName].container.classList.add(field.colName);
-            if (field.colName.includes("_name"))
-            {
-                // this.formEx.dbInputEx[field.colName].setWidth("11em");
-            }
-            if (field.colName == "employeeId")
-            {
-                // this.formEx.dbInputEx[field.colName].setWidth("9em");
-                this.formEx.dbInputEx[field.colName].showColon();
-            }
-            if (field.type == "checkbox")
-            {
-                this.formEx.dbInputEx[field.colName].reverse();
-            }
-            else if (field.colName == "username")
-            {
-                this.formEx.dbInputEx[field.colName].showColon();
-            }
-            if (this.mode != 0 && field.colName == "temp_user")
-            {
-                this.formEx.dbInputEx[field.colName].check(userData[field.colName]);
-            }
-            this.formEx.addSpacer();
-        });
-
-        this.formEx.addDisplayEx("div", "user-editor-access-levels", "", "Access Levels");
-        this.formEx.displayExs["user-editor-access-levels"].showColon();
-        this.formEx.displayExs["user-editor-access-levels"].container.classList.add("user-editor-access-levels");
-
-        [
-            {label:"SeRGS", type:"number", colName:"sergs_access_level", table:"All_User", tooltip:"Access level for the Service Record Generation System"},
-            {label:"OPMS", type:"number", colName:"opms_access_level", table:"All_User", tooltip:"Access level for the Online Performance Management System"},
-            {label:"MPaSIS", type:"number", colName:"mpasis_access_level", table:"All_User", tooltip:"Access level for the Merit Promotion and Selection Information System"}
-        ].forEach(field=>{
-            this.formEx.addInputEx(field.label, field.type, (mode == 1 && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? 0 : 0), field.tooltip, field.colName, field.table);
-            this.formEx.displayExs["user-editor-access-levels"].addContent(this.formEx.dbInputEx[field.colName].container);
-            this.formEx.dbInputEx[field.colName].setMin(0);
-            this.formEx.dbInputEx[field.colName].setMax(field.label == "MPaSIS" ? 4 : 10);
-            this.formEx.dbInputEx[field.colName].fields[0].classList.add("right");
-            this.formEx.addSpacer();
-        });
-
-        this.formEx.dbInputEx["temp_user"].addEvent("change", event=>{
-            this.formEx.dbInputEx["employeeId"].enable(null, !this.formEx.dbInputEx["temp_user"].isChecked());
-        });
-
-        var dialog = this;
-        var form = this.formEx;
-        var btnGrp = form.addFormButtonGrp(2);
-        btnGrp.container.classList.add("user-editor-buttons");
-        form.addStatusPane();
-        btnGrp.inputExs[0].setLabelText("Save");
-        btnGrp.inputExs[0].setTooltipText("");
-        btnGrp.inputExs[0].addEvent("click", (event)=>{
-            var person = {};
-            var user = {};
-            var error = "";
-
-            for (const dbColName in form.dbInputEx) {
-                var value = form.dbInputEx[dbColName].getValue();
-                if (dbColName == "temp_user")
-                {
-                    user[dbColName] = form.dbInputEx[dbColName].isChecked();
-                }
-                else if ((MPASIS_App.isDefined(value) && !MPASIS_App.isEmptySpaceString(value)) || typeof(value) == "number")
-                {
-                    if (form.dbTableName[dbColName] == "Person")
-                    {
-                        person[dbColName] = value;
-                    }
-                    else
-                    {
-                        user[dbColName] = value;
-                    }
-                }
-                else if (dbColName == "employeeId" && !form.dbInputEx["temp_user"].isChecked())
-                {
-                    error += "Employee ID should not be blank for non-temporary user accounts.<br>";
-                }
-                else if (dbColName == "given_name" && form.dbInputEx["temp_user"].isChecked())
-                {
-                    error += "Given Name should not be blank.<br>";
-                }
-                else if (dbColName == "username")
-                {
-                    error += "Username should not be blank.<br>";
-                }
-            }
-
-            user["personId"] = dialog.data["personId"];
-
-            if (error != "")
-            {
-                form.raiseError(error);
-            }
-            else
-            {
-                // // DEBUG
-                // console.log(form.dbInputEx, person, user, MPASIS_App.processURL);
-
-                // return;
-                // // DEBUG
-
-                postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
-                    var response;
-
-                    if (event.target.readyState == 4 && event.target.status == 200)
-                    {
-                        response = JSON.parse(event.target.responseText);
-
-                        if (response.type == "Error")
-                        {
-                            form.raiseError(response.content);
-                        }
-                        else if (response.type == "Success")
-                        {
-                            form.showSuccess(response.content);
-                            dialog.app.temp["searchButton"].fields[0].click();
-                            await sleep(3000);
-                            dialog.close();
-                        }
-                        else if (response.type == "Debug")
-                        {
-                            new MsgBox(form.container.parentElement, response.content, "OK");
-                            console.log(response.content);
-                        }
-                        else
-                        {
-                            console.log(response.content, event.target);
-                        }
-                    }
-                });
-            }
-        });
-        btnGrp.inputExs[1].setLabelText("Close");
-        btnGrp.inputExs[1].setTooltipText("");
-        btnGrp.inputExs[1].addEvent("click", event=>{
-            this.close();
-        });
-
-        form.container.parentElement.appendChild(btnGrp.container);
-
-        // TEMP
-        this.formEx.dbInputEx["employeeId"].disable();
-        this.formEx.dbInputEx["temp_user"].disable();
-        if (this.mode == 1)
-            return;
-        this.formEx.dbInputEx["temp_user"].check();
-        // TEMP
-    }
-}
-
-class PasswordEditor extends DialogEx
+class PasswordEditor extends Old_DialogEx
 {
     constructor(app = new App(), id = "", requireCurrentPassword = false, requireChange = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
     {
@@ -3147,7 +2964,7 @@ class PasswordEditor extends DialogEx
     }
 }
 
-class PositionSelectorDialog extends DialogEx
+class PositionSelectorDialog extends Old_DialogEx
 {
     constructor(app = new MPASIS_App(), id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}], customPositionFilterCallback = (position, index, positions)=>{
         var i = 0;
@@ -3205,7 +3022,7 @@ class PositionSelectorDialog extends DialogEx
     }
 }
 
-class JobApplicationSelectorDialog extends DialogEx
+class JobApplicationSelectorDialog extends Old_DialogEx
 {
     constructor(app = new MPASIS_App(), id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}])
     {
@@ -3274,7 +3091,7 @@ class JobApplicationSelectorDialog extends DialogEx
     }
 }
 
-class JobQSEntryForm extends FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
+class JobQSEntryForm extends Old_FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -3283,7 +3100,7 @@ class JobQSEntryForm extends FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
     }
 }
 
-class ApplicationEntryForm extends FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
+class ApplicationEntryForm extends Old_FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -3687,7 +3504,7 @@ class ScoreSheetElementUI
     }
 }
 
-class ScoreSheet extends FormEx
+class ScoreSheet extends Old_FormEx
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -3810,7 +3627,7 @@ class ScoreSheet extends FormEx
                                 if (scoreSheet.summaryUI != null && scoreSheet.summaryUI != undefined)
                                 {
                                     scoreSheet.summaryUI.container.displayTableEx.addRow({"summary_criteria":criteria.label, "summary_weight":criteria.weight + "%","summary_score":0});
-                                    scoreSheet.summary[criteria.id] = scoreSheet.summaryUI.container.displayTableEx.rows[scoreSheet.summaryUI.container.displayTableEx.rows.length - 1]["td"]["summary_score"];
+                                    scoreSheet.summary[criteria.id] = scoreSheet.summaryUI.container.displayTableEx.rows.slice(-1)[0]["td"]["summary_score"];
                                     weight += criteria.weight;
                                 }
                             }                                
@@ -5014,7 +4831,7 @@ class ScoreSheet extends FormEx
         //        && ((postGradUnits == null && (increment["baseline_postgraduate_units"] == null || increment["baseline_postgraduate_units"] == 0)) || (postGradUnits != null && increment["baseline_postgraduate_units"] <= postGradUnits))
         //        && ((completeAcadReq == null && (increment["complete_academic_requirements"] || increment["complete_academic_requirements"] == null)) || (completeAcadReq != null && increment["complete_academic_requirements"] == completeAcadReq));
         // });
-        // var increment = (incrementObj.length > 0 ? incrementObj[incrementObj.length - 1]["education_increment_level"] : -1);
+        // var increment = (incrementObj.length > 0 ? incrementObj.slice(-1)[0]["education_increment_level"] : -1);
 
         // // OLD CODE FROM OLD SCORE SHEET
         // var incrementObj = document.mpsEducIncrement.filter(increment=>(
@@ -5345,7 +5162,7 @@ class ScoreSheet extends FormEx
     }
 }
 
-class IERForm extends FormEx
+class IERForm extends Old_FormEx
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -5656,9 +5473,24 @@ class IERForm extends FormEx
 
         var signatory = new DisplayEx(ierFormCloneFields, "div", "ier-printout-signatory", "", "Prepared and certified correct by");
         signatory.showColon();
-        htmlToElements("<div class=\"name\"></div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
+        var fieldModeChange = event=>{
+            if (event.target.isContentEditable)
+            {
+                event.target.removeAttribute("contenteditable");
+            }
+            else
+            {
+                event.target.setAttribute("contenteditable", true);
+            }
+        };
+        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["hrmo"]["name"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
             signatory.addContent(node);
             signatory.addContent(document.createTextNode(" "));
+            if (node.classList.contains("name"))
+            {
+                node.addEventListener("dblclick", fieldModeChange);
+                node.title = "Please double-click to edit.";
+            }
         });
         signatory.container.classList.add("ier-printout-signatory");
 
@@ -5688,7 +5520,7 @@ class IERForm extends FormEx
     }
 }
 
-class IESForm extends FormEx
+class IESForm extends Old_FormEx
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -6026,15 +5858,30 @@ class IESForm extends FormEx
         conforme.container.classList.add("ies-printout-conforme");
         
         var signatoryApplicant = new DisplayEx(iesFormCloneFields, "div", "ies-printout-signatory-applicant", "", "");
-        htmlToElements("<div class=\"name\"></div> <div class=\"date\"></div>").forEach(node=>{
+        var fieldModeChange = event=>{
+            if (event.target.isContentEditable)
+            {
+                event.target.removeAttribute("contenteditable");
+            }
+            else
+            {
+                event.target.setAttribute("contenteditable", true);
+            }
+        };
+        htmlToElements("<div class=\"name\">" + MPASIS_App.getFullName(thisIESForm.jobApplication["given_name"], thisIESForm.jobApplication["middle_name"], thisIESForm.jobApplication["family_name"], thisIESForm.jobApplication["spouse_name"], thisIESForm.jobApplication["ext_name"]) + "</div> <div class=\"date\"></div>").forEach(node=>{
             signatoryApplicant.addContent(node);
             signatoryApplicant.addContent(document.createTextNode(" "));
+            if (node.classList.contains("name"))
+            {
+                node.addEventListener("dblclick", fieldModeChange);
+                node.title = "Please double-click to edit.";
+            }
         });
         signatoryApplicant.container.classList.add("ies-printout-signatory-applicant");
 
         var signatoryHRMPSBChair = new DisplayEx(iesFormCloneFields, "div", "ies-printout-signatory-hrmpsb", "", "Attested");
         signatoryHRMPSBChair.showColon();
-        htmlToElements("<div class=\"name\"></div> <div class=\"date\"></div>").forEach(node=>{
+        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["hrmpsb_chair"]["name"]) + "</div> <div class=\"date\"></div>").forEach(node=>{
             signatoryHRMPSBChair.addContent(node);
             signatoryHRMPSBChair.addContent(document.createTextNode(" "));
         });
@@ -6053,7 +5900,7 @@ class IESForm extends FormEx
     }
 }
 
-class CARForm extends FormEx
+class CARForm extends Old_FormEx
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -6068,6 +5915,7 @@ class CARForm extends FormEx
         this.setTitle("Comparative Assessment Result (CAR)", 2);
 
         this.position = null;
+        this.positions = [];
         this.jobApplications = [];
         this.scoreSheetElements = [];
         this.carTable = null;
@@ -6158,6 +6006,8 @@ class CARForm extends FormEx
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+
+                    this.positions = positions;
 
                     this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
                     this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
@@ -6292,7 +6142,7 @@ class CARForm extends FormEx
 
                                     if (isTopRank)
                                     {
-                                        thisCARForm.carTable.rows[thisCARForm.carTable.rows.length - 1]["tr"].classList.add("top-rank");
+                                        thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("top-rank");
                                     }
                                 }
 
@@ -6364,12 +6214,27 @@ class CARForm extends FormEx
         signatoryHRMPSB.container.classList.add("hrmpsb");
 
         var signatoryHRMPSBMember = [];
-
+        var fieldModeChange = event=>{
+            if (event.target.isContentEditable)
+            {
+                event.target.removeAttribute("contenteditable");
+            }
+            else
+            {
+                event.target.setAttribute("contenteditable", true);
+            }
+        };
         [0, 1, 2, 3, 4].forEach(i=>{
+            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 2 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)])[(i > 2 ? i - 1 : i)]));
             signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 2 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"]/* + "<br>" + member["position"]*/) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
+                if (node.classList.contains("name-position"))
+                {
+                    node.addEventListener("dblclick", fieldModeChange);
+                    node.title = "Please double-click to edit.";
+                }
             });
             signatoryHRMPSBMember[i].container.classList.add(i == 2 ? "chair" : "member");
             signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
@@ -6377,9 +6242,24 @@ class CARForm extends FormEx
         });
 
         var signatoryAppointer = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
-        htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+        var fieldModeChange = event=>{
+            if (event.target.isContentEditable)
+            {
+                event.target.removeAttribute("contenteditable");
+            }
+            else
+            {
+                event.target.setAttribute("contenteditable", true);
+            }
+        };
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
+            if (node.classList.contains("name-position"))
+            {
+                node.addEventListener("dblclick", fieldModeChange);
+                node.title = "Please double-click to edit.";
+            }
         });
         // signatoryAppointer.showColon();
         signatory.addContent(signatoryAppointer.container);
@@ -6398,7 +6278,7 @@ class CARForm extends FormEx
     }
 }
 
-class RQAForm extends FormEx
+class RQAForm extends Old_FormEx
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
@@ -6414,6 +6294,7 @@ class RQAForm extends FormEx
         this.setTitle("Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA)", 2);
 
         this.position = null;
+        this.positions = [];
         this.jobApplications = [];
         this.scoreSheetElements = [];
         this.rqaTable = null;
@@ -6503,6 +6384,7 @@ class RQAForm extends FormEx
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    this.positions = positions;
 
                     this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
                     this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
@@ -6703,12 +6585,28 @@ class RQAForm extends FormEx
         signatoryHRMPSB.container.classList.add("hrmpsb");
         
         var signatoryHRMPSBMember = [];
-
+        var fieldModeChange = event=>{
+            if (event.target.isContentEditable)
+            {
+                event.target.removeAttribute("contenteditable");
+            }
+            else
+            {
+                event.target.setAttribute("contenteditable", true);
+            }
+        };
+        
         [0, 1, 2, 3, 4].forEach(i=>{
+            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 2 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)])[(i > 2 ? i - 1 : i)]));
             signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 2 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"]/* + "<br>" + member["position"]*/) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
+                if (node.classList.contains("name-position"))
+                {
+                    node.addEventListener("dblclick", fieldModeChange);
+                    node.title = "Please double-click to edit.";
+                }
             });
             signatoryHRMPSBMember[i].container.classList.add(i == 2 ? "chair" : "member");
             signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
@@ -6716,7 +6614,7 @@ class RQAForm extends FormEx
         });
 
         var signatoryAppointer = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
-        htmlToElements("<div class=\"name-position\"></div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
         });
@@ -6737,25 +6635,33 @@ class RQAForm extends FormEx
     }
 }
 
-class MPASIS_Settings_Form extends FormEx
+class MPASIS_Settings_Form extends Old_FormEx
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
     {
         super(app.mainSections["main-settings"], id, useFormElement);
         this.app = app;
+        var thisMPASISSettingForm = this;
 
         this.setTitle("Settings", 2);
         this.container.classList.add("mpasis-settings");
 
         this.addHeader("Roles", 3);
 
-        this.addInputEx("Add/Edit Committees", "buttonEx", "Add/Edit Committees", "", "mpasis-settings-edit-committees");
-        this.addSpacer();
-        this.addInputEx("Add/Edit Roles", "buttonEx", "Add/Edit Roles", "", "mpasis-settings-edit-roles");
-        this.addSpacer();
+        // this.addInputEx("Add/Edit Roles", "buttonEx", "Add/Edit Roles", "", "mpasis-settings-edit-roles");
+        // this.addSpacer();
+        // this.addInputEx("Add/Edit Selection Boards", "buttonEx", "Add/Edit Selection Boards", "", "mpasis-settings-edit-selection-boards");
+        // this.addSpacer();
         this.addInputEx("Assign Roles", "buttonEx", "Assign Roles", "", "mpasis-settings-assign-roles");
 
+        this.dbInputEx["mpasis-settings-assign-roles"].addEvent("click", event=>{
+            new AssignRoles().setup(app.main);
+        });
         
+
+        // this.dbInputEx["mpasis-settings-edit-selection-boards"].addEvent("click", event=>{
+            // new EditSelectionBoard(thisMPASISSettingForm.app, "edit-selection-board-dialog");
+        // });
     }
 }
-// export { ScrimEx, DisplayEx, InputEx, FormEx, DialogEx, MsgBox };
+// export { ScrimEx, DisplayEx, InputEx, Old_FormEx, Old_DialogEx, MsgBox };

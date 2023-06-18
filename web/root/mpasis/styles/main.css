@@ -7,7 +7,7 @@ body, .app > main {
     margin-bottom: 1em;
 }
 
-.app > main > section > .form-ex {
+.app > main > section > .old-form-ex {
     display: block;
 }
 
@@ -343,17 +343,17 @@ REINSTATE FOR PRINTOUT
     overflow-y: auto;
 }
 
-.user-editor > .dialog > .form-ex {
+.user-editor > .dialog > .old-form-ex {
     display: block;
     overflow: auto;
 }
 
-.user-editor > .dialog > .form-ex > h3 {
+.user-editor > .dialog > .old-form-ex > h3 {
     margin: 0 0 0.5em;
     text-align: center;
 }
 
-.user-editor > .dialog > .form-ex > .fields {
+.user-editor > .dialog > .old-form-ex > .fields {
     display: grid;
     grid-template-columns: auto auto auto auto auto auto;
     gap: 0.25em 1em;
@@ -363,69 +363,69 @@ REINSTATE FOR PRINTOUT
     overflow: auto;
 }
 
-.user-editor > .dialog > .form-ex > .fields > * {
+.user-editor > .dialog > .old-form-ex > .fields > * {
     display: block;
     grid-column: span 2;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields {
+.user-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields {
     width: 11em;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields > label {
+.user-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields > label {
 }
 
-.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields > input {
+.user-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields > input {
     display: block;
     width: 100%;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .input-ex > .fields > .status-pane {
+.user-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields > .status-pane {
 }
 
-.user-editor > .dialog > .form-ex > .fields > .employeeId,
-.user-editor > .dialog > .form-ex > .fields > .temp_user {
+.user-editor > .dialog > .old-form-ex > .fields > .employeeId,
+.user-editor > .dialog > .old-form-ex > .fields > .temp_user {
     grid-column: span 3;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .employeeId > .fields,
-.user-editor > .dialog > .form-ex > .fields > .temp_user > .fields,
-.user-editor > .dialog > .form-ex > .fields > .username > .fields {
+.user-editor > .dialog > .old-form-ex > .fields > .employeeId > .fields,
+.user-editor > .dialog > .old-form-ex > .fields > .temp_user > .fields,
+.user-editor > .dialog > .old-form-ex > .fields > .username > .fields {
     width: unset;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .employeeId > .fields > input {
+.user-editor > .dialog > .old-form-ex > .fields > .employeeId > .fields > input {
     display: inline-block;
     width: 10em;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .temp_user > .fields > input {
+.user-editor > .dialog > .old-form-ex > .fields > .temp_user > .fields > input {
     display: inline;
     width: unset;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .username {
+.user-editor > .dialog > .old-form-ex > .fields > .username {
     grid-column: span 6;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .username > .fields {
+.user-editor > .dialog > .old-form-ex > .fields > .username > .fields {
     display: grid;
     grid-template-columns: auto auto auto auto auto auto;
     align-items: center;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .username > .fields > label {
+.user-editor > .dialog > .old-form-ex > .fields > .username > .fields > label {
     display: block;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .username > .fields > input {
+.user-editor > .dialog > .old-form-ex > .fields > .username > .fields > input {
     display: block;
     width: 100%;
     grid-column: span 5;
 }
 
 
-.user-editor > .dialog > .form-ex > .fields > .user-editor-access-levels {
+.user-editor > .dialog > .old-form-ex > .fields > .user-editor-access-levels {
     grid-column: span 6;
 }
 
@@ -460,7 +460,7 @@ REINSTATE FOR PRINTOUT
     text-align: center;
 }
 
-.user-editor > .dialog > .form-ex > .fields > .status-pane {
+.user-editor > .dialog > .old-form-ex > .fields > .status-pane {
     grid-column: span 6;
     text-align: center;
 }
@@ -470,33 +470,33 @@ REINSTATE FOR PRINTOUT
     overflow-y: auto;
 }
 
-.password-editor > .dialog > .form-ex {
+.password-editor > .dialog > .old-form-ex {
     display: block;
     overflow: auto;
 }
 
-.password-editor > .dialog > .form-ex > h3 {
+.password-editor > .dialog > .old-form-ex > h3 {
     margin: 0 0 0.5em;
     text-align: center;
 }
 
 
-.password-editor > .dialog > .form-ex > .fields > .input-ex {
+.password-editor > .dialog > .old-form-ex > .fields > .input-ex {
     display: block;
 }
 
-.password-editor > .dialog > .form-ex > .fields > .input-ex > .fields {
+.password-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields {
     display: grid;
     grid-template-columns: auto auto;
     align-items: center;
     gap: 0.25em 1em;
 }
 
-.password-editor > .dialog > .form-ex > .fields > .input-ex > .fields > label {}
+.password-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields > label {}
 
-.password-editor > .dialog > .form-ex > .fields > .input-ex > .fields > input {}
+.password-editor > .dialog > .old-form-ex > .fields > .input-ex > .fields > input {}
 
-.password-editor > .dialog > .form-ex > .fields > .status-pane {
+.password-editor > .dialog > .old-form-ex > .fields > .status-pane {
     grid-column: span 6;
     text-align: center;
 }
@@ -641,61 +641,61 @@ REINSTATE FOR PRINTOUT
     text-align: right;
 }
 
-.position-selector > .dialog > .form-ex > h3 {
+.position-selector > .dialog > .old-form-ex > h3 {
     margin: 0px 0px 0.5em;
     text-align: center;
 }
 
-.position-selector > .dialog > .form-ex > .fields > .input-ex:not(.position-selector-buttons) {
+.position-selector > .dialog > .old-form-ex > .fields > .input-ex:not(.position-selector-buttons) {
     display: block;
 }
 
-.position-selector > .dialog > .form-ex > .fields > .input-ex:not(.position-selector-buttons) > .fields {
+.position-selector > .dialog > .old-form-ex > .fields > .input-ex:not(.position-selector-buttons) > .fields {
     display: grid;
     align-items: center;
     column-gap: 0.5em;
     grid-template-columns: auto auto 0.5em;
 }
 
-.position-selector > .dialog > .form-ex > .fields > .input-ex:not(.position-selector-buttons) > .fields > select {
+.position-selector > .dialog > .old-form-ex > .fields > .input-ex:not(.position-selector-buttons) > .fields > select {
     min-width: 15em;
 }
 
-.position-selector > .dialog > .form-ex > .fields > .input-ex.position-selector-buttons {
+.position-selector > .dialog > .old-form-ex > .fields > .input-ex.position-selector-buttons {
     display: block;
 }
 
-.position-selector > .dialog > .form-ex > .fields > .input-ex.position-selector-buttons > .fields {
+.position-selector > .dialog > .old-form-ex > .fields > .input-ex.position-selector-buttons > .fields {
     text-align: center;
 }
 
-.job-application-selector > .dialog > .form-ex > h3 {
+.job-application-selector > .dialog > .old-form-ex > h3 {
     margin: 0px 0px 0.5em;
     text-align: center;
 }
 
-.job-application-selector > .dialog > .form-ex > .fields > .applicant-query-box {
+.job-application-selector > .dialog > .old-form-ex > .fields > .applicant-query-box {
     display: block;
     margin-bottom: 1em;
 }
 
-.job-application-selector > .dialog > .form-ex > .fields > .applicant-query-box > .fields > input {
+.job-application-selector > .dialog > .old-form-ex > .fields > .applicant-query-box > .fields > input {
     display: block;
     width: 100%;
 }
 
-.job-application-selector > .dialog > .form-ex > .fields > .applicant-list-box {
+.job-application-selector > .dialog > .old-form-ex > .fields > .applicant-list-box {
     display: block;
 }
 
-.job-application-selector > .dialog > .form-ex > .fields > .applicant-list-box > .fields {
+.job-application-selector > .dialog > .old-form-ex > .fields > .applicant-list-box > .fields {
     display: flex;
     flex-direction: column;
     max-height: 15em;
     overflow: auto;
 }
 
-.job-application-selector > .dialog > .form-ex > .fields > .job-application-selector-buttons {
+.job-application-selector > .dialog > .old-form-ex > .fields > .job-application-selector-buttons {
     display: block;
     margin-top: 1em;
     text-align: right;
@@ -927,4 +927,64 @@ REINSTATE FOR PRINTOUT
 .rqa-form > .fields > .rqa-update {
     display: block;
     text-align: right;
+}
+
+.dialog-ex.assign-roles .dialog-content {
+    grid-column: span 1;
+    grid-row: 2 / span 1;
+}
+
+.dialog-ex.assign-roles .dialog-content .selector-link-a {
+    color: gray;
+    font-size: 0.8em;
+}
+
+.dialog-ex.assign-roles .dialog-content .selector-link-a:hover {
+    color: blue;
+}
+
+.dialog-ex.assign-roles tr > * {
+    padding: 0.5em;
+}
+
+.dialog-ex.assign-roles .dialog-content table {
+    border-collapse: collapse;
+}
+
+.dialog-ex.assign-roles .dialog-content thead > tr:last-child > * {
+    border-bottom: 0.25em double;
+}
+
+.dialog-ex.assign-roles .dialog-content tbody > tr + tr > * {
+    border-top: 1px solid;
+}
+
+.dialog-ex.assign-roles .dialog-content tbody > tr > * {
+    vertical-align: top;
+    font-weight: bold;
+}    
+
+.dialog-ex.assign-roles .dialog-content tbody > tr > * + * {
+    font-weight: inherit;
+}    
+
+.dialog-ex.assign-roles .dialog-content tbody > tr > * > button[class^=selector-link-] {
+    margin: 0 0.5em 0;
+    padding: 0;
+    font-size: 0.5em;
+    border-radius: 50%;
+    border-width: 1px;
+    vertical-align: top;
+    user-select: none;
+}
+
+.dialog-ex.assign-roles .dialog-content tbody > tr > * > button[class^=selector-link-] > span[class^=material-] {
+    font-size: inherit;
+    font-weight: bold;
+    padding: 0;
+    margin: 0;
+}
+
+.dialog-ex.assign-roles .dialog-content tbody > tr > * > button[class^=selector-link-] > span[class^=material-]:hover {
+    color: red;
 }

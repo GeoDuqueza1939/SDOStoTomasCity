@@ -6,6 +6,7 @@
 <link href="/styles/default.css" rel="stylesheet" />
 <link href="/styles/main.css" rel="stylesheet" />
 <link href="/styles/ExClass.css" rel="stylesheet" />
+<link href="/styles/UIEx.css" rel="stylesheet" />
 <!-- FAVICON START -->
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -17,6 +18,7 @@
 <script src="/js/types.js"></script>
 <script src="/js/async.js"></script>
 <script src="/js/classes/ExClass.js"></script>
+<script src="/js/classes/UIEx.js"></script>
 <?php
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 

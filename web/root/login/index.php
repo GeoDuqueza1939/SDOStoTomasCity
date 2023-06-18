@@ -3,6 +3,7 @@ session_start();
 
 require_once('../path.php');
 
+
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
@@ -45,7 +46,7 @@ else
     {
         // MODE: sign in form
         $isInvalidSignIn = false;
-
+        
         require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
     }
 }

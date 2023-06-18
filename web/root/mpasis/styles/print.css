@@ -120,9 +120,10 @@ body.print {
 
 .ier-printout-signatory > .content > .name {
     display: flex;
-    height: 4em;
-    align-items: end;
-    justify-content: center;
+    height: 5em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
     min-height: 1.2em;
 }
 
@@ -249,9 +250,10 @@ body.print {
 
 .ies-printout-signatory-applicant > .content > .name {
     display: flex;
-    height: 4em;
-    align-items: end;
-    justify-content: center;
+    height: 5em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
     min-height: 1.2em;
 }
 
@@ -292,9 +294,10 @@ body.print {
 
 .ies-printout-signatory-hrmpsb > .content > .name {
     display: flex;
-    height: 4em;
-    align-items: end;
-    justify-content: center;
+    height: 5em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
     min-height: 1.2em;
 }
 
@@ -403,7 +406,7 @@ body.print {
 
 .car-printout-signatory > .content > .hrmpsb > .content > * {
     display: inline-block;
-    width: 12em;
+    min-width: 12em;
 }
 
 .car-printout-signatory > .content > .hrmpsb > .content > * > .content {
@@ -413,9 +416,11 @@ body.print {
 
 .car-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position {
     display: flex;
-    align-items: end;
-    justify-content: center;
-    height: 4em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+    height: 5em;
+    font-size: 1em;
 }
 
 .car-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position::after {
@@ -423,6 +428,7 @@ body.print {
     border-top: 1px solid;
     content: "Name and Position";
     display: block;
+    font-size: 1em;
 }
 
 .car-printout-signatory > .content > .appointer {
@@ -437,9 +443,11 @@ body.print {
 
 .car-printout-signatory > .content > .appointer > .content > .name-position {
     display: flex;
-    align-items: end;
-    justify-content: center;
-    height: 4em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+    height: 5em;
+    font-size: 1em;
 }
 
 .car-printout-signatory > .content > .appointer > .content > .name-position::after {
@@ -447,6 +455,7 @@ body.print {
     border-top: 1px solid;
     content: "Name and Position";
     display: block;
+    font-size: 1em;
 }
 
 .rqa-form {
@@ -544,7 +553,7 @@ body.print {
 
 .rqa-printout-signatory > .content > .hrmpsb > .content > * {
     display: inline-block;
-    width: 12em;
+    min-width: 12em;
 }
 
 .rqa-printout-signatory > .content > .hrmpsb > .content > * > .content {
@@ -554,9 +563,10 @@ body.print {
 
 .rqa-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position {
     display: flex;
-    align-items: end;
-    justify-content: center;
-    height: 4em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+    height: 5em;
 }
 
 .rqa-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position::after {
@@ -578,9 +588,10 @@ body.print {
 
 .rqa-printout-signatory > .content > .appointer > .content > .name-position {
     display: flex;
-    align-items: end;
-    justify-content: center;
-    height: 4em;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+    height: 5em;
 }
 
 .rqa-printout-signatory > .content > .appointer > .content > .name-position::after {

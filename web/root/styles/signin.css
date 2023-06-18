@@ -2,7 +2,7 @@
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
-.login-page > header {
+/* .login-page > header {
     background-color: var(--bg1);
     padding: 2em;
     align-content: center;
@@ -33,7 +33,7 @@
 
 .login-page .header-logo {
     /* display: inline-block; */
-    /* max-width: 8em; */
+    /* max-width: 8em; */ /*
 }
 
 .login-page .header-logo > img {
@@ -41,13 +41,13 @@
 }
 
 .login-page .header-text {
-    /* display: inline-flex; */
+    /* display: inline-flex; */ /*
     padding-left: 1em;
     text-align: left;
     font-size: 1.25em;
     /* align-items: start; */
     /* justify-items: center; */
-    /* flex-direction: column; */
+    /* flex-direction: column; */ /*
     color: beige;
     text-shadow: 0.05em 0.05em black;
 }
@@ -57,16 +57,16 @@
     font-family: 'Old English Text MT', 'Times New Roman', serif;
     font-weight: bold;
     /* text-shadow: 0.03em 0.025em gray; */
-    /* color: var(--hlt); */
+    /* color: var(--hlt); */ /*
 }
 
 .login-page .header-text-sdo {
     display: block;
     font-family: 'Bookman Old Style', 'Book Antiqua', 'Times New Roman', Times, serif;
     font-weight: bold;
-}
+} */
 
-.login-page > section {
+/* .login-page > section {
     text-align: center;
     background-image: url("/images/makiling-stotomas.jpg");
     background-size: cover;
@@ -76,7 +76,7 @@
     right: 0;
     bottom: 0;
     overflow: auto;
-}
+} */
 
 .login-page form {
 }

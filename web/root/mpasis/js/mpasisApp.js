@@ -90,6 +90,7 @@ class MPASIS_App extends App
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
                     document.positionCategory = data["position_category"];
+                    document.hrRoles = data["hr_roles"];
             
                     if (MPASIS_App.getCookie("current_view") == "" || MPASIS_App.getCookie("current_view") == undefined)
                     {
@@ -294,7 +295,7 @@ class MPASIS_App extends App
                         switch (obj.dialogId)
                         {
                             case "edit-user":
-                                new UserEditor(this, "my-user-editor", 1, this.currentUser);
+                                new UserEditor().setup(this.main, this, "my-user-editor", 1, this.currentUser);
                                 break;
                             case "change-password":
                                 new PasswordEditor(this, "my-password-editor", true);
@@ -304,7 +305,7 @@ class MPASIS_App extends App
                 });
                 break;
             case "other-account":
-                var otherAccountFormEx = new FormEx(this.mainSections["main-" + viewId], "other-account-form-ex", false);
+                var otherAccountFormEx = new Old_FormEx(this.mainSections["main-" + viewId], "other-account-form-ex", false);
 
                 otherAccountFormEx.setTitle("Other Account", 2);
 
@@ -365,7 +366,7 @@ class MPASIS_App extends App
                                             case 0:
                                                 btn.addEvent("click", clickEditAccountEvent=>{
                                                     this.temp["searchButton"] = btnGrp.inputExs[0];
-                                                    var editUserDialog = new UserEditor(this, "mpasis-other-account-user-editor", 1, row);
+                                                    var editUserDialog = new UserEditor().setup(this.main, this, "mpasis-other-account-user-editor", 1, row);
                                                 });
                                                 break;
                                             case 1:
@@ -434,7 +435,7 @@ class MPASIS_App extends App
                                                 break;
                                         }
                                     });
-                                    viewer.rows[viewer.rows.length - 1]["td"]["control"].appendChild(controlButtons.container);
+                                    viewer.rows.slice(-1)[0]["td"]["control"].appendChild(controlButtons.container);
                                 }
                             }
                         }
@@ -443,7 +444,7 @@ class MPASIS_App extends App
                 btnGrp.inputExs[1].setLabelText("Add New Account");
                 btnGrp.inputExs[1].setTooltipText("");
                 btnGrp.inputExs[1].addEvent("click", (event)=>{
-                    var addUserDialog = new UserEditor(this, "mpasis-add-account-user-editor", 0);
+                    var addUserDialog = new UserEditor().setup(this.main, this, "mpasis-add-account-user-editor", 0);
                 });
 
                 otherAccountFormEx.addStatusPane();
@@ -473,7 +474,7 @@ class MPASIS_App extends App
         var field = null;
         var header = null;
 
-        this.forms["jobData"] = new FormEx(this.mainSections["main-job-data-entry"], "job-data-form");
+        this.forms["jobData"] = new Old_FormEx(this.mainSections["main-job-data-entry"], "job-data-form");
         this.forms["jobData"].fieldWrapper.style.display = "grid";
         this.forms["jobData"].fieldWrapper.style.gridTemplateColumns = "auto auto auto auto auto auto auto auto auto auto auto auto";
         this.forms["jobData"].fieldWrapper.style.gridAutoFlow = "column";
@@ -481,6 +482,10 @@ class MPASIS_App extends App
 
         this.forms["jobData"].setFullWidth();
         this.forms["jobData"].setTitle("Job Data Entry", 2);
+
+        field = this.forms["jobData"].addInputEx("Load Position", "buttonEx", "", "Load Position", "loadPosition");
+        field.container.style.gridColumn = "1 / span 12";
+        field.container.classList.add("right");
 
         field = this.forms["jobData"].addInputEx("Position Title", "text", "", "", "position_title", "Position");
         field.container.style.gridColumn = "1 / span 6";
@@ -663,7 +668,7 @@ class MPASIS_App extends App
             addEligibilityBtn = new InputEx(this.fieldWrapper, "add-eligibility-input-ex", "buttonEx", false);
             addEligibilityBtn.setLabelText("+Add Missing Eligibility");
             addEligibilityBtn.addEvent("click", (clickEvent)=>{
-                var addEligDialog = new DialogEx(this.container, "add-eligibility-dialog-ex");
+                var addEligDialog = new Old_DialogEx(this.container, "add-eligibility-dialog-ex");
                 var addEligForm = addEligDialog.addFormEx();
                 var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
                 addEligForm.addLineBreak();
@@ -792,9 +797,9 @@ class MPASIS_App extends App
             });
 
             // DEBUG
-            // console.log(packageData(positions));
+            console.log(packageData(positions));
             
-            // return;
+            return;
             // DEBUG
             
             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
@@ -811,7 +816,13 @@ class MPASIS_App extends App
                     }
                     else if (response.type == "Success")
                     {
-                        new MsgBox(this.forms["jobData"].container, response.content, "OK");
+                        new MsgBox(this.forms["jobData"].container, response.content, "OK", successClickOKEvent=>{
+                            window.location.reload(true);
+                        });
+                    }
+                    else if (response.type == "Warning")
+                    {
+                        new MsgBox(this.forms["jobData"].container, "WARNING: " + response.content, "OK");
                     }
                 }
             });
@@ -846,7 +857,7 @@ class MPASIS_App extends App
 
         document.scrim = new ScrimEx(this.main);
 
-        applicantDataForm = this.forms["applicantData"] = new FormEx(this.mainSections["main-applicant-data-entry"], "applicant-data-form-ex", true);
+        applicantDataForm = this.forms["applicantData"] = new Old_FormEx(this.mainSections["main-applicant-data-entry"], "applicant-data-form-ex", true);
         applicantDataForm.setFullWidth();
 
         applicantDataForm.fieldWrapper.style.display = "grid";
@@ -1173,9 +1184,9 @@ class MPASIS_App extends App
                 "trainingHoursInputEx": new InputEx(createElementEx(NO_NS, "td", row, null, "class", "bordered"), "trainingHours-" + timestamp, "number")
             });
 
-            trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].setDefaultValue(0, true);
+            trainingInputExs.slice(-1)[0]["trainingHoursInputEx"].setDefaultValue(0, true);
 
-            trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].addEvent("change", changeEvent=>{
+            trainingInputExs.slice(-1)[0]["trainingHoursInputEx"].addEvent("change", changeEvent=>{
                 attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
             });
 
@@ -1185,7 +1196,7 @@ class MPASIS_App extends App
             removeRowBtn.fields[0].style.padding = 0;
             removeRowBtn.fields[0].style.fontSize = "0.5em";
             removeRowBtn["row"] = row;
-            removeRowBtn["rowData"] = trainingInputExs[trainingInputExs.length - 1];
+            removeRowBtn["rowData"] = trainingInputExs.slice(-1)[0];
             removeRowBtn.addEvent("click", (removeClickEvent)=>{
                 if (removeRowBtn.removeRowOverride)
                 {
@@ -1203,20 +1214,20 @@ class MPASIS_App extends App
                 }
             });
 
-            for (const key in trainingInputExs[trainingInputExs.length - 1])
+            for (const key in trainingInputExs.slice(-1)[0])
             {
-                trainingInputExs[trainingInputExs.length - 1][key]["removeRowBtn"] = removeRowBtn;
+                trainingInputExs.slice(-1)[0][key]["removeRowBtn"] = removeRowBtn;
             }
 
-            trainingInputExs[trainingInputExs.length - 1].trainingInputEx.setFullWidth();
-            trainingInputExs[trainingInputExs.length - 1].trainingInputEx.setPlaceholderText("Enter a descriptive name for the training");
-            trainingInputExs[trainingInputExs.length - 1].trainingInputEx.fields[0].style.width = "100%";
-            trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setFullWidth();
-            trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setPlaceholderText("hours");
-            trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setMin(0);
-            trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.setMax(999);
-            trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.fields[0].style.width = "100%";
-            trainingInputExs[trainingInputExs.length - 1].trainingHoursInputEx.fields[0].style.textAlign = "right";
+            trainingInputExs.slice(-1)[0].trainingInputEx.setFullWidth();
+            trainingInputExs.slice(-1)[0].trainingInputEx.setPlaceholderText("Enter a descriptive name for the training");
+            trainingInputExs.slice(-1)[0].trainingInputEx.fields[0].style.width = "100%";
+            trainingInputExs.slice(-1)[0].trainingHoursInputEx.setFullWidth();
+            trainingInputExs.slice(-1)[0].trainingHoursInputEx.setPlaceholderText("hours");
+            trainingInputExs.slice(-1)[0].trainingHoursInputEx.setMin(0);
+            trainingInputExs.slice(-1)[0].trainingHoursInputEx.setMax(999);
+            trainingInputExs.slice(-1)[0].trainingHoursInputEx.fields[0].style.width = "100%";
+            trainingInputExs.slice(-1)[0].trainingHoursInputEx.fields[0].style.textAlign = "right";
         });
         specTrainingAttained.addEvent("change", changeEvent=>{
             attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
@@ -1357,12 +1368,12 @@ class MPASIS_App extends App
                 "workExpDuration": new DisplayEx(createElementEx(NO_NS, "td", row, null, "class", "bordered right", "style", "font-size: 0.8em;"), "div", "workExpDuration-" + timestamp, "0 days")
             });
 
-            workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].setTooltipText("Leave blank if still employed");
+            workExpInputExs.slice(-1)[0]["workExpEndDateInputEx"].setTooltipText("Leave blank if still employed");
 
-            workExpInputExs[workExpInputExs.length - 1]["workExpStartDateInputEx"].addEvent("change", changeEvent=>{
+            workExpInputExs.slice(-1)[0]["workExpStartDateInputEx"].addEvent("change", changeEvent=>{
                 attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
             });
-            workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].addEvent("change", changeEvent=>{
+            workExpInputExs.slice(-1)[0]["workExpEndDateInputEx"].addEvent("change", changeEvent=>{
                 attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
             });
             
@@ -1372,7 +1383,7 @@ class MPASIS_App extends App
             removeRowBtn.fields[0].style.padding = 0;
             removeRowBtn.fields[0].style.fontSize = "0.5em";
             removeRowBtn["row"] = row;
-            removeRowBtn["rowData"] = workExpInputExs[workExpInputExs.length - 1];
+            removeRowBtn["rowData"] = workExpInputExs.slice(-1)[0];
             removeRowBtn.addEvent("click", (removeClickEvent)=>{
                 if (removeRowBtn.removeRowOverride)
                 {
@@ -1390,18 +1401,18 @@ class MPASIS_App extends App
                 }
             });
 
-            for (const key in workExpInputExs[workExpInputExs.length - 1])
+            for (const key in workExpInputExs.slice(-1)[0])
             {
-                workExpInputExs[workExpInputExs.length - 1][key]["removeRowBtn"] = removeRowBtn;
+                workExpInputExs.slice(-1)[0][key]["removeRowBtn"] = removeRowBtn;
             }
 
-            workExpInputExs[workExpInputExs.length - 1].workExpInputEx.setFullWidth();
-            workExpInputExs[workExpInputExs.length - 1].workExpInputEx.setPlaceholderText("Enter a descriptive name for the work experience");
-            workExpInputExs[workExpInputExs.length - 1].workExpInputEx.fields[0].style.width = "100%";
-            workExpInputExs[workExpInputExs.length - 1].workExpStartDateInputEx.setFullWidth();
-            workExpInputExs[workExpInputExs.length - 1].workExpStartDateInputEx.fields[0].style.width = "100%";
-            workExpInputExs[workExpInputExs.length - 1].workExpEndDateInputEx.setFullWidth();
-            workExpInputExs[workExpInputExs.length - 1].workExpEndDateInputEx.fields[0].style.width = "100%";
+            workExpInputExs.slice(-1)[0].workExpInputEx.setFullWidth();
+            workExpInputExs.slice(-1)[0].workExpInputEx.setPlaceholderText("Enter a descriptive name for the work experience");
+            workExpInputExs.slice(-1)[0].workExpInputEx.fields[0].style.width = "100%";
+            workExpInputExs.slice(-1)[0].workExpStartDateInputEx.setFullWidth();
+            workExpInputExs.slice(-1)[0].workExpStartDateInputEx.fields[0].style.width = "100%";
+            workExpInputExs.slice(-1)[0].workExpEndDateInputEx.setFullWidth();
+            workExpInputExs.slice(-1)[0].workExpEndDateInputEx.fields[0].style.width = "100%";
 
         });
 
@@ -1438,7 +1449,7 @@ class MPASIS_App extends App
 
             this.setAsExtendableList(true, "+Add missing eligibility", clickEvent=>{
                 var addEligibilityBtn = clickEvent.target.inputEx;
-                var addEligDialog = new DialogEx(field.fieldWrapper, "add-eligibility-dialog-ex");
+                var addEligDialog = new Old_DialogEx(field.fieldWrapper, "add-eligibility-dialog-ex");
                 var addEligForm = addEligDialog.addFormEx();
 
                 var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
@@ -1520,7 +1531,7 @@ class MPASIS_App extends App
                     {
                         for (const reqElig of appliedPosition["required_eligibility"]) {
                             requiredEligibilities.push([]);
-                            var requiredEligibility = requiredEligibilities[requiredEligibilities.length - 1];
+                            var requiredEligibility = requiredEligibilities.slice(-1)[0];
                             requiredEligibility.push(reqElig["eligibilityId"]);
                             if (reqElig["eligibilityId2"] != null && reqElig["eligibilityId2"] != undefined && (typeof(reqElig["eligibilityId2"]) == "string" && reqElig["eligibilityId2"] != ""))
                             {
@@ -1646,15 +1657,15 @@ class MPASIS_App extends App
                                 case "relevant_training":
                                     while(trainingInputExs.length > 0)
                                     {
-                                        trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"]["removeRowBtn"].removeRowOverride = true;
-                                        trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"]["removeRowBtn"].fields[0].click();
+                                        trainingInputExs.slice(-1)[0]["trainingInputEx"]["removeRowBtn"].removeRowOverride = true;
+                                        trainingInputExs.slice(-1)[0]["trainingInputEx"]["removeRowBtn"].fields[0].click();
                                     }
 
                                     for (const training of applicationObj[key])
                                     {
                                         addTrainingBtn.fields[0].click();
-                                        trainingInputExs[trainingInputExs.length - 1]["trainingInputEx"].setDefaultValue(training["descriptive_name"], true);
-                                        trainingInputExs[trainingInputExs.length - 1]["trainingHoursInputEx"].setDefaultValue(training["hours"], true);
+                                        trainingInputExs.slice(-1)[0]["trainingInputEx"].setDefaultValue(training["descriptive_name"], true);
+                                        trainingInputExs.slice(-1)[0]["trainingHoursInputEx"].setDefaultValue(training["hours"], true);
                                     }
                                     attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
                                     break;
@@ -1667,17 +1678,17 @@ class MPASIS_App extends App
                                 case "relevant_work_experience":
                                     while(workExpInputExs.length > 0)
                                     {
-                                        workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"]["removeRowBtn"].removeRowOverride = true;
-                                        workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"]["removeRowBtn"].fields[0].click();
+                                        workExpInputExs.slice(-1)[0]["workExpInputEx"]["removeRowBtn"].removeRowOverride = true;
+                                        workExpInputExs.slice(-1)[0]["workExpInputEx"]["removeRowBtn"].fields[0].click();
                                     }
 
                                     for (const workExp of applicationObj[key])
                                     {
                                         addWorkExpBtn.fields[0].click();
-                                        workExpInputExs[workExpInputExs.length - 1]["workExpInputEx"].setDefaultValue(workExp["descriptive_name"], true);
-                                        workExpInputExs[workExpInputExs.length - 1]["workExpStartDateInputEx"].setDefaultValue(workExp["start_date"], true);
-                                        workExpInputExs[workExpInputExs.length - 1]["workExpEndDateInputEx"].setDefaultValue(workExp["end_date"], true);
-                                        workExpInputExs[workExpInputExs.length - 1]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
+                                        workExpInputExs.slice(-1)[0]["workExpInputEx"].setDefaultValue(workExp["descriptive_name"], true);
+                                        workExpInputExs.slice(-1)[0]["workExpStartDateInputEx"].setDefaultValue(workExp["start_date"], true);
+                                        workExpInputExs.slice(-1)[0]["workExpEndDateInputEx"].setDefaultValue(workExp["end_date"], true);
+                                        workExpInputExs.slice(-1)[0]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
                                     }
                                     attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
                                     break;
@@ -1701,7 +1712,7 @@ class MPASIS_App extends App
                     loadApplicant.setLabelText("Reset Form");
                 };
 
-                retrieveApplicantDialog = new JobApplicationSelectorDialog(app.main, "applicant-data-job-application-selector-dialog", [
+                retrieveApplicantDialog = new JobApplicationSelectorDialog(this, "applicant-data-job-application-selector-dialog", [
                     {label:"New", tooltip:"Create a new application from the selected application's data", callbackOnClick:event=>{                
                         var searchResult = retrieveApplicantDialog.getApplicantListBox();
                         
@@ -1783,6 +1794,7 @@ class MPASIS_App extends App
                     document.mpsEducIncrement = data["mps_increment_table_education"];
                     document.enumEducationalAttainment = data["enum_educational_attainment"];
                     document.positionCategory = data["position_category"];
+                    document.hrRoles = data["hr_roles"];
                     
                     document.scrim.destroy();
 
@@ -2308,7 +2320,7 @@ class MPASIS_App extends App
         return !this.isDefined(value) || this.isEmptyString(value);
     }
 
-    static getFullName(givenName, middleName, familyName, spouseName, extName, lastNameFirst = false, middleInitialOnly = false)
+    static getFullName(givenName, middleName, familyName, spouseName, extName, lastNameFirst = false, middleInitialOnly = true)
     {
         var nameArr = null;
 

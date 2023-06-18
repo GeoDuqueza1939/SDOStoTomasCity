@@ -1,5 +1,219 @@
 # Work Log
 
+## 6/29/2023
+TO DO:
+* [ ] Endorse source code to IT Officer
+
+## 6/19/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [ ] Test MPaSIS for production fitness
+* [ ] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/16/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [ ] Test MPaSIS for production fitness
+* [ ] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [x] Add a class for selecting items via link
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/15/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [ ] Test MPaSIS for production fitness
+* [ ] Add a class for selecting items via link
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+Exam and interview day.
+
+## 6/14/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [x] Finish ButtonGroupEx class
+* [x] Add new DialogEx class
+* [ ] Test MPaSIS for production fitness
+* [x] Develop UIEx framework for better UI rendering and data handling
+* [x] Allow changes in temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/13/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [x] Add ButtonGroupEx class
+* [ ] Add new DialogEx class
+* [ ] Test MPaSIS for production fitness
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/9/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [ ] Add new DialogEx class
+* [x] Add new DataFormEx class
+* [ ] Test MPaSIS for production fitness
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [x] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/8/2023
+TO DO:
+* [x] Add event callback arrays to ControlEx
+* [x] Add more UIEx references on wrapped elements
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [ ] Add new DialogEx class
+* [ ] Add new DataFormEx class
+* [ ] Test MPaSIS for production fitness
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+I found a bug in the Applicant Data Form, which caused the JobApplicationSelectorDialog to not generate.
+
+## 6/7/2023
+TO DO:
+* [ ] Cleanup Code
+* [ ] Change font-family (ask for suggestions)
+* [ ] Handle tied scores in the rankings
+* [ ] Add new DialogEx class
+* [ ] Add new DataFormEx class
+* [x] Add CheckboxGroupEx class
+* [x] Add RadioButtonGroupEx class
+* [x] Add RadioButtonEx class
+* [ ] Test MPaSIS for production fitness
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/6/2023
+TO DO:
+* [ ] Handle tied scores in the rankings
+* [ ] Add RadioButtonGroupEx class
+* [ ] Add CheckboxGroupEx class
+* [ ] Add RadioButtonEx class
+* [x] Add CheckboxEx class
+* [x] Add ListBoxEx class
+* [x] Add DropDownEx class
+* [ ] Test MPaSIS for production fitness
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/5/2023
+TO DO:
+* [ ] Add ListBoxEx class
+* [ ] Add RadioButtonGroupEx class
+* [ ] Add CheckboxGroupEx class
+* [ ] Add RadioButtonEx class
+* [ ] Add CheckboxEx class
+* [ ] Add DropDownEx class
+* [x] Add ComboEx class
+* [x] Add ButtonEx class
+* [x] Add InputButtonEx class
+* [x] Add a SetupFooter method to TableEx
+* [ ] Test MPaSIS for production fitness
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/2/2023
+TO DO:
+* [x] Add DateTimeFieldEx class
+* [x] Add TimeFieldEx class
+* [x] Add DateFieldEx class
+* [x] Add NumberFieldEx class
+* [x] Add TextboxEx class
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Test MPaSIS for production fitness
+* [ ] Add Honor Graduate to eligibilities
+
+## 6/1/2023
+TO DO:
+* [x] Add a very flexible TableEx for use in laying out and moving around of both content and input components
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Test MPaSIS for production fitness
+* [ ] Add Honor Graduate to eligibilities
+
+## 5/31/2023
+TO DO:
+* [x] Add a FrameEx class
+* [ ] Add TableEx for use in laying out of both content and input components
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Test MPaSIS for production fitness
+* [ ] Add Honor Graduate to eligibilities
+
+## 5/30/2023
+TO DO:
+* [x] Add a LabelEx class for labelling and/or adding captions to various components
+* [x] Add a DivEx class
+* [x] Add a SpanEx class
+* [x] Add a ContainerEx classes that will help in holding content and input components
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [ ] Test MPaSIS for production fitness
+* [ ] Add Honor Graduate to eligibilities
+
+I finished the SpanEx and DivEx classes today
+
+## 5/29/2023
+TO DO:
+* [ ] Develop UIEx framework for better UI rendering and data handling
+* [ ] Add temporary signatory names
+* [ ] Add signatory names
+* [ ] Provide a field/checkbox for withdrawn applications
+* [x] Improve appearance of SDO Services sign-in page
+* [x] Improve appearance of SDO Services landing page
+* [ ] Test MPaSIS for production fitness
+* [ ] Add Honor Graduate to eligibilities
+
+I started work today on the landing and sign-in page, trying to make the styling consistent for the two pages. After that, I started work on my new UIEx control framework which, I hope, can further simplify my coding processes.
+
 ## 5/26/2023
 TO DO:
 * [x] Add MPASIS_Settings class
