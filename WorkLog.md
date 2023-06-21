@@ -4,20 +4,58 @@
 TO DO:
 * [ ] Endorse source code to IT Officer
 
+## 6/21/2023
+TO DO:
+* [ ] [SeRGS] Design New Request layout
+* [ ] Make secure folder secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+I spent most of the first 2 hours fixing my work logs. Afterwards I continued work on the New Request page
+
+## 6/20/2023
+TO DO:
+* [x] [SeRGS] Design Dashboard layout
+* [x] [SeRGS] Design View Service Record layout
+* [x] [SeRGS] Add preliminary design layout for My Service Record UI
+* [x] [SeRGS] Add variant views depending on user access level
+* [ ] [SeRGS] Design New Request layout
+* [ ] Make secure folder secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+Today, I progressively worked on the SeRGS_App, mostly in the backend. I worked on the Dashboard layout, implementing it with card-like interface, which would look cool in pastel, although I colored them gray for now. I also made it so that the access level of the user affects the cards that can be viewed by the user. I also worked on the View Service Record layout by making the links to the underlying pages look like cards, as well. I also added a bare-bones layout for the My Service Record page, the table of which can be constructed either in the PHP backend or through the JS/HTML frontend. I also began work on the New Request page, which also features a variant layout, depending on the user's access level. I will need to finish this tomorrow.
+
 ## 6/19/2023
 TO DO:
-* [ ] Cleanup Code
-* [ ] Change font-family (ask for suggestions)
-* [ ] Handle tied scores in the rankings
-* [ ] Test MPaSIS for production fitness
-* [ ] Add features in Add User dialog that will handle the adding of temporary users with positions
-* [ ] Add signatory names
-* [ ] Provide a field/checkbox for withdrawn applications
-* [ ] Add Honor Graduate to eligibilities
+* [x] [SeRGS] Create SeRGS_App class
+* [x] [SeRGS] Add bare-bones index files for destination folders
+* [ ] [SeRGS] Design Dashboard layout
+* [ ] [SeRGS] Design view Service Record layout
+* [x] [SeRGS] Adjust SeRGS UI to be consistent with layout and styling of MPaSIS
+* [ ] Make secure folder secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+Its the first day of the week and a few days before my Job Order is officially finised. I decided to leave work on MPaSIS for a while and continue working on the SeRGS for a change of pace. Also, I would like to accomplish a few more things aside from the MPaSIS app before I am finished with the current Job Order. I added the SeRGS_App class by using the MPaSIS_App class as reference. But I also tried to implement a counterpart SeRGS_App on the backend as well while also adding index files to destination web folders. Although implementing almost everything in JavaScript would be faster, I reckoned that making the backend handle more processing is the more practical way forward. I might do the same with the MPaSIS_App once I am renewed with the Job Order contract or once I am hired as an ADAS I/III, whichever comes first.
 
 ## 6/16/2023
 TO DO:
-* [ ] Cleanup Code
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [ ] Test MPaSIS for production fitness
@@ -27,9 +65,10 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
+My work progressed a bit slowly today. I continued my work on the SelectorLink class and eventually finished it early in the afternoon. I also tried using the SelectorLink on the Assign Roles dialog in the MPaSIS settings page. I was able to finish the said dialog box, but I still needed to add a backend processor for this to make the signatory names a fully working feature. I also tried to modify the Add/Edit user dialog to allow adding of positions, but I kept on stumbling on the new DialogEx class which I tried to use. I will need more time for this later on.
+
 ## 6/15/2023
 TO DO:
-* [ ] Cleanup Code
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [ ] Test MPaSIS for production fitness
@@ -38,11 +77,10 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
-Exam and interview day.
+Today was exam and interview day for the ADAS I application. I couldn't really focus on work today, but I did begin coding the SelectorLink class, which should feature a link that changes to a dropdown listbox when clicked that, in turn, changes into a simple text node whose contents are the text in the selected item. However, I might need to finish this tomorrow.
 
 ## 6/14/2023
 TO DO:
-* [ ] Cleanup Code
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [x] Finish ButtonGroupEx class
@@ -54,9 +92,10 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
+I added a few modifications to the ButtonGroupEx class today. Afterwards, I finished the new DialogEx class to wrap up the new UIEx framework which I worked on for a couple of weeks. Likewise, I added some code to allow temporary modifications to (the temporary) signatory names in the printouts by double clicking and editing them before printing. All these were dealt with while participating and anticipating the Open Ranking procedures for my ADAS I application.
+
 ## 6/13/2023
 TO DO:
-* [ ] Cleanup Code
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [x] Add ButtonGroupEx class
@@ -67,9 +106,10 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
+Today, I started work on ButtonGroupEx. Its implementation was a breeze, using some of the methods from the previously finished -GroupEx classes. I, eventually, started reimplementing the DialogEx class. It took a lot of my time, especially as I had to implement the same or similar useful features. I will need to continue this tomorrow.
+
 ## 6/9/2023
 TO DO:
-* [ ] Cleanup Code
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [ ] Add new DialogEx class
@@ -81,11 +121,13 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
+I was able to finish (most of) the DataFormEx class today after working on it for a few days, although I might need to polish its data submission feature once I put the class into use. I also tried to add signatories in some of the forms, albiet temporarily. I will soon need to implement the signatory names that can be fixed in the database through the settings of the MPaSIS app.
+
 ## 6/8/2023
 TO DO:
 * [x] Add event callback arrays to ControlEx
 * [x] Add more UIEx references on wrapped elements
-* [ ] Cleanup Code
+* [x] Fix bug on the JobApplicationSelectorDialog instantiation
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [ ] Add new DialogEx class
@@ -97,11 +139,10 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
-I found a bug in the Applicant Data Form, which caused the JobApplicationSelectorDialog to not generate.
+I found and eventually fixed a bug in the Applicant Data Form, which caused the JobApplicationSelectorDialog to not generate. It turned out that the dialog was actually generating, but it is not being inserted into the DOM. The issue came from changes to the original DialogEx class which required for the App to be added as an argument instead of a parent HTML element. The issue also existed in the other forms, as well, but went undetected as the features haven't been tested for quite a while. As a corollary, I added some more UIEx references on some UIEx wrapped elements, for better reference redundancy and debugging. I also added an event callback array to the ControlEx parent class that can be used in storing event callbacks.
 
 ## 6/7/2023
 TO DO:
-* [ ] Cleanup Code
 * [ ] Change font-family (ask for suggestions)
 * [ ] Handle tied scores in the rankings
 * [ ] Add new DialogEx class
@@ -115,6 +156,8 @@ TO DO:
 * [ ] Add signatory names
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
+
+Today, I continued work on the backlogs yesterday and eventually finished them. Afterwards, I laid the groundwork for the reimplementation of the DialogEx and the FormEx classes. I renamed the reimplementation of the FormEx class as DataFormEx instead of retaining the old name to differentiate it from the Form HTML element better, as it doesn't always use a Form element.
 
 ## 6/6/2023
 TO DO:
@@ -131,6 +174,10 @@ TO DO:
 * [ ] Add signatory names
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
+
+After adding a few more finishing touches to the ComboEx class, I started work on the DropDownEx class, which uses the select HTML element and is somewhat the uneditable version of the ComboEx class. I also derived the ListBoxEx class from the DropDownEx class, which allows for multiple items to be selected while holding the CTRL or SHIFT keys. I also began work on the RadioButtonEX, the CheckboxGroupEx, and the RadioButtonGroupEx classes simultaneously. At first, I intended to derived the CheckboxGroupEx and the RadioButtonGroupEx classes from the CheckboxEx and the RadioButtonEX classes, respectively, but doing so proved to be a bit difficult due to the prototype inheritance in JavaScript, which treats the `this` identifier as a pointer to the current object in scope and not on the parent class scope even when it is used by a parent class method. I will have to continue this tomorrow after apply a few finishing touches to the CheckboxEx class.
+
+On the side, I had a little conversation with others in the Personnel section regarding ties in the bottom of the top 5 rankings. I still haven't fully handled the ties in the bottom part of the top 5. I will have to work on this sooner or later.
 
 ## 6/5/2023
 TO DO:
@@ -151,6 +198,8 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Add Honor Graduate to eligibilities
 
+I further modified the TableEx class by adding a SetupFooter method, which was supposed to allow colspans on footer cells even on a single row footer. This will be particularly useful in instances where there is a need to add summary of the data in the tbody cells. Afterwards, I worked on the ButtonEx and InputButtonEx classes. I also started work on the ComboEx class, which I finished before end-of-shift.
+
 ## 6/2/2023
 TO DO:
 * [x] Add DateTimeFieldEx class
@@ -165,6 +214,10 @@ TO DO:
 * [ ] Test MPaSIS for production fitness
 * [ ] Add Honor Graduate to eligibilities
 
+After fully implementing the TextboxEx class, I derived other classes from it, such as the NumberFieldEx class, the DateFieldEx class, the TimeFieldEx class, and the DateTimeFieldEx class. I took a somewhat longer time implementing the DateFieldEx class, but pretty soon it was a breeze when I worked on the other TextboxEx-derived classes.
+
+On the side, it doesn't seem like the testing of the MPaSIS web app would be scheduled anytime soon. I will try to just work on it a little more, particularly in putting signatory names on the printable forms.
+
 ## 6/1/2023
 TO DO:
 * [x] Add a very flexible TableEx for use in laying out and moving around of both content and input components
@@ -174,6 +227,8 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Test MPaSIS for production fitness
 * [ ] Add Honor Graduate to eligibilities
+
+The TableEx class proved to be composed of a big chunk of code. It took me quite a while, but I eventually finished it today. I, then, began work on the TextboxEx class, which could prove to be the ControlEx-derived class that will have much use.
 
 ## 5/31/2023
 TO DO:
@@ -185,6 +240,8 @@ TO DO:
 * [ ] Provide a field/checkbox for withdrawn applications
 * [ ] Test MPaSIS for production fitness
 * [ ] Add Honor Graduate to eligibilities
+
+I have added a FrameEx class as another ContainerEx-derived class. Afterwards, I began work on the TableEx class, which proved to be taking a significant time of my work time, especially as it has a lot more structures than other ContainerEx classes. I might need to continue this tomorrow, instead.
 
 ## 5/30/2023
 TO DO:
@@ -199,7 +256,7 @@ TO DO:
 * [ ] Test MPaSIS for production fitness
 * [ ] Add Honor Graduate to eligibilities
 
-I finished the SpanEx and DivEx classes today
+I finished the SpanEx and DivEx classes today. I have also added a LabelEx class to make labelling/captioning controls and containers easier.
 
 ## 5/29/2023
 TO DO:

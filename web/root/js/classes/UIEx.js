@@ -644,9 +644,9 @@ class ContainerEx extends UIEx
                 this.container.uiEx = this;
 
                 Array.from(this.container.children).forEach(node=>{
-                    if (ElementEx.isElement(node) && node.classList.contains("label-ex"))
+                    if (ElementEx.isElement(node) && node.classList.contains("label-ex") && (this.labelEx === null || this.labelEx === undefined))
                     {
-                        this.labelEx = new LabelEx.setupFromHTMLElement(node);
+                        this.labelEx = new LabelEx().setupFromHTMLElement(node);
                     }
                 });
             }
@@ -722,6 +722,30 @@ class ContainerEx extends UIEx
         else
         {
             throw new ReferenceError("This UIEx object is not yet setup.");
+        }
+    }
+
+    get captionHeaderLevel()
+    {
+        if (this.labelEx !== null && this.labelEx.container.tagName[0].toLowerCase() === "h")
+        {
+            return Number.parseInt(this.labelEx.container.tagName[1]);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    set captionHeaderLevel(level = 0)
+    {
+        console.log(level);
+        if (this.captionHeaderLevel !== level)
+        {
+            let newTag = ElementEx.replace(this.labelEx.container, (level > 0 && level < 7 ? "h" + level : "span"));
+
+            this.labelEx.resetUIEx();
+            this.labelEx.setupFromHTMLElement(newTag);
         }
     }
 
@@ -1054,7 +1078,7 @@ class TableEx extends ContainerEx
 
     setupHeaders(headers = [{name:"", text:"", subheaders:[]}])
     {
-        let addHeader = null, tr = null;
+        let addHeader = null, tr = null, maxDepth = 0;
 
         if (ElementEx.isElement(this.thead))
         {
@@ -1091,8 +1115,10 @@ class TableEx extends ContainerEx
                 currentLevel = Array.from(this.thead.children).findIndex(row=>tr === row) + 1;
 
                 this.headers[header.name] = {
+                    name:header.name,
                     tr:tr,
                     th:ElementEx.create((this.type === "table" ? "th" : this.type), ElementEx.NO_NS, tr),
+                    parentHeader:null,
                     subheaders:[],
                     level:currentLevel,
                     contenteditable:false,
@@ -1132,6 +1158,9 @@ class TableEx extends ContainerEx
                     {
                         [childDescendantDepth, subheaderColSpan] = addHeader(subheader);
 
+                        this.headers[header.name].subheaders.push(this.headers[subheader.name]);
+                        this.headers[subheader.name].parentHeader = this.headers[header.name];
+
                         this.headers[header.name].colSpan += subheaderColSpan;
                         
                         maxDescendantDepth = Math.max(childDescendantDepth, maxDescendantDepth);
@@ -1146,23 +1175,27 @@ class TableEx extends ContainerEx
 
             for (const header of headers)
             {
-                addHeader(header);
+                let depth;
+                [depth, ] = addHeader(header);
+
+                maxDepth = Math.max(depth, maxDepth);
             }
             
+            maxDepth++;
+
             for (const key in this.headers)
             {
+                let rowspan = (maxDepth - this.headers[key].level - this.headers[key].descendantDepth == 0 || this.headers[key].descendantDepth == 0 ? maxDepth - this.headers[key].level - this.headers[key].descendantDepth + 1 : 1);
+
                 if (this.headers[key].colSpan > 1)
                 {
                     this.headers[key].th.setAttribute("colspan", this.headers[key].colSpan);
                 }
 
-                [this.thead.children.length - this.headers[key].level - this.headers[key].descendantDepth + 1].forEach(rowspan=>{
-                    if (rowspan > 1)
-                    {
-                        this.headers[key].th.setAttribute("rowspan", rowspan);
-                    }
-                });
-
+                if (rowspan > 1)
+                {
+                    this.headers[key].th.setAttribute("rowspan", rowspan);
+                }
             }
         }
     }
@@ -4417,6 +4450,11 @@ class RadioButtonGroupEx extends ControlEx
         }
     }
 
+    get name()
+    {
+        return this.id;
+    }
+
     get labelEx()
     {
         return this.#containerEx.labelEx;
@@ -4590,7 +4628,8 @@ class RadioButtonGroupEx extends ControlEx
         item.parentUIEx = this;
         this.controlExs.push(item);
         item.id = item.id;
-        item.name = this.id = this.id; // autogenerate id before assigning it as a group name
+        this.id = this.id; // autogenerate id before assigning it as a group name
+        item.name = this.id;
         if (value !== null && value !== undefined)
         {
             item.value = value;
@@ -5541,30 +5580,6 @@ class DialogEx extends ContainerEx
     get dialogBox()
     {
         return this.#dialogBox;
-    }
-
-    get captionHeaderLevel()
-    {
-        if (this.labelEx !== null && this.labelEx.container.tagName[0].toLowerCase() === "h")
-        {
-            return Number.parseInt(this.labelEx.container.tagName[1]);
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    
-    set captionHeaderLevel(level = 0)
-    {
-        
-        if (this.captionHeaderLevel !== level)
-        {
-            let newTag = ElementEx.replace(this.labelEx.container, (level > 0 && level < 7 ? "h" + level : "span"));
-
-            this.labelEx.resetUIEx();
-            this.labelEx.setupFromHTMLElement(newTag);
-        }
     }
 
     get caption()

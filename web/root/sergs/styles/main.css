@@ -1,0 +1,103 @@
+body, .app > main {
+    background-color: beige;
+}
+
+.app > main {
+    padding: 2em;
+    margin-bottom: 1em;
+}
+
+
+
+.div-ex.dashboard-contents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5em;
+    justify-content: center;
+}
+
+.div-ex.dashboard-contents > * {
+    border-radius: 1em;
+    background-color: darkgray;
+    width: calc((100% - 1.5em) / 2);
+    padding: 1em;
+    line-height: 1.5;
+}
+
+.div-ex.dashboard-contents > [class*="dashboard-recent-for-"] {
+    width: 100%;
+}
+
+.div-ex.dashboard-contents a.dashboard-refresh-link > span[class^="material-"] {
+    font-size: inherit;
+    margin: 0;
+    padding: 0;
+    width: unset;
+    height: unset;
+}
+
+.div-ex.dashboard-contents > * > h4 {
+    margin: 0 0 1em;
+}
+
+.div-ex.dashboard-contents > * button {
+    font-size: inherit;
+    border-width: 1px;
+    border-radius: 0.25em;
+}
+
+.div-ex.sr-table-wrapper {
+    margin: 1em 0;
+    padding: 0.25em;
+    background-color: white;
+    border: 0.15em inset;
+    overflow: auto;
+}
+
+.table-ex.sr-table {
+    border-collapse: collapse;
+    border: 1px solid black;
+    overflow: auto;
+    width: 100%;
+    /* max-width: 100%; */
+}
+
+.table-ex.sr-table tr > * {
+    border: 1px solid black;
+}
+
+.table-ex.sr-table > thead > tr:first-child {
+    text-transform: uppercase;
+}
+
+.table-ex.sr-table > thead > tr:last-child > :first-child,
+.table-ex.sr-table > thead > tr:last-child > :first-child + *,
+.table-ex.sr-table > tbody > tr > td:first-child,
+.table-ex.sr-table > tbody > tr > td:first-child + td {
+    width: 10%;
+}
+
+.table-ex.sr-table > thead > tr:first-child + tr > :first-child + *,
+.table-ex.sr-table > tbody > tr > td:first-child + td + td {
+    width: 15%;
+}
+
+.table-ex.sr-table > tbody > tr > td:first-child + td + td + td {}
+
+.table-ex.sr-table > tbody > tr > td:first-child + td + td + td + td {}
+
+.table-ex.sr-table > thead > tr:first-child > :first-child + * + *,
+.table-ex.sr-table > tbody > tr > td:first-child + td + td + td + td + td {
+    width: 15%;
+}
+
+.table-ex.sr-table > thead > tr:first-child > :first-child + * + * + * + *,
+.table-ex.sr-table > tbody > tr > td:first-child + td + td + td + td + td + td,
+.table-ex.sr-table > tbody > tr > td:first-child + td + td + td + td + td + td + td {
+    width: 5%;
+}
+
+.table-ex.sr-table > thead > tr:first-child > :first-child + * + * + * + * + *,
+.table-ex.sr-table > tbody > tr > td:first-child + td + td + td + td + td + td + td + td {
+    width: 12%;
+}

@@ -10,6 +10,18 @@ class App
 
     constructor(htmlContainer)
     {}
+
+    getActiveView()
+    {
+        if (this.main instanceof HTMLElement && this.main.children.length > 0)
+        {
+            return Array.from(this.main.children).find(child=>child instanceof HTMLElement && !child.classList.contains("hidden"));
+        }
+        else
+        {
+            return undefined;
+        }
+    }
 }
 
 class ScrimEx
