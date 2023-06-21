@@ -234,7 +234,7 @@ class DatabaseConnection
 		return count($this->executeStatement("SHOW TABLE STATUS FROM `$this->dbname` WHERE NAME = '$tableName';")) > 0;
 	}
 
-	public function select($table, $fieldStr, $criteriaStr)
+	public function select($table, $fieldStr, $criteriaStr = '')
 	{
 		$sql = "SELECT $fieldStr FROM `$this->dbname`.`$table`" . ($criteriaStr == '' ? '' : " $criteriaStr") . ';';
 
@@ -255,12 +255,12 @@ class DatabaseConnection
 		return $this->lastInsertId;
 	}
 
-	public function update($table, $fieldValueStr, $criteriaStr)
+	public function update($table, $fieldValueStr, $criteriaStr = '')
 	{
 		return $this->executeStatement("UPDATE `$this->dbname`.`$table` SET $fieldValueStr" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
 
-	public function delete($table, $criteriaStr)
+	public function delete($table, $criteriaStr = '')
 	{
 		return $this->executeStatement("DELETE FROM `$this->dbname`.`$table`" . ($criteriaStr == '' ? '' : " $criteriaStr"));
 	}
