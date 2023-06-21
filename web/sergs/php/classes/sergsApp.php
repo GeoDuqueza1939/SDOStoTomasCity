@@ -81,38 +81,53 @@ class SeRGS_App extends App
 ?>
 <main>
 <?php
-switch ($pageId)
-{
-    case "dashboard":
-        $this->generateDashboardUI();
-        break;
-    case "view":
-        $this->generateViewSRUI();
-        break;
-    case "view-my-sr":
-        $this->generateViewMySRUI();
-        break;
-    case "new-request":
-        $this->generateNewRequestUI();
-        break;
-    case "view-other-sr":
-    case "requests":
-    case "my-requests":
-    case "for-encode":
-    case "for-certify":
-    case "for-approve":
-    case "for-release":
-    case "archived":
-    case "search-requests":
-    case "system-logs":
-    case "account":
-    case "my-account":
-    case "other-account":
-    case "settings":
-    default:
-        $this->generateTempUI($pageId);
-        break;
-} ?>
+            if ($this->getUserAccessLevel() > 0)
+            {
+                switch ($pageId)
+                {
+                    case "dashboard":
+                        $this->generateDashboardUI();
+                        break;
+                    case "view":
+                        $this->generateViewSRUI();
+                        break;
+                    case "view-my-sr":
+                        $this->generateViewMySRUI();
+                        break;
+                    case "requests":
+                        $this->generateViewRequestsUI();
+                        break;
+                    case "request-list":
+                        $this->generateViewMyRequestsUI();
+                        break;
+                    case "new-request":
+                        $this->generateNewRequestUI();
+                        break;
+                    case "view-other-sr":
+                    case "for-encode":
+                    case "for-certify":
+                    case "for-approve":
+                    case "for-release":
+                    case "archived":
+                    case "search-requests":
+                    case "system-logs":
+                    case "account":
+                    case "my-account":
+                    case "other-account":
+                    case "settings":
+                    default:
+                        $this->generateTempUI($pageId);
+                        break;
+                }
+            }
+            else
+            { ?>
+    <h2>Unauthorized Access</h2>
+    <p class="center">Your user access level is not allowed to access this interface.</p>
+    <p class="center">Click <a href="?a=logout" title="Sign out">here to sign out</a> or <a href="/" title="SDO Services Home">here to return to SDO Services Home</a>.</p>
+    <p class="center">Thank you.</p><?php
+            }
+?>
 
 </main>
 <?php
@@ -138,6 +153,10 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
         </form>
         <form id="redir-new-request">
             <input type="hidden" name="redir" value="/sergs/requests/new_request/">
+        </form>
+        <form id="redir-request-list">
+            <input type="hidden" name="redir" value="/sergs/requests/request_list/">
+            <input type="hidden" name="req" value="user">
         </form>
         <form id="redir-my-service-record">
             <input type="hidden" name="redir" value="/sergs/view/my_service_record">
@@ -216,7 +235,9 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                 <h4 class="label-ex">My Requests History <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                 <div class="dashboard-item-contents">
                     <!-- None to show [<a href="/sergs/requests/new_request/">Transact</a>]<br> -->
-                    None to show <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Request Service Record">Request</button>
+                    None to show
+                    <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Request Service Record">Request</button>
+                    <button type="submit" form="redir-request-list" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="View my requests">View</button>
                 </div>
             </div>
         </div>
@@ -316,33 +337,220 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
         $accessLevel = $this->getUserAccessLevel(); ?>
     <section id="main-new-request">
         <h2>New Request</h2>
+
+        <form class="data-form-ex" action="" method="post">
+            <input type="hidden" name="transact" value="request-encode" />
 <?php 
         if ($accessLevel < 9 && $accessLevel > 1)
         { ?>
-        <div class="div-ex radio-button-group-ex center" id="radio-select-sr-owner">
-            <span class="radio-ex" title="Request encoding or updating of my own service record">
-                <input type="radio" id="radio-select-sr-owner0" title="Request encoding or updating of my own service record" name="radio-select-sr-owner" value="0" checked>
-                <label class="label-ex" for="radio-select-sr-owner0" title="Request encoding or updating of my own service record">For me</label>
-            </span>
-            <span class="radio-ex" title="Request encoding or updating of another employee's service record">
-                <input type="radio" id="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record" name="radio-select-sr-owner" value="1">
-                <label class="label-ex" for="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record">For another employee</label>
-            </span>
-        </div><?php
+            <div class="div-ex radio-button-group-ex" id="sr-owner">
+                <span class="radio-ex" title="Request encoding or updating of my own service record">
+                    <input type="radio" id="radio-select-sr-owner0" title="Request encoding or updating of my own service record" name="sr-owner" value="0" onclick="document.getElementById('sr-employee-id').disabled = true;"<?php if (!isset($_REQUEST['sr-owner']) || $_REQUEST['sr-owner'] === '0') { echo(' checked'); } ?>>
+                    <label class="label-ex" for="radio-select-sr-owner0" title="Request encoding or updating of my own service record">For myself</label>
+                </span>
+                <span class="radio-ex" title="Request encoding or updating of another employee's service record">
+                    <input type="radio" id="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record" name="sr-owner" value="1" onclick="document.getElementById('sr-employee-id').disabled = false;"<?php if ($_REQUEST['sr-owner'] === '1') { echo(' checked'); } ?>>
+                    <label class="label-ex" for="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record">For another employee</label>
+                </span>
+            </div><?php
+            $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId;');
+
+            if (is_null($this->getDB_SDO()->lastException))
+            { ?>
+
+            <span class="drop-down-ex sr-employee-id">
+                <select id="sr-employee-id" name="sr-employee-id" title="Please select the employee for whom you are transacting this request"<?php if (!isset($_REQUEST['sr-owner']) || $_REQUEST['sr-owner'] === '0') { echo(' disabled'); } ?>>
+                    <option value="-1" class="non-option">- Select employee -</option><?php
+                foreach ($employees as $employee) { ?>
+
+                    <option value="<?php echo($employee['employeeId']); ?>"><?php
+                        echo($employee['employeeId'] . ' &ndash; ' . $this->getFullName($employee['given_name'], $employee['middle_name'], $employee['family_name'], $employee['spouse_name'], $employee['ext_name'], true));
+                    ?></option><?php
+                } ?>
+
+                </select>
+            </span><?php
+            }
+            else
+            {
+                echo('Error encountered retrieving employee records.');
+            }
         }
         else // end-user access only
         { ?>
-            <input type="hidden" id="radio-select-sr-owner" name="radio-select-sr-owner" value="0" /><?php
+            <input type="hidden" id="radio-select-sr-owner" name="sr-owner" value="0" />
+            <input type="hidden" id="sr-employee-id" name="sr-employee-id" value="<?php echo($_SESSION['user']['employeeId']); ?>" /><?php
         } ?>
-        
+
+            <span class="span-ex checkbox-group-ex" id="sr-type">
+                <span class="checkbox-ex" title="Viewable and printable (no e-signature)">
+                    <input type="checkbox" id="sr-online" title="Viewable and printable (no e-signature)" name="sr-online" value="0">
+                    <label class="label-ex" for="sr-online" title="Viewable and printable (no e-signature)">Online only</label>
+                </span>
+                <span class="checkbox-ex" title="Viewable and printable (with e-signature)">
+                    <input type="checkbox" id="sr-online-signed" title="Viewable and printable (with e-signature)" name="sr-online-signed" value="1">
+                    <label class="label-ex" for="sr-online-signed" title="Viewable and printable (with e-signature)">Online with e-signature</label>
+                </span>
+                <span class="checkbox-ex" title="May be claimed from the Records Section of the Schools Division Office; please bring a valid ID for verification">
+                    <input type="checkbox" id="sr-printout" title="May be claimed from the Records Section of the Schools Division Office; please bring a valid ID for verification" name="sr-printout" value="2">
+                    <label class="label-ex" for="sr-printout" title="May be claimed from the Records Section of the Schools Division Office; please bring a valid ID for verification">Certified/Approved (with actual signature)</label>
+                </span>
+            </span>
+
+            <span class="button-group-ex span-ex data-form-buttons">
+                <span class="button-ex"><button type="submit" id="new-request-submit">Submit</button></span>
+                <span class="button-ex"><button type="reset" id="new-request-reset">Reset</button></span>
+            </span>
+        </form>
     </section><?php
+    }
+
+    protected function generateViewRequestsUI()
+    {
+        $requester = $_REQUEST['req']; ?>
+    <section id="main-requests">
+        <h2>Requests</h2>
+        <ul class="card-link">
+            <li><a href="/sergs/requests/request_list/"><?php echo($this->getUserAccessLevel() === 1 ? 'My Requests' : 'Request List'); ?></a></li>
+            <li><a href="/sergs/requests/new_request/">New Request</a></li>
+            <li><a href="/sergs/requests/for_encode/">For Encode/Update</a></li>
+            <li><a href="/sergs/requests/for_certify/">For Certification</a></li>
+            <li><a href="/sergs/requests/for_approval/">For Approval</a></li>
+            <li><a href="/sergs/requests/for_release/">For Release</a></li>
+            <li><a href="/sergs/requests/archive/">Archived Requests</a></li>
+            <li><a href="/sergs/requests/search/">Search</a></li>
+        </ul>
+    </section><?php
+    }
+    protected function generateViewMyRequestsUI()
+    { ?>
+        <section id="main-request-list">
+            <h2><?php echo($this->getUserAccessLevel() === 1 ? 'My Requests' : 'Request List'); ?></h2>
+
+            <div class="div-ex request-list-filters">
+                <label class="label-ex caption" for="filter-status">Filters:</label>
+                <span class="drop-down-ex filter-requester">
+                    <label class="label-ex" for="filter-requester">Requester:</label>
+                    <select id="filter-requester" name="filter-requester">
+                        <option value ="0">Me</option>
+                        <option value ="1">All</option>
+                        <?php
+                        // INCLUDE NON-EMPLOYEE USERS IN THIS QUERY!!!!
+                        $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId;');            
+                        ?>
+                    </select>
+                </span>
+                <span class="drop-down-ex filter-status">
+                    <label class="label-ex" for="filter-status">Status:</label>
+                    <select id="filter-status" name="filter-status">
+                        <option value ="0">ALL</option>
+                        <option value ="1">For Encode/Update</option>
+                        <option value ="2">For Certification</option>
+                        <option value ="3">For Approval</option>
+                        <option value ="4">For Release (Records Section)</option>
+                        <option value ="5">Approved (Available Online)</option>
+                        <option value ="6">Released (Records Section)</option>
+                        <option value ="7">Cancelled</option>
+                        <option value ="8">Archived</option>
+                    </select>
+                </span>
+                <label class="label-ex" for="filter-date-range-start">Dates</label>
+                <span class="date-field-ex filter-date-range-start">
+                    <label class="label-ex" for="filter-date-range-start">From:</label>
+                    <input type="date" id="filter-date-range-start" name="filter-date-range-start">
+                </span>
+                <span class="date-field-ex filter-date-range-end">
+                    <label class="label-ex" for="filter-date-range-end">To:</label>
+                    <input type="date" id="filter-date-range-end" name="filter-date-range-end">
+                </span>
+                <span class="button-ex">
+                    <button type="button">Apply</button>
+                </span>
+            </div>
+            <div class="div-ex request-list-table-wrapper">
+                <!-- None found. <a href="/sergs/requests/new_request/" title="Request for a service record">Request a copy</a> -->
+                <table class="table-ex request-list-table">
+                    <thead>
+                        <tr>
+                            <th>Requested On</th>
+                            <th>Requested By</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section><?php
     }
 
     protected function generateTempUI($pageId)
     { ?>
-    <section id="main-<?php echo $pageId;?>">
+    <section id="main-<?php echo $pageId;?>" class="under-construction">
         <h2><?php echo strtoupper($pageId[0]) . substr($pageId, 1);?></h2>
+        <p class="center"><em>This page is under construction. Please bear with us.</em></p>
     </section><?php
+    }
+
+    protected function getFullName($givenName, $middleName, $familyName, $spouseName, $extName, $lastNameFirst = false, $middleInitialOnly = true, $includeAllMiddleNames = false)
+    {
+        $nameArr = null;
+        
+        if (!is_string($givenName) || trim($givenName) === '')
+        {
+            die('Invalid argument: $givenName:' . $givenName);
+        }
+        
+        $nameArr = array($givenName, $middleName, $familyName, $spouseName, $extName);
+        
+        if ($lastNameFirst)
+        {
+            for ($i = count($nameArr) - 2; $i > 0; $i--)
+            {
+                $lastName = array_splice($nameArr, $i, 1)[0];
+                
+                if (is_string($lastName) && trim($lastName) !== '')
+                {
+                    array_unshift($nameArr, $lastName . ", ");
+                    break;
+                }
+            }
+            
+            if ($middleInitialOnly && count($nameArr) > 3)
+            {
+                $nameArr[2] = $this->getNameInitials($nameArr[2]);
+            }
+            
+            if ($middleInitialOnly && count($nameArr) > 4)
+            {
+                $nameArr[3] = $this->getNameInitials($nameArr[3]);
+            }
+
+            if (!$includeAllMiddleNames && count($nameArr) > 4)
+            {
+                $removedMiddleName = array_splice($nameArr, 2, 1)[0];
+            }
+        }
+        elseif ($middleInitialOnly)
+        {
+            $nameArr[1] = $this->getNameInitials($nameArr[1]);
+
+            if ($middleInitialOnly && $nameArr[3] !== '')
+            {
+                $nameArr[2] = $this->getNameInitials($nameArr[2]);
+            }
+
+            if (!$includeAllMiddleNames && $nameArr[3] !== '')
+            {
+                $removedMiddleName = array_splice($nameArr, 1, 1)[0];
+            }
+        }
+        
+        return join(' ', array_filter($nameArr, function($name){ return is_string($name) && trim($name) !== ''; }));
+    }
+
+    protected function getNameInitials($nameStr)
+    {
+        return (!is_string($nameStr) || trim($nameStr) === '' ? '' : join(' ', array_map(function($name){ return $name[0] . '.'; }, preg_split('/ /', $nameStr))));
     }
 }
 ?>

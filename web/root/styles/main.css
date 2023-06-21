@@ -359,6 +359,13 @@ span[class^=material-symbol] {
     box-shadow:-2px -2px black;
 }
 
+select > option.non-option {
+    text-align: center;
+    background-color: white;
+    color: gray;
+    font-style: italic;
+}
+
 /* Extra small devices (phones, 600px and below) */
 @media only screen and (max-width: 600px) {
     .app:not(.landing) > header {

@@ -6,7 +6,14 @@ TO DO:
 
 ## 6/21/2023
 TO DO:
-* [ ] [SeRGS] Design New Request layout
+* [x] [SeRGS] Design New Request layout
+* [x] [SeRGS] Design Requests layout
+* [x] [SeRGS] Design My Requests layout
+* [x] [SeRGS] Rename My Requests to Request List and allow it show varied titles and interfaces depending on user access level
+* [ ] [SeRGS] Design For Encode/Update layout
+* [ ] [SeRGS] Design For Certification layout
+* [ ] [SeRGS] Design For Approval layout
+* [ ] [SeRGS] Design For Release layout
 * [ ] Make secure folder secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
@@ -16,7 +23,7 @@ TO DO:
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] [MPaSIS] Add Honor Graduate to eligibilities
 
-I spent most of the first 2 hours fixing my work logs. Afterwards I continued work on the New Request page
+I spent most of the first hour fixing my work log documentation. Afterwards I continued work on the New Request page. I made its interface variant depending on user access level. I also worked on the My Requests layout. After finishing its general layout, I realized that the request list will be redundant for the other request status, so I remade the My Request page into the Request List page which can morph depending on the user access level. I will need to delete the other links tomorrow while I am dealing with my IPCRF.
 
 ## 6/20/2023
 TO DO:

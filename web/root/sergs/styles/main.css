@@ -7,7 +7,16 @@ body, .app > main {
     margin-bottom: 1em;
 }
 
+.app#sergs > main button,
+.app#sergs > main select,
+.app#sergs > main input {
+    font-size: inherit;
+}
 
+.app#sergs > main button {
+    border-width: 1px;
+    border-radius: 0.25em;
+}
 
 .div-ex.dashboard-contents {
     display: flex;
@@ -40,15 +49,9 @@ body, .app > main {
     margin: 0 0 1em;
 }
 
-.div-ex.dashboard-contents > * button {
-    font-size: inherit;
-    border-width: 1px;
-    border-radius: 0.25em;
-}
-
 .div-ex.sr-table-wrapper {
     margin: 1em 0;
-    padding: 0.25em;
+    padding: 0.1em;
     background-color: white;
     border: 0.15em inset;
     overflow: auto;
@@ -100,4 +103,87 @@ body, .app > main {
 .table-ex.sr-table > thead > tr:first-child > :first-child + * + * + * + * + *,
 .table-ex.sr-table > tbody > tr > td:first-child + td + td + td + td + td + td + td + td {
     width: 12%;
+}
+
+#main-new-request .data-form-ex {
+    display: flex;
+    margin: 2em;
+    flex-direction: column;
+    gap: 2em;
+    align-items: center;
+}
+
+#main-new-request #radio-select-sr-owner {
+    text-align: center;
+}
+
+#main-new-request .sr-employee-id {
+    display: block;
+    text-align: center;
+}
+
+#main-new-request .sr-employee-id > #sr-employee-id {
+    font-size: inherit;
+}
+
+#main-new-request #sr-type {
+    display: block;
+}
+
+#main-new-request #sr-type > .checkbox-ex {
+    display: block;
+}
+
+#main-new-request .data-form-ex .data-form-buttons {
+    display: block;
+    text-align: center;
+}
+
+#main-request-list .request-list-filters {
+    display: block;
+    font-size: 0.75em;
+}
+
+#main-request-list .request-list-filters > .caption {
+    display: block;
+}
+
+#main-request-list .request-list-filters > * {
+    white-space: nowrap;
+}
+
+#main-request-list .div-ex.request-list-table-wrapper {
+    margin: 1em 0;
+    padding: 0.1em;
+    background-color: white;
+    border: 0.15em inset;
+    overflow: auto;
+}
+
+#main-request-list .table-ex.request-list-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: auto;
+    width: 100%;
+}
+
+#main-request-list .table-ex.request-list-table tr > * {
+    border: 1px solid black;
+}
+
+#main-request-list .table-ex.request-list-table > thead > tr > * {
+    background-color: lightgray;
+    border: 2px outset;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    font-weight: normal;
+    user-select: none;
+}
+
+#main-request-list .table-ex.request-list-table > thead > tr > :active {
+    border: 2px inset;
+}
+
+#main-request-list .table-ex.request-list-table > * > tr > * {
+    padding: 0.25em;
 }

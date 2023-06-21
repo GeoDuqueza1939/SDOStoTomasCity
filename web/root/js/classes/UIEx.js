@@ -3139,27 +3139,24 @@ class ButtonEx extends ControlEx
 
 class ButtonGroupEx extends ControlEx
 {
-    static #UIExType = "ButtonEx";
+    static #UIExType = "ButtonGroupEx";
     static #instanceCount = 0;
     autoId = "";
     #containerEx = null;
     #controlExs = [];
-    #buttonType = "";
     
     constructor()
     {
         super(ControlEx.UIExType);
         this.type = "input-button"; // button or input-button
-        this.buttonType = "button"; // button || reset || submit
         this.autoId = this.UIExType + ButtonGroupEx.#instanceCount++;
     }
 
-    setup(parentHTMLElement = new HTMLElement(), type = "input-button", buttonType = "button")
+    setup(parentHTMLElement = new HTMLElement(), type = "input-button")
     {
         try
         {
             this.type = type;
-            this.buttonType = buttonType;
             this.setupFromHTMLElement(ElementEx.createSimple("span", ElementEx.NO_NS, this.type + "-group-ex" + " span-ex", parentHTMLElement));
 
             return this;
@@ -3170,23 +3167,24 @@ class ButtonGroupEx extends ControlEx
         }
     }
 
-    setupFromConfig(config = {parentHTMLElement:new HTMLElement(), caption:"", type:"button", buttonType:"button", buttonsInfo:[]}) // the key `text` refers to the default text value
+    setupFromConfig(config = {parentHTMLElement:new HTMLElement(), caption:"", type:"input-button", buttonsInfo:[]}) // the key `text` refers to the default text value
     {
         try
         {
-            this.setup(config.parentHTMLElement, config.type ?? "button", config.buttonType ?? "button");
+            this.setup(config.parentHTMLElement, config.type ?? "input-button");
 
             for (const key in config)
             {
                 switch (key)
                 {
                     case "parentHTMLElement":
+                    case "type":
                         // do nothing
                         break;
                     case "buttonsInfo":
                         for (const buttonInfo of config.buttonsInfo)
                         {
-                            this.addButton(buttonInfo.text, buttonInfo.clickCallback, buttonInfo.tooltip);
+                            this.addButton(buttonInfo.text, buttonInfo.buttonType, buttonInfo.tooltip, buttonInfo.clickCallback);
                         }
                         break;
                     default:
@@ -3303,16 +3301,6 @@ class ButtonGroupEx extends ControlEx
         return this.#controlExs;
     }
 
-    get buttonType()
-    {
-        return this.#buttonType;
-    }
-    
-    set buttonType(buttonType = "button")
-    {
-        this.#buttonType = buttonType;
-    }
-
     get id()
     {
         if (ElementEx.isElement(this.container))
@@ -3343,7 +3331,7 @@ class ButtonGroupEx extends ControlEx
         }
     }
 
-    addButton(text = "", clickCallback = clickEvent=>{}, tooltip = "")
+    addButton(text = "", buttonType = "button", tooltip = "", clickCallback = clickEvent=>{})
     {
         let button = null;
         if (this.spacer.length == 0)
@@ -3354,17 +3342,18 @@ class ButtonGroupEx extends ControlEx
         this.container.appendChild(this.spacer.slice(-1)[0]);
         if (this.type === "button")
         {
-            button = new ButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:this.buttonType, tooltip:tooltip});
+            button = new ButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:buttonType, tooltip:tooltip});
         }
         else
         {
-            button = new InputButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:this.buttonType, tooltip:tooltip});
+            button = new InputButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:buttonType, tooltip:tooltip});
         }
         button.addEvent("click", clickCallback);
         button.parentUIEx = this;
         this.controlExs.push(button);
         button.id = button.id;
-        // button.name = this.id = this.id; // autogenerate id before assigning it as a group name
+        // this.id = this.id; // autogenerate id before assigning it as a group name
+        // button.name = this.id;
         // if (value !== null && value !== undefined)
         // {
         //     button.value = value;
@@ -3380,7 +3369,7 @@ class ButtonGroupEx extends ControlEx
 
     addButtons(...buttons)
     {
-        buttons.forEach(button=>this.addButton(button.text, button.clickCallback, button.tooltip));
+        buttons.forEach(button=>this.addButton(button.text, button.buttonType, button.tooltip, button.clickCallback));
     }
 
     static get UIExType()
@@ -3719,7 +3708,10 @@ class DropDownEx extends ControlEx
                             this.labelEx = new LabelEx().setupFromHTMLElement(node);
                             this.labelEx.parentUIEx = this;
 
-                            this.id = this.id;
+                            if (this.control instanceof HTMLElement)
+                            {
+                                this.id = this.id;
+                            }
                         }
                         else if (node.tagName.toLowerCase() === "select" && (this.control === null || this.control === undefined))
                         {
@@ -4370,9 +4362,16 @@ class RadioButtonGroupEx extends ControlEx
                             this.statusPane = node;
                             this.statusPane.uiEx = this;
                         }
-                        else if (node.classList.contains("radio-ex"))
+                        else if (this.UIExType === "RadioButtonGroupEx" && node.classList.contains("radio-ex"))
                         {
                             this.controlExs.push(new RadioButtonEx().setupFromHTMLElement(node));
+                            this.controlExs.slice(-1)[0].parentUIEx = this;
+
+                            this.id = this.id;
+                        }
+                        else if (this.UIExType === "CheckboxGroupEx" && node.classList.contains("checkbox-ex"))
+                        {
+                            this.controlExs.push(new CheckboxEx().setupFromHTMLElement(node));
                             this.controlExs.slice(-1)[0].parentUIEx = this;
 
                             this.id = this.id;
@@ -4692,7 +4691,7 @@ class RadioButtonGroupEx extends ControlEx
 
 class CheckboxGroupEx extends RadioButtonGroupEx
 {
-    static #UIExType = "RadioButtonGroupEx";
+    static #UIExType = "CheckboxGroupEx";
     static #instanceCount = 0;
     autoId = "";
 
@@ -4821,7 +4820,8 @@ class CheckboxGroupEx extends RadioButtonGroupEx
         item.parentUIEx = this;
         this.controlExs.push(item);
         item.id = item.id;
-        item.name = this.id = this.id; // autogenerate id before assigning it as a group name
+        this.id = this.id; // autogenerate id before assigning it as a group name
+        item.name = this.id;
         if (value !== null && value !== undefined)
         {
             item.value = value;
@@ -4856,11 +4856,13 @@ class DataFormEx extends ContainerEx
     static #UIExType = "DataFormEx";
     static #instanceCount = 0;
     autoId = "";
+    #dataForm = null;
     #headers = [];
     #labelExs = [];
     #containerExs = [];
     #dbContainers = {};
     #controlExs = [];
+    #buttonGrpEx = null;
     #dbControls = {};
 
     constructor()
@@ -5325,6 +5327,23 @@ class DataFormEx extends ContainerEx
     get dbContainers()
     {
         return this.#dbContainers;
+    }
+
+    setupDataFormButtons(buttonsInfo = [{text:"Text1", clickCallback:clickEvent=>{}, tooltip:""}])
+    {
+        if (buttonsInfo.length > 0 && (this.#buttonGrpEx === null || this.#buttonGrpEx === undefined))
+        {
+            this.#buttonGrpEx = new ButtonGroupEx();
+        }
+
+        this.buttonGrpEx.setupFromConfig({parentHTMLElement:this.container, buttonsInfo:buttonsInfo, type:"button"});
+        this.buttonGrpEx.container.classList.add("data-form-buttons");
+        this.buttonGrpEx.parentDataFormEx = this;
+    }
+
+    get buttonGrpEx()
+    {
+        return this.#buttonGrpEx;
     }
 
     static get UIExType()
