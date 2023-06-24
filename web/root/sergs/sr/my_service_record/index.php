@@ -7,5 +7,5 @@ require_once(__FILE_ROOT__ . '/sergs/php/classes/sergsApp.php');
 
 $app = new SeRGS_App();
 
-$app->run('view-my-sr');
+$app->run('my-sr');
 ?>

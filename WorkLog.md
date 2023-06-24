@@ -4,6 +4,38 @@
 TO DO:
 * [ ] Endorse source code to IT Officer
 
+## 6/23/2023
+TO DO:
+* [x] [SeRGS] Added control buttons to Service Record Data Entry Form
+* [x] [SeRGS] Added an Add Employee Dialog (to be finished)
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] Make secure folder more secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+## 6/22/2023
+TO DO:
+* [x] [SeRGS] Design For Encode/Update layout
+* [x] [SeRGS] Design For Certification layout
+* [x] [SeRGS] Design For Approval layout
+* [x] [SeRGS] Design For Release layout
+* [x] [SeRGS] Incorporate encode/update, certification, approval, and release views in Request List
+* [x] [SeRGS] Delete links and pages for encode/update, certification, approval, and release views
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] Make secure folder more secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
 ## 6/21/2023
 TO DO:
 * [x] [SeRGS] Design New Request layout
@@ -14,7 +46,7 @@ TO DO:
 * [ ] [SeRGS] Design For Certification layout
 * [ ] [SeRGS] Design For Approval layout
 * [ ] [SeRGS] Design For Release layout
-* [ ] Make secure folder secure
+* [ ] Make secure folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -32,7 +64,7 @@ TO DO:
 * [x] [SeRGS] Add preliminary design layout for My Service Record UI
 * [x] [SeRGS] Add variant views depending on user access level
 * [ ] [SeRGS] Design New Request layout
-* [ ] Make secure folder secure
+* [ ] Make secure folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -50,7 +82,7 @@ TO DO:
 * [ ] [SeRGS] Design Dashboard layout
 * [ ] [SeRGS] Design view Service Record layout
 * [x] [SeRGS] Adjust SeRGS UI to be consistent with layout and styling of MPaSIS
-* [ ] Make secure folder secure
+* [ ] Make secure folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness

@@ -429,7 +429,7 @@ class UIEx
     {
         return this.#UIExType;
     }
-
+    
     get UIExType()
     {
         return UIEx.#UIExType;
@@ -793,6 +793,23 @@ class ContainerEx extends UIEx
     set labelEx(labelEx = new LabelEx())
     {
         this.#labelEx = labelEx;
+    }
+
+    get vertical()
+    {
+        return (this.container instanceof HTMLElement && this.container.classList.contains("vertical"));
+    }
+
+    set vertical(setting = true)
+    {
+        if (this.container instanceof HTMLElement)
+        {
+            this.container.classList.toggle("vertical", setting);
+            if (this.container.classList.length == 0)
+            {
+                this.container.removeAttribute("class");
+            }
+        }
     }
 
     static get UIExType()
@@ -1824,6 +1841,50 @@ class ControlEx extends UIEx
         }
     }
 
+    get vertical()
+    {
+        return (this.container instanceof HTMLElement && this.container.classList.contains("vertical"));
+    }
+
+    set vertical(setting = true)
+    {
+        if (this.container instanceof HTMLElement)
+        {
+            this.container.classList.toggle("vertical", setting);
+            if (this.container.classList.length == 0)
+            {
+                this.container.removeAttribute("class");
+            }
+        }
+    }
+
+    get autofocus()
+    {
+        if (this.control instanceof HTMLInputElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLButtonElement)
+        {
+            return this.control.autofocus;
+        }
+
+        return false;
+    }
+
+    set autofocus(setting = true)
+    {
+        if (this.control instanceof HTMLInputElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLButtonElement)
+        {
+            this.control.autofocus = setting;
+        }
+    }
+
+    focus()
+    {
+        console.log(this.UIExType);
+        if (this.control instanceof HTMLInputElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLButtonElement)
+        {
+            this.control.focus();
+        }
+    }
+
     get eventCallbacks()
     {
         return this.#eventCallbacks;
@@ -1920,24 +1981,48 @@ class TextboxEx extends ControlEx
         try
         {
             this.setup(config.parentHTMLElement);
-            if ("label" in config)
-            {
-                this.label = config.label;
-            }
 
-            if ("id" in config)
+            for (const key in config)
             {
-                this.id = config.id;
-            }
-
-            if ("text" in config)
-            {
-                this.text = config.text.trim();
-            }
-
-            if ("inputType" in config)
-            {
-                this.inputType = config.inputType.trim();
+                switch (key)
+                {
+                    case "parentHTMLElement":
+                        // do nothing
+                        break;
+                    case "label":
+                    case "id":
+                        this[key] = config[key];
+                        break;
+                    case "text":
+                    case "inputType":
+                        this[key] = config[key].trim();
+                        break;
+                    default:
+                        if (key in this)
+                        {
+                            if (ElementEx.type(config[key]) === "function")
+                            {
+                                config[key](this);
+                            }
+                            else if (ElementEx.type(this[key]) === "function")
+                            {
+                                this[key](config[key]);
+                            }
+                            else
+                            {
+                                this[key] = config[key];
+                            }
+                        }
+                        else if (ElementEx.type(config[key]) === "function")
+                        {
+                            config[key](this);
+                        }
+                        else
+                        {
+                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                        }
+                        break;
+                }
             }
 
             return this;
@@ -2038,6 +2123,23 @@ class TextboxEx extends ControlEx
         else
         {
             // do nothing; THIS IF-ELSE STATEMENT IS A HACK!!!!!!!!!!
+        }
+    }
+
+    get blankStyle()
+    {
+        return (this.container instanceof HTMLElement && this.container.classList.contains("blank"));
+    }
+
+    set blankStyle(setting = true)
+    {
+        if (this.container instanceof HTMLElement)
+        {
+            this.container.classList.toggle("blank", setting);
+            if (this.container.classList.length == 0)
+            {
+                this.container.removeAttribute("class");
+            }
         }
     }
 
@@ -4053,10 +4155,8 @@ class RadioButtonEx extends ControlEx
                         // do nothing
                         break;
                     case "label":
-                        this.label = config.label;
-                        break;
                     case "id":
-                        this.id = config.id;
+                        this[key] = config[key];
                         break;
                     case "checked":
                         this.check(config.checked);
@@ -4076,6 +4176,10 @@ class RadioButtonEx extends ControlEx
                             {
                                 this[key] = config[key];
                             }
+                        }
+                        else if (ElementEx.type(config[key]) === "function")
+                        {
+                            config[key](this);
                         }
                         else
                         {
@@ -4862,8 +4966,11 @@ class DataFormEx extends ContainerEx
     #containerExs = [];
     #dbContainers = {};
     #controlExs = [];
-    #buttonGrpEx = null;
     #dbControls = {};
+    #uiExs = [];
+    #dbUIExs = {};
+    #dbInfo = {};
+    #buttonGrpEx = null;
 
     constructor()
     {
@@ -4947,6 +5054,7 @@ class DataFormEx extends ContainerEx
             if (ElementEx.isElement(htmlElement) && (htmlElement instanceof HTMLSpanElement || htmlElement instanceof HTMLDivElement || htmlElement instanceof HTMLFormElement) && htmlElement.classList.contains("data-form-ex"))
             {
                 this.container = htmlElement;
+                this.container.uiEx = this;
                 this.container.dataFormEx = this;
             }
             else
@@ -5130,7 +5238,15 @@ class DataFormEx extends ContainerEx
         if (UIEx.UIExControlClasses.includes(exType))
         {
             let controlEx = new Function("return new " + exType + "()")();
+            let dbInfo = null;
+
             controlEx.parentDataFormEx = this;
+
+            if ("dbInfo" in config)
+            {
+                dbInfo = config["dbInfo"];
+                delete config["dbInfo"];
+            }
 
             if (!("parentHTMLElement" in config))
             {
@@ -5151,9 +5267,21 @@ class DataFormEx extends ContainerEx
                 config.parentContainerEx.addContent(controlEx.container);
             }
 
-            if ("dbInfo" in config)
+            if ((dbInfo !== null || dbInfo !== undefined) && "column" in dbInfo)
             {
-                this.dbControls[config.dbInfo.column] = controlEx;
+                this.dbControls[dbInfo.column] = controlEx;
+                if ("table" in dbInfo)
+                {
+                    if (!(dbInfo.table in this.#dbInfo))
+                    {
+                        this.#dbInfo[dbInfo.table] = [];
+                    }
+
+                    if (!this.#dbInfo[dbInfo.table].includes(dbInfo.column))
+                    {
+                        this.#dbInfo[dbInfo.table].push(dbInfo.column);
+                    }
+                }
             }
 
             this.controlExs.push(controlEx);
@@ -5171,7 +5299,15 @@ class DataFormEx extends ContainerEx
         if (UIEx.UIExContainerClasses.includes(exType))
         {
             let containerEx = new Function("return new " + exType + "()")();
+            let dbInfo = null;
+
             containerEx.parentDataFormEx = this;
+
+            if ("dbInfo" in config)
+            {
+                dbInfo = config["dbInfo"];
+                delete config["dbInfo"];
+            }
 
             if (!("parentHTMLElement" in config))
             {
@@ -5192,9 +5328,21 @@ class DataFormEx extends ContainerEx
                 config.parentContainerEx.addContent(containerEx.container);
             }
 
-            if ("dbInfo" in config)
+            if ((dbInfo !== null || dbInfo !== undefined) && "column" in dbInfo)
             {
-                this.dbContainers[config.dbInfo.column] = containerEx;
+                this.dbControls[dbInfo.column] = containerEx;
+                if ("table" in dbInfo)
+                {
+                    if (!(dbInfo.table in this.#dbInfo))
+                    {
+                        this.#dbInfo[dbInfo.table] = [];
+                    }
+
+                    if (!this.#dbInfo[dbInfo.table].includes(dbInfo.column))
+                    {
+                        this.#dbInfo[dbInfo.table].push(dbInfo.column);
+                    }
+                }
             }
 
             this.containerExs.push(containerEx);
@@ -5477,6 +5625,7 @@ class DialogEx extends ContainerEx
     {
         this.dataFormEx = new DataFormEx().setup(this.dialogBox);
         this.#dialogContentEx.addExContent(this.dataFormEx);
+        this.dataFormEx.parentDialogEx = this;
 
         return this.dataFormEx;
     }
@@ -5632,6 +5781,7 @@ class DialogEx extends ContainerEx
                     this.dialogBox.prepend(this.closeBtn, this.labelEx.container, this.spacer[0]);
                 }
                 this.labelEx.parentUIEx = this;
+                this.labelEx.parentDialogEx = this;
             }
     
             this.labelEx.caption = caption;

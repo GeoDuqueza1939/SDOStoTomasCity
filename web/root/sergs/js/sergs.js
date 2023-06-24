@@ -1,6 +1,10 @@
 "use strict";
 
-// import "../../js/classes/ExClass.js";
+if (typeof window === "null" || typeof window === "undefined")
+{
+    import("../../js/classes/ExClass.js");
+    import("../../js/classes/UIEx.js");
+}
 
 class SeRGS_App extends App
 {
@@ -67,12 +71,90 @@ class SeRGS_App extends App
     }
 }
 
+class AddEmployeeDialog extends DialogEx
+{
+    static #UIExType = "AddEmployeeDialog";
+    static #instanceCount = 0;
+
+    constructor()
+    {
+        super(ContainerEx.UIExType);
+        this.autoId = this.UIExType + AddEmployeeDialog.#instanceCount++;
+    }
+
+    setup(parentHTMLElement = new HTMLElement())
+    {
+        try
+        {
+            super.setup(parentHTMLElement);
+            this.uiEx = this;
+            this.caption = "Add Employee";
+            this.container.classList.add("add-employee-dialog");
+            this.addDataFormEx();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", blankStyle:true, dbInfo:{table:"Employee", column:"employeeId"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary", addContainerClass:obj=>obj.container.classList.add("temp-emp-id"), tooltip: "Temporary employee ID; for Plantilla Item Numbers, uncheck this item", reverse:undefined, dbInfo:{table:"Employee", column:"is_temporary_empno"}});
+            this.dataFormEx.addSpacer();
+            // this.dataFormEx.addLineBreak();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Position Title:", addContainerClass:obj=>obj.container.classList.add("position"), inputType:"text", blankStyle:true, dbInfo:{table:"Position", column:"position_title"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Workplace:", addContainerClass:obj=>obj.container.classList.add("workplace"), inputType:"text", blankStyle:true, dbInfo:{column:"workplace"}});
+            this.dataFormEx.addSpacer();
+            // this.dataFormEx.addLineBreak();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"given_name"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"middle_name"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Family Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"family_name"}});
+            this.dataFormEx.addSpacer();
+            // this.dataFormEx.addLineBreak();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Spouse Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"spouse_name"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Ext. Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"ext_name"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Suffix", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"suffix"}});
+            this.dataFormEx.addSpacer();
+            // this.dataFormEx.addLineBreak();
+            this.dataFormEx.addControlEx(DateFieldEx.UIExType, {label:"Birth Date", addContainerClass:obj=>obj.container.classList.add("birth-date"), reverse:undefined, blankStyle:true, vertical:true, dbInfo:{table:"Person", column:"birth_date"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Birth Place", addContainerClass:obj=>obj.container.classList.add("birth-place"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"birth_place"}});
+            this.dataFormEx.addSpacer();
+            // this.dataFormEx.addLineBreak();
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Email Address", addContainerClass:obj=>obj.container.classList.add("email"), inputType:"email", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Email_Address", column:"email_address"}});
+            this.dataFormEx.addSpacer();
+            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Create SDO Services Account <br>using this email address", addContainerClass:obj=>obj.container.classList.add("create-account"), reverse:undefined, dbInfo:{column:"create_account"}});
+
+            return this;
+        }
+        catch (ex)
+        {
+            throw ex;
+        }
+    }
+
+    static get UIExType()
+    {
+        return this.#UIExType;
+    }
+
+    get UIExType()
+    {
+        return AddEmployeeDialog.#UIExType;
+    }
+
+    get instanceCount()
+    {
+        return AddEmployeeDialog.#instanceCount;
+    }
+}
+
 let app = new SeRGS_App(document.getElementById("sergs"));
 app.dataFormExs = Array.from(document.querySelectorAll(".data-form-ex")).map(element=>("uiEx" in element ? element.uiEx : new DataFormEx().setupFromHTMLElement(element)));
 app.checkboxGroupExs = Array.from(document.querySelectorAll(".checkbox-group-ex")).map(element=>("uiEx" in element ? element.uiEx : new CheckboxGroupEx().setupFromHTMLElement(element)));
 app.checkboxExs = Array.from(document.querySelectorAll(".checkbox-ex")).map(element=>("uiEx" in element ? element.uiEx : new CheckboxEx().setupFromHTMLElement(element)));
 app.radioButtonGroupExs = Array.from(document.querySelectorAll(".radio-button-group-ex")).map(element=>("uiEx" in element ? element.uiEx : new RadioButtonGroupEx().setupFromHTMLElement(element)));
 app.radioButtonExs = Array.from(document.querySelectorAll(".radio-button-ex")).map(element=>("uiEx" in element ? element.uiEx : new RadioButtonEx().setupFromHTMLElement(element)));
+app.buttonExs = Array.from(document.querySelectorAll(".button-ex")).map(element=>("uiEx" in element ? element.uiEx : new ButtonEx().setupFromHTMLElement(element)));
 app.dropDownExs = Array.from(document.querySelectorAll(".drop-down-ex")).map(element=>("uiEx" in element ? element.uiEx : new DropDownEx().setupFromHTMLElement(element)));
 app.divExs = Array.from(document.querySelectorAll(".div-ex")).map(element=>("uiEx" in element ? element.uiEx : new DivEx().setupFromHTMLElement(element)));
 var pageRun; // HACK

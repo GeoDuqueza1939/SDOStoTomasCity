@@ -13,6 +13,8 @@ function getUserFetchQuery($includePassword = false)
             family_name,
             spouse_name,
             ext_name,
+            birth_date,
+            birth_place,
             All_User.employeeId,
             Person.personId,
             sergs_access_level,

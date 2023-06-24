@@ -142,6 +142,7 @@ body, .app > main {
 #main-request-list .request-list-filters {
     display: block;
     font-size: 0.75em;
+    line-height: 2;
 }
 
 #main-request-list .request-list-filters > .caption {
@@ -186,4 +187,48 @@ body, .app > main {
 
 #main-request-list .table-ex.request-list-table > * > tr > * {
     padding: 0.25em;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex {
+    display: grid;
+    grid-template-columns: 5em 5em 5em 5em 5em 5em;
+    gap: 1em;
+    /* line-height: 2; */
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > * {
+    grid-column: span 2;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > .employee-id,
+.add-employee-dialog .dialog-content > .data-form-ex > .temp-emp-id,
+.add-employee-dialog .dialog-content > .data-form-ex > .position,
+.add-employee-dialog .dialog-content > .data-form-ex > .workplace,
+.add-employee-dialog .dialog-content > .data-form-ex > .email,
+.add-employee-dialog .dialog-content > .data-form-ex > .create-account {
+    grid-column: span 3;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > .employee-id,
+.add-employee-dialog .dialog-content > .data-form-ex > .position,
+.add-employee-dialog .dialog-content > .data-form-ex > .workplace {
+    display: flex;
+}
+
+
+.add-employee-dialog .dialog-content > .data-form-ex > .birth-date {
+    grid-column: 2 / span 2;
+}
+
+.add-employee-dialog .dialog-content .vertical > * {
+    text-align: center;
+}
+
+.add-employee-dialog .dialog-content .checkbox-ex > label {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.add-employee-dialog .dialog-content .checkbox-ex > * {
+    vertical-align: baseline;
 }

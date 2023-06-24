@@ -106,3 +106,25 @@
     font-size: inherit;
     /* padding: 0.5em; */
 }
+
+.textbox-ex.vertical, .datefield-ex.vertical {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.textbox-ex.blank > input[type="text"],
+.textbox-ex.blank > input[type="email"],
+.textbox-ex.blank > input[type="date"] {
+    border: 1px solid;
+    border-top-style: none;
+    border-left-style: none;
+    border-right-style: none;
+    /* background-color: inherit; */
+}
+
+.textbox-ex.blank > input[type="text"]:focus,
+.textbox-ex.blank > input[type="email"]:focus,
+.textbox-ex.blank > input[type="date"]:focus {
+    border: 1px solid;
+    /* background-color: unset; */
+}
