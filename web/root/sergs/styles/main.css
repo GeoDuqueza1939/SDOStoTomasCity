@@ -10,12 +10,15 @@ body, .app > main {
 .app#sergs > main button,
 .app#sergs > main select,
 .app#sergs > main input {
+    font-family: inherit;
     font-size: inherit;
+    border-width: 1px;
+    border-radius: 0.25em;
+    padding: 0.25em;
 }
 
 .app#sergs > main button {
-    border-width: 1px;
-    border-radius: 0.25em;
+    padding: 0.25em 0.5em;
 }
 
 .div-ex.dashboard-contents {
@@ -83,6 +86,16 @@ body, .app > main {
 .table-ex.sr-table > thead > tr:first-child + tr > :first-child + *,
 .table-ex.sr-table > tbody > tr > td:first-child + td + td {
     width: 15%;
+}
+
+.table-ex.sr-table > tbody > tr > * {
+    text-align: center;
+    padding: 0.25em;
+    height: 1.5em;
+}
+
+.table-ex.sr-table > tbody > tr > * > input[type=date] {
+    text-align: inherit;
 }
 
 .table-ex.sr-table > tbody > tr > td:first-child + td + td + td {}
@@ -190,14 +203,37 @@ body, .app > main {
 }
 
 .add-employee-dialog .dialog-content > .data-form-ex {
-    display: grid;
-    grid-template-columns: 5em 5em 5em 5em 5em 5em;
+    /* display: grid; */
+    /* grid-template-columns: 5em 5em 5em 5em 5em 5em; */
     gap: 1em;
     /* line-height: 2; */
 }
 
 .add-employee-dialog .dialog-content > .data-form-ex > * {
-    grid-column: span 2;
+    /* grid-column: span 2; */
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > * + * {
+    margin-top: 0.25em;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > .checkbox-ex {
+    display: block;
+    margin-top: 0.1em;
+    text-align: right;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > .name,
+.add-employee-dialog .dialog-content > .data-form-ex > .birth-date,
+.add-employee-dialog .dialog-content > .data-form-ex > .email {
+    margin-top: 1em;
+}
+
+.add-employee-dialog .dialog-content > .data-form-ex > .name + .name {
+    margin-top: 0.25em;
 }
 
 .add-employee-dialog .dialog-content > .data-form-ex > .employee-id,
@@ -206,29 +242,35 @@ body, .app > main {
 .add-employee-dialog .dialog-content > .data-form-ex > .workplace,
 .add-employee-dialog .dialog-content > .data-form-ex > .email,
 .add-employee-dialog .dialog-content > .data-form-ex > .create-account {
-    grid-column: span 3;
+    /* grid-column: span 3; */
 }
 
 .add-employee-dialog .dialog-content > .data-form-ex > .employee-id,
 .add-employee-dialog .dialog-content > .data-form-ex > .position,
 .add-employee-dialog .dialog-content > .data-form-ex > .workplace {
-    display: flex;
+    /* display: flex; */
+    /* justify-content: space-between; */
 }
 
 
 .add-employee-dialog .dialog-content > .data-form-ex > .birth-date {
-    grid-column: 2 / span 2;
+    /* grid-column: 2 / span 2; */
 }
 
 .add-employee-dialog .dialog-content .vertical > * {
-    text-align: center;
+    /* text-align: center; */
 }
 
 .add-employee-dialog .dialog-content .checkbox-ex > label {
     display: inline-block;
     vertical-align: middle;
+    text-align: left;
 }
 
 .add-employee-dialog .dialog-content .checkbox-ex > * {
     vertical-align: baseline;
+}
+
+.delete-service-record-entry-dialog .dialog-content > .div-ex > .div-ex {
+    margin: 0 2em;
 }

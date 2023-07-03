@@ -4,6 +4,50 @@
 TO DO:
 * [ ] Endorse source code to IT Officer
 
+## 6/28/2023
+TO DO:
+* [ ] [SeRGS] Create code procedures for loading service record data using employee ID
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] Make secure folder more secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+## 6/27/2023
+TO DO:
+* [x] [SeRGS] Keep the mm/dd/yyyy date format in SR during the focus and blur events
+* [x] [SeRGS] Enable delete record entry
+* [x] [SeRGS] Allow tab and arrow keys navigation in the SR table
+* [ ] [SeRGS] Create code procedures for loading service record data using employee ID
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] Make secure folder more secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+## 6/26/2023
+TO DO:
+* [x] [SeRGS] Completed Add Employee Dialog (to do: backend)
+* [x] [SeRGS] Enable add record entry
+* [ ] [SeRGS] Enable delete record entry
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] Make secure folder more secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
 ## 6/23/2023
 TO DO:
 * [x] [SeRGS] Added control buttons to Service Record Data Entry Form

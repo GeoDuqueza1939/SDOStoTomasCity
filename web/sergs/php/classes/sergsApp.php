@@ -303,7 +303,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                 </div>
 
                 <div class="div-ex sr-table-wrapper">
-                    Not available. <a href="/sergs/requests/new_request/" title="Request for a service record">Request service record update</a>
+                    Not available. To request a service record update, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.
                     <!-- <table class="table-ex sr-table">
                         <thead>
                             <tr>
@@ -560,27 +560,401 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 
     protected function generateSREncodingUI()
     { 
+        $error = false;
+        $dbResults = null;
         $accessLevel = $this->getUserAccessLevel();
         if ($accessLevel < 2)
         {
             $this->generateForbidden();
             return;
-        } ?>
+        } 
+        
+        if (isset($_REQUEST['a']))
+        {
+            switch ($_REQUEST['a'])
+            {
+                case 'addEmployeeSubmit':
+                    $person = [];
+                    $employee = [];
+                    $birthPlace = [];
+                    $emailAddress = "";
+                    
+                    $isTempEmpId = isset($_REQUEST['is_temporary_empno']);
+                    $employeeId = trim($_REQUEST['employeeId']);
+                    $createAccount = isset($_REQUEST['create_account']);
+                    
+                    if (!is_string($_REQUEST['given_name']) || trim($_REQUEST['given_name']) === '')
+                    {
+                        $error = true; ?>
+                        <script>
+                            function errorMsg() {
+                                new MessageBox().setup(app.main, "SeRGS Error", "Error: Given name is required.");
+                            }
+                        </script><?php
+                    }
+        
+                    if (!$error)
+                    {
+                        $dbResults = $this->getDB_SDO()->select('Employee', 'employeeId', "WHERE employeeId='$employeeId'");
+        
+                        if (!is_null($this->getDB_SDO()->lastException))
+                        {
+                            $error = true; ?>
+                            <script>
+                                function errorMsg() {
+                                    new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in querying employee information in database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                }
+                            </script><?php
+                        }
+                        elseif (count($dbResults) > 0)
+                        {
+                            $error = true; ?>
+                            <script>
+                                function errorMsg() {
+                                    new MessageBox().setup(app.main, "SeRGS Error", "Error: Employee ID <?php echo($employeeId); ?> already exists.");
+                                }
+                            </script><?php
+                        }
+                    }
+        
+                    foreach ($_REQUEST as $key => $value) {
+                        switch ($key)
+                        {
+                            case 'app':
+                            case 'a':
+                            case 'is_temporary_empno':
+                            case 'employeeId':
+                                    break;
+                            case 'given_name': case 'middle_name': case 'family_name':
+                            case 'spouse_name': case 'ext_name': case 'post_nominal':
+                            case 'birth_date':
+                                $person[$key] = trim($value);
+                                break;
+                            case 'birth_place':
+                                $birthPlace = trim($value);
+                                break;
+                            case 'employeeId':
+                                break;
+                            case 'is_temporary_empno':
+                                break;
+                            case 'email_address':
+                                $emailAddress = trim($value);
+                                break;
+                        }
+                    }
+        
+                    $birthPlaceAddressId = -1;
+                    $personId = -1;
+        
+                    if (!$error)
+                    {
+                        $dbResults = $this->getDB_SDO()->select('Address', 'addressId', "WHERE address='$birthPlace'");
+            
+                        if (is_null($this->getDB_SDO()->lastException))
+                        {
+                            if (count($dbResults) === 0)
+                            {
+                                $birthPlaceAddressId = $this->getDB_SDO()->insert('Address', '(address)', "('$birthPlace')");
+            
+                                if (!is_null($this->getDB_SDO()->lastException))
+                                {
+                                    $error = true; ?>
+                                    <script>
+                                        function errorMsg() {
+                                            new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in inserting birth place into database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                        }
+                                    </script><?php
+                                }
+                            }
+                            else
+                            {
+                                $birthPlaceAddressId = $dbResults[0]['addressId'];
+                            }
+                        }
+                        else
+                        {
+                            $error = true; ?>
+                            <script>
+                                function errorMsg() {
+                                    new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in querying birth place in database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                }
+                            </script><?php
+                        }
+                    }
+        
+                    if (!$error)
+                    {
+                        $dbResults = $this->getDB_SDO()->select('Person', 'personId, given_name, middle_name, family_name, spouse_name, ext_name, post_nominal, birth_date, birth_place', 'WHERE given_name="' . $person['given_name'] . '" AND family_name="' . $person['family_name'] . '" AND birth_date="' . $person['birth_date'] . '"');
+        
+                        if (is_null($this->getDB_SDO()->lastException) && count($dbResults) === 0)
+                        {
+                            $dbResults = $this->getDB_SDO()->select('Person', 'personId, given_name, middle_name, family_name, spouse_name, ext_name, post_nominal, birth_date, birth_place', 'WHERE given_name="' . $person['given_name'] . '" AND (family_name="' . $person['family_name'] . '" OR birth_date="' . $person['birth_date'] . '")');
+                        }
+        
+                        if (is_null($this->getDB_SDO()->lastException))
+                        {
+                            if (count($dbResults) > 1)
+                            {
+                                $error = true; ?>
+                                <script>
+                                    function errorMsg() {
+                                        new MessageBox().setup(app.main, "SeRGS Error", "Ambiguity encountered in querying personal information in database. [Multiple matches found where a single match is expected]");
+                                    }
+                                </script><?php    
+                            }
+                            elseif (count($dbResults) === 1)
+                            {
+                                $personId = $dbResults[0]['personId'];
+        
+                                $this->getDB_SDO()->update('Person', 'given_name="' . $person['given_name'] . '", middle_name="' . $person['middle_name'] . '", family_name="' . $person['family_name'] . '", spouse_name="' . $person['spouse_name'] . '", ext_name="' . $person['ext_name'] . '", post_nominal="' . $person['post_nominal'] . '", birth_date="' . $person['birth_date'] . '", birth_place="' . $birthPlaceAddressId . '"', "WHERE personId='$personId'");
+        
+                                if (!is_null($this->getDB_SDO()->lastException))
+                                {
+                                    $error = true; ?>
+                                    <script>
+                                        function errorMsg() {
+                                            new MessageBox().setup(app.main, "SeRGS Error", "Ambiguity encountered in querying personal information in database. [Multiple matches found where a single match is expected]" + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                        }
+                                    </script><?php
+                                }
+                            }
+                            elseif (count($dbResults) === 0)
+                            {
+                                $personId = $this->getDB_SDO()->insert('Person', '(given_name, middle_name, family_name, spouse_name, ext_name, post_nominal, birth_date, birth_place)', '("' . $person['given_name'] . '", "' . $person['middle_name'] . '", "' . $person['family_name'] . '", "' . $person['spouse_name'] . '", "' . $person['ext_name'] . '", "' . $person['post_nominal'] . '", "' . $person['birth_date'] . '", "' . $person['birth_date'] . '", "' . $person['birth_place'] . '", "' . $birthPlaceAddressId . '")');
+        
+                                if (!is_null($this->getDB_SDO()->lastException))
+                                {
+                                    $error = true; ?>
+                                    <script>
+                                        function errorMsg() {
+                                            new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in inserting personal information into database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                        }
+                                    </script><?php        
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $error = true; ?>
+                            <script>
+                                function errorMsg() {
+                                    new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in querying personal information in database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                }
+                            </script><?php
+                        }    
+                    }
+        
+                    if (!$error)
+                    {
+                        $this->getDB_SDO()->insert('Employee', '(employeeId, personId, is_temporary_empno)', "('$employeeId', '$personId', '" . ($isTempEmpId ? '1' : '0') . "')");
+        
+                        if (!is_null($this->getDB_SDO()->lastException))
+                        {
+                            $error = true; ?>
+                            <script>
+                                function errorMsg() {
+                                    new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in inserting employee information into database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                }
+                            </script><?php
+                        }
+                    }
+        
+                    if (!$error)
+                    {
+                        $this->getDB_SDO()->insert('Email_Address', '(email_address, personId)', "('$emailAddress', '$personId')");
+        
+                        if (!is_null($this->getDB_SDO()->lastException))
+                        {
+                            $error = true; ?>
+                            <script>
+                                function errorMsg() {
+                                    new MessageBox().setup(app.main, "SeRGS Error", "Error encountered in inserting email address into database." + "<br><br><?php echo($this->getDB_SDO()->lastException->getMessage()); ?><br><br>Last SQL String: <?php echo($this->getDB_SDO()->lastSQLStr); ?>");
+                                }
+                            </script><?php
+                        }    
+                    }
+                    break;
+                case 'loadServiceRecord':
+                    
+                    break;
+            }
+        }
+        ?>
     <section id="main-sr-encoding">
         <h2>Service Record Data Entry Form</h2>
+
+        <script>
+            "use strict";
+
+            function activateDateInput(td = new HTMLTableCellElement())
+            {
+                if (td instanceof HTMLTableCellElement)
+                {
+                    if (!(td.children.length > 0 && td.children[0] instanceof HTMLInputElement))
+                    {
+                        let dateInput = ElementEx.create("input", ElementEx.NO_NS, null, null, "type", "date", "style", "border: 0 none;");
+                        dateInput.value = td.innerHTML.replace(/(\d\d)\/(\d\d)\/(\d\d\d\d)/, "$3-$1-$2");
+                        td.innerHTML = "";
+                        td.append(dateInput);
+                        td.tabIndex = -1;
+                        dateInput.addEventListener("blur", event=>deactivateDateInput(td));
+                        dateInput.focus();
+                        document.getElementById("sr-delete-record").children[0]["active_cell"] = td;
+                    }
+                }
+            }
+
+            function deactivateDateInput(td = new HTMLTableCellElement())
+            {
+                if (td instanceof HTMLTableCellElement && td.children.length > 0 && td.children[0] instanceof HTMLInputElement && td.children[0].type === "date")
+                {
+                    td.innerHTML = td.children[0].value.replace(/(\d\d\d\d)-(\d\d)-(\d\d)/, "$2\/$3\/$1");
+                    td.tabIndex = 0;
+                }
+            }
+
+            async function activateDelRecButton(setting = true, td = null)
+            {
+                await window.setTimeout(()=>{
+                    [document.getElementById("sr-delete-record").children[0]].forEach(delRecButton=>{
+                        delRecButton.disabled = !setting;
+                        delRecButton["active_cell"] = (setting ? td : null);
+                    });
+                }, 1000);
+            }
+
+            function arrowMove(event = new KeyboardEvent(), td = new HTMLTableCellElement)
+            {
+                if ("lastStart" in td && td["lastStart"] === td.selectionStart && td["lastEnd"] === td.selectionEnd)
+                {
+                    let rowIndex = Array.from(td.parentElement.parentElement.children).findIndex(row=>row === td.parentElement);
+                    let cellIndex = Array.from(td.parentElement.children).findIndex(cell=>cell === td);
+
+                    if (event.key === "ArrowUp" && rowIndex > 0)
+                    {
+                        td.parentElement.parentElement.children[rowIndex - 1].rowInfo.td[td["headerName"]].focus();
+                    }
+                    else if (event.key === "ArrowDown" && rowIndex < td.parentElement.parentElement.childElementCount - 1)
+                    {
+                        td.parentElement.parentElement.children[rowIndex + 1].rowInfo.td[td["headerName"]].focus();
+                    }
+                    else if (event.key === "ArrowLeft")
+                    {
+                        if (cellIndex > 0)
+                        {
+                            td.previousElementSibling.focus();
+                        }
+                        else if (rowIndex > 0)
+                        {
+                            Array.from(td.parentElement.parentElement.children[rowIndex - 1].children).slice(-1)[0].focus();
+                        }
+                    }
+                    else if (event.key === "ArrowRight")
+                    {
+                        if (cellIndex < td.parentElement.children.length - 1)
+                        {
+                            td.nextElementSibling.focus();
+                        }
+                        else if (rowIndex < td.parentElement.parentElement.children.length - 1)
+                        {
+                            td.parentElement.parentElement.children[rowIndex + 1].children[0].focus();
+                        }
+                    }
+                }
+
+                td["lastStart"] = td.selectionStart;
+                td["lastEnd"] = td.selectionEnd;
+            }
+
+            function addNewRow()
+            {
+                let row = document.getElementById('sr-table-entry').uiEx.addRow();
+                
+                Array.from(row.children).forEach((cell, index)=>{
+                    if (index === 0 || index === 1 || index === 8)
+                    {
+                        cell.addEventListener("focus", event=>activateDateInput(cell));
+                    }
+                    else
+                    {
+                        cell.addEventListener("keydown", event=>arrowMove(event, cell));
+                    }
+                    
+                    cell.addEventListener("focus", event=>activateDelRecButton(true, cell));
+                    cell.addEventListener("blur", event=>activateDelRecButton(false, cell));
+                });
+
+                [document.getElementById("sr-save-update").children[0]].forEach(saveBtn=>{
+                    if (saveBtn.disabled) saveBtn.disabled = false;
+                });
+
+                row.children[0].focus();
+            }
+
+            function addEmployeeLoadSRButton(button = new HTMLButtonElement())
+            {
+                if (button.innerHTML === 'Add Employee')
+                {
+                    new AddEmployeeDialog().setup(document.getElementById('sergs').querySelector('main'));
+                }
+                else if (button.innerHTML === 'Load Service Record')
+                {
+                    loadSR(document.getElementById('emp-id').value, document.getElementById('sr-table-entry'));
+                }
+            }
+
+            function loadSR(employeeId = "", srTableEx = new TableEx())
+            {
+                if (ElementEx.type(employeeId) === "string" && employeeId !== "")
+                {
+                    console.log(employeeId, srTableEx);
+                    document.getElementById("sr-revert-cancel").children[0].disabled = false;
+                }
+            }
+
+            function updateSR()
+            {
+                let srTableEx = document.getElementById("sr-table-entry").uiEx;
+
+                let srData = srTableEx.rows.map(rowInfo=>{
+                    var rowData = {};
+
+                    for (const key in rowInfo.td)
+                    {
+                        switch (key)
+                        {
+                            case "date-from":
+                            case "date-to":
+                            case "date":
+                                rowData[key] = rowInfo.td[key].innerHTML.replace(/(\d\d)\/(\d\d)\/(\d\d\d\d)/, "$3-$1-$2");
+                                break;
+                            default:
+                                rowData[key] = rowInfo.td[key].innerHTML;
+                                break;
+                        }
+                    }
+
+                    return rowData;
+                });
+
+                // ADD CODE FOR SUBMITTING SERVICE RECORD DATA TO SERVER
+
+                console.log(srData);
+            }
+        </script>
 
         <div class="div-ex emp-info">
             <span class="drop-down-ex emp-id">
                 <label class="label-ex" for="emp-id">Employee ID/Name:</label>
-                <select id="emp-id" name="emp-id" onchange="(()=>{ document.getElementById('sr-add-new-emp').uiEx.control.disabled = (this.value != -1); document.getElementById('sr-emp-birth-date').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthDate); document.getElementById('sr-emp-birth-place').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthPlace); })()">
-                    <option value="-1" class="non-option">- Select employee -</option><?php
-                    $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId;');
+                <select id="emp-id" name="emp-id" onchange="(()=>{ document.getElementById('sr-add-new-emp').uiEx.control.innerHTML = (this.value == -1 ? 'Add Employee' : 'Load Service Record'); document.getElementById('sr-emp-birth-date').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthDate); document.getElementById('sr-emp-birth-place').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthPlace); })()">
+                    <option value="-1" class="non-option">- New Employee Record -</option><?php
+                    $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, Address.address AS birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId LEFT JOIN Address ON Person.birth_place=Address.addressId;');
     
                     if (is_null($this->getDB_SDO()->lastException))
                     {
                         foreach ($employees as $employee) { ?>
-    
-                            <option value="<?php echo($employee['employeeId']); ?>" data-birth-date="<?php echo($employee['birth_date']); ?>" data-birth-place="<?php echo($employee['birth_place']); ?>"><?php
+
+                            <option value="<?php echo($employee['employeeId']); ?>" data-birth-date="<?php echo(date('F j, Y', strtotime($employee['birth_date']))); ?>" data-birth-place="<?php echo($employee['birth_place']); ?>"><?php
                                 echo($employee['employeeId'] . ' &ndash; ' . $this->getFullName($employee['given_name'], $employee['middle_name'], $employee['family_name'], $employee['spouse_name'], $employee['ext_name'], true));
                             ?></option><?php
                         }
@@ -589,13 +963,12 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                     {
                         echo('Error encountered retrieving employee records.');
                     }
-    
                     ?>
                 </select>
             </span>
 
             <span class="button-ex" id="sr-add-new-emp">
-                <button type="button" onclick="new AddEmployeeDialog().setup(document.getElementById('sergs').querySelector('main'));">Add New</button>
+                <button type="button" onclick="addEmployeeLoadSRButton(this);">Add Employee</button>
             </span>
 
             <div class="div-ex" id="sr-emp-birth-date">
@@ -607,26 +980,26 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
         </div>
 
         <div class="div-ex sr-table-wrapper">
-            <table class="table-ex sr-table">
+            <table class="table-ex sr-table" id="sr-table-entry">
                 <thead>
                     <tr>
-                        <th colspan="2">Service</th>
-                        <th colspan="3">Record of Appointment</th>
-                        <th>Office</th>
-                        <th rowspan="3">Branch</th>
-                        <th rowspan="3">Leave of Absence w/o Pay</th>
-                        <th rowspan="3">Date</th>
+                        <th colspan="2" data-header-name="service">Service</th>
+                        <th colspan="3" data-header-name="appointment">Record of Appointment</th>
+                        <th data-header-name="office">Office</th>
+                        <th rowspan="3" data-header-name="branch" data-contenteditable="true">Branch</th>
+                        <th rowspan="3" data-header-name="lwop" data-contenteditable="true">Leave of Absence w/o Pay</th>
+                        <th rowspan="3" data-header-name="date" data-contenteditable="true">Date</th>
                     </tr>
                     <tr>
-                        <th colspan="2">(Inclusive Date)</th>
-                        <th rowspan="2">Designation</th>
-                        <th rowspan="2">Status</th>
-                        <th rowspan="2">Salary</th>
-                        <th rowspan="2">Station/Place</th>
+                        <th colspan="2" data-header-name="inclusive_date">(Inclusive Date)</th>
+                        <th rowspan="2" data-header-name="designation" data-contenteditable="true">Designation</th>
+                        <th rowspan="2" data-header-name="status" data-contenteditable="true">Status</th>
+                        <th rowspan="2" data-header-name="salary" data-contenteditable="true">Salary</th>
+                        <th rowspan="2" data-header-name="station" data-contenteditable="true">Station/Place</th>
                     </tr>
                     <tr>
-                        <th>From</th>
-                        <th>To</th>
+                        <th data-header-name="date-from" data-contenteditable="true">From</th>
+                        <th data-header-name="date-to" data-contenteditable="true">To</th>
                     </tr>
                 </thead>
                 <tbody><?php ?>
@@ -636,21 +1009,26 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 
         <div class="button-group-ex" style="float: left;">
             <span class="button-ex" id="sr-add-record">
-                <button type="button">Add <br>Record</button>
+                <button type="button" disabled onclick="addNewRow();">Add <br>Record</button>
             </span>
             <span class="button-ex" id="sr-delete-record">
-                <button type="button" disabled>Delete <br>Record</button>
+                <button type="button" disabled onclick="activateDelRecButton(true, this['active_cell']); new DeleteServiceRecordEntryDialog().setup(app.main, this['active_cell'].parentElement, this);" title="Delete the entire row of a selected cell">Delete <br>Record</button>
             </span>
         </div>
-        <div class="button-group-ex" id="sr-save-update" style="float: right;">
-            <span class="button-ex">
-                <button type="submit">Update/<br>Save</button>
+        <div class="button-group-ex" style="float: right;">
+            <span class="button-ex" id="sr-save-update">
+                <button type="submit" disabled onclick="updateSR();">Update/<br>Save</button>
             </span>
-            <span class="button-ex">
-                <button type="submit" id="sr-revert-cancel" disabled>Revert/<br>Cancel</button>
+            <span class="button-ex" id="sr-revert-cancel">
+                <button type="submit" disabled onclick="window.location.replace(window.location.href);">Revert/<br>Cancel</button>
             </span>
             <span class="status-pane" id="sr-status"></span>
         </div>
+
+        <script>
+            "use strict";
+            new TableEx().setupFromHTMLElement(document.getElementById('sr-table-entry'));
+        </script>
     </section><?php
     }
 
