@@ -2,10 +2,6 @@
 
 ## 6/29/2023
 TO DO:
-* [ ] Endorse source code to IT Officer
-
-## 6/28/2023
-TO DO:
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
 * [ ] [SeRGS] Design a Service Record Data Entry Form
 * [ ] Make secure folder more secure
@@ -16,12 +12,15 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+As today is examination day, I was unable to do very much today. I intended to endorse the source code to the IT Officer for safe-keeping, as this was supposed to be my last office day before my Job Order renewal. Fortunately, we were informed that we were to be renewed by Monday, so I did not need to rush things today just to endorse the source code as I will have the next week to continue my work. Still, I tried to add the code for loading service record data using employee ID. I will have to revisit this code by next week, as I am on leave tomorrow (Friday) for the graduation/completion ceremony of two of my sons.
 
 ## 6/27/2023
 TO DO:
 * [x] [SeRGS] Keep the mm/dd/yyyy date format in SR during the focus and blur events
 * [x] [SeRGS] Enable delete record entry
 * [x] [SeRGS] Allow tab and arrow keys navigation in the SR table
+* [x] [SeRGS] Backend for Add Employee Dialog (saving new Employee data)
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
 * [ ] [SeRGS] Design a Service Record Data Entry Form
 * [ ] Make secure folder more secure
@@ -32,6 +31,8 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+Today was the Open Ranking proceedings for Admin Assistant III, so my attention was a bit divided today, again. However, I was still able to add a few functionalities to the SR table. First, I added code to retain the `mm/dd/yyyy` date format in between focus and blur events. I was also able to make the behavior similar to spreadsheet software whenever navigation through cells using arrow keys, although I disabled the arrow key navigation for the date cells to prevent conflict with the date-type input functionality. I also enabled the delete record entry functionality in the <button>Delete Record</button> button. I also added some code for adding employee data to the database. Now, limited sets of employee data can be added using this interface.
 
 ## 6/26/2023
 TO DO:
@@ -48,6 +49,8 @@ TO DO:
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] [MPaSIS] Add Honor Graduate to eligibilities
 
+After modifying the DialogEx class, I worked to add the dialog buttons and code that will extract/directly submit the data from the dialog form's input fields. I will need to add backed code that will handle these submissions later on. I also added functionality to the <button>Add Record</button> button to enable adding of rows to the SR table. I first had to modify the TableEx class to enable setting up using an existing table before I could enable adding of record entries. The rows added can be automatically set as editable, depending on header setting. I also added code that changes the date-typed cells in a row to a date-typed input element, although blur events causes the date data to be converted to the `yyyy-mm-dd` format. Likewise, focus and blur events don't feel natural, as I am at least aiming for an MS Excel-like feel in the navigation around the SR-table. I will need to deal with these things tomorrow.
+
 ## 6/23/2023
 TO DO:
 * [x] [SeRGS] Added control buttons to Service Record Data Entry Form
@@ -61,6 +64,8 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+I decided to add control buttons to the Service Record Data Entry form which will handle adding and deleting of record rows, updating and saving of data, and reverting to unmodified records. I will have to  add the functions later on. I, proceeded to create the AddEmployeeDialog class which is called everytime the `Add Employee` button is clicked. I was able to add all the fields that it needs, although I will need to add the dialog buttons later on by modifying the parent DialogEx class itself.
 
 ## 6/22/2023
 TO DO:
@@ -79,6 +84,8 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
+I worked steadily in the layouts for the Requests lists pages. I decided to incorporate the other lists into a single Request list page, instead implementing them as a filter. I then delete the links to these features from the database. I then began working on the Service Record data entry form layout.
 
 ## 6/21/2023
 TO DO:
