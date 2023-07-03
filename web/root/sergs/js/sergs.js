@@ -78,7 +78,7 @@ class AddEmployeeDialog extends DialogEx
 
     constructor()
     {
-        super(ContainerEx.UIExType);
+        super(DialogEx.UIExType);
         this.autoId = this.UIExType + AddEmployeeDialog.#instanceCount++;
     }
 
@@ -87,42 +87,52 @@ class AddEmployeeDialog extends DialogEx
         try
         {
             super.setup(parentHTMLElement);
-            this.uiEx = this;
+            this.container.uiEx = this;
             this.caption = "Add Employee";
             this.container.classList.add("add-employee-dialog");
             this.addDataFormEx();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", blankStyle:true, dbInfo:{table:"Employee", column:"employeeId"}});
+            this.dataFormEx.id = "add-employee-dialog";
+            this.dataFormEx.container.name = "add-employee-dialog";
+            this.dataFormEx.container.setAttribute("method", "POST");
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"SeRGS"});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"a", name:"a", inputType:"hidden", value:"addEmployeeSubmit"});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary", addContainerClass:obj=>obj.container.classList.add("temp-emp-id"), tooltip: "Temporary employee ID; for Plantilla Item Numbers, uncheck this item", reverse:undefined, dbInfo:{table:"Employee", column:"is_temporary_empno"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"Employee", column:"employeeId"}});
             this.dataFormEx.addSpacer();
-            // this.dataFormEx.addLineBreak();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Position Title:", addContainerClass:obj=>obj.container.classList.add("position"), inputType:"text", blankStyle:true, dbInfo:{table:"Position", column:"position_title"}});
+            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary employee ID", id:"is_temporary_empno", name:"is_temporary_empno", addContainerClass:obj=>obj.container.classList.add("temp-emp-id"), tooltip: "Temporary employee ID; for Plantilla Item Numbers, uncheck this item", reverse:undefined, dbInfo:{table:"Employee", column:"is_temporary_empno"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Workplace:", addContainerClass:obj=>obj.container.classList.add("workplace"), inputType:"text", blankStyle:true, dbInfo:{column:"workplace"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
             this.dataFormEx.addSpacer();
-            // this.dataFormEx.addLineBreak();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"given_name"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name:", id:"middle_name", name:"middle_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"middle_name"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"middle_name"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Family Name:", id:"family_name", name:"family_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"family_name"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Family Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"family_name"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Spouse Name:", id:"spouse_name", name:"spouse_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) For married women only", dbInfo:{table:"Person", column:"spouse_name"}});
             this.dataFormEx.addSpacer();
-            // this.dataFormEx.addLineBreak();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Spouse Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"spouse_name"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Ext. Name:", id:"ext_name", name:"ext_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) Extension Name, e.g., Jr., III", dbInfo:{table:"Person", column:"ext_name"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Ext. Name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"ext_name"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Post-Nominal Degrees:", id:"post_nominal", name:"post_nominal", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) Post-Nominal Degrees, e.g., LPT, PhD, EdD, MD, etc.", dbInfo:{table:"Person", column:"post_nominal"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Suffix", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"suffix"}});
+            this.dataFormEx.addControlEx(DateFieldEx.UIExType, {label:"Birth Date:", id:"birth_date", name:"birth_date", addContainerClass:obj=>obj.container.classList.add("birth-date"), dbInfo:{table:"Person", column:"birth_date"}});
             this.dataFormEx.addSpacer();
-            // this.dataFormEx.addLineBreak();
-            this.dataFormEx.addControlEx(DateFieldEx.UIExType, {label:"Birth Date", addContainerClass:obj=>obj.container.classList.add("birth-date"), reverse:undefined, blankStyle:true, vertical:true, dbInfo:{table:"Person", column:"birth_date"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Birth Place:", id:"birth_place", name:"birth_place", addContainerClass:obj=>obj.container.classList.add("birth-place"), inputType:"text", dbInfo:{table:"Person", column:"birth_place"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Birth Place", addContainerClass:obj=>obj.container.classList.add("birth-place"), inputType:"text", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Person", column:"birth_place"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Email Address:", id:"email_address", name:"email_address", addContainerClass:obj=>obj.container.classList.add("email"), inputType:"email", dbInfo:{table:"Email_Address", column:"email_address"}});
             this.dataFormEx.addSpacer();
-            // this.dataFormEx.addLineBreak();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Email Address", addContainerClass:obj=>obj.container.classList.add("email"), inputType:"email", blankStyle:true, reverse:undefined, vertical:true, dbInfo:{table:"Email_Address", column:"email_address"}});
-            this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Create SDO Services Account <br>using this email address", addContainerClass:obj=>obj.container.classList.add("create-account"), reverse:undefined, dbInfo:{column:"create_account"}});
+            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Create SDO Services Account <br>using this email address", id:"create_account", name:"create_account", addContainerClass:obj=>obj.container.classList.add("create-account"), reverse:undefined, dbInfo:{table:"_", column:"create_account"}});
+
+            this.addStatusPane();
+        
+            this.setupDialogButtons([
+                {text:"Save", buttonType:"submit", tooltip:"Save employee information"/*, clickCallback:function(clickEvent){
+                    console.log(this.uiEx.parentUIEx.parentDialogEx.dataFormEx.dbValues); // TEMP
+                }*/}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                    this.uiEx.parentUIEx.parentDialogEx.close();
+                }}
+            ]);
+
+            this.buttonGrpEx.controlExs[0].control.setAttribute("form", "add-employee-dialog");
+            this.buttonGrpEx.controlExs[1].control.setAttribute("form", "add-employee-dialog");
 
             return this;
         }
@@ -148,6 +158,81 @@ class AddEmployeeDialog extends DialogEx
     }
 }
 
+class DeleteServiceRecordEntryDialog extends DialogEx
+{
+    static #UIExType = "AddEmployeeDialog";
+    static #instanceCount = 0;
+
+    constructor()
+    {
+        super(DialogEx.UIExType);
+        this.autoId = this.UIExType + DeleteServiceRecordEntryDialog.#instanceCount++;
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), row = new HTMLTableRowElement(), deleteRecordButton = new HTMLButtonElement())
+    {
+        try
+        {
+            super.setup(parentHTMLElement);
+            this.container.uiEx = this;
+            this.caption = "Delete Service Record Entry";
+            this.container.classList.add("delete-service-record-entry-dialog");
+            let container = new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"This will delete the following service record entry:"});
+            this.addExContent(container);
+            container.addContent(ElementEx.create("br"));
+            container.addContent(ElementEx.create("br"));
+
+            Array.from(row.children).forEach(cell=>{
+                if (cell.children.length > 0 && cell.children[0] instanceof HTMLInputElement && cell.children[0].type === "date")
+                {
+                    cell.innerHTML = cell.children[0].value.replace(/(\d\d\d\d)-(\d\d)-(\d\d)/, "$2\/$3\/$1");
+                }
+            });
+
+            container.addExContent(new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"Inclusive Dates:"}).setHTMLContent(row.rowInfo.td["date-from"].innerHTML + " &ndash; " + row.rowInfo.td["date-to"].innerHTML));
+            container.addContent(document.createTextNode(" "));
+            container.addExContent(new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"Designation:"}).setHTMLContent(row.rowInfo.td["designation"].innerHTML));
+            container.addContent(document.createTextNode(" "));
+            container.addExContent(new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"Office/Station/Place:"}).setHTMLContent(row.rowInfo.td["station"].innerHTML));
+
+            this.addStatusPane();
+        
+            this.setupDialogButtons([
+                {text:"Continue", buttonType:"button", tooltip:"Delete the specified service record entry", clickCallback:function(clickEvent){
+                    row.uiEx.rows.splice(row.uiEx.rows.findIndex(rowInfo=>rowInfo === row.rowInfo), 1)[0].tr.remove();
+                    deleteRecordButton.disabled = true;
+                    this.uiEx.parentUIEx.parentDialogEx.close();
+                }}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                    this.uiEx.parentUIEx.parentDialogEx.close();
+                }}
+            ]);
+
+            this.buttonGrpEx.controlExs[0].control.focus();
+
+            return this;
+        }
+        catch (ex)
+        {
+            throw ex;
+        }
+    }
+
+    static get UIExType()
+    {
+        return this.#UIExType;
+    }
+
+    get UIExType()
+    {
+        return DeleteServiceRecordEntryDialog.#UIExType;
+    }
+
+    get instanceCount()
+    {
+        return DeleteServiceRecordEntryDialog.#instanceCount;
+    }
+}
+
 let app = new SeRGS_App(document.getElementById("sergs"));
 app.dataFormExs = Array.from(document.querySelectorAll(".data-form-ex")).map(element=>("uiEx" in element ? element.uiEx : new DataFormEx().setupFromHTMLElement(element)));
 app.checkboxGroupExs = Array.from(document.querySelectorAll(".checkbox-group-ex")).map(element=>("uiEx" in element ? element.uiEx : new CheckboxGroupEx().setupFromHTMLElement(element)));
@@ -158,6 +243,8 @@ app.buttonExs = Array.from(document.querySelectorAll(".button-ex")).map(element=
 app.dropDownExs = Array.from(document.querySelectorAll(".drop-down-ex")).map(element=>("uiEx" in element ? element.uiEx : new DropDownEx().setupFromHTMLElement(element)));
 app.divExs = Array.from(document.querySelectorAll(".div-ex")).map(element=>("uiEx" in element ? element.uiEx : new DivEx().setupFromHTMLElement(element)));
 var pageRun; // HACK
+var errorMsg; // HACK
+var loadData; // HACK
 if (pageRun !== null && pageRun !== undefined && ElementEx.type(pageRun) === "function")
 {
     pageRun(app);
@@ -168,3 +255,11 @@ if (pageRun !== null && pageRun !== undefined && ElementEx.type(pageRun) === "fu
         // console.log(view);
     }
 });
+if (errorMsg !== null && errorMsg !== undefined && ElementEx.type(errorMsg) === "function")
+{
+    errorMsg();
+}
+if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === "function")
+{
+    loadData();
+}

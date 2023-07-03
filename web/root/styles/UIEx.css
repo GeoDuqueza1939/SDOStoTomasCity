@@ -1,3 +1,28 @@
+.status-pane {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+.status-pane.error {
+    color: red;
+}
+
+.status-pane.warning {
+    color: yellow;
+}
+
+.status-pane.success {
+    color: green;
+}
+
+.status-pane.wait {
+    color: gray;
+}
+
+.status-pane.information {
+    color: blue;
+}
+
 .dialog-ex.scrim {
     position: fixed;
     top: 0;
@@ -53,8 +78,6 @@
 }
 
 .dialog-ex > .dialog > .close-btn:hover {
-    /* background-color: inherit;
-    border: 2px outset; */
     color: red;
 }
 
@@ -92,19 +115,45 @@
     max-width: 40em; */
 }
 
+.dialog-ex > .dialog > .dialog-content > .status-pane {
+    display: block;
+    text-align: center;
+    margin-top: 1em;
+}
+
 .dialog-ex > .dialog > .dialog-buttons {
     grid-column: span 1;
     grid-row: 3 / span 1;
 
     display: flex;
     justify-content: center;
-    align-items: end;
+    /* align-items: end; */
+    align-items: center;
     gap: 0.25em;
 }
 
 .dialog-ex > .dialog > .dialog-buttons > .button-ex > button {
     font-size: inherit;
     /* padding: 0.5em; */
+}
+
+.dialog-ex > .dialog > .close-btn {
+    color: white;
+}
+
+.dialog-ex > .dialog > .close-btn:hover {
+    color: red;
+}
+
+.dialog-ex > .dialog > .close-btn:active {
+    color: black;
+}
+
+.message-box.dialog-ex > .dialog > .dialog-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 .textbox-ex.vertical, .datefield-ex.vertical {

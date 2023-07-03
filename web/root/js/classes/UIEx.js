@@ -739,7 +739,6 @@ class ContainerEx extends UIEx
     
     set captionHeaderLevel(level = 0)
     {
-        console.log(level);
         if (this.captionHeaderLevel !== level)
         {
             let newTag = ElementEx.replace(this.labelEx.container, (level > 0 && level < 7 ? "h" + level : "span"));
@@ -1024,34 +1023,139 @@ class TableEx extends ContainerEx
         }
     }
 
-    // setupFromHTMLElement(htmlElement = new HTMLElement())
-    // {
-    //     if (ElementEx.isElement(this.table))
-    //     {
-    //         throw new TypeError("This object is already setup. It cannot be setup again unless reset.");
-    //     }
-    //     else if (ElementEx.isElement(htmlElement) && (htmlElement instanceof HTMLTableElement || htmlElement.classList.contains("table") || htmlElement.classList.contains("table-ex")))
-    //     {
-    //         this.table = htmlElement;
-    //         this.table.classList.add("table-ex");
-    //         let tableSections = Array.from(this.table.children);
-    //         let invalidSections = tableSections.filter(tableSection=>!(tableSection instanceof HTMLTableSectionElement || tableSection instanceof HTMLTableCaptionElement || tableChild.classList.contains("thead") || tableChild.classList.contains("tbody") || tableChild.classList.contains("tfoot")));
+    setupFromHTMLElement(htmlElement = new HTMLElement())
+    {
+        if (ElementEx.isElement(this.table))
+        {
+            throw new TypeError("This object is already setup. It cannot be setup again unless reset.");
+        }
+        else if (ElementEx.isElement(htmlElement) && (htmlElement instanceof HTMLTableElement || htmlElement.classList.contains("table") || htmlElement.classList.contains("table-ex")))
+        {
+            this.table = htmlElement;
+            this.table.classList.add("table-ex");
+            this.table.uiEx = this;
+            let tableSections = Array.from(this.table.children);
+            let invalidSections = tableSections.filter(tableSection=>!(tableSection instanceof HTMLTableSectionElement || tableSection instanceof HTMLTableCaptionElement || tableChild.classList.contains("caption") || tableChild.classList.contains("thead") || tableChild.classList.contains("tbody") || tableChild.classList.contains("tfoot")));
 
-    //         if (invalidSections.length > 0)
-    //         {
-    //             throw new SyntaxError("Invalid table structure");
-    //         }
+            if (invalidSections.length > 0)
+            {
+                throw new SyntaxError("Invalid table structure");
+            }
 
-    //         for (const tableSection of tableChildren)
-    //         {
-    //             invalidChildren = tableSection.filter(tableChild=>!(tableChild instanceof HTMLTableSectionElement || tableChild.classList.contains("thead") || tableChild.classList.contains("tbody") || tableChild.classList.contains("tfoot")));
-    //         }
-    //     }
-    //     else
-    //     {
-    //         throw new TypeError("Invalid table element.");
-    //     }
-    // }
+            for (const tableSection of tableSections)
+            {
+                if (tableSection instanceof HTMLTableCaptionElement || tableSection.classList.contains("caption"))
+                {
+                    this.labelEx = new LabelEx().setupFromHTMLElement(tableSection);
+                    this.labelEx.parentUIEx = this;
+                }
+                else if (tableSection.tagName.toLowerCase() === "thead" || tableSection.classList.contains("thead"))
+                {
+                    this.thead = tableSection;
+                    this.thead.uiEx = this;
+
+                    let level = 1, maxLevel = this.thead.children.length, tr = this.thead.firstElementChild;
+                    let setupHeaderCell = (cell, parentHeader = null)=>{
+                        let headerInfo = null, colSpan = 0, maxDepth = 0;
+
+                        // console.log(cell, parentHeader, cell instanceof HTMLTableCellElement, cell.classList.contains("th"), cell.classList.contains("td"));
+                        if (cell instanceof HTMLTableCellElement || cell.classList.contains("th") || cell.classList.contains("td"))
+                        {
+                            headerInfo = {
+                                name:cell.dataset.headerName,
+                                tr:cell.parentElement,
+                                th:cell,
+                                parentHeader:(parentHeader instanceof HTMLTableCellElement  || cell.classList.contains("th") || cell.classList.contains("td") ? parentHeader : null),
+                                subheaders:[],
+                                level:Array.from(this.thead.children).findIndex(tr=>Array.from(tr.children).includes(cell)) + 1,
+                                contenteditable:("contenteditable" in cell.dataset && cell.dataset.contenteditable === "true"),
+                                colSpan:(cell.hasAttribute("colspan") ? parseInt(cell.getAttribute("colspan")) : 1),
+                                descendantDepth:0,
+                            }
+
+                            this.headers[headerInfo.name] = headerInfo;
+
+                            cell.classList.add("processed");
+                            
+                            if (headerInfo.level + (cell.hasAttribute("rowspan") ? parseInt(cell.getAttribute("rowspan")) : 1) - 1 === maxLevel)
+                            {
+                                this.dataHeaders.push(headerInfo.name);
+                            }
+                            else
+                            {
+                                colSpan = headerInfo.colSpan;
+    
+                                for (const th of Array.from(headerInfo.tr.nextElementSibling.children))
+                                {
+                                    if (th.classList.contains("processed"))
+                                    {
+                                        continue;
+                                    }
+
+                                    let childHeaderInfo = setupHeaderCell(th, cell);
+                                    colSpan -= childHeaderInfo.colSpan;
+                                    headerInfo.subheaders.push(childHeaderInfo);
+                                    maxDepth = Math.max(maxDepth, childHeaderInfo.descendantDepth)
+                                    
+                                    if (colSpan === 0)
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                headerInfo.descendantDepth += maxDepth + 1;
+                            }
+                            
+                            return headerInfo; 
+                        }
+                        else
+                        {
+                            throw new TypeError("Invalid table structure.");
+                        }
+                    };
+                    
+                    for (const cell of Array.from(this.thead.children[0].children))
+                    {
+                        setupHeaderCell(cell);
+                    }
+
+                    for (const key in this.headers)
+                    {
+                        let header = this.headers[key];
+                        header.th.classList.remove("processed");
+                        if (header.th.classList.length === 0)
+                        {
+                            header.th.removeAttribute("class");
+                        }
+                        header.th.uiEx = this;
+                    }
+                }
+                else if (tableSection.tagName.toLowerCase() === "tbody" || tableSection.classList.contains("tbody"))
+                {
+                    this.tbody = tableSection;
+                    this.tbody.uiEx = this;
+
+                    if (this.tbody.children.length > 0)
+                    {
+                        this.tbody.innerHTML = "";
+                    }
+                }
+                else if (tableSection.tagName.toLowerCase() === "tfoot" || tableSection.classList.contains("tfoot"))
+                {
+                    this.tfoot = tableSection;
+                    this.tfoot.uiEx = this;
+
+                    // ADD CODE FOR SCANNING TFOOT ELEMENT
+                }
+            }
+
+            return this;
+        }
+        else
+        {
+            throw new TypeError("Invalid table element.");
+        }
+    }
 
     // static #checkStructure(htmlElement = new HTMLTableElement())
     // {
@@ -1064,6 +1168,16 @@ class TableEx extends ContainerEx
     //         });
     //     }
     // }
+
+    get captionHeaderLevel()
+    {
+        return 0;
+    }
+    
+    set captionHeaderLevel(level = 0)
+    {
+        // DO NOTHING
+    }
 
     get caption()
     {
@@ -1093,7 +1207,7 @@ class TableEx extends ContainerEx
         }
     }
 
-    setupHeaders(headers = [{name:"", text:"", subheaders:[]}])
+    setupHeaders(headers = [{name:"", text:"", subheaders:[], contenteditable:false}])
     {
         let addHeader = null, tr = null, maxDepth = 0;
 
@@ -1138,7 +1252,7 @@ class TableEx extends ContainerEx
                     parentHeader:null,
                     subheaders:[],
                     level:currentLevel,
-                    contenteditable:false,
+                    contenteditable:("contenteditable" in header && ElementEx.type(header["contenteditable"]) === "boolean" ? header["contenteditable"] : false),
                     descendantDepth:0, // 0 for no subheaders
                     colSpan:0,
                 }
@@ -1302,8 +1416,28 @@ class TableEx extends ContainerEx
             row.data[headerName] = (headerName in rowData ? rowData[headerName] ?? "" : "");
             row.td[headerName] = ElementEx.htmlToElement("<td>" + row.data[headerName] + "</td>");
             row.td[headerName].uiEx = this;
+            row.td[headerName].headerName = headerName;
             row.tr.appendChild(row.td[headerName]);
+            if (this.headers[headerName].contenteditable)
+            {
+                row.td[headerName].tabIndex = 0;
+                row.td[headerName].addEventListener("focus", event=>{
+                    row.td[headerName].contentEditable = "true";
+
+                    var el = row.td[headerName];
+                    var range = document.createRange();
+                    var sel = window.getSelection();
+                    
+                    range.selectNodeContents(el);
+                    
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                });
+                row.td[headerName].addEventListener("blur", event=>{ row.td[headerName].contentEditable = "inherit"; });
+            }
         });
+
+        return row.tr;
     }
 
     deleteRowIndex(i = 0)
@@ -1590,6 +1724,8 @@ class ControlEx extends UIEx
     autoId = "";
     #control = null;
     #statusPane = null;
+    #statusTimeOut = 3;
+    #statusResetTimeOut = null;
     #eventCallbacks = {}; // {click:[], keyup:[], keydown:[], ...}
     
     constructor()
@@ -1632,7 +1768,10 @@ class ControlEx extends UIEx
 
     set statusPane(statusPane = new HTMLElement())
     {
-        this.#statusPane = statusPane;
+        if (!(this.#statusPane instanceof HTMLElement))
+        {
+            this.#statusPane = statusPane;
+        }
     }
 
     get id()
@@ -1882,6 +2021,84 @@ class ControlEx extends UIEx
         if (this.control instanceof HTMLInputElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLButtonElement)
         {
             this.control.focus();
+        }
+    }
+
+    addStatusPane()
+    {
+        if (this.control instanceof HTMLElement)
+        {
+            if (this.spacer.length === 0)
+            {
+                this.spacer.push(document.createTextNode(" "));
+            }
+
+            this.spacer.push(document.createTextNode(" "));
+
+            this.statusPane = ElementEx.createSimple("span", ElementEx.NO_NS, "status-pane", this.container);
+            this.statusPane.before(this.spacer.slice(-1)[0]);
+        }
+    }
+
+    setStatus(statusMsg = "", statusType = "information")
+    {
+        if (!(this.statusPane instanceof HTMLElement))
+        {
+            this.addStatusPane();
+        }
+        this.statusPane.classList.add(statusType);
+        this.statusPane.innerHTML = statusMsg;
+
+        this.#statusResetTimeOut = window.setTimeout(() => {
+            this.resetStatus();
+            this.#statusResetTimeOut = null;
+        }, this.statusTimeOut * 1000);
+    }
+
+    showInfo(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "information");
+    }
+    
+    showSuccess(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "success");
+    }
+    
+    showSuccess(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "wait");
+    }
+    
+    showWarning(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "warning");
+    }
+    
+    raiseError(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "error");
+    }
+
+    resetStatus()
+    {
+        if (this.statusPane instanceof HTMLElement)
+        {
+            this.statusPane.innerHTML = "";
+            this.statusPane.setAttribute("class", "status-pane");
+        }
+    }
+
+    get statusTimeOut()
+    {
+        return this.#statusTimeOut;
+    }
+
+    set statusTimeOut(duration = 5)
+    {
+        if (ElementEx.type(duration) === "number")
+        {
+            this.#statusTimeOut = duration;
         }
     }
 
@@ -3142,6 +3359,10 @@ class ButtonEx extends ControlEx
                             this.statusPane = node;
                             this.statusPane.uiEx = this;
                         }
+                        else if (node instanceof HTMLScriptElement)
+                        {
+                            // DO NOTHING
+                        }
                         else
                         {
                             throw new SyntaxError("Element to be configured has extra elements, which may only be added after configuration as a UIEx object.");
@@ -3472,6 +3693,22 @@ class ButtonGroupEx extends ControlEx
     addButtons(...buttons)
     {
         buttons.forEach(button=>this.addButton(button.text, button.buttonType, button.tooltip, button.clickCallback));
+    }
+
+    addStatusPane()
+    {
+        if (!(this.statusPane instanceof HTMLElement))
+        {
+            if (this.spacer.length === 0)
+            {
+                this.spacer.push(document.createTextNode(" "));
+            }
+
+            this.spacer.push(document.createTextNode(" "));
+
+            this.statusPane = ElementEx.createSimple("span", ElementEx.NO_NS, "status-pane", this.container);
+            this.statusPane.before(this.spacer.slice(-1)[0]);
+        }
     }
 
     static get UIExType()
@@ -5267,7 +5504,7 @@ class DataFormEx extends ContainerEx
                 config.parentContainerEx.addContent(controlEx.container);
             }
 
-            if ((dbInfo !== null || dbInfo !== undefined) && "column" in dbInfo)
+            if (dbInfo !== null && dbInfo !== undefined && "column" in dbInfo)
             {
                 this.dbControls[dbInfo.column] = controlEx;
                 if ("table" in dbInfo)
@@ -5328,7 +5565,7 @@ class DataFormEx extends ContainerEx
                 config.parentContainerEx.addContent(containerEx.container);
             }
 
-            if ((dbInfo !== null || dbInfo !== undefined) && "column" in dbInfo)
+            if (dbInfo !== null && dbInfo !== undefined && "column" in dbInfo)
             {
                 this.dbControls[dbInfo.column] = containerEx;
                 if ("table" in dbInfo)
@@ -5441,6 +5678,24 @@ class DataFormEx extends ContainerEx
         }
     }
 
+    get dbValues()
+    {
+        let dbValues = {};
+        let values = this.values;
+
+        for (const table in this.#dbInfo)
+        {
+            dbValues[table] = {};
+
+            for (const column of this.#dbInfo[table])
+            {
+                dbValues[table][column] = values[column];
+            }
+        }
+
+        return dbValues;
+    }
+
     submit()
     {}
 
@@ -5521,6 +5776,9 @@ class DialogEx extends ContainerEx
     #dataFormEx = null;
     #dialogContentEx = null;
     #buttonGrpEx = null;
+    #statusPane = null;
+    #statusTimeOut = 3;
+    #statusResetTimeOut = null;
     #app = null;
 
     constructor()
@@ -5740,6 +5998,22 @@ class DialogEx extends ContainerEx
         }
     }
 
+    addSpacer(count = 1)
+    {
+        while (count-- > 0)
+        {
+            this.addContent(document.createTextNode(" "));
+        }
+    }
+
+    addLineBreak(count = 1)
+    {
+        while (count-- > 0)
+        {
+            this.addContent(ElementEx.create("br"));
+        }
+    }
+    
     get scrim()
     {
         return this.container;
@@ -5820,6 +6094,89 @@ class DialogEx extends ContainerEx
         this.#app = app;
     }
 
+    get statusPane()
+    {
+        return this.#statusPane;
+    }
+
+    set statusPane(statusPane = new HTMLElement())
+    {
+        if (!(this.#statusPane instanceof HTMLElement))
+        {
+            this.#statusPane = statusPane;
+        }
+    }
+
+    addStatusPane()
+    {
+        this.statusPane = ElementEx.createSimple("span", ElementEx.NO_NS, "status-pane", this.#dialogContentEx.container);
+    }
+
+    setStatus(statusMsg = "", statusType = "information")
+    {
+        if (!(this.statusPane instanceof HTMLElement))
+        {
+            this.addStatusPane();
+        }
+
+        this.#dialogContentEx.addContent(this.statusPane);
+
+        this.statusPane.classList.add(statusType);
+        this.statusPane.innerHTML = statusMsg;
+
+        this.#statusResetTimeOut = window.setTimeout(() => {
+            this.resetStatus();
+            this.#statusResetTimeOut = null;
+        }, this.statusTimeOut * 1000);
+    }
+
+    showInfo(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "information");
+    }
+    
+    showSuccess(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "success");
+    }
+    
+    showSuccess(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "wait");
+    }
+    
+    showWarning(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "warning");
+    }
+    
+    raiseError(statusMsg = "")
+    {
+        this.setStatus(statusMsg, "error");
+    }
+
+    resetStatus()
+    {
+        if (this.statusPane instanceof HTMLElement)
+        {
+            this.statusPane.innerHTML = "";
+            this.statusPane.setAttribute("class", "status-pane");
+        }
+    }
+
+    get statusTimeOut()
+    {
+        return this.#statusTimeOut;
+    }
+
+    set statusTimeOut(duration = 5)
+    {
+        if (ElementEx.type(duration) === "number")
+        {
+            this.#statusTimeOut = duration;
+        }
+    }
+
     close()
     {
         this.scrim.remove();
@@ -5838,6 +6195,57 @@ class DialogEx extends ContainerEx
     get instanceCount()
     {
         return DialogEx.#instanceCount;
+    }
+}
+
+class MessageBox extends DialogEx
+{
+    static #UIExType = "MessageBox";
+    static #instanceCount = 0;
+
+    constructor()
+    {
+        super(DialogEx.UIExType);
+        this.autoId = this.UIExType + MessageBox.#instanceCount++;
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), caption = "", message = "", buttonsInfo = [{text:"Close", buttonType:"button", tooltip:"Close message box", clickCallback:clickEvent=>this.close()}])
+    {
+        try
+        {
+            super.setup(parentHTMLElement);
+            this.container.uiEx = this;
+            this.caption = (ElementEx.type(caption) === "string" && caption.trim() !== "" ? caption : "Message");
+            this.container.classList.add("message-box");
+            let container = new DivEx().setupFromConfig({parentHTMLElement:this.container});
+            this.addExContent(container);
+            container.setHTMLContent(message);
+
+            this.setupDialogButtons(buttonsInfo);
+
+            buttonsInfo.forEach((buttonInfo, index)=>this.buttonGrpEx.controlExs[index].control.setAttribute("form", "message-box"));
+
+            return this;
+        }
+        catch (ex)
+        {
+            throw ex;
+        }
+    }
+
+    static get UIExType()
+    {
+        return this.#UIExType;
+    }
+
+    get UIExType()
+    {
+        return MessageBox.#UIExType;
+    }
+
+    get instanceCount()
+    {
+        return MessageBox.#instanceCount;
     }
 }
 
