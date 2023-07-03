@@ -562,6 +562,8 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
     { 
         $error = false;
         $dbResults = null;
+        $mode = 0; // 0: no data loaded; 1: data loaded
+
         $accessLevel = $this->getUserAccessLevel();
         if ($accessLevel < 2)
         {
@@ -775,7 +777,10 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                     }
                     break;
                 case 'loadServiceRecord':
-                    
+                    ?>
+                    <?php
+                    break;
+                case 'saveServiceRecord':
                     break;
             }
         }
@@ -825,45 +830,65 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 
             function arrowMove(event = new KeyboardEvent(), td = new HTMLTableCellElement)
             {
-                if ("lastStart" in td && td["lastStart"] === td.selectionStart && td["lastEnd"] === td.selectionEnd)
-                {
-                    let rowIndex = Array.from(td.parentElement.parentElement.children).findIndex(row=>row === td.parentElement);
-                    let cellIndex = Array.from(td.parentElement.children).findIndex(cell=>cell === td);
+                let rowIndex = Array.from(td.parentElement.parentElement.children).findIndex(row=>row === td.parentElement);
+                let cellIndex = Array.from(td.parentElement.children).findIndex(cell=>cell === td);
+                let nextTD = null;
+                let range = document.getSelection().getRangeAt(0);
+                let isCollapsed = range.commonAncestorContainer === td || range.startContainer === range.endContainer && range.startOffset === range.endOffset;
+                let hasChildren = (td.childNodes.length > 0);
 
-                    if (event.key === "ArrowUp" && rowIndex > 0)
+                let canMoveToPrevious = (!hasChildren || (isCollapsed && range.startContainer === td.childNodes[0] && range.startOffset === 0 && td["lastStart"] === range.startOffset));
+                let canMoveToNext = (!hasChildren || (isCollapsed && range.startContainer === Array.from(td.childNodes).slice(-1)[0] && range.endOffset >= Array.from(td.childNodes).slice(-1)[0].textContent.length && td["lastEnd"] === range.endOffset));
+
+                if (event.key === "ArrowUp" && rowIndex > 0 && canMoveToPrevious)
+                {
+                    nextTD = td.parentElement.parentElement.children[rowIndex - 1].rowInfo.td[td["headerName"]];
+                }
+                else if (event.key === "ArrowDown" && rowIndex < td.parentElement.parentElement.children.length - 1 && canMoveToNext)
+                {
+                    nextTD = td.parentElement.parentElement.children[rowIndex + 1].rowInfo.td[td["headerName"]];
+                }
+                else if (event.key === "ArrowLeft" && canMoveToPrevious)
+                {
+                    if (cellIndex > 0)
                     {
-                        td.parentElement.parentElement.children[rowIndex - 1].rowInfo.td[td["headerName"]].focus();
+                        nextTD = td.previousElementSibling;
                     }
-                    else if (event.key === "ArrowDown" && rowIndex < td.parentElement.parentElement.childElementCount - 1)
+                    else if (rowIndex > 0)
                     {
-                        td.parentElement.parentElement.children[rowIndex + 1].rowInfo.td[td["headerName"]].focus();
-                    }
-                    else if (event.key === "ArrowLeft")
-                    {
-                        if (cellIndex > 0)
-                        {
-                            td.previousElementSibling.focus();
-                        }
-                        else if (rowIndex > 0)
-                        {
-                            Array.from(td.parentElement.parentElement.children[rowIndex - 1].children).slice(-1)[0].focus();
-                        }
-                    }
-                    else if (event.key === "ArrowRight")
-                    {
-                        if (cellIndex < td.parentElement.children.length - 1)
-                        {
-                            td.nextElementSibling.focus();
-                        }
-                        else if (rowIndex < td.parentElement.parentElement.children.length - 1)
-                        {
-                            td.parentElement.parentElement.children[rowIndex + 1].children[0].focus();
-                        }
+                        nextTD = Array.from(td.parentElement.parentElement.children[rowIndex - 1].children).slice(-1)[0];
                     }
                 }
+                else if (event.key === "ArrowRight" && canMoveToNext)
+                {
+                    if (cellIndex < td.parentElement.children.length - 1)
+                    {
+                        nextTD = td.nextElementSibling;
+                    }
+                    else if (rowIndex < td.parentElement.parentElement.children.length - 1)
+                    {
+                        nextTD = td.parentElement.parentElement.children[rowIndex + 1].children[0];
+                    }
+                }
+                else if (event.key === "F2" && hasChildren && (!isCollapsed || range.commonAncestorContainer === td))
+                {
+                    document.getSelection().collapseToStart();
+                }
 
-                td["lastStart"] = td.selectionStart;
-                td["lastEnd"] = td.selectionEnd;
+                if (nextTD)
+                {
+                    nextTD.focus();
+                    document.getSelection().selectAllChildren(nextTD);
+
+                    delete td["lastStart"];
+                    delete td["lastEnd"];
+                }
+                else
+                {
+                    td["lastStart"] = range.startOffset;
+                    td["lastEnd"] = range.endOffset;
+                }
+
             }
 
             function addNewRow()
@@ -877,7 +902,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                     }
                     else
                     {
-                        cell.addEventListener("keydown", event=>arrowMove(event, cell));
+                        cell.addEventListener("keyup", event=>arrowMove(event, cell));
                     }
                     
                     cell.addEventListener("focus", event=>activateDelRecButton(true, cell));
@@ -907,8 +932,12 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
             {
                 if (ElementEx.type(employeeId) === "string" && employeeId !== "")
                 {
-                    console.log(employeeId, srTableEx);
+                    // console.log(employeeId, srTableEx);
+                    document.getElementById("sr-add-record").children[0].disabled = false;
                     document.getElementById("sr-revert-cancel").children[0].disabled = false;
+                    // document.getElementById("sr-add-record").children[0].click();
+                    // document.getElementById("sr-add-record").children[0].click();
+                    // document.getElementById("sr-add-record").children[0].click();
                 }
             }
 
@@ -943,10 +972,14 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
             }
         </script>
 
+        <form id="sr-loader" name="sr-loader" method="GET">
+            <input type="hidden" name="a" value="loadServiceRecord">
+        </form>
+
         <div class="div-ex emp-info">
             <span class="drop-down-ex emp-id">
                 <label class="label-ex" for="emp-id">Employee ID/Name:</label>
-                <select id="emp-id" name="emp-id" onchange="(()=>{ document.getElementById('sr-add-new-emp').uiEx.control.innerHTML = (this.value == -1 ? 'Add Employee' : 'Load Service Record'); document.getElementById('sr-emp-birth-date').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthDate); document.getElementById('sr-emp-birth-place').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthPlace); })()">
+                <select id="emp-id" name="emp-id" form="sr-loader" onchange="(()=>{ document.getElementById('sr-add-new-emp').uiEx.control.disabled = false; document.getElementById('sr-add-new-emp').uiEx.control.innerHTML = (this.value == -1 ? 'Add Employee' : 'Load Service Record'); document.getElementById('sr-add-new-emp').uiEx.control.type = (this.value == -1 ? 'button' : 'submit'); document.getElementById('sr-emp-birth-date').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthDate); document.getElementById('sr-emp-birth-place').uiEx.setHTMLContent(this.selectedOptions[0].dataset.birthPlace); })()">
                     <option value="-1" class="non-option">- New Employee Record -</option><?php
                     $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, Address.address AS birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId LEFT JOIN Address ON Person.birth_place=Address.addressId;');
     
@@ -954,7 +987,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                     {
                         foreach ($employees as $employee) { ?>
 
-                            <option value="<?php echo($employee['employeeId']); ?>" data-birth-date="<?php echo(date('F j, Y', strtotime($employee['birth_date']))); ?>" data-birth-place="<?php echo($employee['birth_place']); ?>"><?php
+                            <option value="<?php echo($employee['employeeId']); ?>" data-birth-date="<?php echo(date('F j, Y', strtotime($employee['birth_date']))); ?>" data-birth-place="<?php echo($employee['birth_place']); ?>"<?php $selected = (isset($_REQUEST['a']) && $_REQUEST['a'] === 'loadServiceRecord' && isset($_REQUEST['emp-id']) && $_REQUEST['emp-id'] === $employee['employeeId']); echo($selected ? ' selected': ''); $mode = ($mode === 1 || $selected ? 1 : 0); ?>><?php
                                 echo($employee['employeeId'] . ' &ndash; ' . $this->getFullName($employee['given_name'], $employee['middle_name'], $employee['family_name'], $employee['spouse_name'], $employee['ext_name'], true));
                             ?></option><?php
                         }
@@ -968,7 +1001,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
             </span>
 
             <span class="button-ex" id="sr-add-new-emp">
-                <button type="button" onclick="addEmployeeLoadSRButton(this);">Add Employee</button>
+                <button type="button" form="sr-loader" onclick="addEmployeeLoadSRButton(this);"<?php echo($mode === 1 ? ' disabled' : ''); ?>><?php echo($mode === 1 ? 'Load Service Record' : 'Add Employee'); ?></button>
             </span>
 
             <div class="div-ex" id="sr-emp-birth-date">
@@ -1020,7 +1053,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
                 <button type="submit" disabled onclick="updateSR();">Update/<br>Save</button>
             </span>
             <span class="button-ex" id="sr-revert-cancel">
-                <button type="submit" disabled onclick="window.location.replace(window.location.href);">Revert/<br>Cancel</button>
+                <button type="button" disabled onclick="window.location.replace(window.location.origin + window.location.pathname);">Revert/<br>Cancel</button>
             </span>
             <span class="status-pane" id="sr-status"></span>
         </div>

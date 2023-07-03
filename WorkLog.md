@@ -1,5 +1,20 @@
 # Work Log
 
+## 7/3/2023
+TO DO:
+* [x] [SeRGS] Improved SR cell navigation
+* [x] [SeRGS] Enabled/disabled the <button>Add Employee</button>/<button>Load Service Record</button> button when clicked while an employee ID is selected
+* [ ] [SeRGS] Create code procedures for loading service record data using employee ID
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] Make secure folder more secure
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add features in Add User dialog that will handle the adding of temporary users with positions
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] [MPaSIS] Add Honor Graduate to eligibilities
+
 ## 6/29/2023
 TO DO:
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
