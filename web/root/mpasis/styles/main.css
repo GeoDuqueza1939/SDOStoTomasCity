@@ -338,7 +338,7 @@ REINSTATE FOR PRINTOUT
     margin: 0;
 }
 
-.user-editor > .dialog {
+/* .user-editor > .dialog {
     overflow-x: hidden;
     overflow-y: auto;
 }
@@ -357,9 +357,9 @@ REINSTATE FOR PRINTOUT
     display: grid;
     grid-template-columns: auto auto auto auto auto auto;
     gap: 0.25em 1em;
-    /* width: 40em; */
+    /* width: 40em; *//*
     align-items: center;
-    /* justify-content: center; */
+    *//* justify-content: center; *//*
     overflow: auto;
 }
 
@@ -463,6 +463,70 @@ REINSTATE FOR PRINTOUT
 .user-editor > .dialog > .old-form-ex > .fields > .status-pane {
     grid-column: span 6;
     text-align: center;
+} */
+
+.user-editor .dialog-content > .data-form-ex {
+    /* display: grid; */
+    /* grid-template-columns: 5em 5em 5em 5em 5em 5em; */
+    gap: 1em;
+    /* line-height: 2; */
+}
+
+.user-editor .dialog-content > .data-form-ex > * {
+    /* grid-column: span 2; */
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.user-editor .dialog-content > .data-form-ex > * + * {
+    margin-top: 0.25em;
+}
+
+.user-editor .dialog-content > .data-form-ex > .checkbox-ex {
+    display: block;
+    margin-top: 0.1em;
+    text-align: right;
+}
+
+.user-editor .dialog-content > .data-form-ex > .name {
+    margin-top: 1em;
+}
+
+.user-editor .dialog-content > .data-form-ex > .name + .name {
+    margin-top: 0.25em;
+}
+
+.user-editor .dialog-content > .data-form-ex > .user-editor-access-levels {
+    display: block;
+    margin-top: 1em;
+    border: 2px groove;
+}
+
+.user-editor .dialog-content > .data-form-ex > .user-editor-access-levels > .access-level {
+    display: grid;
+    grid-template-columns: 5em 2.5em;
+    gap: 1em;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-editor .dialog-content > .data-form-ex > .user-editor-access-levels > .access-level+.access-level {
+    margin-top: 0.25em;
+}
+
+.user-editor .dialog-content > .data-form-ex > .user-editor-access-levels > .access-level > input {
+    text-align: right;
+}
+
+.user-editor .dialog-content .checkbox-ex > label {
+    display: inline-block;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.user-editor .dialog-content .checkbox-ex > * {
+    vertical-align: baseline;
 }
 
 .password-editor > .dialog {

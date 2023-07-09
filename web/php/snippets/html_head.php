@@ -26,39 +26,41 @@ switch ($pageType)
 {
     case PageType::Landing:
         break;
-    case PageType::SignIn:
-        echo('<link href="/styles/signin.css" rel="stylesheet" />');
+    case PageType::SignIn: ?>
+<link href="/styles/signin.css" rel="stylesheet" /><?php
         break;
     case PageType::SignOut:
         break;
     case PageType::SERGS:
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">');
-        echo('<link href="/styles/material.io/material-icons.css" rel="stylesheet">');
-        echo('<link href="/sergs/styles/main.css" rel="stylesheet" />');
+        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">'); ?>
+<link href="/styles/material.io/material-icons.css" rel="stylesheet">
+<link href="/sergs/styles/main.css" rel="stylesheet" /><?php
         break;
     case PageType::OPMS:
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />');
-        echo('<link href="/styles/material.io/material-icons.css" rel="stylesheet">');
-        echo('<link href="/opms/styles/main.css" rel="stylesheet" />');
+        // echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />'); ?>
+<link href="/styles/material.io/material-icons.css" rel="stylesheet">
+<link href="/opms/styles/main.css" rel="stylesheet" /><?php
         break;
     case PageType::MPASIS:
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
         // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />');
-        echo('<link href="/styles/material.io/material-icons.css" rel="stylesheet">');
-        echo('<link href="/mpasis/styles/main.css" rel="stylesheet" />');
+        // echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />'); ?>
+<link href="/styles/material.io/material-icons.css" rel="stylesheet">
+<link href="/mpasis/styles/main.css" rel="stylesheet" /><?php
         break;
     }
 
 if ($addDebug)
-{
-    echo('<link href="/styles/debug.css" rel="stylesheet" />');
+{ ?>
+
+<link href="/styles/debug.css" rel="stylesheet" /><?php
 }
 ?>
+
 </head>

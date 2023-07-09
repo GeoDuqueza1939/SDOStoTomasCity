@@ -213,7 +213,7 @@ class DatabaseConnection
 					
 					if (!is_null($this->lastException))
 					{
-						$errMsg += ($errMsg == '' ? "Problems were encountered during the creation of the following tables: $key" : "; $key");
+						$errMsg += ($errMsg == '' ? "Problems were encountered during the creation of the following tables: $table" : "; $table");
 					}
 				}
 			}

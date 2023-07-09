@@ -5,6 +5,8 @@ logAction('mpasis', 24, array(
     ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username']
 ));
 
+setcookie('user', json_encode($_SESSION['user']), -time() - 60 * 60 * 24, '/');
+setcookie('PHPSESSID', json_encode($_SESSION['user']), -time() - 60 * 60 * 24, '/');
 session_unset();
 session_destroy();
 

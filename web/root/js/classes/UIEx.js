@@ -276,7 +276,7 @@ class UIEx
     #type = "";
     #container = null;
     autoId = "";
-    dbInfo = {}; // { column:"column_name", table:"table_name" }
+    // dbInfo = {}; // { column:"column_name", table:"table_name" }
     spacer = [];
     parentUIEx = null;
     parentDataFormEx = null;
@@ -615,11 +615,46 @@ class ContainerEx extends UIEx
         try
         {
             this.setup(config.parentHTMLElement);
-            this.caption = (ElementEx.type(config.caption) === "string" ? config.caption : "");
-    
-            if ("id" in config && ElementEx.type(config.id) === "string" && config.id.trim() !== "")
+
+            for (const key in config)
             {
-                this.id = config.id.trim();
+                switch (key)
+                {
+                    case "parentHTMLElement":
+                        // do nothing
+                        break;
+                    case "caption":
+                        this[key] = (ElementEx.type(config.caption) === "string" ? config.caption : "");
+                        break;
+                    case "id":
+                        this[key] = config[key].trim();
+                        break;
+                    default:
+                        if (key in this)
+                        {
+                            if (ElementEx.type(config[key]) === "function")
+                            {
+                                config[key](this);
+                            }
+                            else if (ElementEx.type(this[key]) === "function")
+                            {
+                                this[key](config[key]);
+                            }
+                            else
+                            {
+                                this[key] = config[key];
+                            }
+                        }
+                        else if (ElementEx.type(config[key]) === "function")
+                        {
+                            config[key](this);
+                        }
+                        else
+                        {
+                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                        }
+                        break;
+                }
             }
 
             return this;
@@ -1135,9 +1170,28 @@ class TableEx extends ContainerEx
                     this.tbody = tableSection;
                     this.tbody.uiEx = this;
 
-                    if (this.tbody.children.length > 0)
+                    for (const tr of Array.from(this.tbody.children))
                     {
-                        this.tbody.innerHTML = "";
+                        [{ tr:tr, td:{}, data:{} }].forEach(rowInfo=>{
+                            this.rows.push(rowInfo);
+                            tr.rowInfo = rowInfo;
+                            tr.uiEx = this;
+
+                            Array.from(tr.children).forEach((td, index)=>{
+                                rowInfo["td"][this.dataHeaders[index]] = td;
+                                rowInfo["data"][this.dataHeaders[index]] = td.textContent;
+                                td.uiEx = this;
+                                td.headerName = this.dataHeaders[index];
+                                if (this.headers[td.headerName].contenteditable)
+                                {
+                                    td.tabIndex = 0;
+                                    td.addEventListener("focus", TableEx.editableCellFocusEvent);
+                                    td.addEventListener("blur", TableEx.editableCellBlurEvent);
+                                    td.addEventListener("keyup", TableEx.editableCellNavigation);
+                                    ElementEx.create("input", ElementEx.NO_NS, td, null, "type", "hidden", "name", td.headerName + "[]", "value", td.textContent);
+                                }
+                            });
+                        });
                     }
                 }
                 else if (tableSection.tagName.toLowerCase() === "tfoot" || tableSection.classList.contains("tfoot"))
@@ -1402,9 +1456,7 @@ class TableEx extends ContainerEx
         };
 
         this.rows.push(row);
-
         row.tr.rowInfo = row;
-
         row.tr.uiEx = this;
 
         if (typeof(rowData) !== "object" || rowData === null || rowData === undefined)
@@ -1412,7 +1464,7 @@ class TableEx extends ContainerEx
             rowData = {};
         }
 
-        this.dataHeaders.forEach((headerName)=>{
+        this.dataHeaders.forEach(headerName=>{
             row.data[headerName] = (headerName in rowData ? rowData[headerName] ?? "" : "");
             row.td[headerName] = ElementEx.htmlToElement("<td>" + row.data[headerName] + "</td>");
             row.td[headerName].uiEx = this;
@@ -1421,23 +1473,107 @@ class TableEx extends ContainerEx
             if (this.headers[headerName].contenteditable)
             {
                 row.td[headerName].tabIndex = 0;
-                row.td[headerName].addEventListener("focus", event=>{
-                    row.td[headerName].contentEditable = "true";
-
-                    var el = row.td[headerName];
-                    var range = document.createRange();
-                    var sel = window.getSelection();
-                    
-                    range.selectNodeContents(el);
-                    
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                });
-                row.td[headerName].addEventListener("blur", event=>{ row.td[headerName].contentEditable = "inherit"; });
+                row.td[headerName].addEventListener("focus", TableEx.editableCellFocusEvent);
+                row.td[headerName].addEventListener("blur", TableEx.editableCellBlurEvent);
+                row.td[headerName].addEventListener("keyup", TableEx.editableCellNavigation);
+                ElementEx.create("input", ElementEx.NO_NS, row.td[headerName], null, "type", "hidden", "name", headerName + "[]", "value", row.data[headerName]);
             }
         });
 
         return row.tr;
+    }
+
+    static editableCellFocusEvent(event = new Event())
+    {
+        if (this.children.length > 0)
+        {
+            let el = Array.from(this.children).find(element=>{
+                return (element instanceof HTMLInputElement && element.type === "hidden")
+            });
+            if (el !== null && el !== undefined)
+            {
+                el.remove();
+            }
+        }
+        this.contentEditable = "true";
+
+        var el = this;
+        var range = document.createRange();
+        var sel = window.getSelection();
+        
+        range.selectNodeContents(el);
+        
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    static editableCellBlurEvent(event = new Event())
+    {
+        this.contentEditable = "inherit";
+        this.append(ElementEx.htmlToElement("<input type=\"hidden\" name=\"" + this.headerName + "[]\" value=\"" + this.textContent + "\">"));
+    }
+
+    static editableCellNavigation(event = new KeyboardEvent())
+    {
+        let td = this;
+        let rowIndex = Array.from(td.parentElement.parentElement.children).findIndex(row=>row === td.parentElement);
+        let cellIndex = Array.from(td.parentElement.children).findIndex(cell=>cell === td);
+        let nextTD = null;
+        let range = document.getSelection().getRangeAt(0);
+        let isCollapsed = range.commonAncestorContainer === td || range.startContainer === range.endContainer && range.startOffset === range.endOffset;
+        let hasChildren = (td.childNodes.length > 0);
+
+        let canMoveToPrevious = (!hasChildren || (isCollapsed && range.startContainer === td.childNodes[0] && range.startOffset === 0 && td["lastStart"] === range.startOffset));
+        let canMoveToNext = (!hasChildren || (isCollapsed && range.startContainer === Array.from(td.childNodes).slice(-1)[0] && range.endOffset >= Array.from(td.childNodes).slice(-1)[0].textContent.length && td["lastEnd"] === range.endOffset));
+
+        if (event.key === "ArrowUp" && rowIndex > 0 && canMoveToPrevious)
+        {
+            nextTD = td.parentElement.parentElement.children[rowIndex - 1].rowInfo.td[td["headerName"]];
+        }
+        else if (event.key === "ArrowDown" && rowIndex < td.parentElement.parentElement.children.length - 1 && canMoveToNext)
+        {
+            nextTD = td.parentElement.parentElement.children[rowIndex + 1].rowInfo.td[td["headerName"]];
+        }
+        else if (event.key === "ArrowLeft" && canMoveToPrevious)
+        {
+            if (cellIndex > 0)
+            {
+                nextTD = td.previousElementSibling;
+            }
+            else if (rowIndex > 0)
+            {
+                nextTD = Array.from(td.parentElement.parentElement.children[rowIndex - 1].children).slice(-1)[0];
+            }
+        }
+        else if (event.key === "ArrowRight" && canMoveToNext)
+        {
+            if (cellIndex < td.parentElement.children.length - 1)
+            {
+                nextTD = td.nextElementSibling;
+            }
+            else if (rowIndex < td.parentElement.parentElement.children.length - 1)
+            {
+                nextTD = td.parentElement.parentElement.children[rowIndex + 1].children[0];
+            }
+        }
+        else if (event.key === "F2" && hasChildren && (!isCollapsed || range.commonAncestorContainer === td))
+        {
+            document.getSelection().collapseToStart();
+        }
+
+        if (nextTD)
+        {
+            nextTD.focus();
+            document.getSelection().selectAllChildren(nextTD);
+
+            delete td["lastStart"];
+            delete td["lastEnd"];
+        }
+        else
+        {
+            td["lastStart"] = range.startOffset;
+            td["lastEnd"] = range.endOffset;
+        }
     }
 
     deleteRowIndex(i = 0)
@@ -2208,8 +2344,6 @@ class TextboxEx extends ControlEx
                         break;
                     case "label":
                     case "id":
-                        this[key] = config[key];
-                        break;
                     case "text":
                     case "inputType":
                         this[key] = config[key].trim();
@@ -5567,7 +5701,7 @@ class DataFormEx extends ContainerEx
 
             if (dbInfo !== null && dbInfo !== undefined && "column" in dbInfo)
             {
-                this.dbControls[dbInfo.column] = containerEx;
+                this.dbContainers[dbInfo.column] = containerEx;
                 if ("table" in dbInfo)
                 {
                     if (!(dbInfo.table in this.#dbInfo))
@@ -5732,6 +5866,11 @@ class DataFormEx extends ContainerEx
         return this.#dbContainers;
     }
 
+    get dbInfo()
+    {
+        return this.#dbInfo;
+    }
+
     setupDataFormButtons(buttonsInfo = [{text:"Text1", clickCallback:clickEvent=>{}, tooltip:""}])
     {
         if (buttonsInfo.length > 0 && (this.#buttonGrpEx === null || this.#buttonGrpEx === undefined))
@@ -5779,6 +5918,7 @@ class DialogEx extends ContainerEx
     #statusPane = null;
     #statusTimeOut = 3;
     #statusResetTimeOut = null;
+    #escapeKeyEnabled = false;
     #app = null;
 
     constructor()
@@ -5804,6 +5944,8 @@ class DialogEx extends ContainerEx
             this.#dialogContentEx.container.classList.add("dialog-content");
             [this.scrim, this.dialogBox, this.closeBtn].forEach(el=>el["dialogEx"] = this);
 
+            this.#enableEscapeKey();
+
             return this;
         }
         catch (ex)
@@ -5820,30 +5962,48 @@ class DialogEx extends ContainerEx
 
             for (const key in config)
             {
-                if (key === "parentHTMLElement")
+                switch (key)
                 {
-                    
-                }
-                else if (key in this)
-                {
-                    if (ElementEx.type(config[key]) === "function")
-                    {
-                        config[key](this);
-                    }
-                    else if (ElementEx.type(this[key]) === "function")
-                    {
-                        this[key](config[key]);
-                    }
-                    else
-                    {
-                        this[key] = config[key];
-                    }
-                }
-                else
-                {
-                    console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                    case "parentHTMLElement":
+                        // do nothing
+                        break;
+                    case "caption":
+                        this[key] = (ElementEx.type(config.caption) === "string" ? config.caption : "");
+                        break;
+                    case "id":
+                        this[key] = config[key].trim();
+                        break;
+                    default:
+                        if (key in this)
+                        {
+                            if (ElementEx.type(config[key]) === "function")
+                            {
+                                config[key](this);
+                            }
+                            else if (ElementEx.type(this[key]) === "function")
+                            {
+                                this[key](config[key]);
+                            }
+                            else
+                            {
+                                this[key] = config[key];
+                            }
+                        }
+                        else if (ElementEx.type(config[key]) === "function")
+                        {
+                            config[key](this);
+                        }
+                        else
+                        {
+                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                        }
+                        break;
                 }
             }
+
+            this.#enableEscapeKey();
+
+            return this;
         }
         catch (ex)
         {
@@ -5863,6 +6023,8 @@ class DialogEx extends ContainerEx
                     
                 }
             });
+            
+            this.#enableEscapeKey();
             
             return this;
         }
@@ -6140,7 +6302,7 @@ class DialogEx extends ContainerEx
         this.setStatus(statusMsg, "success");
     }
     
-    showSuccess(statusMsg = "")
+    showWait(statusMsg = "")
     {
         this.setStatus(statusMsg, "wait");
     }
@@ -6174,6 +6336,23 @@ class DialogEx extends ContainerEx
         if (ElementEx.type(duration) === "number")
         {
             this.#statusTimeOut = duration;
+        }
+    }
+
+    #enableEscapeKey()
+    {
+        if (this.dialogBox instanceof HTMLElement && !this.#escapeKeyEnabled)
+        {
+            this.dialogBox.addEventListener("keydown", event=>{
+                if (event.key === "Escape")
+                {
+                    this.close();
+                }
+            });
+            this.dialogBox.tabIndex = 0;
+            this.dialogBox.focus();
+
+            this.#escapeKeyEnabled = true;
         }
     }
 
@@ -6222,7 +6401,7 @@ class MessageBox extends DialogEx
             container.setHTMLContent(message);
 
             this.setupDialogButtons(buttonsInfo);
-
+            
             buttonsInfo.forEach((buttonInfo, index)=>this.buttonGrpEx.controlExs[index].control.setAttribute("form", "message-box"));
 
             return this;
@@ -6609,71 +6788,198 @@ class UserEditor extends DialogEx
         
         this.addDataFormEx();
         // this.formEx.setTitle((mode ? "Edit" : "Add") + " User", 3);
+        this.dataFormEx.id = "user-editor-form";
+        this.dataFormEx.container.name = "user-editor-form";
+        this.dataFormEx.container.setAttribute("method", "POST");
 
-        [
-            {label:"Employee ID", type:"input", colName:"employeeId", table:"User", tooltip:""},
-            {label:"Temporary account only", type:"checkbox", colName:"temp_user", table:"", tooltip:"Temporary accounts are accounts that are not bound to employee information"},
-            {label:"Given Name", type:"input", colName:"given_name", table:"Person", tooltip:"Enter the applicant's given name. This is required."},
-            {label:"Middle Name", type:"input", colName:"middle_name", table:"Person", tooltip:"Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none."},
-            {label:"Family Name", type:"input", colName:"family_name", table:"Person", tooltip:"Enter the applicant's family name. For married women, please enter the maiden last name."},
-            {label:"Spouse Name", type:"input", colName:"spouse_name", table:"Person", tooltip:"For married women, please enter the spouse's last name. Leave blank for none."},
-            {label:"Ext. Name", type:"input", colName:"ext_name", table:"Person", tooltip:"Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none."},
-            {label:"Username", type:"input", colName:"username", table:"All_User", tooltip:""}
-        ].forEach(field=>{
-            this.dataFormEx.addControlEx(field.label, field.type, (mode == 1 && field.colName != "temp_user" && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? "" : ""), field.tooltip, field.colName, field.table);
-            this.dataFormEx.dbInputEx[field.colName].container.classList.add(field.colName);
-            if (field.colName.includes("_name"))
-            {
-                // this.formEx.dbInputEx[field.colName].setWidth("11em");
-            }
-            if (field.colName == "employeeId")
-            {
-                // this.formEx.dbInputEx[field.colName].setWidth("9em");
-                this.formEx.dbInputEx[field.colName].showColon();
-            }
-            if (field.type == "checkbox")
-            {
-                this.formEx.dbInputEx[field.colName].reverse();
-            }
-            else if (field.colName == "username")
-            {
-                this.formEx.dbInputEx[field.colName].showColon();
-            }
-            if (this.mode != 0 && field.colName == "temp_user")
-            {
-                this.formEx.dbInputEx[field.colName].check(userData[field.colName]);
-            }
-            this.formEx.addSpacer();
+        // [
+        //     {label:"Employee ID", type:"input", colName:"employeeId", table:"User", tooltip:""},
+        //     {label:"Temporary account only", type:"checkbox", colName:"temp_user", table:"", tooltip:"Temporary accounts are accounts that are not bound to employee information"},
+        //     {label:"Given Name", type:"input", colName:"given_name", table:"Person", tooltip:"Enter the applicant's given name. This is required."},
+        //     {label:"Middle Name", type:"input", colName:"middle_name", table:"Person", tooltip:"Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none."},
+        //     {label:"Family Name", type:"input", colName:"family_name", table:"Person", tooltip:"Enter the applicant's family name. For married women, please enter the maiden last name."},
+        //     {label:"Spouse Name", type:"input", colName:"spouse_name", table:"Person", tooltip:"For married women, please enter the spouse's last name. Leave blank for none."},
+        //     {label:"Ext. Name", type:"input", colName:"ext_name", table:"Person", tooltip:"Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none."},
+        //     {label:"Username", type:"input", colName:"username", table:"All_User", tooltip:""}
+        // ].forEach(field=>{
+        //     this.dataFormEx.addControlEx(field.label, field.type, (mode == 1 && field.colName != "temp_user" && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? "" : ""), field.tooltip, field.colName, field.table);
+        //     this.dataFormEx.dbInputEx[field.colName].container.classList.add(field.colName);
+        //     if (field.colName.includes("_name"))
+        //     {
+        //         // this.formEx.dbInputEx[field.colName].setWidth("11em");
+        //     }
+        //     if (field.colName == "employeeId")
+        //     {
+        //         // this.formEx.dbInputEx[field.colName].setWidth("9em");
+        //         this.formEx.dbInputEx[field.colName].showColon();
+        //     }
+        //     if (field.type == "checkbox")
+        //     {
+        //         this.formEx.dbInputEx[field.colName].reverse();
+        //     }
+        //     else if (field.colName == "username")
+        //     {
+        //         this.formEx.dbInputEx[field.colName].showColon();
+        //     }
+        //     if (this.mode != 0 && field.colName == "temp_user")
+        //     {
+        //         this.formEx.dbInputEx[field.colName].check(userData[field.colName]);
+        //     }
+        //     this.formEx.addSpacer();
+        // });
+
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"a", name:"a", inputType:"hidden", value:(this.mode == 0 ? "add" : "update")});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["employeeId"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"User", column:"employeeId"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && MPASIS_App.isDefined(userData) && "temp_user" in userData && userData["temp_user"] === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["given_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name:", id:"middle_name", name:"middle_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["middle_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"middle_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Family Name:", id:"family_name", name:"family_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["family_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"family_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Spouse Name:", id:"spouse_name", name:"spouse_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["spouse_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) For married women only", dbInfo:{table:"Person", column:"spouse_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Ext. Name:", id:"ext_name", name:"ext_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["ext_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) Extension Name, e.g., Jr., III", dbInfo:{table:"Person", column:"ext_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Username:", id:"username", name:"username", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["username"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), disable:obj=>obj.control.disabled = (this.mode === 1), inputType:"text", dbInfo:{table:"All_User", column:"username"}});
+        this.dataFormEx.addSpacer();
+
+        this.dataFormEx.addContainerEx(FrameEx.UIExType, {caption:"Access Levels:", addContainerClass:obj=>obj.container.classList.add("user-editor-access-levels"), dbInfo:{column:"user-editor-access-levels"}});
+        // this.dataFormEx.displayExs["user-editor-access-levels"].showColon();
+        // this.dataFormEx.dbContainers["user-editor-access-levels"].container.classList.add("user-editor-access-levels");
+
+        // [
+        //     {label:"SeRGS", type:"number", colName:"sergs_access_level", table:"All_User", tooltip:"Access level for the Service Record Generation System"},
+        //     {label:"OPMS", type:"number", colName:"opms_access_level", table:"All_User", tooltip:"Access level for the Online Performance Management System"},
+        //     {label:"MPaSIS", type:"number", colName:"mpasis_access_level", table:"All_User", tooltip:"Access level for the Merit Promotion and Selection Information System"}
+        // ].forEach(field=>{
+        //     this.formEx.addInputEx(field.label, field.type, (mode == 1 && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? 0 : 0), field.tooltip, field.colName, field.table);
+        //     this.formEx.displayExs["user-editor-access-levels"].addContent(this.formEx.dbInputEx[field.colName].container);
+        //     this.formEx.dbInputEx[field.colName].setMin(0);
+        //     this.formEx.dbInputEx[field.colName].setMax(field.label == "MPaSIS" ? 4 : 10);
+        //     this.formEx.dbInputEx[field.colName].fields[0].classList.add("right");
+        //     this.formEx.addSpacer();
+        // });
+
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"SeRGS:", id:"sergs_access_level", name:"sergs_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["sergs_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"sergs_access_level"}});
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"OPMS:", id:"opms_access_level", name:"opms_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["opms_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"opms_access_level"}});
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"MPaSIS:", id:"mpasis_access_level", name:"mpasis_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["mpasis_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:4, dbInfo:{table:"All_User", column:"mpasis_access_level"}});
+        this.dataFormEx.addSpacer();
+
+        this.dataFormEx.dbControls["temp_user"].addEvent("change", event=>{
+            this.dataFormEx.dbControls["employeeId"].control.disabled = this.dataFormEx.dbControls["temp_user"].checked;
         });
 
-        this.formEx.addDisplayEx("div", "user-editor-access-levels", "", "Access Levels");
-        this.formEx.displayExs["user-editor-access-levels"].showColon();
-        this.formEx.displayExs["user-editor-access-levels"].container.classList.add("user-editor-access-levels");
+        this.addStatusPane();
 
-        [
-            {label:"SeRGS", type:"number", colName:"sergs_access_level", table:"All_User", tooltip:"Access level for the Service Record Generation System"},
-            {label:"OPMS", type:"number", colName:"opms_access_level", table:"All_User", tooltip:"Access level for the Online Performance Management System"},
-            {label:"MPaSIS", type:"number", colName:"mpasis_access_level", table:"All_User", tooltip:"Access level for the Merit Promotion and Selection Information System"}
-        ].forEach(field=>{
-            this.formEx.addInputEx(field.label, field.type, (mode == 1 && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? 0 : 0), field.tooltip, field.colName, field.table);
-            this.formEx.displayExs["user-editor-access-levels"].addContent(this.formEx.dbInputEx[field.colName].container);
-            this.formEx.dbInputEx[field.colName].setMin(0);
-            this.formEx.dbInputEx[field.colName].setMax(field.label == "MPaSIS" ? 4 : 10);
-            this.formEx.dbInputEx[field.colName].fields[0].classList.add("right");
-            this.formEx.addSpacer();
-        });
+        this.setupDialogButtons([
+            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
+                let dialog = this.uiEx.parentUIEx.parentDialogEx;
+                let form = dialog.dataFormEx;
 
-        this.formEx.dbInputEx["temp_user"].addEvent("change", event=>{
-            this.formEx.dbInputEx["employeeId"].enable(null, !this.formEx.dbInputEx["temp_user"].isChecked());
-        });
+                var person = {};
+                var user = {};
+                var error = "";
+    
+                for (const dbColName in form.dbControls) {
+                    var value = form.dbControls[dbColName].value;
+                    if (dbColName == "temp_user")
+                    {
+                        user[dbColName] = form.dbControls[dbColName].checked;
+                    }
+                    else if ((MPASIS_App.isDefined(value)/* && !MPASIS_App.isEmptySpaceString(value)*/) || typeof(value) == "number")
+                    {
+                        if (form.dbInfo["Person"].includes(dbColName))
+                        {
+                            person[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                        }
+                        else
+                        {
+                            user[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                        }
+                    }
+                    
+                    if (dbColName == "employeeId" && (user["employeeId"] === null || user["employeeId"] === undefined) && !form.dbControls["temp_user"].checked)
+                    {
+                        error += "Employee ID should not be blank for non-temporary user accounts.<br>";
+                    }
+                    else if (dbColName == "given_name" && (person["given_name"] === null || person["given_name"] === undefined) && form.dbControls["temp_user"].checked)
+                    {
+                        error += "Given Name should not be blank.<br>";
+                    }
+                    else if (dbColName == "username" && (user["username"] === null || user["username"] === undefined))
+                    {
+                        error += "Username should not be blank.<br>";
+                    }
+                }
+    
+                user["personId"] = dialog.data["personId"];
+    
+                if (error != "")
+                {
+                    dialog.raiseError(error);
+                }
+                else
+                {
+                    // // DEBUG
+                    // console.log(form.dbControls, person, user, MPASIS_App.processURL);
+    
+                    // return;
+                    // // DEBUG
+    
+                    postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                        var response;
+    
+                        if (event.target.readyState == 4 && event.target.status == 200)
+                        {
+                            response = JSON.parse(event.target.responseText);
+    
+                            if (response.type == "Error")
+                            {
+                                dialog.raiseError(response.content);
+                            }
+                            else if (response.type == "Success")
+                            {
+                                dialog.showSuccess(response.content);
+                                if ("searchButton" in dialog.app.temp)
+                                {
+                                    dialog.app.temp["searchButton"].fields[0].click();
+                                }
+                                await sleep(3000);
+                                dialog.close();
+                            }
+                            else if (response.type == "Debug")
+                            {
+                                new MsgBox(form.container.parentElement, response.content, "OK");
+                                console.log(response.content);
+                            }
+                            else
+                            {
+                                console.log(response.content, event.target);
+                            }
+                        }
+                    });
+                }
+            }}, {text:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                this.uiEx.parentUIEx.parentDialogEx.close();
+            }}
+        ]);
 
-        var dialog = this;
-        var form = this.formEx;
-        var btnGrp = form.addFormButtonGrp(2);
-        btnGrp.container.classList.add("user-editor-buttons");
-        form.addStatusPane();
-        btnGrp.inputExs[0].setLabelText("Save");
-        btnGrp.inputExs[0].setTooltipText("");
+        this.buttonGrpEx.controlExs[0].control.setAttribute("form", "add-employee-dialog");
+        this.buttonGrpEx.controlExs[1].control.setAttribute("form", "add-employee-dialog");
+
+        // var dialog = this;
+        // var form = this.formEx;
+        // var btnGrp = form.addFormButtonGrp(2);
+        // btnGrp.container.classList.add("user-editor-buttons");
+        // form.addStatusPane();
+        // btnGrp.inputExs[0].setLabelText("Save");
+        // btnGrp.inputExs[0].setTooltipText("");
+        /*
         btnGrp.inputExs[0].addEvent("click", (event)=>{
             var person = {};
             var user = {};
@@ -6755,20 +7061,21 @@ class UserEditor extends DialogEx
                 });
             }
         });
-        btnGrp.inputExs[1].setLabelText("Close");
-        btnGrp.inputExs[1].setTooltipText("");
-        btnGrp.inputExs[1].addEvent("click", event=>{
-            this.close();
-        });
+        */
+        // btnGrp.inputExs[1].setLabelText("Close");
+        // btnGrp.inputExs[1].setTooltipText("");
+        // btnGrp.inputExs[1].addEvent("click", event=>{
+        //     this.close();
+        // });
 
-        form.container.parentElement.appendChild(btnGrp.container);
+        // form.container.parentElement.appendChild(btnGrp.container);
 
         // TEMP
-        this.formEx.dbInputEx["employeeId"].disable();
-        this.formEx.dbInputEx["temp_user"].disable();
+        this.dataFormEx.dbControls["employeeId"].control.disabled = true;
+        this.dataFormEx.dbControls["temp_user"].control.disabled = true;
         if (this.mode == 1)
             return;
-        this.formEx.dbInputEx["temp_user"].check();
+            this.dataFormEx.dbControls["temp_user"].check();
         // TEMP
 
         return this;

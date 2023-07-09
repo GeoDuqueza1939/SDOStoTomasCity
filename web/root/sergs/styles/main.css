@@ -52,7 +52,7 @@ body, .app > main {
     margin: 0 0 1em;
 }
 
-.div-ex.sr-table-wrapper {
+.data-form-ex.sr-table-wrapper {
     margin: 1em 0;
     padding: 0.1em;
     background-color: white;
@@ -269,6 +269,47 @@ body, .app > main {
 
 .add-employee-dialog .dialog-content .checkbox-ex > * {
     vertical-align: baseline;
+}
+
+.sr-control-buttons {
+    text-align: right;
+    font-size: 0.8em;
+}
+
+.sr-control-buttons > .button-ex > button {
+    color: white;
+}
+
+.sr-control-buttons > .button-ex > button:disabled {
+    background-color: initial;
+    color: gray;
+}
+
+.sr-control-buttons > .sr-add-record > button {
+    background-color: blue;
+}
+
+.sr-control-buttons > .sr-delete-record > button {
+    background-color: red;
+}
+
+.sr-control-buttons > .sr-add-record > button > .material-icons-round,
+.sr-control-buttons > .sr-delete-record > button > .material-icons-round {
+    font-weight: bold;
+}
+
+.sr-control-buttons > .sr-save-update > button {
+    background-color: green;
+}
+
+.sr-control-buttons > .sr-revert-cancel > button {
+    background-color: goldenrod;
+    color: initial;
+}
+
+.sr-control-buttons > .sr-print > button {
+    background-color: blue;
+    color: white;
 }
 
 .delete-service-record-entry-dialog .dialog-content > .div-ex > .div-ex {

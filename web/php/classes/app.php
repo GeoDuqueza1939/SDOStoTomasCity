@@ -7,6 +7,7 @@ abstract class App
     private $name = '';
     private $dynamic = false;
     protected $dbconns = [];
+    protected $error = false;
 
     abstract public function run();
 

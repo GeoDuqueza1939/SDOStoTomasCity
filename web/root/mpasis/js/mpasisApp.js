@@ -486,6 +486,7 @@ class MPASIS_App extends App
         field = this.forms["jobData"].addInputEx("Load Position", "buttonEx", "", "Load Position", "loadPosition");
         field.container.style.gridColumn = "1 / span 12";
         field.container.classList.add("right");
+        field.disable();
 
         field = this.forms["jobData"].addInputEx("Position Title", "text", "", "", "position_title", "Position");
         field.container.style.gridColumn = "1 / span 6";
@@ -665,10 +666,12 @@ class MPASIS_App extends App
             var addEligibilityBtn = null;
             var eligField = this;
 
+            this.removeItemAt(this.inputExs.findIndex(inputEx=>Number.parseInt(inputEx.fields[0].value) == 3)); // Remove Honor Graduate entry which is only one of the equivalents of CS Prof
+
             addEligibilityBtn = new InputEx(this.fieldWrapper, "add-eligibility-input-ex", "buttonEx", false);
             addEligibilityBtn.setLabelText("+Add Missing Eligibility");
             addEligibilityBtn.addEvent("click", (clickEvent)=>{
-                var addEligDialog = new Old_DialogEx(this.container, "add-eligibility-dialog-ex");
+                var addEligDialog = new Old_DialogEx(app.main, "add-eligibility-dialog-ex");
                 var addEligForm = addEligDialog.addFormEx();
                 var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");
                 addEligForm.addLineBreak();
@@ -1445,11 +1448,11 @@ class MPASIS_App extends App
             var parentEx = this;
             MPASIS_App.processURL = "/mpasis/php/process.php";
 
-            this.removeItemAt(this.inputExs.findIndex(inputEx=>Number.parseInt(inputEx.fields[0].value) == 3)); // Remove RA 1080 entry which is only used as a general/umbrella requirement for positions
+            this.removeItemAt(this.inputExs.findIndex(inputEx=>Number.parseInt(inputEx.fields[0].value) == 4)); // Remove RA 1080 entry which is only used as a general/umbrella requirement for positions
 
             this.setAsExtendableList(true, "+Add missing eligibility", clickEvent=>{
                 var addEligibilityBtn = clickEvent.target.inputEx;
-                var addEligDialog = new Old_DialogEx(field.fieldWrapper, "add-eligibility-dialog-ex");
+                var addEligDialog = new Old_DialogEx(app.main, "add-eligibility-dialog-ex");
                 var addEligForm = addEligDialog.addFormEx();
 
                 var newEligText = addEligForm.addInputEx("New Eligibility", "text", "");

@@ -120,6 +120,10 @@ ___
 - $_SESSION
 
 ### GENERAL POST DATA VARIABLE STRINGS/SWITCHES
+- app: Current Web Application
+  - sergs
+  - opms
+  - mpasis
 - a : Action
   - login (use with: unm, pwd)
   - logout
@@ -128,6 +132,7 @@ ___
   - query (use with: q)
   - fetch (use with: f, k, qcs, flim)
   - add (use with: add)
+  - update
   - addTempUser
 - q : Query
 - unm : Username (use with: a=login)
@@ -145,6 +150,8 @@ ___
   - eligibilities
 - add : add an entry (use with a=add);
   - same as fetch
+- update : update an entry (use with a=add);
+  - same as fetch
 - k : Primary Key (use with: a=fetch, f, qcs, flim)
   - all (all results)
   - [specify]
@@ -153,3 +160,4 @@ ___
 - src: Redirect Source URL
 - dbflds
 - dbvals
+

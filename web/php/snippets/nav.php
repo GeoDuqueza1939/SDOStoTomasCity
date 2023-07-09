@@ -1,5 +1,5 @@
-    <a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
-    <ul id="nav">
+        <a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
+        <ul id="nav">
 <?php
     $ISId = ($pageType === PageType::SERGS ? 2 : ($pageType === PageType::OPMS ? 3 : ($pageType === PageType::MPASIS ? 4 : 1)));
     $dbResults = $this->getDBConn(0)->select('Nav', '*', "WHERE information_systemId = $ISId AND type = 1 AND parent_nav = 0 ORDER BY nav_index");
@@ -18,7 +18,7 @@
                 $url = trim($navItem['url']);
                 $navId = trim($navItem['nav_html_id']);
     
-                echo('        <li' . (isset($navId) && $navId != '' ? " id=\"$navId\"" : '') . '>');
+                echo('            <li' . (isset($navId) && $navId != '' ? " id=\"$navId\"" : '') . '>');
                 echo((isset($url) && $url != '' ? "<a href=\"$url\">" : ''));
                 echo("$icon $text");
                 echo((isset($url) && $url != '' ? '</a>' : ''));
@@ -27,7 +27,7 @@
     
                 if (is_null($this->getDBConn(0)->lastException) && count($dbResults2) > 0)
                 {
-                    echo(" <span class=\"nav-dropdown-icon\">&#xe5cf;</span>\n            <ul>\n");
+                    echo(" <span class=\"nav-dropdown-icon\">&#xe5cf;</span>\n                <ul>\n");
                     foreach($dbResults2 as $navItem2)
                     {
                         if ($navItem2['access_level'] <= $accessLevel)
@@ -37,14 +37,14 @@
                             $url = trim($navItem2['url']);
                             $navId = trim($navItem2['nav_html_id']);
         
-                            echo('                <li' . (isset($navId) && $navId != '' ? " id=\"$navId\"" : '') . '>');
+                            echo('                    <li' . (isset($navId) && $navId != '' ? " id=\"$navId\"" : '') . '>');
                             echo((isset($url) && $url != '' ? "<a href=\"$url\">" : ''));
                             echo($text);
                             echo((isset($url) && $url != '' ? '</a>' : ''));
                             echo("</li>\n");
                         }
                     }
-                    echo("            </ul>\n        ");
+                    echo("                </ul>\n            ");
                 }
     
                 echo("</li>\n");
@@ -57,4 +57,4 @@
         var_dump($dbconn->lastException->getMessage());
     }
 ?>
-    </ul>
+        </ul>

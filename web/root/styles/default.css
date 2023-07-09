@@ -181,8 +181,40 @@ table.bordered > tr > *, table.bordered > * > tr > *, .table.bordered > .tr > *,
     color: yellow;
 }
 
+.orange {
+    color: orange;
+}
+
+.orangered {
+    color: orangered;
+}
+
 .crimson {
-    color:crimson;
+    color: crimson;
+}
+
+.magenta {
+    color: magenta;
+}
+
+.purple {
+    color: purple;
+}
+
+.cyan {
+    color: cyan;
+}
+
+.bold, .strong {
+    font-weight: bold;
+}
+
+.italic, .emphasized {
+    font-style: italic;
+}
+
+.underlined {
+    text-decoration: underline;
 }
 
 a.js-link {

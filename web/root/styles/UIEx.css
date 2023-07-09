@@ -156,6 +156,20 @@
     text-align: center;
 }
 
+.message-box.dialog-ex > .dialog > .dialog-content > .div-ex {
+    overflow: auto;
+}
+
+.message-box.dialog-ex .message-box-icon {
+    display: flex;
+    font-size: 2em;
+    margin: 0 0 0.25em 0;
+    padding: 0;
+    height: auto;
+    width: auto;
+}
+
+
 .textbox-ex.vertical, .datefield-ex.vertical {
     display: inline-flex;
     flex-direction: column;
