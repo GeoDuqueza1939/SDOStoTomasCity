@@ -3,25 +3,45 @@
     font-style: italic;
 }
 
-.status-pane.error {
-    color: red;
+.status-pane.information, .status-pane.multiple > .information {
+    background-color: var(--info-bg);
+    color: var(--info-fg);
 }
 
-.status-pane.warning {
-    color: yellow;
+.status-pane.wait, .status-pane.multiple > .wait {
+    background-color: var(--wait-bg);
+    color: var(--wait-fg);
+}    
+
+.status-pane.success, .status-pane.multiple > .success {
+    background-color: var(--success-bg);
+    color: var(--success-fg);
 }
 
-.status-pane.success {
-    color: green;
+.status-pane.failure, .status-pane.multiple > .failure {
+    background-color: var(--failure-bg);
+    color: var(--failure-fg);
 }
 
-.status-pane.wait {
-    color: gray;
-}
+.status-pane.warning, .status-pane.multiple > .warning {
+    background-color: var(--warning-bg);
+    color: var(--warning-fg);
+}    
 
-.status-pane.information {
-    color: blue;
-}
+.status-pane.exception, .status-pane.multiple > .exception {
+    background-color: var(--exxception-bg);
+    color: var(--exxception-fg);
+}        
+
+.status-pane.error, .status-pane.multiple > .error {
+    background-color: var(--error-bg);
+    color: var(--error-fg);
+}        
+
+.status-pane.debug, .status-pane.multiple > .debug {
+    background-color: var(--debug-bg);
+    color: var(--debug-fg);
+}        
 
 .dialog-ex.scrim {
     position: fixed;

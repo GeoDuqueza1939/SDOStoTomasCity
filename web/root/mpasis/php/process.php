@@ -31,7 +31,7 @@ class ajaxResponse implements JsonSerializable
 	}
 	
 	// override to allow json_encode() to convert an instance of this class
-	public function jsonSerialize ()
+	public function jsonSerialize () : mixed
 	{ 
 		return $this->to_array();
     }

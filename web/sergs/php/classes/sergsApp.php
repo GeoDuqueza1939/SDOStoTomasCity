@@ -395,7 +395,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
             // srTable = new TableEx().setup(app.main);
             // srTable.table.classList.add("sr-table");
-            // srTable.setupHeaders([{name:"service_date_range", text:"Service", subheaders:[{name:"service_date_range2", text:"(Inclusive Date)", subheaders:[{name:"service_date_from", text:"From"}, {name:"service_date_to", text:"To"}]}]}, {name:"appointment", text:"Record of Appointment", subheaders:[{name:"designation", text:"Designation"}, {name:"status", text:"Status"}, {name:"salary", text:"Salary"}]}, {name:"office", text:"Office", subheaders:[{name:"station", text:"Station/Place"}]}, {name:"branch", text:"Branch"}, {name:"lwop", text:"Leave of Absence w/o Pay"}, {name:"date", text:"Date"}]);
+            // srTable.setupHeaders([{name:"service_date_range", text:"Service", subheaders:[{name:"service_date_range2", text:"(Inclusive Date)", subheaders:[{name:"service_date_from", text:"From"}, {name:"service_date_to", text:"To"}]}]}, {name:"appointment", text:"Record of Appointment", subheaders:[{name:"designation", text:"Designation"}, {name:"status", text:"Status"}, {name:"salary", text:"Salary"}]}, {name:"office", text:"Office", subheaders:[{name:"station", text:"Station/Place"}]}, {name:"branch", text:"Branch"}, {name:"lwop_count", text:"Leave of Absence w/o Pay"}, {name:"separation_date", text:"Date"}]);
             // srTableWrapper.addExContent(srTable);
         }
         </script>
@@ -425,7 +425,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         <label class="label-ex" for="radio-select-sr-owner0" title="Request encoding or updating of my own service record">For myself</label>
                     </span>
                     <span class="radio-ex" title="Request encoding or updating of another employee's service record">
-                        <input type="radio" id="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record" name="sr-owner" value="1" onclick="document.getElementById('sr-employee-id').disabled = false;"<?php if ($_REQUEST['sr-owner'] === '1') { echo(' checked'); } ?>>
+                        <input type="radio" id="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record" name="sr-owner" value="1" onclick="document.getElementById('sr-employee-id').disabled = false;"<?php if (isset($_REQUEST['sr-owner']) && $_REQUEST['sr-owner'] === '1') { echo(' checked'); } ?>>
                         <label class="label-ex" for="radio-select-sr-owner1" title="Request encoding or updating of another employee's service record">For another employee</label>
                     </span>
                 </div><?php
@@ -483,7 +483,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
     protected function generateRequestsUI()
     {
-        $requester = $_REQUEST['req'];
+        $requester = (isset($_REQUEST['req']) ? $_REQUEST['req'] : null);
         $accessLevel = $this->getUserAccessLevel();
         
         if ($accessLevel < 1)
@@ -618,6 +618,11 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         $employee = null;
         $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, Address.address AS birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId LEFT JOIN Address ON Person.birth_place=Address.addressId;');
         $sr = [];
+        $forSRUpdate = false;
+        $error = false;
+        $warning = false;
+        $multipleStatus = '';
+        $empAppointments = [];
 
         $accessLevel = $this->getUserAccessLevel();
         if ($accessLevel < 2)
@@ -637,7 +642,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         {
                             case 'employee':
                                 $person = [];
-                                $employee = [];
+                                // $employee = [];
                                 $birthPlace = [];
                                 $emailAddress = "";
                                 
@@ -755,7 +760,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                         }
                                         elseif (count($dbResults) === 0)
                                         {
-                                            $personId = $this->getDB_SDO()->insert('Person', '(given_name, middle_name, family_name, spouse_name, ext_name, post_nominal, birth_date, birth_place)', '("' . $person['given_name'] . '", "' . $person['middle_name'] . '", "' . $person['family_name'] . '", "' . $person['spouse_name'] . '", "' . $person['ext_name'] . '", "' . $person['post_nominal'] . '", "' . $person['birth_date'] . '", "' . $person['birth_date'] . '", "' . $person['birth_place'] . '", "' . $birthPlaceAddressId . '")');
+                                            $personId = $this->getDB_SDO()->insert('Person', '(given_name, middle_name, family_name, spouse_name, ext_name, post_nominal, birth_date, birth_place)', '("' . $person['given_name'] . '", "' . $person['middle_name'] . '", "' . $person['family_name'] . '", "' . $person['spouse_name'] . '", "' . $person['ext_name'] . '", "' . $person['post_nominal'] . '", "' . $person['birth_date'] . '", "' . $birthPlaceAddressId . '")');
                     
                                             if (!is_null($this->getDB_SDO()->lastException))
                                             {
@@ -803,6 +808,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                         $this->jsErrorMsgBox('Error encountered in querying employee information in database.<br><br>' . $this->getDB_SDO()->lastException->getMessage() . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
                                     }
                                 }
+
                                 break;
                             default:
                                 $this->jsErrorMsgBox('Unknown Add keyword.');
@@ -821,6 +827,88 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         {
                             case 'sr':
                                 $employee = $this->filterEmployee($employees);
+                                $dbResults = null;
+                                $dbSR = null;
+                                $dbAppointments = null;
+
+                                if (!$this->error)
+                                {
+                                    $dbSR = $this->getDB_SDO()->executeQuery(
+                                        "SELECT 
+                                            etos.*,
+                                            dater.date_rangeId,
+                                            date_start,
+                                            date_end,
+                                            designation,
+                                            appointment_number,
+                                            plantilla_item_number,
+                                            status,
+                                            institution_name AS station,
+                                            salary,
+                                            branch,
+                                            lwop_count,
+                                            separation_date
+                                        FROM Emp_Term_of_Service etos
+                                        INNER JOIN Emp_Appointment appmt ON etos.appointmentId = appmt.emp_appointmentId
+                                        INNER JOIN Date_Range dater ON etos.date_rangeId = dater.date_rangeId
+                                        LEFT JOIN Workplace workpl ON etos.workplaceId = workpl.workplaceId
+                                        LEFT JOIN Institution inst ON workpl.institutionId = inst.institutionId
+                                        WHERE personId = '" . $employee['personId'] . "';"
+                                    );
+
+                                    if (!is_null($this->getDB_SDO()->lastException))
+                                    {
+                                        $this->error = true;
+                                        $this->jsErrorMsgBox('Error encountered while fetching employee term of service information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
+                                    }
+
+                                    if (count($dbSR) > 0)
+                                    {
+                                        $dbAppointments = $this->getDB_SDO()->executeQuery(
+                                            "SELECT 
+                                                emp_appointmentId,
+                                                designation,
+                                                personId,
+                                                employeeId,
+                                                appointment_number,
+                                                plantilla_item_number,
+                                                dater.date_rangeId,
+                                                date_start,
+                                                date_end
+                                            FROM Emp_Appointment appmt
+                                            INNER JOIN Date_Range dater ON appmt.date_rangeId = dater.date_rangeId
+                                            WHERE personId = '" . $employee['personId'] . "';"
+                                        );
+    
+                                        if (!is_null($this->getDB_SDO()->lastException))
+                                        {
+                                            $this->error = true;
+                                            $this->jsErrorMsgBox('Error encountered while fetching employee appointment information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
+                                        }
+
+                                        foreach ($dbSR as $dbSRTOS) {
+                                            array_push($sr, []);
+
+                                            foreach([
+                                                'date_start',
+                                                'date_end',
+                                                'designation',
+                                                'status',
+                                                'salary',
+                                                'station',
+                                                'branch',
+                                                'lwop_count',
+                                                'separation_date'
+                                            ] as $key)
+                                            {
+                                                $sr[count($sr) - 1][$key] = ($dbSRTOS[$key] === '' ? null : $dbSRTOS[$key]);
+                                            }
+
+                                            $appointments = array_values(array_filter($dbAppointments, fn($dbAppmt) => $dbAppmt['emp_appointmentId'] === $dbSRTOS['appointmentId']));
+                                            $sr[count($sr) - 1]['appointment'] = (count($appointments) === 0 ? null : $appointments[0]);
+                                        }
+                                    }
+                                }
                                 break;
                             default:
                                 $this->jsErrorMsgBox('Unknown Fetch keyword.');
@@ -839,6 +927,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         {
                             case 'sr':
                                 $employee = $this->filterEmployee($employees);
+                                $dbResults = null;
 
                                 if (!$this->error)
                                 {
@@ -850,12 +939,12 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                             case 'a':
                                             case 'update':
                                                 break;
-                                            case 'date-from': case 'date-to':
+                                            case 'date_start': case 'date_end':
                                             case 'designation': case 'status': case 'salary':
                                             case 'station':
                                             case 'branch':
-                                            case 'lwop':
-                                            case 'date':
+                                            case 'lwop_count':
+                                            case 'separation_date':
                                                 while (count($sr) < count($_REQUEST[$key]))
                                                 {
                                                     array_push($sr, []);
@@ -863,49 +952,48 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             
                                                 for ($i = 0; $i < count($sr); $i++)
                                                 {
-                                                    $sr[$i][$key] = ($value[$i] === '' || ($key === 'date-to' && $value[$i] === 'present') ? null : ($key === 'date-from' || $key === 'date-to' || $key === 'date' ? preg_replace('/(\d\d)\/(\d\d)\/(\d\d\d\d)/', '\3-\1-\2', $value[$i]) : $value[$i]));
+                                                    $sr[$i][$key] = ($value[$i] === '' || ($key === 'date_end' && $value[$i] === 'present') ? null : ($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d)\/(\d\d)\/(\d\d\d\d)/', '\3-\1-\2', $value[$i]) : $value[$i]));
                                                 }
                                                 break;
                                             default:
                                                 break;
                                         }
-                                    }
-                                    // $x = null;
-                                    // $y = null;
-                                    // $z = null;
-                                    // // var_dump(SeRGS_App::generateFieldValueStr($sr[2]));
-                                    // // [$x, $y, $z] = SeRGS_App::generateDBFieldValueStr($sr[2]);
-                                    // // list(
-                                    // //     'fieldStr'=>$x,
-                                    // //     'valueStr'=>$y,
-                                    // //     'fieldValueStr'=>$z,
-                                    // // ) = SeRGS_App::generateDBFieldValueStr($sr[2]);
-                                    // ['fieldStr'=>$x, 'valueStr'=>$y, 'fieldValueStr'=>$z] = SeRGS_App::generateDBFieldValueStr($sr[1]);
-                                    // echo('<br>');
-                                    // echo('<br>');
-                                    // var_dump($x);
-                                    // echo('<br>');
-                                    // echo('<br>');
-                                    // var_dump($y);
-                                    // echo('<br>');
-                                    // echo('<br>');
-                                    // var_dump($z);
-                                    // $this->jsDebugConsole(json_encode($sr, true));
-                                    // $this->jsDebugMsgBox(json_encode($sr, true));
 
-                                    // $this->jsSimpleMsgBox("Hello");
-                                    // $this->jsInfoMsgBox("Hello");
-                                    // $this->jsSuccessMsgBox("Hello");
-                                    // $this->jsFailMsgBox("Hello");
-                                    // $this->jsWarningMsgBox("Hello");
-                                    // $this->jsExceptionMsgBox("Hello");
-                                    // $this->jsErrorMsgBox("Hello");
-                                    // $this->jsDebugMsgBox("Hello");
-                                    
-                                    // Check if employeeId is a plantilla_item_number (PRIORITY) or has a matching employeeId in Emp_Appointment table and has the same designation
-                                    // If there is no match found in the Emp_Appointment table
-                                    //     Check if the designation exists as a position_title in Position table and whether the plantilla_item_number is already associated with an employee
-                                    
+                                    }
+
+                                    // $this->jsDebugMsgBox(json_encode($sr, true));
+                                    // $this->jsDebugMsgBox(json_encode($employee, true));
+
+                                    // Sort SR data field according to start dates
+                                    usort($sr, fn($sr1, $sr2) => ($sr1['date_start'] < $sr2['date_start'] ? -1 : ($sr1['date_start'] > $sr2['date_start'] ? 1 : ((($sr1['date_end'] < $sr2['date_end'] || is_null($sr2['date_end'])) && !is_null($sr1['date_end'])) ? -1 : ((!is_null($sr2['date_end']) && ($sr1['date_end'] > $sr2['date_end'] || is_null($sr1['date_end']))) ? 1 : 0))))); // ascending order according to date
+
+                                    foreach ($sr as &$srTOS)
+                                    {
+                                        if (count($empAppointments) === 0 || $srTOS['designation'] !== end($empAppointments)['designation']) // create new
+                                        {
+                                            $empAppointments[] = array(
+                                                'designation' => $srTOS['designation'],
+                                                'personId' => $employee['personId'],
+                                                'employeeId' => $employee['employeeId'],
+                                                'appointment_number' => null,
+                                                'plantilla_item_number' => null,
+                                                'date_start' => $srTOS['date_start'],
+                                                'date_end' => null,
+                                                'term_of_service' => [],
+                                            );
+                                        }
+
+                                        $empAppointments[count($empAppointments) - 1]['term_of_service'][] = &$srTOS;
+                                        $empAppointments[count($empAppointments) - 1]['date_end'] = (is_null($srTOS['date_end']) || $srTOS['date_end'] === '' ? null : $srTOS['date_end']);
+
+                                        $srTOS['designation'] = &$empAppointments[count($empAppointments) - 1]['designation'];
+                                        $srTOS['appointment'] = &$empAppointments[count($empAppointments) - 1];
+                                    }
+
+                                    // update to database after rendering the table; validate data while rendering the table
+                                    // $this->jsDebugMsgBox(json_encode(var_export($empAppointments[0], true)));
+
+                                    $forSRUpdate = true;
                                 }
                                 break;
                             default:
@@ -933,7 +1021,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         if (!is_null($employee))
         { ?>
 
-                <input type="hidden" name="emp-id" value="<?php echo($_REQUEST['emp-id']); ?>"><?php
+                <input type="hidden" name="employeeId" value="<?php echo($_REQUEST['employeeId']); ?>"><?php
         } ?>
 
             </form>
@@ -943,14 +1031,14 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                 <span class="drop-down-ex emp-id">
-                    <label class="label-ex" for="emp-id">Employee ID/Name:</label>
-                    <select id="emp-id" name="emp-id" form="sr-loader" onchange="SeRGS_App.morphAddEmployeeLoadSRButton(this);">
+                    <label class="label-ex" for="employeeId">Employee ID/Name:</label>
+                    <select id="employeeId" name="employeeId" form="sr-loader" onchange="SeRGS_App.morphAddEmployeeLoadSRButton(this);">
                         <option value="-1" class="non-option">- New Employee Record -</option><?php    
                     if (is_null($this->getDB_SDO()->lastException))
                     {
                         foreach ($employees as $emp) { ?>
 
-                        <option value="<?php echo($emp['employeeId']); ?>" data-birth-date="<?php echo(date('F j, Y', strtotime($emp['birth_date']))); ?>" data-birth-place="<?php echo($emp['birth_place']); ?>"<?php $selected = (isset($_REQUEST['a']) && $_REQUEST['a'] === 'fetch' && isset($_REQUEST['fetch']) && $_REQUEST['fetch'] === 'sr' && isset($_REQUEST['emp-id']) && $_REQUEST['emp-id'] === $emp['employeeId']); echo($selected ? ' selected': ''); ?>><?php
+                        <option value="<?php echo($emp['employeeId']); ?>" data-birth-date="<?php echo(date('F j, Y', strtotime($emp['birth_date']))); ?>" data-birth-place="<?php echo($emp['birth_place']); ?>"<?php $selected = (isset($_REQUEST['a']) && $_REQUEST['a'] === 'fetch' && isset($_REQUEST['fetch']) && $_REQUEST['fetch'] === 'sr' && isset($_REQUEST['employeeId']) && $_REQUEST['employeeId'] === $emp['employeeId']); echo($selected ? ' selected': ''); ?>><?php
                                 echo($emp['employeeId'] . ' &ndash; ' . $this->getFullName($emp['given_name'], $emp['middle_name'], $emp['family_name'], $emp['spouse_name'], $emp['ext_name'], true));
                             ?></option><?php
                         }
@@ -1019,7 +1107,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
                 <input type="hidden" name="a" value="update">
                 <input type="hidden" name="update" value="sr">
-                <input type="hidden" name="emp-id" value="<?php echo($_REQUEST['emp-id']); ?>"><?php
+                <input type="hidden" name="employeeId" value="<?php echo($_REQUEST['employeeId']); ?>"><?php
         } ?>
 
                 <table class="table-ex sr-table" id="sr-table-entry">
@@ -1029,8 +1117,8 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                             <th colspan="3" data-header-name="appointment">Record of Appointment</th>
                             <th data-header-name="office">Office</th>
                             <th rowspan="3" data-header-name="branch" data-contenteditable="true">Branch</th>
-                            <th rowspan="3" data-header-name="lwop" data-contenteditable="true">Leave of Absence w/o Pay</th>
-                            <th rowspan="3" data-header-name="date" data-contenteditable="true">Date</th>
+                            <th rowspan="3" data-header-name="lwop_count" data-contenteditable="true">Leave of Absence w/o Pay</th>
+                            <th rowspan="3" data-header-name="separation_date" data-contenteditable="true">Date</th>
                         </tr>
                         <tr>
                             <th colspan="2" data-header-name="inclusive_date">(Inclusive Date)</th>
@@ -1040,19 +1128,112 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                             <th rowspan="2" data-header-name="station" data-contenteditable="true">Station/Place</th>
                         </tr>
                         <tr>
-                            <th data-header-name="date-from" data-contenteditable="true">From</th>
-                            <th data-header-name="date-to" data-contenteditable="true">To</th>
+                            <th data-header-name="date_start" data-contenteditable="true">From</th>
+                            <th data-header-name="date_end" data-contenteditable="true">To</th>
                         </tr>
                     </thead>
                     <tbody><?php 
-        foreach ($sr as $srRow)
+        foreach ($sr as &$srTOS)
         { ?>
-                    
-                        <tr><?php
-            foreach ($srRow as $key => $value)
-            { ?>
 
-                            <td><?php echo($key === 'date-from' || $key === 'date-to' || $key === 'date-to' ? preg_replace('/(\d\d\d\d)-(\d\d)-(\d\d)/', '\2/\3/\1', $value) : ($key === 'status' ? ($value === '-1' ? '' : $this->enum['appointmentStatus'][array_search($value, array_column($this->enum['appointmentStatus'], 'index'))]['appointment_status']) : $value)); ?></td><?php
+                        <tr><?php
+            $i = array_search($srTOS, $sr, true);
+            
+            $invalidDateStartClass = '';
+            $invalidDateEndClass = '';
+            $invalidDesignationClass = '';
+            $invalidStatusClass = '';
+            $invalidSalaryClass = '';
+            $invalidStationClass = '';
+            
+            if (is_null($srTOS['date_start']))
+            {
+                if (is_null($srTOS['date_end']))
+                {
+                    $invalidDateStartClass .= ' error-missing-date-range';
+                    $invalidDateEndClass .= ' error-missing-date-range';
+                    
+                    $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing date range in row ' . ($i + 1) . '</span>';
+                    $error = true;
+                }
+                else
+                {
+                    $invalidDateStartClass .= ' error-missing-from-date';
+                    
+                    $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing "From" date in row ' . ($i + 1) . '</span>';
+                    $error = true;
+                }
+            }
+            elseif (!is_null($srTOS['date_end']) && $srTOS['date_start'] >= $srTOS['date_end'])
+            {
+                $invalidDateStartClass .= ' error-invalid-date-range';
+                $invalidDateEndClass .= ' error-invalid-date-range';
+                
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Invalid date range in row ' . ($i + 1) . '</span>';
+                $error = true;
+            }
+            
+            if ($i < count($sr) - 1 && $srTOS['date_start'] >= $sr[$i + 1]['date_start'])
+            {
+                $invalidDateStartClass .= ' warning-overlapping-date-ranges';
+                $invalidDateEndClass .= ' warning-overlapping-date-ranges';
+                
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Overlapping date ranges in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
+            }
+            elseif ($i < count($sr) - 1 && ((!is_null($srTOS['date_start']) && is_null($srTOS['date_end']) && !is_null($sr[$i + 1]['date_start'])) || $srTOS['date_end'] >= $sr[$i + 1]['date_start']))
+            {
+                $invalidDateEndClass .= ' warning-overlapping-date-ranges';
+                
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Overlapping date ranges in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
+            }
+            elseif ($i > 0 && ($sr[$i - 1]['date_start'] >= $srTOS['date_start'] || (!is_null($sr[$i - 1]['date_start']) && is_null($sr[$i - 1]['date_end']) && !is_null($srTOS['date_start'])) || $sr[$i - 1]['date_end'] >= $srTOS['date_start']))
+            {
+                $invalidDateStartClass .= ' warning-overlapping-date-ranges';
+                
+                // $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . 'Overlapping date ranges in rows ' . ($i) . ' and ' . ($i + 1) . '</span>'; // will only duplicate the above error status
+            }
+            
+            if (is_null($srTOS['designation']))
+            {
+                $invalidDesignationClass = 'error-missing-designation';
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing designation in row ' . ($i + 1) . '</span>';
+                $error = true;
+            }
+            
+            if (is_null($srTOS['status']) || $srTOS['status'] < 1)
+            {
+                $invalidStatusClass = 'error-missing-status';
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing status in row ' . ($i + 1) . '</span>';
+                $error = true;
+            }
+            
+            if (is_null($srTOS['salary']))
+            {
+                $invalidSalaryClass = 'warning-missing-salary';
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Missing salary in row ' . ($i + 1) . '</span>';
+            }
+            
+            if (is_null($srTOS['station']))
+            {
+                $invalidStationClass = 'warning-missing-station';
+                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Missing office/station in row ' . ($i + 1) . '</span>';
+            }
+            
+            foreach ($srTOS as $key => $value)
+            { 
+                switch ($key)
+                {
+                    case "date_start":
+                    case "date_end":
+                    case "designation": case "status": case "salary":
+                    case "station": case "branch": case "lwop_count":
+                    case "separation_date": ?>
+
+                            <td <?php echo($key === 'date_start' && trim($invalidDateStartClass) !== '' ? ' class=' . trim($invalidDateStartClass) : ($key === 'date_end' && trim($invalidDateEndClass) !== '' ? ' class=' . trim($invalidDateEndClass) : ($key === 'designation' && trim($invalidDesignationClass) !== '' ? 'class=' . trim($invalidDesignationClass) : ($key === 'status' && trim($invalidStatusClass) !== '' ? 'class=' . trim($invalidStatusClass) : ($key === 'salary' && trim($invalidSalaryClass) !== '' ? 'class=' . trim($invalidSalaryClass) : ($key === 'station' && trim($invalidStationClass) !== '' ? 'class=' . trim($invalidStationClass) : '')))))); ?>><?php echo($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d\d\d)-(\d\d)-(\d\d)/', '\2/\3/\1', (is_null($value) ? '' : $value)) : ($key === 'status' ? (is_null($value) || $value === '-1' || $value === '' ? '' : $this->enum['appointmentStatus'][array_search($value, array_column($this->enum['appointmentStatus'], 'index'))]['appointment_status']) : $value)); ?></td><?php
+                        break;
+                    default:
+                        break;
+                }
             } ?>
 
                         </tr><?php
@@ -1078,7 +1259,53 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <span class="button-ex sr-print">
                     <button class="blue" type="submit" disabled form="sr-print-form"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
                 </span>
-                <span class="status-pane" id="sr-status"></span>
+                <span class="status-pane multiple" id="sr-status"><?php
+            
+            if (trim($multipleStatus) !== '')
+            {
+                if ($error)
+                {
+                    echo('<span class="failure"><span class="material-icons-round">error</span>');
+                    echo('No changes will be made to the database while errors are found.');
+                    echo('</span>');
+                    echo('<hr>');
+                }
+                echo($multipleStatus . '<hr>');
+            }
+
+            // DEBUG
+
+            // $error = true;
+
+            // DEBUG
+
+
+            if ($forSRUpdate && !$error)
+            {
+                $this->getDB_SDO()->executeStatement(
+                    "DELETE 
+                        etos,
+                        appmt
+                    FROM Emp_Term_of_Service etos
+                    INNER JOIN Emp_Appointment appmt ON etos.appointmentId = appmt.emp_appointmentId
+                    WHERE personId = " . $employee['personId'] . ";
+                    "
+                );
+
+                foreach ($sr as &$srTOS)
+                {
+                    list('tosId' => $tosId, 'errorMsg' => $errorMsg) = $this->dbSaveMatchingTermOfService($srTOS);
+                    
+                    if ($errorMsg !== '')
+                    {
+                        echo('<span class="information"><span class="material-icons-round">info</span>');
+                        echo($errorMsg);
+                        echo('</span>');
+                        echo('<hr>');
+                    }
+                }                 
+            }
+                ?></span>
             </div>
 
             <script>
@@ -1104,6 +1331,357 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             <p class="center">Click <a href="?a=logout" title="Sign out">here to sign out</a> or <a href="/" title="SDO Services Home">here to return to SDO Services Home</a>.</p>
             <p class="center">Thank you.</p>
         </section><?php
+    }
+
+    protected function dbGetMatchingTermOfService($srTOS)
+    {
+        $errorMsg = '';
+
+        $dateStart = $srTOS['date_start'];
+        $dateEnd = $srTOS['date_end'];
+        
+        list('appointment' => $appointment, 'errorMsg' => $errMsg) = $this->dbGetMatchingEmpAppointment($srTOS['appointment']);
+
+        if ($errMsg !== '')
+        {
+            return array('term_of_service' => null, 'errorMsg' => $errMsg);
+        }
+
+        $appointmentId = $appointment['emp_appointmentId'];
+
+        $dbResults = $this->getDB_SDO()->executeQuery(
+            "SELECT
+                emp_term_of_serviceId,
+                etos.date_rangeId,
+                dater.date_start,
+                dater.date_end,
+                etos.workplaceId,
+                addr.address AS station_address,
+                inst.institution_name AS station,
+                status,
+                enumstat.appointment_status AS status_text,
+                salary,
+                branch,
+                lwop_count,
+                separation_date
+            FROM Emp_Term_of_Service etos
+            INNER JOIN (SELECT * FROM SDOStoTomas.Date_Range WHERE description = 'Term of Service') dater ON etos.date_rangeId = dater.date_rangeId
+            LEFT JOIN Workplace workpl ON etos.workplaceId = workpl.workplaceId
+            INNER JOIN Institution inst ON workpl.institutionId = inst.institutionId
+            INNER JOIN Address addr ON workpl.addressId = addr.addressId
+            INNER JOIN ENUM_Emp_Appointment_Status enumstat ON etos.status = enumstat.index
+            WHERE appointmentId = $appointmentId
+                AND date_start = '$dateStart'
+                AND (date_end IS NULL OR date_end = '$dateEnd')
+            ;"
+        );
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in querying employee service record from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('term_of_service' => null, 'errorMsg' => $errorMsg);
+        }
+        elseif (count($dbResults) === 0)
+        {
+            return array('term_of_service' => null, 'errorMsg' => $errorMsg);
+        }
+        else
+        {
+            $dbResults[0]['appointment'] = &$appointment;
+    
+            return array('term_of_service' => $dbResults[0], 'errorMsg' => $errorMsg);
+        }
+    }
+
+    protected function dbSaveMatchingTermOfService(&$srTOS) // THIS FUNCTION EXPECTS ALL EXISTING TOS TO BE ALREADY DELETED!!!!!!!!
+    {
+        list('appointmentId' => $appointmentId, 'errorMsg' => $errorMsg) = $this->dbUpdateMatchingEmpAppointment($srTOS['appointment']);
+        
+        if ($errorMsg !== '')
+        {
+            return array('tosId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        list('date_rangeId' => $dateRangeId, 'errorMsg' => $msg) = $this->dbSaveMatchingDateRange($srTOS['date_start'], $srTOS['date_end'], 'Term of Service');
+
+        if ($errorMsg !== '')
+        {
+            return array('tosId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        list('workplaceId' => $workplaceId, 'errorMsg' => $msg) = $this->dbGetMatchingOfficeStationId($srTOS['station']);
+
+        if ($errorMsg !== '')
+        {
+            return array('tosId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        list('fieldStr' => $fieldStr, 'valueStr' => $valueStr) = $this->generateDBFieldValueStr(array(
+            'date_rangeId' => $dateRangeId,
+            'appointmentId' => $appointmentId,
+            'workplaceId' => $workplaceId,
+            'status' => $srTOS['status'],
+            'salary' => $srTOS['salary'],
+            'branch' => $srTOS['branch'],
+            'lwop_count' => $srTOS['lwop_count'],
+            'separation_date' => $srTOS['separation_date'],
+        ));
+
+        $tosId = $this->getDB_SDO()->insert('Emp_Term_of_Service', "($fieldStr)", "($valueStr)");
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered while inserting term of service information into the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('tosId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        return array('tosId' => $tosId, 'errorMsg' => $errorMsg);
+    }
+
+    protected function dbGetMatchingEmpAppointment($appointment)
+    {
+        $errorMsg = '';
+
+        $designation = $appointment['designation'];
+        $personId = $appointment['personId'];
+        $dateStart = $appointment['date_start'];
+        $dateEnd = $appointment['date_end'];
+
+        $dbResults = $this->getDB_SDO()->executeQuery(
+            "SELECT
+                emp_appointmentId,
+                designation,
+                personId,
+                employeeId,
+                appointment_number,
+                plantilla_item_number,
+                appmt.date_rangeId,
+                date_start,
+                date_end
+            FROM Emp_Appointment appmt
+            INNER JOIN Date_Range dater ON appmt.date_rangeId=dater.date_rangeId
+            WHERE designation='$designation'
+                AND personId='$personId'
+                AND date_start='$dateStart'
+                AND (date_end IS NULL OR date_end>='$dateEnd')
+            ;"
+        );
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in querying employee appointment information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('appointment' => null, 'errorMsg' => $errorMsg);
+        }
+        elseif (count($dbResults) > 1)
+        {
+            $errorMsg .= 'Error: Multiple appointments match the query where only a single match is expected.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('appointment' => null, 'errorMsg' => $errorMsg);
+        }
+
+        return array('appointment' => (count($dbResults) === 0 ? null : $dbResults[0]), 'errorMsg' => $errorMsg);
+    }
+
+    protected function dbUpdateMatchingEmpAppointment(&$appointment) // first time
+    {
+        $errorMsg = '';
+        $dbAppointment = null;
+
+        $designation = &$appointment['designation'];
+        $personId = &$appointment['personId'];
+        $employeeId = &$appointment['employeeId'];
+        $appointmentNumber = &$appointment['appointment_number'];
+        $plantillaItemNumber = &$appointment['plantilla_item_number'];
+        $dateStart = &$appointment['date_start'];
+        $dateEnd = &$appointment['date_end'];
+
+        $dbResults = $this->getDB_SDO()->select('Position', 'plantilla_item_number', "WHERE plantilla_item_number='$employeeId';");
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in querying position information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('appointmentId' => null, 'errorMsg' => $errorMsg);
+        }
+        elseif (count($dbResults) === 0)
+        {
+            $appointmentNumber = $appointment['employeeId'];
+        }
+        else
+        {
+            $plantillaItemNumber = $appointment['employeeId'];
+        }
+
+        list('appointment' => $dbAppointment, 'errorMsg' => $msg) = $this->dbGetMatchingEmpAppointment($appointment);
+
+        if ($msg !== '')
+        {
+            return array('appointmentId' => null, 'errorMsg' => $msg);
+        }
+        elseif (is_null($dbAppointment)) // to create new
+        {
+            list('date_rangeId' => $dateRangeId, 'errorMsg' => $msg) = $this->dbSaveMatchingDateRange($dateStart, $dateEnd, 'Appointment');
+
+            if (!is_null($this->getDB_SDO()->lastException) || ($msg !== '' && is_null($dateRangeId))) // date_rangeId can also turn out null when querying the DB, however the operation is dbSaveMatchingDateRange, which should ALWAYS return a date_rangeId unless an error prevents so
+            {
+                return array('appointmentId' => null, 'errorMsg' => $msg);
+            }
+    
+            list('fieldStr'=>$fieldStr, 'valueStr'=>$valueStr, 'fieldValueStr'=>$fieldValueStr) = $this->generateDBFieldValueStr(array(
+                'designation' => $designation,
+                'personId' => $personId,
+                'employeeId' => $employeeId,
+                'appointment_number' => $appointmentNumber,
+                'plantilla_item_number' => $plantillaItemNumber,
+                'date_rangeId' => $dateRangeId
+            ));
+    
+            $appointmentId = $this->getDB_SDO()->insert('Emp_Appointment', "($fieldStr)", "($valueStr)");
+        }
+        else // to update
+        {
+            $appointmentId = $dbAppointment['emp_appointmentId'];
+
+            list('fieldValueStr'=>$fieldValueStr) = $this->generateDBFieldValueStr(array(
+                'appointment_number' => $appointmentNumber,
+                'plantilla_item_number' => $plantillaItemNumber
+            ));
+
+            $this->getDB_SDO()->update('Emp_Appointment', $fieldValueStr, "WHERE emp_appointmentId='$appointmentId';");
+
+            if (!is_null($this->getDB_SDO()->lastException))
+            {
+                $errorMsg .= 'Error encountered in updating employee appointment information in the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+            }
+        }
+
+        return array('appointmentId' => $appointmentId, 'errorMsg' => $errorMsg);
+    }
+
+    protected function dbGetMatchingDateRange($dateStart, $dateEnd, $description)
+    {
+        $errorMsg = '';
+
+        if (is_null($dateStart))
+        {
+            $errorMsg .= 'Invalid start date specified.<br><hr>';
+
+            return array('date_rangeId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        $dbResults = $this->getDB_SDO()->select('Date_Range', '*', "WHERE description='$description' AND date_start='$dateStart' AND date_end" . (is_null($dateEnd) ? ' IS NULL' : "='$dateEnd'"));
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in querying date information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('date_rangeId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        return array('date_rangeId' => (count($dbResults) === 0 ? null : $dbResults[0]['date_rangeId']), 'errorMsg' => $errorMsg);
+    }
+
+    protected function dbSaveMatchingDateRange($dateStart, $dateEnd, $description) // wont duplicate date ranges
+    {
+        $errorMsg = '';
+
+        list('date_rangeId' => $dateRangeId, 'errorMsg' => $errMsg) = $this->dbGetMatchingDateRange($dateStart, $dateEnd, $description);
+        
+        if ($errMsg !== '')
+        {
+            $errorMsg .= $errMsg;
+
+            return array('date_rangeId' => $dateRangeId, 'errorMsg' => $errorMsg);
+        }
+        elseif (!is_null($dateRangeId))
+        {
+            $errorMsg .= 'Warning: Date range already exists.<br><hr>';
+
+            return array('date_rangeId' => $dateRangeId, 'errorMsg' => $errorMsg);
+        }
+
+        $dateRangeId = $this->getDB_SDO()->insert('Date_Range', '(date_start, date_end, description)', "('$dateStart', " . (is_null($dateEnd) ? 'NULL' : "'$dateEnd'") . ", '$description')");
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in inserting date information into the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('date_rangeId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        return array('date_rangeId' => $dateRangeId, 'errorMsg' => $errorMsg);
+    }
+
+    protected function dbGetMatchingOfficeStationId($stationName)
+    {
+        $errorMsg = '';
+
+        if (!is_string($stationName) || trim($stationName) === '')
+        {
+            return array('workplaceId' => null, 'errorMsg' => $errorMsg);
+        }
+
+        
+        $dbResults = $this->getDB_SDO()->executeQuery( 
+            "SELECT
+                inst.*,
+                pinst.institution_name AS umbrella_institution
+            FROM Institution inst
+            LEFT JOIN Institution pinst ON inst.umbrella_institutionId = pinst.institutionId
+            WHERE inst.institution_name = '$stationName';"
+        );
+        
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in querying office station information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+            
+            return array('workplaceId' => null, 'errorMsg' => $errorMsg);
+        }
+        elseif (count($dbResults) === 0)
+        {
+            $institutionId = $this->getDB_SDO()->insert('Institution', '(institution_name)', "('$stationName')");
+            
+            if (!is_null($this->getDB_SDO()->lastException))
+            {
+                echo($stationName . '<br>' . var_export($this->getDB_SDO()->lastSQLStr, true) . '<hr>');
+                $errorMsg .= 'Error encountered in inserting office station name into the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+    
+                return array('workplaceId' => null, 'errorMsg' => $errorMsg);
+            }
+        }
+        else
+        {
+            $institutionId = $dbResults[0]['institutionId'];
+        }
+
+        $dbResults = $this->getDB_SDO()->select('Workplace', 'workplaceId', "WHERE institutionId = '$institutionId'");
+
+        if (!is_null($this->getDB_SDO()->lastException))
+        {
+            $errorMsg .= 'Error encountered in querying office station information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+
+            return array('workplaceId' => null, 'errorMsg' => $errorMsg);
+        }
+        elseif (count($dbResults) === 0)
+        {
+            $workplaceId = $this->getDB_SDO()->insert('Workplace', '(institutionId)', "($institutionId)");
+
+            if (!is_null($this->getDB_SDO()->lastException))
+            {
+                $errorMsg .= 'Error encountered in inserting office station information into the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr . '<br><hr>';
+    
+                return array('workplaceId' => null, 'errorMsg' => $errorMsg);
+            }
+        }
+        else
+        {
+            $workplaceId = $dbResults[0]['workplaceId'];
+        }        
+
+        return array('workplaceId' => $workplaceId, 'errorMsg' => $errorMsg);
     }
 
     protected function getFullName($givenName, $middleName, $familyName, $spouseName, $extName, $lastNameFirst = false, $middleInitialOnly = true, $includeAllMiddleNames = false)
@@ -1178,12 +1756,12 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
     {
         $employee = null;
 
-        if (is_null($this->getDB_SDO()->lastException) && !is_null($employees) && count($employees) > 0 && isset($_REQUEST['emp-id']) && is_string($_REQUEST['emp-id']) && trim($_REQUEST['emp-id']) !== '')
+        if (is_null($this->getDB_SDO()->lastException) && !is_null($employees) && count($employees) > 0 && isset($_REQUEST['employeeId']) && is_string($_REQUEST['employeeId']) && trim($_REQUEST['employeeId']) !== '')
         {
             try
             {
                 $employee = array_values(array_filter($employees, function($emp){
-                    return $emp['employeeId'] === $_REQUEST['emp-id'];
+                    return $emp['employeeId'] === $_REQUEST['employeeId'];
                 }))[0];
             }
             catch(Exception $ex)
@@ -1221,7 +1799,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         {
             if ($filter($key, $value))
             {
-                $valueStr .= ($fieldStr == '' ? '' : ', ') . (is_string($value) && !$value == '' ? "'" : '') . ($value == '' || is_null($value) ? 'NULL' : '$value') . (is_string($value) && !$value == '' ? "'" : '');
+                $valueStr .= ($fieldStr == '' ? '' : ', ') . (is_string($value) && !$value == '' ? "'" : '') . ($value == '' || is_null($value) ? 'NULL' : $value) . (is_string($value) && !$value == '' ? "'" : '');
                 $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
                 $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . $key . '=' . (is_string($value) ? "'" : '') . (is_null($value) ? 'NULL' : $value) . (is_string($value) ? "'" : '');
             }
@@ -1229,7 +1807,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
     
         return array('fieldStr'=>$fieldStr, 'valueStr'=>$valueStr, 'fieldValueStr'=>$fieldValueStr);
     }
-        
+    
     protected function jsMsgBox($caption, $msg, $type = 0, $funcName = "serverMsg")
     {
         $funcName .= $this->jsTailScriptCount;
@@ -1242,7 +1820,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         ?>
 <script>
 function <?php echo($funcName); ?>() {
-    new MessageBox().setup(app.main, "<?php echo(htmlentities($caption, ENT_QUOTES)); ?>", "<?php echo($typeIcon . htmlentities($msg, ENT_QUOTES)); ?>");
+    new MessageBox().setup(app.main, "<?php echo(htmlentities($caption, ENT_QUOTES)); ?>", ("<?php echo($typeIcon . htmlentities($msg, ENT_QUOTES)); ?>").replace(/&lt;(.+?)&gt;/g, "<$1>"));
 }
 </script><?php
         $this->jsTailScripts .= "if ($funcName !== null && $funcName !== undefined && ElementEx.type($funcName) === \"function\")\n{\n    $funcName();\n}\n";

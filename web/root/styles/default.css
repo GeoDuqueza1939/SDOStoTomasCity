@@ -34,6 +34,24 @@
     --footer-fg: #678ffe;
     --footer-bg: #070f26;
     --footer-shadow: transparent;
+
+    --info-fg: black;
+    --wait-fg: gray;
+    --success-fg: darkgreen;
+    --failure-fg: maroon;
+    --warning-fg: black;
+    --exception-fg: red;
+    --error-fg: red;
+    --debug-fg: black;
+    
+    --info-bg: skyblue;
+    --wait-bg: skyblue;
+    --success-bg: lightgreen;
+    --failure-bg: lightpink;
+    --warning-bg: rgb(246, 234, 98);
+    --exception-bg: lightpink;
+    --error-bg: pink;
+    --debug-bg: purple;
 }
 
 * {

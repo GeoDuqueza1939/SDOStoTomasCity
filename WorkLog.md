@@ -1,29 +1,55 @@
 # Work Log
 
-## 7/8/2023
+## 7/17/2023
 TO DO:
-* [ ] Run the following SQL statements on the hosted web app
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment ADD employeeId varchar(30) NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE employeeId employeeId varchar(30) NULL AFTER plantilla_item_number;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment ADD CONSTRAINT Emp_Appointment_FK_1 FOREIGN KEY (employeeId) REFERENCES SDOStoTomas.Employee(employeeId) ON DELETE CASCADE ON UPDATE CASCADE;
-    * [ ] ALTER TABLE SDOStoTomas.`Position` MODIFY COLUMN plantilla_item_number varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Employee MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] ALTER TABLE SDOStoTomas.PM_Plan MODIFY COLUMN rateeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'employeeId';
-    * [ ] ALTER TABLE SDOStoTomas.PM_Plan MODIFY COLUMN raterId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL COMMENT 'employeeId';
-    * [ ] ALTER TABLE SDOStoTomas.PM_Plan MODIFY COLUMN approverId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL COMMENT 'employeeId';
-    * [ ] ALTER TABLE SDOStoTomas.MPASIS_Role MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL;
-    * [ ] ALTER TABLE SDOStoTomas.`User` MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] ALTER TABLE SDOStoTomas.`Leave` MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Term_of_Service MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Job_Application MODIFY COLUMN plantilla_item_number_applied varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Required_Eligibility MODIFY COLUMN plantilla_item_number varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] ALTER TABLE SDOStoTomas.MPASIS_History MODIFY COLUMN plantilla_item_number varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment MODIFY COLUMN plantilla_item_number varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment DROP FOREIGN KEY Emp_Appointment_FK;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment ADD CONSTRAINT Emp_Appointment_FK FOREIGN KEY (plantilla_item_number) REFERENCES SDOStoTomas.`Position`(plantilla_item_number) ON DELETE SET NULL ON UPDATE CASCADE;
-    * [ ] ALTER TABLE SDOStoTomas.Emp_Appointment MODIFY COLUMN employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-    * [ ] 
+* [ ] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)
+* [ ] [SeRGS] Design My Account page (build upon design of existing MPaSIS version)
+* [ ] [SeRGS] Design Other Accounts page (build upon design of existing MPaSIS version)
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+## 7/14/2023
+TO DO:
+* [x] Run the following SQL statements on the hosted web app
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD date_rangeId BIGINT UNSIGNED NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD CONSTRAINT Emp_Appointment_FK_2 FOREIGN KEY (date_rangeId) REFERENCES SDOStoTomas.Date_Range(date_rangeId) ON DELETE RESTRICT ON UPDATE CASCADE;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment COMMENT='Appointments may include both CSC Appointments and Job Order Appointments';
+    * [x] ALTER TABLE SDOStoTomas.Emp_Term_of_Service DROP FOREIGN KEY Emp_Term_of_Service_FK_4;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Term_of_Service DROP COLUMN employeeId;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Term_of_Service MODIFY COLUMN salary float unsigned DEFAULT NULL NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Term_of_Service MODIFY COLUMN branch varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'NM' NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD personId BIGINT UNSIGNED NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE emp_appointmentId emp_appointmentId bigint(20) unsigned auto_increment NOT NULL AFTER personId;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD CONSTRAINT Emp_Appointment_FK_3 FOREIGN KEY (personId) REFERENCES SDOStoTomas.Person(personId) ON DELETE CASCADE ON UPDATE CASCADE;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE designation designation varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL AFTER emp_appointmentId;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE personId personId bigint(20) unsigned NOT NULL AFTER designation;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE employeeId employeeId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL AFTER personId;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE appointment_number appointment_number varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL AFTER employeeId;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE plantilla_item_number plantilla_item_number varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL AFTER appointment_number;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE date_rangeId date_rangeId bigint(20) unsigned NOT NULL AFTER plantilla_item_number;
+* [x] [SeRGS] Restructure Emp_Appointment and Emp_Term_of_Service tables for better storage of related data
+* [ ] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)
+* [x] [SeRGS] Create code procedures for submitting service record data
+* [x] [SeRGS] Create code procedures for loading service record data using employee ID
+* [x] [SeRGS] Design a Service Record Data Entry Form
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+Today's a Friday and I was supposed to have something to offer for testing today. This proved to be quite a challenge, as it was only now that I could focus better, for there were fewer people and office chatter this morning. I resumed my work on the PHP-to-DB backend code. I kept on changing the code as if I'm getting nowhere. Midway, I turned my attention to the hosted system. I tried to run the queued SQL statements. However, I did run into a problem. I could access the hosted page, but I couldn't log in. Next, I tried logging in to MariaDB on the hosted system, but I could not connect successfully. It turned out that the DB server stack has crashed, so restarting it fixed it. After executing the SQL statements, I continued working on the backend. Unfortunately, another distraction came in the form of a meeting. At first, I couldn't really focus, as the attendees were quite a noisy bunch and there were too many of them. However, once they were finished, although there were still a lot of chatter left, I was finally able to continue working quietly. At around past 4PM, I finally finished the SR Editor, but the AO5 and the HRMO were both occupied at the moment. I guess, I will have to show them this next week. I continued testing it and updating the hosted system as well while waiting for end-of-shift.
+
+## 7/13/2023
+TO DO:
+* [x] [SeRGS] Simplify some of the SR Editor backend code; modularize to functions, if possible
+* [x] [SeRGS] Add row selection outline styling
+* [ ] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)
 * [ ] [SeRGS] Create code procedures for submitting service record data
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
 * [ ] [SeRGS] Design a Service Record Data Entry Form
@@ -32,7 +58,87 @@ TO DO:
 * [ ] [MPaSIS] Test MPaSIS for production fitness
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
+
+Today was one rainy day. I almost failed to arrive at the office on time, again. Also, an officemate had her birthday today and the continuous flow off food and office chatter was a mixture of both welcome and a bit unhealthy distraction (for me, at least), while the ITO was on leave so I had to attend to some tech support-like duties all throughout the day, so I could only do as much as I could. Still, I tried my best to continue with my work. Creating the PHP-to-DB code was a bit tedious. Fortunately, I had the ERD guide that I made yesterday which modifies the current DB structure for the Emp_Term_of_Service and Emp_Appointment tables. Then, I proceeded to create functions out of the PHP-to-DB code. This seems to be taking a long while, as I had to deeply analyze both the relationships of the data (again) and anticipate the effects/impacts of modifying any data submitted. As such, I tried to implement PHP functions that will fetch and update date ranges and appointments. I might need to continue this tomorrow, as my head hurts to much, already. I also added some styling to the selected SR table row, so the user will have no trouble in determining the currently selected row, especially when deleting it.
+
+## 7/12/2023
+TO DO:
+* [x] [SeRGS] Add status indicators for SR Editor status pane messages
+* [ ] [SeRGS] Simplify some of the SR Editor backend code; modularize to functions, if possible
+* [ ] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)
+* [x] [SeRGS] Create a new data structure that will represent the appointment related to each term of service
+* [ ] [SeRGS] Create code procedures for submitting service record data
+* [ ] [SeRGS] Create code procedures for loading service record data using employee ID
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+The status messages from the DB code looked somewhat bland, so I worked to add icons to them. I might need to do the same for the table-based code, later on. Afterwards, I started to work on the DB backend code. However, as the office chatter continued today, I couldn't really concentrate with all the distractions around. As simplifying te DB backend code proved to be a bit of a hassle with the current structure of the both the database and the submitted data, I created a new term of service and appointment DB structure that can accommodate some changes and improve data relationships better.
+
+About the system unit that I intended to bring to the office, I've wanted to install drivers to it for the USB WiFi dongle, as I practiced installing it using may notebook. However, although I was able to resolve the over-heating issue last night, it seems that its former symptoms of its board being short-circuited has returned. After a while, I gave it up. I would probably be better off creating another test system using another spare system unit.
+
+## 7/11/2023
+TO DO:
+* [x] [SeRGS] Transfer server messages passed via JS message box into the status pane
+* [x] [SeRGS] Improve error and warning status message display
+    * [x] [SeRGS] Add color to SR Editor status pane
+* [x] [SeRGS] Added PHP-based validation of Service dates
+* [x] [SeRGS] Added PHP-based validation of missing values in the designation, status, salary, and station fields
+* [x] [SeRGS] Add code to prevent DB manipulation when SR data is incomplete or invalid
+* [ ] [SeRGS] Create code procedures for submitting service record data
+* [ ] [SeRGS] Create code procedures for loading service record data using employee ID
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+When I looked out the office window this morning, I realized that another event will be held again today. I guess I'm off for another noisy day, so I tried starting early. I resumed my work on the PHP-to-JS message passing, but soon decided that it will be easier if I did it PHP-to-HTML instead, so I moved the DB-modifying code down to the status pane code area. I also added data validation via PHP on some of the SR table columns and accumulated the related error messages and warnings for display later in the status pane, as well. As the messages are now displayed in the SR Editor status pane, I then added color styling and differentiating the various statuses I could think off: information, success, failure, wait, warning, exception, error, and debug. I also realized that not all submissions should be sent to the DB right away, so I added a code "gate" that will only allow DB processing when there were no errors encountered during validation.
+
+By the way, I wanted to bring the system unit to office this morning but I couldn't make the USB WiFi dongle to work. I will need to configure it once I got home.
+
+## 7/10/2023
+TO DO:
+* [x] Run the following SQL statements on the hosted web app
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD employeeId varchar(30) NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment CHANGE employeeId employeeId varchar(30) NULL AFTER plantilla_item_number;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD CONSTRAINT Emp_Appointment_FK_1 FOREIGN KEY (employeeId) REFERENCES SDOStoTomas.Employee(employeeId) ON DELETE CASCADE ON UPDATE CASCADE;
+    * [x] ALTER TABLE SDOStoTomas.`Position` MODIFY COLUMN plantilla_item_number varchar(50)  NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.Employee MODIFY COLUMN employeeId varchar(50)  NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.PM_Plan MODIFY COLUMN rateeId varchar(50)  NOT NULL COMMENT 'employeeId';
+    * [x] ALTER TABLE SDOStoTomas.PM_Plan MODIFY COLUMN raterId varchar(50)  DEFAULT NULL NULL COMMENT 'employeeId';
+    * [x] ALTER TABLE SDOStoTomas.PM_Plan MODIFY COLUMN approverId varchar(50)  DEFAULT NULL NULL COMMENT 'employeeId';
+    * [x] ALTER TABLE SDOStoTomas.MPASIS_Role MODIFY COLUMN employeeId varchar(50)  DEFAULT NULL NULL;
+    * [x] ALTER TABLE SDOStoTomas.`User` MODIFY COLUMN employeeId varchar(50)  NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.`Leave` MODIFY COLUMN employeeId varchar(50)  NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Term_of_Service MODIFY COLUMN employeeId varchar(50)  NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment MODIFY COLUMN employeeId varchar(50)  DEFAULT NULL NULL;
+    * [x] ALTER TABLE SDOStoTomas.Job_Application MODIFY COLUMN plantilla_item_number_applied varchar(50)  DEFAULT NULL NULL;
+    * [x] ALTER TABLE SDOStoTomas.Required_Eligibility MODIFY COLUMN plantilla_item_number varchar(50)  NOT NULL;
+    * [x] ALTER TABLE SDOStoTomas.MPASIS_History MODIFY COLUMN plantilla_item_number varchar(50)  DEFAULT NULL NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment MODIFY COLUMN plantilla_item_number varchar(50)  DEFAULT NULL NULL;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment DROP FOREIGN KEY Emp_Appointment_FK;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment ADD CONSTRAINT Emp_Appointment_FK FOREIGN KEY (plantilla_item_number) REFERENCES SDOStoTomas.`Position`(plantilla_item_number) ON DELETE SET NULL ON UPDATE CASCADE;
+    * [x] ALTER TABLE SDOStoTomas.Emp_Appointment MODIFY COLUMN employeeId varchar(50)  NOT NULL;
+* [x] Fix error and warning settings on the PHP server on my development machine
+* [ ] [SeRGS] Create code procedures for submitting service record data
+* [ ] [SeRGS] Create code procedures for loading service record data using employee ID
+* [ ] [SeRGS] Design a Service Record Data Entry Form
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+Inpired by the configuration I did on the system I intended to use as a test server, I started the day by tinkering on the Apache configuration on my notebook so it would display errors and warnings, much like how Apache does on the hosted server. I eventually succeeded and proceeded to debug some of the code on my notebook. Afterwards, I resumed my work on the back-end code for the SR Editor and tried to add some data validation code. However, due to some background noise due to several year-end events held, I couldn't concentrate very much on the SR Editor. I, then, focused my attention on the focused server and started to run some of the queued SQL statements after some DB restructuring last week. Afterwards, as I felt the PHP warnings and error messages were insufficient in debugging, I tried to create better PHP-to-JS message passing procedures, but in vain. I hope the events and the endless office chatter would end soon enough, or I wouldn't be able to finish anything this week.
 
 ## 7/9/2023
 Starting last night until today, I built a test Ubuntu Server system configured with Apache, PHP, MariaDB, and VSFTPD. I used a system unit with a faulty built-in video display adapter. After installing Ubuntu Server on the HDD using another similar system and verifying that the system works without a keyboard, I went on to try my luck in enabling the system's Keyboardless Operation. I spent almost the whole time from midnight to daybreak with no luck whatsoever, not until I found a document online that shows how to modify some (BIOS) system settings even while the OS is online. After doing away with the Keyboarless operation issue, I went on to deal with issues on the server stacks. I initially installed MySQL along with Apache, PHP, and PhpMyAdmin. However, try as I may, I couldn't get the PhpMyAdmin to work. In the early afternoon, I tried to remove all the server stacks I installed. I had some issues with uninstallation, as the PhpMyAdmin kept on blocking the uninstall process. After several reboots, I tried to reconfigure PhpMyAdmin again before finally uninstalling it successfully. After removing all other unnecessary packages and performing some cleanup, I tried to install the server stacks once again, switching MySQL for MariaDB. After the installation and a few configuration steps, I was finally able to make it work. I then tried testing sending an email using PHP mail(). Eventually, I was able to send an email after installing the sendmail package, although there was still no way to tell if the email was actually transmitted as I am only using localhost for this. Afterwards, I went on to configure VSFTPD and was eventually able to enable and test TLS encryption on FTP connections.
@@ -52,7 +158,7 @@ TO DO:
 * [ ] [MPaSIS] Test MPaSIS for production fitness
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 
 It is a Saturday, but I decided to do some coding, anyway. I duplicated the the SR editor control buttons and place the duplicate above the table to make these button more reachable. I also added some background color to these buttons, which show up whenever they are enabled by the users actions. I also did some modifications to the database, which I may need to reimplement on the hosted web app, as well. I have added these SQL statements to the TO DO list for Monday, so I wont forget. This how I begin my plans of making the system adaptable to future updates.
 
@@ -75,7 +181,7 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [x] Update hosted web app code and DB for testing
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 
 Coding was a bit slow today. Burnout must be catching up to me again. I tried my best to modfy or finish the drop down behavior of some of the columns. I made salary column more flexible so that it can receive other values when the salary is not found in the suggested list. I am also planned to implement this on the Designation column, although I might need more time to polish this change later on. To cover more ground, I focused my attention on the buttons, trying to beutify them a bit by changing those word into icons and adding tooltips, instead. I also added print button, although I would need to postpone adding more code to it until this weekend or Monday, whenever I've got the time.
 
@@ -95,7 +201,7 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [x] Update hosted web app code and DB for testing
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 
 As I was anticipating some system tests today, I tried my best to tie loose ends and prepare the hosted web app for testing early on. Afterwards, I resumed modifying the SR table behavior. I added dropdowns for some columns. For the salary column, I had to do some filtering using the value of the designation column to offer the user a list of salary steps available for the specific designation. I also modified the date-to column behavior to display `present` when left blank. Likewise, I also found and fixed a bug in the Dashboard buttons which caused them to fail to redirect to other pages. It turned out that I have misplaced the code for these redirect buttons, placing them after a lot of HTML tags instead of before any HTML tag.
 
@@ -106,7 +212,7 @@ TO DO:
 * [x] [SeRGS] Transfer JS code from the sergsApp.php and the sergs.js files into the SeRGS_App class
 * [ ] [SeRGS] Design a Service Record Data Entry Form
 * [x] Add cell navigation as a built-in TableEx class feature
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [x] [MPaSIS] Repair Add Eligibility dialog layout in the Applicant Data Entry
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
@@ -130,7 +236,7 @@ TO DO:
 * [ ] [SeRGS] Design a Service Record Data Entry Form
 * [x] Allow TableEx class to read and configure existing table body data
 * [ ] Add cell navigation as a built-in TableEx class feature
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -147,7 +253,7 @@ TO DO:
 * [x] [SeRGS] Enabled/disabled the <button>Add Employee</button>/<button>Load Service Record</button> button when clicked while an employee ID is selected
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
 * [ ] [SeRGS] Design a Service Record Data Entry Form
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -162,7 +268,7 @@ I continued my work on the SR Editor, focusing on the cell-to-cell navigation in
 TO DO:
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
 * [ ] [SeRGS] Design a Service Record Data Entry Form
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -181,7 +287,7 @@ TO DO:
 * [x] [SeRGS] Backend for Add Employee Dialog (saving new Employee data)
 * [ ] [SeRGS] Create code procedures for loading service record data using employee ID
 * [ ] [SeRGS] Design a Service Record Data Entry Form
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -198,7 +304,7 @@ TO DO:
 * [x] [SeRGS] Enable add record entry
 * [ ] [SeRGS] Enable delete record entry
 * [ ] [SeRGS] Design a Service Record Data Entry Form
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -214,7 +320,7 @@ TO DO:
 * [x] [SeRGS] Added control buttons to Service Record Data Entry Form
 * [x] [SeRGS] Added an Add Employee Dialog (to be finished)
 * [ ] [SeRGS] Design a Service Record Data Entry Form
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -234,7 +340,7 @@ TO DO:
 * [x] [SeRGS] Incorporate encode/update, certification, approval, and release views in Request List
 * [x] [SeRGS] Delete links and pages for encode/update, certification, approval, and release views
 * [ ] [SeRGS] Design a Service Record Data Entry Form
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -255,7 +361,7 @@ TO DO:
 * [ ] [SeRGS] Design For Certification layout
 * [ ] [SeRGS] Design For Approval layout
 * [ ] [SeRGS] Design For Release layout
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -273,7 +379,7 @@ TO DO:
 * [x] [SeRGS] Add preliminary design layout for My Service Record UI
 * [x] [SeRGS] Add variant views depending on user access level
 * [ ] [SeRGS] Design New Request layout
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
@@ -291,7 +397,7 @@ TO DO:
 * [ ] [SeRGS] Design Dashboard layout
 * [ ] [SeRGS] Design view Service Record layout
 * [x] [SeRGS] Adjust SeRGS UI to be consistent with layout and styling of MPaSIS
-* [ ] Make secure folder more secure
+* [ ] Make `/web/root/secure` folder more secure
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness

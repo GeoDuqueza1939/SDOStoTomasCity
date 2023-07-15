@@ -53,7 +53,7 @@ body, .app > main {
 }
 
 .data-form-ex.sr-table-wrapper {
-    margin: 1em 0;
+    margin: 0 0;
     padding: 0.1em;
     background-color: white;
     border: 0.15em inset;
@@ -272,8 +272,13 @@ body, .app > main {
 }
 
 .sr-control-buttons {
+    margin: 1em 0 0.5em;
     text-align: right;
     font-size: 0.8em;
+}
+
+.sr-table-wrapper + .sr-control-buttons {
+    margin: 0.5em 0 1em;
 }
 
 .sr-control-buttons > .button-ex > button {
@@ -310,6 +315,50 @@ body, .app > main {
 .sr-control-buttons > .sr-print > button {
     background-color: blue;
     color: white;
+}
+
+.sr-table td.error-missing-date-range,
+.sr-table td.error-missing-from-date,
+.sr-table td.error-invalid-date-range,
+.sr-table td.error-missing-designation,
+.sr-table td.error-missing-status {
+    background-color: var(--error-bg);
+    color: var(--error-fg);
+}
+
+.sr-table td.warning-overlapping-date-ranges,
+.sr-table td.warning-missing-salary,
+.sr-table td.warning-missing-station {
+    background-color: var(--warning-bg);
+    color: var(--warning-fg);
+}
+
+.sr-table tbody > tr.selected {
+    outline: 0.25em solid forestgreen;
+}
+
+.sr-encoding .status-pane#sr-status {
+    display: block;
+    margin: 1em 0 0;
+    text-align: center;
+}
+
+.sr-encoding .status-pane#sr-status > span {
+    display: block;
+    padding: 0.5em;
+}
+
+.sr-encoding .status-pane#sr-status > span > span.material-icons-round {
+    margin: 0;
+    padding: 0;
+    font-size: 2em;
+    vertical-align: middle;
+    cursor: default;
+    text-shadow: 0.02em 0.02em black;
+}
+
+.sr-encoding .status-pane#sr-status > span.warning > span.material-icons-round {
+    color: orange;
 }
 
 .delete-service-record-entry-dialog .dialog-content > .div-ex > .div-ex {

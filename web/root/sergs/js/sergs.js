@@ -130,7 +130,7 @@ class SeRGS_App extends App
     {
         if (td instanceof HTMLTableCellElement && td.children.length > 0 && td.children[0] instanceof HTMLInputElement && td.children[0].type === "date")
         {
-            td.innerHTML = (td.children[0].value === "" && td.headerName === "date-to" && td.previousElementSibling.textContent !== "" ? "present" : td.children[0].value.replace(/(\d\d\d\d)-(\d\d)-(\d\d)/, "$2\/$3\/$1"));
+            td.innerHTML = (td.children[0].value === "" && td.headerName === "date_end" && td.previousElementSibling.textContent !== "" ? "present" : td.children[0].value.replace(/(\d\d\d\d)-(\d\d)-(\d\d)/, "$2\/$3\/$1"));
             td.innerHTML += "<input type=\"hidden\" name=\"" + td.headerName + "[]\" value=\"" + (td.textContent === "present" ? "" : td.textContent) + "\">";
             this.activateDelRecButton(false, td);
             td.tabIndex = 0;
@@ -247,7 +247,7 @@ class SeRGS_App extends App
     {
         let position = SeRGS_App.enum["positions"].find(position=>position["position_title"] === td.parentElement.rowInfo.td["designation"].textContent);
         let salaryGrade = (position === null || position === undefined ? null : position["salary_grade"]);
-        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(td.parentElement.rowInfo.td["date-from"].textContent))));
+        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(td.parentElement.rowInfo.td["date_start"].textContent))));
         let salaryStep = salarySteps.find(sg=>parseFloat(sg["salary"]) === parseFloat(td.children[0].value));
 
         return (salaryStep === null || salaryStep === undefined ? null : salaryStep["step_increment"]);
@@ -257,6 +257,10 @@ class SeRGS_App extends App
     {
         await window.setTimeout(()=>{
             Array.from(document.getElementsByClassName("sr-delete-record")).forEach(srDeleteRecord=>{
+                if (td instanceof HTMLTableCellElement)
+                {
+                    td.parentElement.classList.toggle("selected", setting);
+                }
                 srDeleteRecord.children[0].disabled = !setting;
                 srDeleteRecord.children[0]["active_cell"] = (setting ? td : null);
             });
@@ -331,7 +335,7 @@ class SeRGS_App extends App
         
         this.attachRowEventListeners(row);
 
-        row.rowInfo.td["date-to"].innerHTML = row.rowInfo.td["date-to"].innerHTML.replace("present", "");
+        row.rowInfo.td["date_end"].innerHTML = row.rowInfo.td["date_end"].innerHTML.replace("present", "");
 
         row.children[0].focus();
 
@@ -343,12 +347,12 @@ class SeRGS_App extends App
         Array.from(row.children).forEach((cell, index)=>{
             switch(cell.headerName)
             {
-                case "date-from":
-                case "date-to":
-                case "date":
+                case "date_start":
+                case "date_end":
+                case "separation_date":
                     cell.removeEventListener("keyup", TableEx.editableCellNavigation);
                     cell.addEventListener("focus", event=>this.activateDateInput(cell));
-                    if (cell.headerName === "date-to" && cell.textContent.trim() === "" && row.rowInfo.td["date-from"].textContent !== "")
+                    if (cell.headerName === "date_end" && cell.textContent.trim() === "" && row.rowInfo.td["date_start"].textContent !== "")
                     {
                         cell.innerHTML = "present" + cell.innerHTML;
                     }
@@ -408,7 +412,7 @@ class SeRGS_App extends App
                     cell.addEventListener("focus", event=>{
                         let position = SeRGS_App.enum["positions"].find(position=>position["position_title"] === row.rowInfo.td["designation"].textContent);
                         let salaryGrade = (position === null || position === undefined ? null : position["salary_grade"]);
-                        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(row.rowInfo.td["date-from"].textContent))));
+                        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(row.rowInfo.td["date_start"].textContent))));
 
                         // console.log(position, salaryGrade, salarySteps.map(step=>step["salary"]), salarySteps.map(step=>step["step_increment"]));
 
@@ -419,7 +423,7 @@ class SeRGS_App extends App
                         cell.children[0].style.width = "6em";
                     });
                     break;
-                case "lwop":
+                case "lwop_count":
                     cell.childNodes[0].textContent = (isNaN(parseFloat(cell.childNodes[0].textContent)) ? cell.childNodes[0].textContent : Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP" }).format(cell.childNodes[0].textContent));
                     if (cell.childNodes[0] === cell.children[0])
                     {
@@ -434,7 +438,7 @@ class SeRGS_App extends App
                         cell.children[0].value = 0;
                     }
                     cell.children[0].addEventListener("blur", event=>{
-                        this.deactivateTextbox(cell, "lwop");
+                        this.deactivateTextbox(cell, "lwop_count");
                         cell.children[0].removeAttribute("min");
                         if (cell.childNodes[0].textContent.trim() === "0" || cell.childNodes[0].textContent.trim() === "")
                         {
@@ -451,8 +455,7 @@ class SeRGS_App extends App
                         {
                             cell.childNodes[0].textContent = "0";
                         }
-                        console.log(cell.childNodes[0]);
-                        this.activateTextbox(cell, "lwop");
+                        this.activateTextbox(cell, "lwop_count");
 
                         cell.children[0].type = "number";
                         cell.children[0].setAttribute("min", 0);
@@ -541,9 +544,9 @@ class SeRGS_App extends App
             {
                 switch (key)
                 {
-                    case "date-from":
-                    case "date-to":
-                    case "date":
+                    case "date_start":
+                    case "date_end":
+                    case "separation_date":
                         rowData[key] = rowInfo.td[key].textContent.replace(/(\d\d)\/(\d\d)\/(\d\d\d\d)/, "$3-$1-$2");
                         break;
                     default:
@@ -705,7 +708,7 @@ class DeleteServiceRecordEntryDialog extends DialogEx
                 }
             });
 
-            container.addExContent(new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"Inclusive Dates:"}).setHTMLContent(row.rowInfo.td["date-from"].innerHTML + " &ndash; " + row.rowInfo.td["date-to"].innerHTML));
+            container.addExContent(new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"Inclusive Dates:"}).setHTMLContent(row.rowInfo.td["date_start"].innerHTML + " &ndash; " + row.rowInfo.td["date_end"].innerHTML));
             container.addContent(document.createTextNode(" "));
             container.addExContent(new DivEx().setupFromConfig({parentHTMLElement:this.container, caption:"Designation:"}).setHTMLContent(row.rowInfo.td["designation"].innerHTML));
             container.addContent(document.createTextNode(" "));

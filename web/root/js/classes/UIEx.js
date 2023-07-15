@@ -651,7 +651,7 @@ class ContainerEx extends UIEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
@@ -1177,18 +1177,28 @@ class TableEx extends ContainerEx
                             tr.rowInfo = rowInfo;
                             tr.uiEx = this;
 
+                            let indexOffset = 0;
+
                             Array.from(tr.children).forEach((td, index)=>{
-                                rowInfo["td"][this.dataHeaders[index]] = td;
-                                rowInfo["data"][this.dataHeaders[index]] = td.textContent;
-                                td.uiEx = this;
-                                td.headerName = this.dataHeaders[index];
-                                if (this.headers[td.headerName].contenteditable)
+                                if (td instanceof HTMLTableCellElement)
                                 {
-                                    td.tabIndex = 0;
-                                    td.addEventListener("focus", TableEx.editableCellFocusEvent);
-                                    td.addEventListener("blur", TableEx.editableCellBlurEvent);
-                                    td.addEventListener("keyup", TableEx.editableCellNavigation);
-                                    ElementEx.create("input", ElementEx.NO_NS, td, null, "type", "hidden", "name", td.headerName + "[]", "value", td.textContent);
+                                    index -= indexOffset;
+                                    rowInfo["td"][this.dataHeaders[index]] = td;
+                                    rowInfo["data"][this.dataHeaders[index]] = td.textContent;
+                                    td.uiEx = this;
+                                    td.headerName = this.dataHeaders[index];
+                                    if (td.headerName !== null && td.headerName !== undefined && "contenteditable" in this.headers[td.headerName] && this.headers[td.headerName].contenteditable)
+                                    {
+                                        td.tabIndex = 0;
+                                        td.addEventListener("focus", TableEx.editableCellFocusEvent);
+                                        td.addEventListener("blur", TableEx.editableCellBlurEvent);
+                                        td.addEventListener("keyup", TableEx.editableCellNavigation);
+                                        ElementEx.create("input", ElementEx.NO_NS, td, null, "type", "hidden", "name", td.headerName + "[]", "value", td.textContent);
+                                    }
+                                }
+                                else
+                                {
+                                    indexOffset++;
                                 }
                             });
                         });
@@ -2370,7 +2380,7 @@ class TextboxEx extends ControlEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
@@ -3662,7 +3672,7 @@ class ButtonGroupEx extends ControlEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
@@ -4554,7 +4564,7 @@ class RadioButtonEx extends ControlEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
@@ -4779,7 +4789,7 @@ class RadioButtonGroupEx extends ControlEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
@@ -5045,7 +5055,7 @@ class RadioButtonGroupEx extends ControlEx
             if (!found)
             {
                 this.select(-1);
-                console.log("WARNING: Option not found.");
+                console.warn("WARNING: Option not found.");
             }
         }
     }
@@ -5072,7 +5082,7 @@ class RadioButtonGroupEx extends ControlEx
             if (!found)
             {
                 this.select(-1);
-                console.log("WARNING: Option not found.");
+                console.warn("WARNING: Option not found.");
             }
         }
     }
@@ -5205,7 +5215,7 @@ class CheckboxGroupEx extends RadioButtonGroupEx
         if (!found)
         {
             this.select(-1);
-            console.log("WARNING: Option(s) not found.");
+            console.warn("WARNING: Option(s) not found.");
         }
     }
 
@@ -5231,7 +5241,7 @@ class CheckboxGroupEx extends RadioButtonGroupEx
             if (!found)
             {
                 this.select(-1);
-                console.log("WARNING: Option not found.");
+                console.warn("WARNING: Option not found.");
             }
         }
     }
@@ -5400,7 +5410,7 @@ class DataFormEx extends ContainerEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
@@ -5806,7 +5816,7 @@ class DataFormEx extends ContainerEx
                 }
                 else
                 {
-                    console.log("WARNING: Key `" + key + "` not found.");
+                    console.warn("WARNING: Key `" + key + "` not found.");
                 }
             }
         }
@@ -5995,7 +6005,7 @@ class DialogEx extends ContainerEx
                         }
                         else
                         {
-                            console.log("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
                         }
                         break;
                 }
