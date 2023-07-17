@@ -7,9 +7,11 @@ require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 class SeRGS_App extends App
 {
-    protected $enum = array();
-    protected $jsTailScripts = "";
-    protected $jsTailScriptCount = 0;
+    private $enum = array();
+    private $jsTailScripts = '';
+    private $jsTailScriptCount = 0;
+    private $multipleStatus = '';
+    protected $error = false;
 
     public function __construct()
     {
@@ -48,17 +50,17 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
 </script><?php
     }
 
-    protected function getDB_ISCreAMS()
+    private function getDB_ISCreAMS()
     {
         return $this->getDBConn(0);
     }
 
-    protected function getDB_SDO()
+    private function getDB_SDO()
     {
         return $this->getDBConn(1);
     }
 
-    protected function getUserAccessLevel()
+    private function getUserAccessLevel()
     {
         return (isset($_SESSION['user']) && isset($_SESSION['user']['sergs_access_level']) ? $_SESSION['user']['sergs_access_level'] : 0);
     }
@@ -126,6 +128,9 @@ $this->writeJSEnums(); ?>
                     case "my-sr":
                         $this->generateMySRUI();
                         break;
+                    case "other-sr":
+                        $this->generateOtherSRUI();
+                        break;
                     case "sr-encoding":
                         $this->generateSREncodingUI();
                         break;
@@ -138,7 +143,6 @@ $this->writeJSEnums(); ?>
                     case "new-request":
                         $this->generateNewRequestUI();
                         break;
-                    case "other-sr":
                     case "archived":
                     case "search-requests":
                     case "system-logs":
@@ -192,7 +196,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 <?php
     } // function run()
 
-    protected function generateDashboardUI()
+    private function generateDashboardUI()
     {
         $accessLevel = $this->getUserAccessLevel();
 
@@ -301,7 +305,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateSRUI()
+    private function generateSRUI()
     {
         $accessLevel = $this->getUserAccessLevel();
 
@@ -326,9 +330,10 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateMySRUI()
+    private function generateMySRUI()
     {
         $accessLevel = $this->getUserAccessLevel();
+        $sr = $this->retrieveSR($_SESSION['user']['personId']);
         
         if ($accessLevel < 1)
         {
@@ -338,54 +343,72 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         <section id="main-view-my-sr">
             <h2>My Service Record</h2>
             
-            <div class="div-ex view-contents">
-                <div class="div-ex my-sr">
-                    <div class="div-ex my-sr-name">
-                        <span class="label-ex">Name:</span>
-                        <?php echo($this->getFullName($_SESSION['user']['given_name'], $_SESSION['user']['middle_name'], $_SESSION['user']['family_name'], $_SESSION['user']['spouse_name'], $_SESSION['user']['ext_name'], true)); ?>
-                    </div>
-                    <div class="div-ex my-sr-birthdate">
-                        <span class="label-ex">Birth Date:</span>
-                        <?php echo($_SESSION['user']['birth_date']); ?>
-                    </div>
-                    <div class="div-ex my-sr-birthplace">
-                        <span class="label-ex">Birth Place:</span>
-                        <?php echo($_SESSION['user']['birth_place']); ?>
-                    </div>
-                    <div class="div-ex my-sr-emp-no">
-                        <span class="label-ex">Emp. No.:</span>
-                        <?php echo($_SESSION['user']['employeeId']); ?>
-                    </div>
-
-                    <div class="div-ex sr-table-wrapper">
-                        Not available. To request a service record update, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.
-                        <!-- <table class="table-ex sr-table">
-                            <thead>
-                                <tr>
-                                    <th colspan="2">Service</th>
-                                    <th colspan="3">Record of Appointment</th>
-                                    <th>Office</th>
-                                    <th rowspan="3">Branch</th>
-                                    <th rowspan="3">Leave of Absence w/o Pay</th>
-                                    <th rowspan="3">Date</th>
-                                </tr>
-                                <tr>
-                                    <th colspan="2">(Inclusive Date)</th>
-                                    <th rowspan="2">Designation</th>
-                                    <th rowspan="2">Status</th>
-                                    <th rowspan="2">Salary</th>
-                                    <th rowspan="2">Station/Place</th>
-                                </tr>
-                                <tr>
-                                    <th>From</th>
-                                    <th>To</th>
-                                </tr>
-                            </thead>
-                        </table> -->
-                    </div>
-
+            <div class="div-ex emp-info">
+                <div class="div-ex emp-id" id="emp-name">
+                    <span class="label-ex">Name:</span>
+                    <?php echo($this->getFullName($_SESSION['user']['given_name'], $_SESSION['user']['middle_name'], $_SESSION['user']['family_name'], $_SESSION['user']['spouse_name'], $_SESSION['user']['ext_name'], true)); ?>
+                </div>
+                <div class="div-ex" id="sr-emp-birth-date">
+                    <span class="label-ex">Birth Date:</span>
+                    <?php echo($_SESSION['user']['birth_date']); ?>
+                </div>
+                <div class="div-ex" id="sr-emp-birth-date">
+                    <span class="label-ex">Birth Place:</span>
+                    <?php echo($_SESSION['user']['birth_place']); ?>
+                </div>
+                <div class="div-ex" id="sr-emp-birth-place">
+                    <span class="label-ex">Emp. No.:</span>
+                    <?php echo($_SESSION['user']['employeeId']); ?>
                 </div>
             </div>
+
+            <div class="div-ex sr-table-wrapper">
+                <table class="table-ex sr-table" id="sr-table-view">
+                    <thead>
+                        <tr>
+                            <th colspan="2" data-header-name="service">Service</th>
+                            <th colspan="3" data-header-name="appointment">Record of Appointment</th>
+                            <th data-header-name="office">Office</th>
+                            <th rowspan="3" data-header-name="branch" data-contenteditable="true">Branch</th>
+                            <th rowspan="3" data-header-name="lwop_count" data-contenteditable="true">Leave of Absence w/o Pay</th>
+                            <th rowspan="3" data-header-name="separation_date" data-contenteditable="true">Date</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2" data-header-name="inclusive_date">(Inclusive Date)</th>
+                            <th rowspan="2" data-header-name="designation" data-contenteditable="true">Designation</th>
+                            <th rowspan="2" data-header-name="status" data-contenteditable="true">Status</th>
+                            <th rowspan="2" data-header-name="salary" data-contenteditable="true">Salary</th>
+                            <th rowspan="2" data-header-name="station" data-contenteditable="true">Station/Place</th>
+                        </tr>
+                        <tr>
+                            <th data-header-name="date_start" data-contenteditable="true">From</th>
+                            <th data-header-name="date_end" data-contenteditable="true">To</th>
+                        </tr>
+                    </thead>
+                    <tbody><?php
+        if (is_null($sr) || count($sr) === 0)
+        { ?>
+
+                        <tr>
+                            <td colspan="9">Not available. To request a service record update, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
+                        </tr>
+        <?php
+        }
+        else
+        {
+            $this->generateSRTableRows($sr);
+        } ?>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <span class="status-pane multiple" id="sr-status"><?php 
+        $this->displayStatusMessages();
+
+            ?>
+
+            </span>
         </section>
         <script>
         "use strict";
@@ -402,7 +425,173 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
     <?php
     }
 
-    protected function generateNewRequestUI()
+    private function generateOtherSRUI()
+    {
+        $accessLevel = $this->getUserAccessLevel();
+        $dbResults = null;
+        $employee = null;
+        $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, Address.address AS birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId LEFT JOIN Address ON Person.birth_place=Address.addressId WHERE Person.personId <> "' . $_SESSION['user']['personId'] . '";');
+        $sr = [];
+
+        if ($accessLevel < 2)
+        {
+            $this->generateForbidden();
+            return;
+        }
+
+        if (isset($_REQUEST['a']))
+        {
+            switch ($_REQUEST['a'])
+            {
+                case 'fetch':
+                    if (isset($_REQUEST['fetch']))
+                    {
+                        switch ($_REQUEST['fetch'])
+                        {
+                            case 'sr':
+                                $employee = $this->filterEmployee($employees);
+
+                                $sr = $this->retrieveSR($employee['personId']);
+
+                                break;
+                            default:
+                                $this->jsErrorMsgBox('Unknown Fetch keyword.');
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        $this->jsErrorMsgBox('Nothing to fetch.');
+                    }
+                    break;
+                default:
+                    $this->jsErrorMsgBox(('Unknown operation.'));
+                    break;
+            }
+        } ?>
+        <section id="main-other-sr">
+            <h2>View Service Record</h2>
+            
+            <form id="sr-loader" name="sr-loader" method="GET">
+                <input type="hidden" name="a" value="fetch">
+                <input type="hidden" name="fetch" value="sr"><?php 
+        if (!is_null($employee))
+        { ?>
+
+                <input type="hidden" name="employeeId" value="<?php echo($_REQUEST['employeeId']); ?>"><?php
+        } ?>
+
+            </form>
+
+            <div class="div-ex emp-info"><?php
+        if (is_null($employee))
+        { ?>
+
+                <span class="drop-down-ex emp-id">
+                    <label class="label-ex" for="employeeId">Employee ID/Name:</label>
+                    <select id="employeeId" name="employeeId" form="sr-loader" onchange="SeRGS_App.morphAddEmployeeLoadSRButton(this, false);">
+                        <option value="-1" class="non-option">- Select Employee -</option><?php    
+                    if (is_null($this->getDB_SDO()->lastException))
+                    {
+                        foreach ($employees as $emp) { ?>
+
+                        <option value="<?php echo($emp['employeeId']); ?>" data-birth-date="<?php echo(date('F j, Y', strtotime($emp['birth_date']))); ?>" data-birth-place="<?php echo($emp['birth_place']); ?>"<?php $selected = (isset($_REQUEST['a']) && $_REQUEST['a'] === 'fetch' && isset($_REQUEST['fetch']) && $_REQUEST['fetch'] === 'sr' && isset($_REQUEST['employeeId']) && $_REQUEST['employeeId'] === $emp['employeeId']); echo($selected ? ' selected': ''); ?>><?php
+                                echo($emp['employeeId'] . ' &ndash; ' . $this->getFullName($emp['given_name'], $emp['middle_name'], $emp['family_name'], $emp['spouse_name'], $emp['ext_name'], true));
+                            ?></option><?php
+                        }
+                    }
+                    else
+                    {
+                        $this->jsErrorMsgBox('Error encountered retrieving employee records.');
+                    }
+                    ?>
+                    </select>
+                </span>
+
+                <span class="button-ex" id="sr-load-sr">
+                    <button type="submit" form="sr-loader" disabled>Load Service Record</button>
+                </span><?php
+        }
+        else
+        { ?>
+
+                <div class="div-ex emp-id" id="emp-name">
+                    <span class="label-ex">Employee Name:</span> <?php echo($this->getFullName($employee['given_name'], $employee['middle_name'], $employee['family_name'], $employee['spouse_name'], $employee['ext_name'], true)); ?>
+
+                </div><?php
+        } ?>
+
+                <div class="div-ex" id="sr-emp-birth-date">
+                    <span class="label-ex">Birth Date:</span> <?php echo(is_null($employee) ? '' : date('F j, Y', strtotime($employee['birth_date']))); ?>
+
+                </div>
+                <div class="div-ex" id="sr-emp-birth-place">
+                    <span class="label-ex">Birth Place:</span> <?php echo(is_null($employee) ? '' : $employee['birth_place']); ?>
+
+                </div><?php
+        if (!is_null($employee))
+        { ?>
+
+                <div class="div-ex emp-id" id="emp-id">
+                    <span class="label-ex">Employee ID:</span> <?php echo($employee['employeeId']); ?>
+
+                </div><?php
+        } ?>
+        
+            </div>
+
+            <div class="div-ex sr-table-wrapper">
+                <table class="table-ex sr-table" id="sr-table-view">
+                    <thead>
+                        <tr>
+                            <th colspan="2" data-header-name="service">Service</th>
+                            <th colspan="3" data-header-name="appointment">Record of Appointment</th>
+                            <th data-header-name="office">Office</th>
+                            <th rowspan="3" data-header-name="branch">Branch</th>
+                            <th rowspan="3" data-header-name="lwop_count">Leave of Absence w/o Pay</th>
+                            <th rowspan="3" data-header-name="separation_date">Date</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2" data-header-name="inclusive_date">(Inclusive Date)</th>
+                            <th rowspan="2" data-header-name="designation">Designation</th>
+                            <th rowspan="2" data-header-name="status">Status</th>
+                            <th rowspan="2" data-header-name="salary">Salary</th>
+                            <th rowspan="2" data-header-name="station">Station/Place</th>
+                        </tr>
+                        <tr>
+                            <th data-header-name="date_start">From</th>
+                            <th data-header-name="date_end">To</th>
+                        </tr>
+                    </thead>
+                    <tbody><?php
+        if (is_null($sr) || count($sr) === 0)
+        { ?>
+
+                        <tr>
+                            <td colspan="9">Not available. To update this employee's service record, please click <a href="/sergs/sr/encoding/?<?php echo($_SERVER['QUERY_STRING']); ?>" title="Update service record">here</a>. To request an update in behalf of this employee, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
+                        </tr>
+        <?php
+        }
+        else
+        {
+            $this->generateSRTableRows($sr);
+        } ?>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <span class="status-pane multiple" id="sr-status"><?php 
+        $this->displayStatusMessages();
+
+                    ?>
+
+            </span>
+        </section>
+    <?php
+    }
+
+    private function generateNewRequestUI()
     {
         $accessLevel = $this->getUserAccessLevel();
         
@@ -481,7 +670,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateRequestsUI()
+    private function generateRequestsUI()
     {
         $requester = (isset($_REQUEST['req']) ? $_REQUEST['req'] : null);
         $accessLevel = $this->getUserAccessLevel();
@@ -505,7 +694,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateRequestListUI()
+    private function generateRequestListUI()
     { 
         
         if ($this->getUserAccessLevel() < 1)
@@ -612,16 +801,16 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateSREncodingUI()
+    private function generateSREncodingUI()
     { 
         $dbResults = null;
         $employee = null;
         $employees = $this->getDB_SDO()->executeQuery('SELECT Person.personId, given_name, middle_name, family_name, spouse_name, ext_name, birth_date, Address.address AS birth_place, employeeId, is_temporary_empno FROM Person INNER JOIN Employee ON Person.personId=Employee.personId LEFT JOIN Address ON Person.birth_place=Address.addressId;');
         $sr = [];
         $forSRUpdate = false;
-        $error = false;
+        $this->error = false;
         $warning = false;
-        $multipleStatus = '';
+        $this->multipleStatus = '';
         $empAppointments = [];
 
         $accessLevel = $this->getUserAccessLevel();
@@ -827,88 +1016,9 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         {
                             case 'sr':
                                 $employee = $this->filterEmployee($employees);
-                                $dbResults = null;
-                                $dbSR = null;
-                                $dbAppointments = null;
 
-                                if (!$this->error)
-                                {
-                                    $dbSR = $this->getDB_SDO()->executeQuery(
-                                        "SELECT 
-                                            etos.*,
-                                            dater.date_rangeId,
-                                            date_start,
-                                            date_end,
-                                            designation,
-                                            appointment_number,
-                                            plantilla_item_number,
-                                            status,
-                                            institution_name AS station,
-                                            salary,
-                                            branch,
-                                            lwop_count,
-                                            separation_date
-                                        FROM Emp_Term_of_Service etos
-                                        INNER JOIN Emp_Appointment appmt ON etos.appointmentId = appmt.emp_appointmentId
-                                        INNER JOIN Date_Range dater ON etos.date_rangeId = dater.date_rangeId
-                                        LEFT JOIN Workplace workpl ON etos.workplaceId = workpl.workplaceId
-                                        LEFT JOIN Institution inst ON workpl.institutionId = inst.institutionId
-                                        WHERE personId = '" . $employee['personId'] . "';"
-                                    );
+                                $sr = $this->retrieveSR($employee['personId']);
 
-                                    if (!is_null($this->getDB_SDO()->lastException))
-                                    {
-                                        $this->error = true;
-                                        $this->jsErrorMsgBox('Error encountered while fetching employee term of service information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
-                                    }
-
-                                    if (count($dbSR) > 0)
-                                    {
-                                        $dbAppointments = $this->getDB_SDO()->executeQuery(
-                                            "SELECT 
-                                                emp_appointmentId,
-                                                designation,
-                                                personId,
-                                                employeeId,
-                                                appointment_number,
-                                                plantilla_item_number,
-                                                dater.date_rangeId,
-                                                date_start,
-                                                date_end
-                                            FROM Emp_Appointment appmt
-                                            INNER JOIN Date_Range dater ON appmt.date_rangeId = dater.date_rangeId
-                                            WHERE personId = '" . $employee['personId'] . "';"
-                                        );
-    
-                                        if (!is_null($this->getDB_SDO()->lastException))
-                                        {
-                                            $this->error = true;
-                                            $this->jsErrorMsgBox('Error encountered while fetching employee appointment information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
-                                        }
-
-                                        foreach ($dbSR as $dbSRTOS) {
-                                            array_push($sr, []);
-
-                                            foreach([
-                                                'date_start',
-                                                'date_end',
-                                                'designation',
-                                                'status',
-                                                'salary',
-                                                'station',
-                                                'branch',
-                                                'lwop_count',
-                                                'separation_date'
-                                            ] as $key)
-                                            {
-                                                $sr[count($sr) - 1][$key] = ($dbSRTOS[$key] === '' ? null : $dbSRTOS[$key]);
-                                            }
-
-                                            $appointments = array_values(array_filter($dbAppointments, fn($dbAppmt) => $dbAppmt['emp_appointmentId'] === $dbSRTOS['appointmentId']));
-                                            $sr[count($sr) - 1]['appointment'] = (count($appointments) === 0 ? null : $appointments[0]);
-                                        }
-                                    }
-                                }
                                 break;
                             default:
                                 $this->jsErrorMsgBox('Unknown Fetch keyword.');
@@ -1051,14 +1161,14 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     </select>
                 </span>
 
-                <span class="button-ex" id="sr-add-new-emp">
+                <span class="button-ex" id="sr-load-sr">
                     <button type="button" form="sr-loader"<?php echo(is_null($employee) ? ' onclick="SeRGS_App.addEmployeeLoadSRButton(this);"' : ' disabled'); ?>><?php echo(is_null($employee) ? 'Add Employee' : 'Load Service Record'); ?></button>
                 </span><?php
         }
         else
         { ?>
 
-                <div class="div-ex emp-id" id="emp-id">
+                <div class="div-ex emp-id" id="emp-name">
                     <span class="label-ex">Employee Name:</span> <?php echo($this->getFullName($employee['given_name'], $employee['middle_name'], $employee['family_name'], $employee['spouse_name'], $employee['ext_name'], true)); ?>
 
                 </div><?php
@@ -1133,111 +1243,8 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         </tr>
                     </thead>
                     <tbody><?php 
-        foreach ($sr as &$srTOS)
-        { ?>
-
-                        <tr><?php
-            $i = array_search($srTOS, $sr, true);
-            
-            $invalidDateStartClass = '';
-            $invalidDateEndClass = '';
-            $invalidDesignationClass = '';
-            $invalidStatusClass = '';
-            $invalidSalaryClass = '';
-            $invalidStationClass = '';
-            
-            if (is_null($srTOS['date_start']))
-            {
-                if (is_null($srTOS['date_end']))
-                {
-                    $invalidDateStartClass .= ' error-missing-date-range';
-                    $invalidDateEndClass .= ' error-missing-date-range';
                     
-                    $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing date range in row ' . ($i + 1) . '</span>';
-                    $error = true;
-                }
-                else
-                {
-                    $invalidDateStartClass .= ' error-missing-from-date';
-                    
-                    $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing "From" date in row ' . ($i + 1) . '</span>';
-                    $error = true;
-                }
-            }
-            elseif (!is_null($srTOS['date_end']) && $srTOS['date_start'] >= $srTOS['date_end'])
-            {
-                $invalidDateStartClass .= ' error-invalid-date-range';
-                $invalidDateEndClass .= ' error-invalid-date-range';
-                
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Invalid date range in row ' . ($i + 1) . '</span>';
-                $error = true;
-            }
-            
-            if ($i < count($sr) - 1 && $srTOS['date_start'] >= $sr[$i + 1]['date_start'])
-            {
-                $invalidDateStartClass .= ' warning-overlapping-date-ranges';
-                $invalidDateEndClass .= ' warning-overlapping-date-ranges';
-                
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Overlapping date ranges in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
-            }
-            elseif ($i < count($sr) - 1 && ((!is_null($srTOS['date_start']) && is_null($srTOS['date_end']) && !is_null($sr[$i + 1]['date_start'])) || $srTOS['date_end'] >= $sr[$i + 1]['date_start']))
-            {
-                $invalidDateEndClass .= ' warning-overlapping-date-ranges';
-                
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Overlapping date ranges in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
-            }
-            elseif ($i > 0 && ($sr[$i - 1]['date_start'] >= $srTOS['date_start'] || (!is_null($sr[$i - 1]['date_start']) && is_null($sr[$i - 1]['date_end']) && !is_null($srTOS['date_start'])) || $sr[$i - 1]['date_end'] >= $srTOS['date_start']))
-            {
-                $invalidDateStartClass .= ' warning-overlapping-date-ranges';
-                
-                // $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . 'Overlapping date ranges in rows ' . ($i) . ' and ' . ($i + 1) . '</span>'; // will only duplicate the above error status
-            }
-            
-            if (is_null($srTOS['designation']))
-            {
-                $invalidDesignationClass = 'error-missing-designation';
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing designation in row ' . ($i + 1) . '</span>';
-                $error = true;
-            }
-            
-            if (is_null($srTOS['status']) || $srTOS['status'] < 1)
-            {
-                $invalidStatusClass = 'error-missing-status';
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing status in row ' . ($i + 1) . '</span>';
-                $error = true;
-            }
-            
-            if (is_null($srTOS['salary']))
-            {
-                $invalidSalaryClass = 'warning-missing-salary';
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Missing salary in row ' . ($i + 1) . '</span>';
-            }
-            
-            if (is_null($srTOS['station']))
-            {
-                $invalidStationClass = 'warning-missing-station';
-                $multipleStatus .= (trim($multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Missing office/station in row ' . ($i + 1) . '</span>';
-            }
-            
-            foreach ($srTOS as $key => $value)
-            { 
-                switch ($key)
-                {
-                    case "date_start":
-                    case "date_end":
-                    case "designation": case "status": case "salary":
-                    case "station": case "branch": case "lwop_count":
-                    case "separation_date": ?>
-
-                            <td <?php echo($key === 'date_start' && trim($invalidDateStartClass) !== '' ? ' class=' . trim($invalidDateStartClass) : ($key === 'date_end' && trim($invalidDateEndClass) !== '' ? ' class=' . trim($invalidDateEndClass) : ($key === 'designation' && trim($invalidDesignationClass) !== '' ? 'class=' . trim($invalidDesignationClass) : ($key === 'status' && trim($invalidStatusClass) !== '' ? 'class=' . trim($invalidStatusClass) : ($key === 'salary' && trim($invalidSalaryClass) !== '' ? 'class=' . trim($invalidSalaryClass) : ($key === 'station' && trim($invalidStationClass) !== '' ? 'class=' . trim($invalidStationClass) : '')))))); ?>><?php echo($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d\d\d)-(\d\d)-(\d\d)/', '\2/\3/\1', (is_null($value) ? '' : $value)) : ($key === 'status' ? (is_null($value) || $value === '-1' || $value === '' ? '' : $this->enum['appointmentStatus'][array_search($value, array_column($this->enum['appointmentStatus'], 'index'))]['appointment_status']) : $value)); ?></td><?php
-                        break;
-                    default:
-                        break;
-                }
-            } ?>
-
-                        </tr><?php
-        } ?>
+                    $this->generateSRTableRows($sr); ?>
 
                     </tbody>
                 </table>
@@ -1259,28 +1266,21 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <span class="button-ex sr-print">
                     <button class="blue" type="submit" disabled form="sr-print-form"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
                 </span>
-                <span class="status-pane multiple" id="sr-status"><?php
+            </div>
+
+            <span class="status-pane multiple" id="sr-status"><?php
             
-            if (trim($multipleStatus) !== '')
-            {
-                if ($error)
-                {
-                    echo('<span class="failure"><span class="material-icons-round">error</span>');
-                    echo('No changes will be made to the database while errors are found.');
-                    echo('</span>');
-                    echo('<hr>');
-                }
-                echo($multipleStatus . '<hr>');
-            }
+
+            $this->displayStatusMessages();
 
             // DEBUG
 
-            // $error = true;
+            // $this->error = true;
 
             // DEBUG
 
 
-            if ($forSRUpdate && !$error)
+            if ($forSRUpdate && !$this->error)
             {
                 $this->getDB_SDO()->executeStatement(
                     "DELETE 
@@ -1304,9 +1304,9 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         echo('<hr>');
                     }
                 }                 
-            }
-                ?></span>
-            </div>
+            } ?>
+            
+            </span>
 
             <script>
             "use strict";
@@ -1315,7 +1315,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateTempUI($pageId)
+    private function generateTempUI($pageId)
     { ?>
         <section id="main-<?php echo $pageId;?>" class="under-construction">
             <h2><?php echo strtoupper($pageId[0]) . substr($pageId, 1);?></h2>
@@ -1323,7 +1323,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function generateForbidden()
+    private function generateForbidden()
     { ?>
         <section id="main-forbidden">
             <h2><span class="material-icons-round red" style="font-weight: bold; vertical-align: middle;">block</span> Unauthorized Access <span class="material-icons-round red" style="font-weight: bold; vertical-align: middle;">front_hand</span></h2>
@@ -1333,7 +1333,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
-    protected function dbGetMatchingTermOfService($srTOS)
+    private function dbGetMatchingTermOfService($srTOS)
     {
         $errorMsg = '';
 
@@ -1394,7 +1394,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         }
     }
 
-    protected function dbSaveMatchingTermOfService(&$srTOS) // THIS FUNCTION EXPECTS ALL EXISTING TOS TO BE ALREADY DELETED!!!!!!!!
+    private function dbSaveMatchingTermOfService(&$srTOS) // THIS FUNCTION EXPECTS ALL EXISTING TOS TO BE ALREADY DELETED!!!!!!!!
     {
         list('appointmentId' => $appointmentId, 'errorMsg' => $errorMsg) = $this->dbUpdateMatchingEmpAppointment($srTOS['appointment']);
         
@@ -1440,7 +1440,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('tosId' => $tosId, 'errorMsg' => $errorMsg);
     }
 
-    protected function dbGetMatchingEmpAppointment($appointment)
+    private function dbGetMatchingEmpAppointment($appointment)
     {
         $errorMsg = '';
 
@@ -1485,7 +1485,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('appointment' => (count($dbResults) === 0 ? null : $dbResults[0]), 'errorMsg' => $errorMsg);
     }
 
-    protected function dbUpdateMatchingEmpAppointment(&$appointment) // first time
+    private function dbUpdateMatchingEmpAppointment(&$appointment) // first time
     {
         $errorMsg = '';
         $dbAppointment = null;
@@ -1561,7 +1561,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('appointmentId' => $appointmentId, 'errorMsg' => $errorMsg);
     }
 
-    protected function dbGetMatchingDateRange($dateStart, $dateEnd, $description)
+    private function dbGetMatchingDateRange($dateStart, $dateEnd, $description)
     {
         $errorMsg = '';
 
@@ -1584,7 +1584,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('date_rangeId' => (count($dbResults) === 0 ? null : $dbResults[0]['date_rangeId']), 'errorMsg' => $errorMsg);
     }
 
-    protected function dbSaveMatchingDateRange($dateStart, $dateEnd, $description) // wont duplicate date ranges
+    private function dbSaveMatchingDateRange($dateStart, $dateEnd, $description) // wont duplicate date ranges
     {
         $errorMsg = '';
 
@@ -1615,7 +1615,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('date_rangeId' => $dateRangeId, 'errorMsg' => $errorMsg);
     }
 
-    protected function dbGetMatchingOfficeStationId($stationName)
+    private function dbGetMatchingOfficeStationId($stationName)
     {
         $errorMsg = '';
 
@@ -1684,7 +1684,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('workplaceId' => $workplaceId, 'errorMsg' => $errorMsg);
     }
 
-    protected function getFullName($givenName, $middleName, $familyName, $spouseName, $extName, $lastNameFirst = false, $middleInitialOnly = true, $includeAllMiddleNames = false)
+    private function getFullName($givenName, $middleName, $familyName, $spouseName, $extName, $lastNameFirst = false, $middleInitialOnly = true, $includeAllMiddleNames = false)
     {
         $nameArr = null;
         
@@ -1742,17 +1742,17 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return join(' ', array_filter($nameArr, function($name){ return is_string($name) && trim($name) !== ''; }));
     }
 
-    protected function getNameInitials($nameStr)
+    private function getNameInitials($nameStr)
     {
         return (!is_string($nameStr) || trim($nameStr) === '' ? '' : join(' ', array_map(function($name){ return $name[0] . '.'; }, preg_split('/ /', $nameStr))));
     }
 
-    protected function br()
+    private function br()
     {
         ?><br><?php
     }
 
-    protected function filterEmployee($employees) // should be run after retrieving employess from DB
+    private function filterEmployee($employees) // should be run after retrieving employess from DB
     {
         $employee = null;
 
@@ -1784,7 +1784,219 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return $employee;
     }
 
-    protected static function generateDBFieldValueStr($values, $filter = null) // returns an associative array of field string, value string, and field-value pair string for use in DB select, insert, and update operations; destructuring syntax may be used to extract the strings using the keys 'fieldStr', 'valueStr', and 'fieldValueStr'; does not include parenthesis for field and value strings;
+    private function retrieveSR($personId)
+    {
+        $sr = [];
+        $dbSR = null;
+        $dbAppointments = null;
+
+        if (!$this->error)
+        {
+            $dbSR = $this->getDB_SDO()->executeQuery(
+                "SELECT 
+                    etos.*,
+                    dater.date_rangeId,
+                    date_start,
+                    date_end,
+                    designation,
+                    appointment_number,
+                    plantilla_item_number,
+                    status,
+                    institution_name AS station,
+                    salary,
+                    branch,
+                    lwop_count,
+                    separation_date
+                FROM Emp_Term_of_Service etos
+                INNER JOIN Emp_Appointment appmt ON etos.appointmentId = appmt.emp_appointmentId
+                INNER JOIN Date_Range dater ON etos.date_rangeId = dater.date_rangeId
+                LEFT JOIN Workplace workpl ON etos.workplaceId = workpl.workplaceId
+                LEFT JOIN Institution inst ON workpl.institutionId = inst.institutionId
+                WHERE personId = '$personId';"
+            );
+
+            if (!is_null($this->getDB_SDO()->lastException))
+            {
+                $this->error = true;
+                $this->jsErrorMsgBox('Error encountered while fetching employee term of service information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
+            }
+
+            if (count($dbSR) > 0)
+            {
+                $dbAppointments = $this->getDB_SDO()->executeQuery(
+                    "SELECT 
+                        emp_appointmentId,
+                        designation,
+                        personId,
+                        employeeId,
+                        appointment_number,
+                        plantilla_item_number,
+                        dater.date_rangeId,
+                        date_start,
+                        date_end
+                    FROM Emp_Appointment appmt
+                    INNER JOIN Date_Range dater ON appmt.date_rangeId = dater.date_rangeId
+                    WHERE personId = '$personId';"
+                );
+
+                if (!is_null($this->getDB_SDO()->lastException))
+                {
+                    $this->error = true;
+                    $this->jsErrorMsgBox('Error encountered while fetching employee appointment information from the database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
+                }
+
+                foreach ($dbSR as $dbSRTOS) {
+                    array_push($sr, []);
+
+                    foreach([
+                        'date_start',
+                        'date_end',
+                        'designation',
+                        'status',
+                        'salary',
+                        'station',
+                        'branch',
+                        'lwop_count',
+                        'separation_date'
+                    ] as $key)
+                    {
+                        $sr[count($sr) - 1][$key] = ($dbSRTOS[$key] === '' ? null : $dbSRTOS[$key]);
+                    }
+
+                    $appointments = array_values(array_filter($dbAppointments, fn($dbAppmt) => $dbAppmt['emp_appointmentId'] === $dbSRTOS['appointmentId']));
+                    $sr[count($sr) - 1]['appointment'] = (count($appointments) === 0 ? null : $appointments[0]);
+                }
+            }
+        }
+
+        return $sr;
+    }
+
+    private function generateSRTableRows($sr)
+    {
+        foreach ($sr as &$srTOS)
+        { ?>
+
+                        <tr><?php
+            $i = array_search($srTOS, $sr, true);
+            
+            $invalidDateStartClass = '';
+            $invalidDateEndClass = '';
+            $invalidDesignationClass = '';
+            $invalidStatusClass = '';
+            $invalidSalaryClass = '';
+            $invalidStationClass = '';
+            
+            if (is_null($srTOS['date_start']))
+            {
+                if (is_null($srTOS['date_end']))
+                {
+                    $invalidDateStartClass .= ' error-missing-date-range';
+                    $invalidDateEndClass .= ' error-missing-date-range';
+                    
+                    $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing date range in row ' . ($i + 1) . '</span>';
+                    $this->error = true;
+                }
+                else
+                {
+                    $invalidDateStartClass .= ' error-missing-from-date';
+                    
+                    $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing "From" date in row ' . ($i + 1) . '</span>';
+                    $this->error = true;
+                }
+            }
+            elseif (!is_null($srTOS['date_end']) && $srTOS['date_start'] >= $srTOS['date_end'])
+            {
+                $invalidDateStartClass .= ' error-invalid-date-range';
+                $invalidDateEndClass .= ' error-invalid-date-range';
+                
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Invalid date range in row ' . ($i + 1) . '</span>';
+                $this->error = true;
+            }
+            
+            if ($i < count($sr) - 1 && $srTOS['date_start'] >= $sr[$i + 1]['date_start'])
+            {
+                $invalidDateStartClass .= ' warning-overlapping-date-ranges';
+                $invalidDateEndClass .= ' warning-overlapping-date-ranges';
+                
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Overlapping date ranges in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
+            }
+            elseif ($i < count($sr) - 1 && ((!is_null($srTOS['date_start']) && is_null($srTOS['date_end']) && !is_null($sr[$i + 1]['date_start'])) || $srTOS['date_end'] >= $sr[$i + 1]['date_start']))
+            {
+                $invalidDateEndClass .= ' warning-overlapping-date-ranges';
+                
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Overlapping date ranges in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
+            }
+            elseif ($i > 0 && ($sr[$i - 1]['date_start'] >= $srTOS['date_start'] || (!is_null($sr[$i - 1]['date_start']) && is_null($sr[$i - 1]['date_end']) && !is_null($srTOS['date_start'])) || $sr[$i - 1]['date_end'] >= $srTOS['date_start']))
+            {
+                $invalidDateStartClass .= ' warning-overlapping-date-ranges';
+                
+                // $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . 'Overlapping date ranges in rows ' . ($i) . ' and ' . ($i + 1) . '</span>'; // will only duplicate the above error status
+            }
+            
+            if (is_null($srTOS['designation']))
+            {
+                $invalidDesignationClass = 'error-missing-designation';
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing designation in row ' . ($i + 1) . '</span>';
+                $this->error = true;
+            }
+            
+            if (is_null($srTOS['status']) || $srTOS['status'] < 1)
+            {
+                $invalidStatusClass = 'error-missing-status';
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="error" title="Status type: Error"><span class="material-icons-round" title="Status type: Error">cancel</span> Missing status in row ' . ($i + 1) . '</span>';
+                $this->error = true;
+            }
+            
+            if (is_null($srTOS['salary']))
+            {
+                $invalidSalaryClass = 'warning-missing-salary';
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Missing salary in row ' . ($i + 1) . '</span>';
+            }
+            
+            if (is_null($srTOS['station']))
+            {
+                $invalidStationClass = 'warning-missing-station';
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="warning" title="Status type: Warning"><span class="material-icons-round" title="Status type: Warning">warning</span> Missing office/station in row ' . ($i + 1) . '</span>';
+            }
+            
+            foreach ($srTOS as $key => $value)
+            { 
+                switch ($key)
+                {
+                    case "date_start":
+                    case "date_end":
+                    case "designation": case "status": case "salary":
+                    case "station": case "branch": case "lwop_count":
+                    case "separation_date": ?>
+
+                            <td <?php echo($key === 'date_start' && trim($invalidDateStartClass) !== '' ? ' class=' . trim($invalidDateStartClass) : ($key === 'date_end' && trim($invalidDateEndClass) !== '' ? ' class=' . trim($invalidDateEndClass) : ($key === 'designation' && trim($invalidDesignationClass) !== '' ? 'class=' . trim($invalidDesignationClass) : ($key === 'status' && trim($invalidStatusClass) !== '' ? 'class=' . trim($invalidStatusClass) : ($key === 'salary' && trim($invalidSalaryClass) !== '' ? 'class=' . trim($invalidSalaryClass) : ($key === 'station' && trim($invalidStationClass) !== '' ? 'class=' . trim($invalidStationClass) : '')))))); ?>><?php echo($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d\d\d)-(\d\d)-(\d\d)/', '\2/\3/\1', (is_null($value) ? ($key === 'date_end' ? 'present' : '') : $value)) : ($key === 'status' ? (is_null($value) || $value === '-1' || $value === '' ? '' : $this->enum['appointmentStatus'][array_search($value, array_column($this->enum['appointmentStatus'], 'index'))]['appointment_status']) : $value)); ?></td><?php
+                        break;
+                    default:
+                        break;
+                }
+            } ?>
+
+                        </tr><?php
+        }
+    }
+
+    private function displayStatusMessages()
+    {
+        if (trim($this->multipleStatus) !== '')
+        {
+            if ($this->error)
+            {
+                echo('<span class="failure"><span class="material-icons-round">error</span>');
+                echo('No changes will be made to the database while errors are found.');
+                echo('</span>');
+                echo('<hr>');
+            }
+            echo($this->multipleStatus . '<hr>');
+        }
+    }
+
+    private function generateDBFieldValueStr($values, $filter = null) // returns an associative array of field string, value string, and field-value pair string for use in DB select, insert, and update operations; destructuring syntax may be used to extract the strings using the keys 'fieldStr', 'valueStr', and 'fieldValueStr'; does not include parenthesis for field and value strings;
     {
         $fieldValueStr = '';
         $fieldStr = '';
@@ -1808,7 +2020,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return array('fieldStr'=>$fieldStr, 'valueStr'=>$valueStr, 'fieldValueStr'=>$fieldValueStr);
     }
     
-    protected function jsMsgBox($caption, $msg, $type = 0, $funcName = "serverMsg")
+    private function jsMsgBox($caption, $msg, $type = 0, $funcName = "serverMsg")
     {
         $funcName .= $this->jsTailScriptCount;
         $typeIcon = ($type > 0 && $type < 8 ? '<span class=\"material-icons-round'
@@ -1827,7 +2039,7 @@ function <?php echo($funcName); ?>() {
         $this->jsTailScriptCount++;
     }
 
-    protected function jsMsgConsole($msg, $funcName = "serverMsg")
+    private function jsMsgConsole($msg, $funcName = "serverMsg")
     {
         $funcName .= $this->jsTailScriptCount; ?>
 <script>
@@ -1839,47 +2051,47 @@ function <?php echo($funcName); ?>() {
         $this->jsTailScriptCount++;
     }
 
-    protected function jsSimpleMsgBox($msg)
+    private function jsSimpleMsgBox($msg)
     { 
         $this->jsMsgBox('SeRGS Message', $msg, 0, 'simpleMsg');
     }
         
-    protected function jsInfoMsgBox($msg)
+    private function jsInfoMsgBox($msg)
     { 
         $this->jsMsgBox('SeRGS Info', $msg, 1, 'infoMsg');
     }
         
-    protected function jsSuccessMsgBox($msg)
+    private function jsSuccessMsgBox($msg)
     { 
         $this->jsMsgBox('SeRGS Info', $msg, 2, 'infoMsg');
     }
         
-    protected function jsFailMsgBox($msg)
+    private function jsFailMsgBox($msg)
     { 
         $this->jsMsgBox('SeRGS Info', $msg, 3, 'infoMsg');
     }
         
-    protected function jsWarningMsgBox($msg)
+    private function jsWarningMsgBox($msg)
     { 
         $this->jsMsgBox('SeRGS Warning', $msg, 4, 'infoMsg');
     }
         
-    protected function jsExceptionMsgBox($exceptionMsg)
+    private function jsExceptionMsgBox($exceptionMsg)
     { 
         $this->jsMsgBox('SeRGS Exception', $exceptionMsg, 5, 'exceptionMsg');
     }
         
-    protected function jsErrorMsgBox($errMsg)
+    private function jsErrorMsgBox($errMsg)
     { 
         $this->jsMsgBox('SeRGS Error', $errMsg, 6, 'errorMsg');
     }
 
-    protected function jsDebugMsgBox($debugMsg)
+    private function jsDebugMsgBox($debugMsg)
     { 
         $this->jsMsgBox('SeRGS Debug', $debugMsg, 7, 'debugMsg');
     }
 
-    protected function jsDebugConsole($msg)
+    private function jsDebugConsole($msg)
     { 
         $this->jsMsgConsole("SeRGS Debug:\n " . $msg);
     }

@@ -2,15 +2,19 @@
 
 ## 7/17/2023
 TO DO:
-* [ ] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)
-* [ ] [SeRGS] Design My Account page (build upon design of existing MPaSIS version)
-* [ ] [SeRGS] Design Other Accounts page (build upon design of existing MPaSIS version)
+* [x] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)
+* [x] [SeRGS] Create a function for retrieving a static list of service records for a particular person
+* [x] [SeRGS] Design My Service Record page
+* [x] [SeRGS] Design Other Service Record
+* [x] [SeRGS] Convert all static SeRGS_App members into non-static members
 * [ ] [MPaSIS] Change font-family (ask for suggestions)
 * [ ] [MPaSIS] Handle tied scores in the rankings
 * [ ] [MPaSIS] Test MPaSIS for production fitness
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] Make `/web/root/secure` folder more secure
+
+I was progressing quite smoothly today, despite some office events (e.g., Flag Ceremony, welcoming of new appointees, etc.) By using the SR Editor as a guide, I redesigned the `My Service Record` page and built the `Other Service Record` page. I have also renamed the `Other Service Record` to `View Service Record` as it is more like a viewer for service records owned by others. I might integrate the two pages later on, if time allows. Likewise, defining a function which retrieves/filters the employees through a selected personId really helped in simplifying things more. I have also changed the privacy of most SeRGS_App PHP members. I also dealt with a backlog related to resetting the salary field once related fields were activated and then goes out of focus. Tomorrow, I will have to start the printing feature so the app will at least have a backoffice use.
 
 ## 7/14/2023
 TO DO:

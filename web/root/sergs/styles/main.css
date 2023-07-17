@@ -52,12 +52,16 @@ body, .app > main {
     margin: 0 0 1em;
 }
 
-.data-form-ex.sr-table-wrapper {
+.sr-table-wrapper {
     margin: 0 0;
     padding: 0.1em;
     background-color: white;
     border: 0.15em inset;
     overflow: auto;
+}
+
+.emp-info + .sr-table-wrapper {
+    margin: 1em 0;
 }
 
 .table-ex.sr-table {
@@ -337,17 +341,24 @@ body, .app > main {
     outline: 0.25em solid forestgreen;
 }
 
+.my-sr .status-pane#sr-status,
+.other-sr .status-pane#sr-status,
 .sr-encoding .status-pane#sr-status {
     display: block;
     margin: 1em 0 0;
     text-align: center;
+    font-size: 0.8em;
 }
 
+.my-sr .status-pane#sr-status > span,
+.other-sr .status-pane#sr-status > span,
 .sr-encoding .status-pane#sr-status > span {
     display: block;
     padding: 0.5em;
 }
 
+.my-sr .status-pane#sr-status > span > span.material-icons-round,
+.other-sr .status-pane#sr-status > span > span.material-icons-round,
 .sr-encoding .status-pane#sr-status > span > span.material-icons-round {
     margin: 0;
     padding: 0;
@@ -357,6 +368,8 @@ body, .app > main {
     text-shadow: 0.02em 0.02em black;
 }
 
+.my-sr .status-pane#sr-status > span.warning > span.material-icons-round,
+.other-sr .status-pane#sr-status > span.warning > span.material-icons-round,
 .sr-encoding .status-pane#sr-status > span.warning > span.material-icons-round {
     color: orange;
 }

@@ -134,6 +134,11 @@ class SeRGS_App extends App
             td.innerHTML += "<input type=\"hidden\" name=\"" + td.headerName + "[]\" value=\"" + (td.textContent === "present" ? "" : td.textContent) + "\">";
             this.activateDelRecButton(false, td);
             td.tabIndex = 0;
+
+            if (td.headerName !== "separation_date")
+            {
+                SeRGS_App.resetSalaryValue(td.parentElement);
+            }            
         }
     }
 
@@ -243,14 +248,49 @@ class SeRGS_App extends App
         }
     }
 
+    static getSalarySteps(designation = "", dateStart = "", dateEnd = "")
+    {
+        if (designation === null || dateStart === null || dateEnd === null || designation === undefined || dateStart === undefined || dateEnd === undefined || designation === "" || dateStart === "" || dateEnd === "")
+        {
+            return [];
+        }
+
+        let position = SeRGS_App.enum["positions"].find(position=>position["position_title"] === designation);
+        let salaryGrade = (position === null || position === undefined ? null : position["salary_grade"]);
+        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(dateStart))));
+
+        // console.log(salarySteps);
+
+        return salarySteps;
+    }
+
     static getSalaryStepValue(td = new HTMLTableCellElement())
     {
-        let position = SeRGS_App.enum["positions"].find(position=>position["position_title"] === td.parentElement.rowInfo.td["designation"].textContent);
-        let salaryGrade = (position === null || position === undefined ? null : position["salary_grade"]);
-        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(td.parentElement.rowInfo.td["date_start"].textContent))));
+        let salarySteps = SeRGS_App.getSalarySteps(td.parentElement.rowInfo.td["designation"].textContent, td.parentElement.rowInfo.td["date_start"].textContent, td.parentElement.rowInfo.td["date_end"].textContent);
+
         let salaryStep = salarySteps.find(sg=>parseFloat(sg["salary"]) === parseFloat(td.children[0].value));
 
         return (salaryStep === null || salaryStep === undefined ? null : salaryStep["step_increment"]);
+    }
+
+    static resetSalaryValue(tr = new HTMLTableCellElement())
+    {
+        let salaryList = this.getSalarySteps(tr.rowInfo.td["designation"].textContent, tr.rowInfo.td["date_start"].textContent, tr.rowInfo.td["date_end"].textContent).map(step => parseFloat(step['salary']));
+
+        if (salaryList.length !== 0 && !salaryList.includes(parseFloat(tr.rowInfo.td["salary"].children[0].value)) && tr.rowInfo.td["salary"].childNodes[0].textContent !== "")
+        {
+            new MessageBox().setup(app.main, "SeRGS Dialog", "Do you want to delete the corresponding salary in this entry?", [
+                { text:"Yes", buttonType:"button", clickCallback:clickEvent=>{
+                    tr.rowInfo.td["salary"].childNodes[0].textContent = "";
+                    tr.rowInfo.td["salary"].children[0].removeAttribute("value");
+                    tr.rowInfo.td["salary"].children[1].removeAttribute("value");
+                    clickEvent.target.uiEx.parentUIEx.parentDialogEx.close();
+                }},
+                { text:"No", buttonType:"button", clickCallback:clickEvent=>{
+                    clickEvent.target.uiEx.parentUIEx.parentDialogEx.close();
+                }},
+            ]);
+        }
     }
 
     static async activateDelRecButton(setting = true, td = null)
@@ -352,9 +392,16 @@ class SeRGS_App extends App
                 case "separation_date":
                     cell.removeEventListener("keyup", TableEx.editableCellNavigation);
                     cell.addEventListener("focus", event=>this.activateDateInput(cell));
-                    if (cell.headerName === "date_end" && cell.textContent.trim() === "" && row.rowInfo.td["date_start"].textContent !== "")
+                    if (cell.headerName === "date_end" && row.rowInfo.td["date_start"].textContent !== "")
                     {
-                        cell.innerHTML = "present" + cell.innerHTML;
+                        if (cell.textContent.trim() === "")
+                        {
+                            cell.innerHTML = "present" + cell.innerHTML;
+                        }
+                        else if (cell.textContent.trim() === "present")
+                        {
+                            cell.children[0].value = null;
+                        }
                     }
                     break;
                 case "designation":
@@ -365,9 +412,8 @@ class SeRGS_App extends App
                     ElementEx.create("input", ElementEx.NO_NS, cell, null, "type", "hidden", "name", "designationList[]").value = cell.children[0].value;
                     cell.children[0].addEventListener("blur", event=>{
                         this.deactivateCombo(cell, "designation", "designationList", td => td.children[1].value = td.children[0].value);
-                        row.rowInfo.td["salary"].childNodes[0].textContent = "";
-                        row.rowInfo.td["salary"].children[0].removeAttribute("value");
-                        row.rowInfo.td["salary"].children[1].removeAttribute("value");
+                        
+                        this.resetSalaryValue(row);
                     });
                     cell.addEventListener("focus", event=>this.activateCombo(cell, SeRGS_App.enum["position_titles"], [], "designation", "designationList"));
                     if (cell.textContent.trim() !== "" && !SeRGS_App.enum["position_titles"].includes(cell.textContent))
@@ -379,6 +425,7 @@ class SeRGS_App extends App
                     cell.removeEventListener("keyup", TableEx.editableCellNavigation);
                     cell.removeEventListener("focus", TableEx.editableCellFocusEvent);
                     cell.removeEventListener("blur", TableEx.editableCellBlurEvent);
+                    
                     cell.addEventListener("focus", event=>{
                         this.activateSelect(cell, SeRGS_App.enum["appointmentStatus"].map(stat=>stat["appointment_status"]), SeRGS_App.enum["appointmentStatus"].map(stat=>stat["index"]));
                         if (cell.textContent.trim() === "")
@@ -410,13 +457,9 @@ class SeRGS_App extends App
                         cell.childNodes[0].textContent = (isNaN(parseFloat(cell.children[0].value)) ? cell.children[0].value : Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP" }).format(cell.children[0].value));
                     });
                     cell.addEventListener("focus", event=>{
-                        let position = SeRGS_App.enum["positions"].find(position=>position["position_title"] === row.rowInfo.td["designation"].textContent);
-                        let salaryGrade = (position === null || position === undefined ? null : position["salary_grade"]);
-                        let salarySteps = (salaryGrade === null || salaryGrade === undefined ? [] : SeRGS_App.enum["salaryGrade"].filter(sg=>salaryGrade === sg["salary_grade"] && (new Date(sg["effectivity_date"])) <= (new Date(row.rowInfo.td["date_start"].textContent))));
+                        let salarySteps = this.getSalarySteps(row.rowInfo.td["designation"].textContent, row.rowInfo.td["date_start"].textContent, row.rowInfo.td["date_end"].textContent);
 
-                        // console.log(position, salaryGrade, salarySteps.map(step=>step["salary"]), salarySteps.map(step=>step["step_increment"]));
-
-                        this.activateCombo(cell, salarySteps.map(step=>"SG" + salaryGrade + "-Step " + step["step_increment"]), salarySteps.map(step=>step["salary"]), "salary", "salaryStep");
+                        this.activateCombo(cell, salarySteps.map(step=>"SG" + step['salary_grade'] + "-Step " + step["step_increment"]), salarySteps.map(step=>step["salary"]), "salary", "salaryStep");
 
                         cell.children[0].type = "number";
                         cell.children[0].setAttribute("min", 0);
@@ -491,18 +534,18 @@ class SeRGS_App extends App
         });
     }
 
-    static morphAddEmployeeLoadSRButton(select = new HTMLSelectElement())
+    static morphAddEmployeeLoadSRButton(select = new HTMLSelectElement(), isForEditor = true)
     {
-        document.getElementById('sr-add-new-emp').uiEx.control.disabled = false;
-        document.getElementById('sr-add-new-emp').uiEx.control.innerHTML = (select.value == -1 ? 'Add Employee' : 'Load Service Record');
-        document.getElementById('sr-add-new-emp').uiEx.control.type = (select.value == -1 ? 'button' : 'submit');
-        if (select.value == -1)
+        document.getElementById('sr-load-sr').uiEx.control.disabled = !isForEditor && select.value === '-1';
+        document.getElementById('sr-load-sr').uiEx.control.innerHTML = (isForEditor && select.value === '-1' ? 'Add Employee' : 'Load Service Record');
+        document.getElementById('sr-load-sr').uiEx.control.type = (isForEditor && select.value === '-1' ? 'button' : 'submit');
+        if (isForEditor && select.value == -1)
         {
-            document.getElementById('sr-add-new-emp').uiEx.control.setAttribute("onclick", "SeRGS_App.addEmployeeLoadSRButton(this);");
+            document.getElementById('sr-load-sr').uiEx.control.setAttribute("onclick", "SeRGS_App.addEmployeeLoadSRButton(this);");
         }
         else
         {
-            document.getElementById('sr-add-new-emp').uiEx.control.removeAttribute("onclick");
+            document.getElementById('sr-load-sr').uiEx.control.removeAttribute("onclick");
         }
         document.getElementById('sr-emp-birth-date').uiEx.setHTMLContent(select.selectedOptions[0].dataset.birthDate);
         document.getElementById('sr-emp-birth-place').uiEx.setHTMLContent(select.selectedOptions[0].dataset.birthPlace);
