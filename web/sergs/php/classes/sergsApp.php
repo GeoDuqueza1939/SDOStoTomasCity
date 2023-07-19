@@ -105,67 +105,79 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
 <html lang="en">
 <?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
 <script src="/sergs/js/sergs.js"></script><?php
-$this->writeJSEnums(); ?>
+        if ($pageId !== 'print')
+        {
+            $this->writeJSEnums();
+        } ?>
 
 <body>
 <div id="sergs" class="app<?php echo(is_string($pageId) && trim($pageId) !== '' ? " $pageId" : ''); ?>">
 <?php
-        require_once(__FILE_ROOT__ . '/php/snippets/header_full.php'); // general header
-        require_once(__FILE_ROOT__ . '/php/snippets/nav_full.php'); // general nav
+        if ($pageId !== 'print')
+        {
+            require_once(__FILE_ROOT__ . '/php/snippets/header_full.php'); // general header
+            require_once(__FILE_ROOT__ . '/php/snippets/nav_full.php'); // general nav
+        }
 ?>
     <main>
 <?php
-            if ($this->getUserAccessLevel() > 0)
+        if ($this->getUserAccessLevel() > 0)
+        {
+            switch ($pageId)
             {
-                switch ($pageId)
-                {
-                    case "dashboard":
-                        $this->generateDashboardUI();
-                        break;
-                    case "sr":
-                        $this->generateSRUI();
-                        break;
-                    case "my-sr":
-                        $this->generateMySRUI();
-                        break;
-                    case "other-sr":
-                        $this->generateOtherSRUI();
-                        break;
-                    case "sr-encoding":
-                        $this->generateSREncodingUI();
-                        break;
-                    case "requests":
-                        $this->generateRequestsUI();
-                        break;
-                    case "request-list":
-                        $this->generateRequestListUI();
-                        break;
-                    case "new-request":
-                        $this->generateNewRequestUI();
-                        break;
-                    case "archived":
-                    case "search-requests":
-                    case "system-logs":
-                    case "account":
-                    case "my-account":
-                    case "other-account":
-                    case "settings":
-                    default:
-                        $this->generateTempUI($pageId);
-                        break;
-                }
+                case "dashboard":
+                    $this->generateDashboardUI();
+                    break;
+                case "sr":
+                    $this->generateSRUI();
+                    break;
+                case "my-sr":
+                    $this->generateMySRUI();
+                    break;
+                case "other-sr":
+                    $this->generateOtherSRUI();
+                    break;
+                case "sr-encoding":
+                    $this->generateSREncodingUI();
+                    break;
+                case "requests":
+                    $this->generateRequestsUI();
+                    break;
+                case "request-list":
+                    $this->generateRequestListUI();
+                    break;
+                case "new-request":
+                    $this->generateNewRequestUI();
+                    break;
+                case "print":
+                    $this->generatePrintUI();
+                    break;
+                case "archived":
+                case "search-requests":
+                case "system-logs":
+                case "account":
+                case "my-account":
+                case "other-account":
+                case "settings":
+                default:
+                    $this->generateTempUI($pageId);
+                    break;
             }
-            else
-            { 
-                $this->generateForbidden();
-            }
+        }
+        else
+        { 
+            $this->generateForbidden();
+        }
 ?>
 
-    </main>
-<?php
-require_once(__FILE_ROOT__ . '/php/snippets/footer_full.php');
-require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
-?>
+    </main><?php
+        if ($pageId !== 'print')
+        {
+            require_once(__FILE_ROOT__ . '/php/snippets/footer_full.php');
+        }
+
+        require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php'); ?>
+
 </div>
 </body>
 <script>
@@ -362,6 +374,18 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 </div>
             </div>
 
+            <form id="sr-printer" name="sr-printer" method="GET" action="/sergs/print.php" target="_blank">
+                <input type="hidden" name="a" value="print">
+                <input type="hidden" name="print" value="sr">
+                <input type="hidden" name="personId" value="<?php echo($_SESSION['user']['personId']); ?>">
+            </form>
+
+            <div class="button-group-ex sr-control-buttons">
+                <span class="button-ex sr-print">
+                    <button type="submit" form="sr-printer"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
+                </span>
+            </div>
+
             <div class="div-ex sr-table-wrapper">
                 <table class="table-ex sr-table" id="sr-table-view">
                     <thead>
@@ -483,6 +507,17 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
             </form>
 
+            <form id="sr-printer" name="sr-printer" method="GET" action="/sergs/print.php" target="_blank">
+                <input type="hidden" name="a" value="print">
+                <input type="hidden" name="print" value="sr"><?php 
+        if (!is_null($employee))
+        { ?>
+
+                <input type="hidden" name="personId" value="<?php echo($employee['personId']); ?>"><?php
+        } ?>
+
+            </form>
+
             <div class="div-ex emp-info"><?php
         if (is_null($employee))
         { ?>
@@ -540,6 +575,12 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         
             </div>
 
+            <div class="button-group-ex sr-control-buttons">
+                <span class="button-ex sr-print">
+                    <button type="submit" form="sr-printer"<?php echo(is_null($employee) ? ' disabled' : ''); ?>><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
+                </span>
+            </div>
+
             <div class="div-ex sr-table-wrapper">
                 <table class="table-ex sr-table" id="sr-table-view">
                     <thead>
@@ -568,7 +609,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                         <tr>
-                            <td colspan="9">Not available. To update this employee's service record, please click <a href="/sergs/sr/encoding/?<?php echo($_SERVER['QUERY_STRING']); ?>" title="Update service record">here</a>. To request an update in behalf of this employee, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
+                            <td colspan="9"><?php echo(is_null($employee) ? 'Please select and load an employee record to continue.' : 'Not available. To update this employee\'s service record, please click <a href="/sergs/sr/encoding/?' . $_SERVER['QUERY_STRING'] . '" title="Update service record">here</a>. To request an update in behalf of this employee, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.'); ?></td>
                         </tr>
         <?php
         }
@@ -1131,7 +1172,18 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         if (!is_null($employee))
         { ?>
 
-                <input type="hidden" name="employeeId" value="<?php echo($_REQUEST['employeeId']); ?>"><?php
+                <input type="hidden" name="employeeId" value="<?php echo($employee['employeeId']); ?>"><?php
+        } ?>
+
+            </form>
+
+            <form id="sr-printer" name="sr-printer" method="GET" action="/sergs/print.php" target="_blank">
+                <input type="hidden" name="a" value="print">
+                <input type="hidden" name="print" value="sr"><?php 
+        if (!is_null($employee))
+        { ?>
+
+                <input type="hidden" name="personId" value="<?php echo($employee['personId']); ?>"><?php
         } ?>
 
             </form>
@@ -1207,7 +1259,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     <button type="submit" form="sr-loader"<?php echo(!is_null($employee) || $this->error ? '' : ' disabled'); ?> onclick="window.location.replace(window.location.origin + window.location.pathname);"><span class="material-icons-round">restore</span><span class="hidden">Revert/<br>Refresh</span></button>
                 </span>
                 <span class="button-ex sr-print">
-                    <button type="submit" disabled form="sr-print-form"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
+                    <button type="submit" form="sr-printer"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
                 </span>
             </div>
 
@@ -1252,19 +1304,19 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
             <div class="button-group-ex sr-control-buttons" style="text-align: right; font-size: 0.8em;">
                 <span class="button-ex sr-add-record" title="Add new row">
-                    <button class="blue" type="button"<?php echo(is_null($employee) ? ' disabled' : ''); ?> onclick="SeRGS_App.addNewRow();" title="Add new row"><span class="material-icons-round">add</span><span class="hidden">Add <br>Record</span></button>
+                    <button type="button"<?php echo(is_null($employee) ? ' disabled' : ''); ?> onclick="SeRGS_App.addNewRow();" title="Add new row"><span class="material-icons-round">add</span><span class="hidden">Add <br>Record</span></button>
                 </span>
                 <span class="button-ex sr-delete-record" title="Delete the entire row of a selected cell">
-                    <button class="red" type="button" disabled onclick="new DeleteServiceRecordEntryDialog().setup(app.main, this['active_cell'].parentElement, this);" title="Delete the entire row of a selected cell"><span class="material-icons-round">remove</span><span class="hidden">Delete <br>Record</span></button>
+                    <button type="button" disabled onclick="new DeleteServiceRecordEntryDialog().setup(app.main, this['active_cell'].parentElement, this);" title="Delete the entire row of a selected cell"><span class="material-icons-round">remove</span><span class="hidden">Delete <br>Record</span></button>
                 </span>
                 <span class="button-ex sr-save-update" title="Update/save service record">
-                    <button class="green" type="submit" disabled form="sr-table-form" title="Update/save service record"><span class="material-icons-round">save</span><span class="hidden">Update/<br>Save</span></button>
+                    <button type="submit" disabled form="sr-table-form" title="Update/save service record"><span class="material-icons-round">save</span><span class="hidden">Update/<br>Save</span></button>
                 </span>
                 <span class="button-ex sr-revert-cancel" title="Revert/restore service record">
-                    <button class="blue" type="submit" form="sr-loader"<?php echo(!is_null($employee) || $this->error ? '' : ' disabled'); ?> onclick="window.location.replace(window.location.origin + window.location.pathname);"><span class="material-icons-round">restore</span><span class="hidden">Revert/<br>Refresh</span></button>
+                    <button type="submit" form="sr-loader"<?php echo(!is_null($employee) || $this->error ? '' : ' disabled'); ?> onclick="window.location.replace(window.location.origin + window.location.pathname);"><span class="material-icons-round">restore</span><span class="hidden">Revert/<br>Refresh</span></button>
                 </span>
                 <span class="button-ex sr-print">
-                    <button class="blue" type="submit" disabled form="sr-print-form"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
+                    <button type="submit" form="sr-printer"><span class="material-icons-round">print</span><span class="hidden"><br>Print</span></button>
                 </span>
             </div>
 
@@ -1312,6 +1364,228 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             "use strict";
 
             </script>
+        </section><?php
+    }
+
+    private function generatePrintUI()
+    {
+        $errorMsg = '';
+        $personId = '';
+        $employee = null;
+        $sr = [];
+        $dbResults = null;
+
+        if (isset($_REQUEST['a']) && $_REQUEST['a'] === 'print')
+        {
+            if (isset($_REQUEST['print']) && $_REQUEST['print'] === 'sr')
+            {
+                if (isset($_REQUEST['personId']) && is_string($_REQUEST['personId']))
+                {
+                    if ($_SESSION['user']['sergs_access_level'] > 1 || $_SESSION['user']['sergs_access_level'] === 1 && strval($_SESSION['user']['personId']) === strval($_REQUEST['personId']))
+                    {
+                        if (is_string($_REQUEST['personId']) && trim($_REQUEST['personId']) !== '')
+                        {
+                            $personId = $_REQUEST['personId'];
+                        }
+                        else
+                        {
+                            $this->error = true;
+                            $errorMsg = 'Invalid or missing value';
+                        }
+                    }
+                    else
+                    {
+                        $this->error = true;
+                        $errorMsg = 'Access level is insufficient';
+                    }
+                }
+                else
+                {
+                    $this->error = true;
+                    $errorMsg = 'Unknown data request';
+                }
+            }
+            else
+            {
+                $this->error = true;
+                $errorMsg = 'Unknown print request';
+            }
+        }
+        else
+        {
+            $this->error = true;
+            $errorMsg = 'Unknown request';
+        }
+
+        if (!$this->error)
+        {
+            $dbResults = $this->getDB_SDO()->executeQuery(
+                "SELECT
+                    Person.personId,
+                    given_name,
+                    middle_name,
+                    family_name,
+                    spouse_name,
+                    ext_name,
+                    post_nominal,
+                    birth_date,
+                    Address.address AS birth_place,
+                    employeeId
+                FROM Person
+                INNER JOIN Employee ON Person.personId = Employee.personId
+                LEFT JOIN Address ON Person.birth_place = Address.addressId
+                WHERE Employee.personId = '$personId';"
+            );
+            if (!is_null($this->getDB_SDO()->lastException))
+            {
+                $this->error = true;
+                $errorMsg = json_encode('Error encountered in querying employee information in database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
+            }
+            elseif (count($dbResults) === 0)
+            {
+                $this->error = true;
+                $errorMsg = json_encode('No results were returned when querying employee information in database.' . (is_null($this->getDB_SDO()->lastException) ? '' : '<br><br>' . $this->getDB_SDO()->lastException->getMessage()) . '<br><br>Last SQL String: ' . $this->getDB_SDO()->lastSQLStr);
+            }
+            else
+            {
+                $employee = $dbResults[0];
+                $sr = $this->retrieveSR($personId);
+            }
+        }
+
+        // echo('<code style="white-space: pre;">');
+        // var_dump($employee);
+        // var_dump($errorMsg);
+        // echo('</code>');
+
+        ?>
+        <section id="main-print">
+            <div class="button-group-ex print-controls">
+                <span class="button-ex print-button" title="Open Print Dialog" onclick="window.print();">
+                    <button type="button" title="Print"><span class="material-icons-round">print</span><span class="hidden">Print</span></button>
+                </span>
+                <span class="button-ex close-button" title="Close Tab/Window">
+                    <button type="button" title="Close Tab/Window" onclick="window.close();"><span class="material-symbols-rounded">tab_close</span><span class="hidden">Close</span></button>
+                </span>
+            </div><?php
+
+        if ($errorMsg === 'Access level is insufficient')
+        {
+            $this->generateForbidden();
+            return;
+        }
+        elseif ($errorMsg !== '')
+        {
+            $this->jsErrorMsgBox($errorMsg);
+            return;
+        } ?>
+            <section id="sr-print">
+                <header id="sr-header">
+                    <h1><img class="deped-logo" src="/images/Department_of_Education.svg" alt="logo:Department of Education" />
+                        <span class="header-rp">Republic of the Philippines</span>
+                        <span class="header-deped">Department of Education</span>
+                        <span class="header-region">Region IV-A CALABARZON</span>
+                        <span class="header-sdo">Schools Division of Sto. Tomas City</span>
+                    </h1>
+                    <h2>Service Record</h2>
+                </header>
+
+                <table class="pager">
+                    <thead><tr><td></td></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <main id="sr-content">
+                                    <div class="emp-info">
+                                        <div class="div-ex name">
+                                            <span class="label-ex">Name:</span>
+                                            <span class="span-ex surname reversed"><span class="blank"><?php echo(is_null($employee['spouse_name']) || trim($employee['spouse_name']) === '' ? $employee['family_name'] : $employee['spouse_name']); ?></span> <span class="label-ex">(surname)</span></span>
+                                            <span class="span-ex firstname reversed"><span class="blank"><?php echo($employee['given_name'] . (is_null($employee['ext_name']) || trim($employee['ext_name']) === '' ? '' : ' &nbsp; ' . $employee['ext_name'])); ?></span> <span class="label-ex">(first name)</span></span>
+                                            <span class="span-ex middlename reversed"><span class="blank"><?php echo(is_null($employee['spouse_name']) || trim($employee['spouse_name']) === '' ? (is_null($employee['middle_name']) || trim($employee['middle_name']) === '' ? '&nbsp;' : $employee['middle_name']) : $employee['family_name']); ?></span> <span class="label-ex">(middle name)</span></span>
+                                            <span class="span-ex name-comment">(If married, give also full name and other surname used)</span>
+                                        </div>
+                                        <div class="div-ex birth">
+                                            <span class="label-ex">Birth:</span>
+                                            <span class="span-ex birthdate reversed"><span class="blank"><?php echo($employee['birth_date'] ?? '&nbsp;'); ?></span> <span class="label-ex">(date)</span></span>
+                                            <span class="span-ex birthplace reversed"><span class="blank"><?php echo($employee['birth_place'] ?? '&nbsp;'); ?></span> <span class="label-ex">(place)</span></span>
+                                            <span class="span-ex birth-comment">(Date herein should be checked from birth baptismal certificate of some official documents)</span>
+                                        </div>
+                                        <div class="div-ex employeeId">
+                                            <span class="label-ex">Emp. No.:</span> <span class="blank"><?php echo($employee['employeeId']); ?></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="div-ex sr-table-wrapper">
+                                        <p class="prenote">This is to certify that the employee named herein above actually rendered service in this office or office as indicated below, each line of which is supported by appointment and other papers actually issued and approved by the authorities concerned.</p>
+                                        <table class="table-ex sr-table" id="sr-table-view">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="2" data-header-name="service">Service</th>
+                                                    <th colspan="3" data-header-name="appointment">Record of Appointment</th>
+                                                    <th data-header-name="office">Office</th>
+                                                    <th rowspan="3" data-header-name="branch" data-contenteditable="true">Branch</th>
+                                                    <th rowspan="3" data-header-name="lwop_count" data-contenteditable="true">Leave of Absence w/o Pay</th>
+                                                    <th rowspan="3" data-header-name="separation_date" data-contenteditable="true">Date</th>
+                                                </tr>
+                                                <tr>
+                                                    <th colspan="2" data-header-name="inclusive_date">(Inclusive Date)</th>
+                                                    <th rowspan="2" data-header-name="designation" data-contenteditable="true">Designation</th>
+                                                    <th rowspan="2" data-header-name="status" data-contenteditable="true">Status</th>
+                                                    <th rowspan="2" data-header-name="salary" data-contenteditable="true">Salary</th>
+                                                    <th rowspan="2" data-header-name="station" data-contenteditable="true">Station/Place</th>
+                                                </tr>
+                                                <tr>
+                                                    <th data-header-name="date_start" data-contenteditable="true">From</th>
+                                                    <th data-header-name="date_end" data-contenteditable="true">To</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody><?php
+        if (is_null($sr) || count($sr) === 0)
+        { ?>
+
+                                                <tr>
+                                                    <td colspan="9">Not available. To request a service record update, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
+                                                </tr><?php
+        }
+        else
+        {
+            // for ($i = 0; $i < 15; $i++)    // DEBUG
+            // {                               // DEBUG
+            $this->generateSRTableRows($sr);
+            // }                               // DEBUG
+        } ?>
+
+                                            </tbody>
+                                        </table>
+                                        <p class="postnote">Issued in compliance with Executive Order No. 54 dated August 10, 1954 and in accordance with Circular No. 58 dated August 10, 1954 of the system.</p>
+
+                                        <div class="div-ex sr-signatories"><!-- TEMP -->
+                                            <span class="span-ex certifier">
+                                                <span class="name">Jessamae O. Castromero</span>
+                                                <span class="position">AO II/OIC-Administrative Office IV</span>
+                                            </span>
+                                            <span class="span-ex approver">
+                                                <span class="name">Catalina M. Calinawan</span>
+                                                <span class="position">AO II/OIC-Administrative Office V</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </main>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot><tr><td></td></tr></tfoot>
+                </table>
+
+                <footer id="sr-footer">
+                    <div class="div-ex content">
+                        <img class="sdo-logo" src="/images/logo-depedstotomas.webp" alt="logo:Department of Education" />
+                        <p><span class="material-icons-round">pin_drop</span> Brgy. Poblacion IV, Sto. Tomas City, Batangas</p>
+                        <p><span class="material-icons-round">alternate_email</span> sdo.santotomas@deped.gov.ph</p>
+                        <p><span class="material-icons-round">phone</span> (043) 702-8674</p>
+                    </div>
+                </footer>
+            </section>
         </section><?php
     }
 

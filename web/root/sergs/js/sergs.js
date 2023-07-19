@@ -276,11 +276,11 @@ class SeRGS_App extends App
     static resetSalaryValue(tr = new HTMLTableCellElement())
     {
         let salaryList = this.getSalarySteps(tr.rowInfo.td["designation"].textContent, tr.rowInfo.td["date_start"].textContent, tr.rowInfo.td["date_end"].textContent).map(step => parseFloat(step['salary']));
-
+        
         if (salaryList.length !== 0 && !salaryList.includes(parseFloat(tr.rowInfo.td["salary"].children[0].value)) && tr.rowInfo.td["salary"].childNodes[0].textContent !== "")
         {
-            new MessageBox().setup(app.main, "SeRGS Dialog", "Do you want to delete the corresponding salary in this entry?", [
-                { text:"Yes", buttonType:"button", clickCallback:clickEvent=>{
+            new MessageBox().setup(app.main, "SeRGS Dialog", "The salary specified on this record/row does not match <br>any of the salaries for this position that were effective <br>during the service duration. <br><br>Do you want to delete this salary?", [
+                { text:"Yes", buttonType:"button", addStyle:obj=>{console.log(obj);}, clickCallback:clickEvent=>{
                     tr.rowInfo.td["salary"].childNodes[0].textContent = "";
                     tr.rowInfo.td["salary"].children[0].removeAttribute("value");
                     tr.rowInfo.td["salary"].children[1].removeAttribute("value");
@@ -413,7 +413,7 @@ class SeRGS_App extends App
                     cell.children[0].addEventListener("blur", event=>{
                         this.deactivateCombo(cell, "designation", "designationList", td => td.children[1].value = td.children[0].value);
                         
-                        this.resetSalaryValue(row);
+                        SeRGS_App.resetSalaryValue(row);
                     });
                     cell.addEventListener("focus", event=>this.activateCombo(cell, SeRGS_App.enum["position_titles"], [], "designation", "designationList"));
                     if (cell.textContent.trim() !== "" && !SeRGS_App.enum["position_titles"].includes(cell.textContent))
@@ -459,7 +459,7 @@ class SeRGS_App extends App
                     cell.addEventListener("focus", event=>{
                         let salarySteps = this.getSalarySteps(row.rowInfo.td["designation"].textContent, row.rowInfo.td["date_start"].textContent, row.rowInfo.td["date_end"].textContent);
 
-                        this.activateCombo(cell, salarySteps.map(step=>"SG" + step['salary_grade'] + "-Step " + step["step_increment"]), salarySteps.map(step=>step["salary"]), "salary", "salaryStep");
+                        this.activateCombo(cell, salarySteps.map(step=>"SG" + step['salary_grade'] + "-Step " + step["step_increment"] + " (effective on " + step["effectivity_date"] + ")"), salarySteps.map(step=>step["salary"]), "salary", "salaryStep");
 
                         cell.children[0].type = "number";
                         cell.children[0].setAttribute("min", 0);

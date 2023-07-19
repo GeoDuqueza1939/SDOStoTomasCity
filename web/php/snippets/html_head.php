@@ -32,25 +32,31 @@ switch ($pageType)
     case PageType::SignOut:
         break;
     case PageType::SERGS:
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">'); ?>
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"> ?>
 <link href="/styles/material.io/material-icons.css" rel="stylesheet">
 <link href="/sergs/styles/main.css" rel="stylesheet" /><?php
+        if ($pageId === 'print')
+        { ?>
+
+<link href="/styles/print.css" rel="stylesheet" />
+<link href="/sergs/styles/print.css" rel="stylesheet" /><?php
+        }
         break;
     case PageType::OPMS:
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />'); ?>
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" /> ?>
 <link href="/styles/material.io/material-icons.css" rel="stylesheet">
 <link href="/opms/styles/main.css" rel="stylesheet" /><?php
         break;
     case PageType::MPASIS:
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">');
-        // echo('<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />'); ?>
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" /> ?>
 <link href="/styles/material.io/material-icons.css" rel="stylesheet">
 <link href="/mpasis/styles/main.css" rel="stylesheet" /><?php
         break;

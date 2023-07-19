@@ -1,3 +1,80 @@
-@page {
+/* @page {
+    size: A4 landscape;
+    width: 297mm;
+    height: 210;
+} */
 
+@media only screen {
+    .print {
+        margin-top: 6.5em;
+        padding: 1em;
+    }
+}
+
+@media only print {
+    .print {
+        padding: 0;
+        margin: 0;
+    }
+
+    .print .print-controls {
+        display: none;
+        visibility: hidden;
+    }
+
+    .debug {
+        display: none;
+        visibility: hidden;
+    }
+}
+
+*  {
+    font-size: 1em;
+}
+
+.print {
+    background-color: unset;
+    font-family: "Bookman Old Style", "URW Bookman", serif;
+}
+
+.print .print-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    font-size: 18pt;
+    text-align: right;
+    background-color: navy;
+    padding: 1em;
+    z-index: 1;
+}
+
+.print .print-controls > .button-ex > button,
+.print .print-controls > .fields > .input-ex > .fields > button {
+    margin: 0;
+    padding: 0;
+    border-width: 1px;
+}
+
+.print .print-controls > .button-ex > button > [class^=material-],
+.print .print-controls > .fields > .input-ex > .fields > button > [class^=material-] {
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+    height: 1.5em;
+    width: 1.6em;
+}
+
+.print .print-controls > .button-ex.print-button > button > [class^=material-] {
+    color: green;
+}
+
+.print .print-controls > .button-ex.close-button > button > [class^=material-] {
+    color: red;
+}
+
+.print main {
+    margin: 0;
+    padding: 0;
 }

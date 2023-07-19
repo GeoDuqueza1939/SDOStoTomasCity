@@ -3435,30 +3435,61 @@ class ButtonEx extends ControlEx
         {
             this.setup(config.parentHTMLElement);
 
-            if ("caption" in config)
-            {
-                this.caption = config.caption.trim();
-            }
+            // if ("caption" in config)
+            // {
+            //     this.caption = config.caption.trim();
+            // }
 
-            if ("id" in config)
-            {
-                this.id = config.id.trim();
-            }
+            // if ("id" in config)
+            // {
+            //     this.id = config.id.trim();
+            // }
 
-            if ("buttonType" in config)
+            // if ("buttonType" in config)
+            // {
+            //     if (ElementEx.type(config.buttonType) !== "string" || (config.buttonType !== "button" && config.buttonType !== "submit" && config.buttonType !== "reset"))
+            //     {
+            //         throw new SyntaxError("Specified buttonType is invalid.");
+            //     }
+
+            //     this.buttonType = config.buttonType.trim();
+            // }
+
+            // if ("clickCallback" in config)
+            // {
+            //     this.addEvent("click", config.clickCallback);
+            // }
+
+            for (const key in config)
             {
-                if (ElementEx.type(config.buttonType) !== "string" || (config.buttonType !== "button" && config.buttonType !== "submit" && config.buttonType !== "reset"))
+                switch (key)
                 {
-                    throw new SyntaxError("Specified buttonType is invalid.");
+                    case "parentHTMLElement":
+                        break;
+                    default:
+                        if (key in this)
+                        {
+                            if (ElementEx.type(config[key]) === "function")
+                            {
+                                config[key](this);
+                            }
+                            else if (ElementEx.type(this[key]) === "function")
+                            {
+                                this[key](config[key]);
+                            }
+                            else
+                            {
+                                this[key] = config[key];
+                            }
+                        }
+                        else
+                        {
+                            console.warn("WARNING: The key '" + key + "' does not exist in `class " + this.UIExType + "`.");
+                        }
+                        break;
                 }
-
-                this.buttonType = config.buttonType.trim();
             }
 
-            if ("clickCallback" in config)
-            {
-                this.addEvent("click", config.clickCallback);
-            }
 
             return this;
         }

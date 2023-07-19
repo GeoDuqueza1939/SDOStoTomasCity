@@ -1,5 +1,37 @@
 # Work Log
 
+## 7/19/2023
+TO DO:
+* [x] [SeRGS] Fix print layout for multiple-page SR
+* [x] [SeRGS] Enable `Print` views for the SR Viewers
+* [ ] [SeRGS] Add My Account page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [SeRGS] 
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+After a very long while and while we were transferring our office to another location, I finally found a way to render fixed headers and footers without overlapping text. It is not that perfect, but it would work for the meantime. To while the remaining time of the day, I also put print buttons on the SR Viewer pages, so we SRs can now be printed even without loading them for editing.
+
+## 7/18/2023
+TO DO:
+* [x] [SeRGS] Enable `Print` views for the SR Editor
+* [ ] [SeRGS] Add My Account page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+I could start clean on my SeRGS tasks today. That's why I decided to endeavor to add Print views for the SR Editor. I didn't really encounter much issues in building the print page, although I did hit a stump when trying to print a multi-page SR, in which fixed headers and footers overlap with text. I tried the previous tricks that I knew back when I was still converting books into ebooks and when I used to generate PDF test papers from HTML code, but still with no luck. I will have to resume this tomorrow. In the meanwhile, I might need to do some readings on web standards and do a few more web searches.
+
 ## 7/17/2023
 TO DO:
 * [x] [SeRGS] Add a function that creates a list of salary steps valid for a selected designation/position (to be used for SR Editor's salary column)

@@ -19,6 +19,8 @@
 .debug .debug-variables {
     display: none;
     visibility: hidden;
+    white-space: pre-wrap;
+    font-family: monospace;
 }
 
 .debug:hover .debug-variables {

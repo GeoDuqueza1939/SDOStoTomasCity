@@ -1,0 +1,308 @@
+:root {
+    --page-margin-top: 2.2in;
+    --page-margin-bottom: 1in;
+    /* --page-margin-bottom: 3in; */
+}
+
+@media only print {
+    body {
+        background-color: unset !important;
+    }
+
+    .print {
+        padding: 0 !important;
+    }
+
+    .print #sr-print > header#sr-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    #sr-print {
+        max-width: initial;
+        background-color: initial;
+        margin: 0;
+        padding: 0 !important;
+        box-shadow: unset !important;
+    }
+
+    .print #sr-print > table.pager > thead > tr > * {
+        height: var(--page-margin-top);
+    }
+    
+    .print #sr-print > table.pager > tfoot > tr > * {
+        height: var(--page-margin-bottom);
+    }
+    
+    .print footer#sr-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+}
+
+body {
+    background-color: gray;
+}
+
+.print {
+    padding: 1em;
+}
+
+.print main {
+    background-color: unset;
+}
+
+#sr-print {
+    font-size: 10pt;
+    font-family: Calibri, sans-serif;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.5in;
+    background-color: white;
+    box-shadow: 3pt 3pt 5pt black;
+}
+
+.print #sr-print > header {
+    text-align: center;
+}
+
+.print #sr-print > header > h1 {
+    margin: 0;
+    font-size: 10pt;
+    border-bottom: 2pt solid;
+}
+
+.print #sr-print > header > h1::after {
+    display: block;
+    content: " ";
+    border-bottom: 1pt solid;
+    margin-bottom: 1pt;
+}
+
+.print #sr-print > header > h1 > img.deped-logo {
+    width: 2cm;
+}
+
+.print #sr-print > header > h1 > span {
+    display: block;
+    margin: 0;
+    padding: 0;
+    text-transform: uppercase;
+    line-height: 1.25em;
+}
+
+.print #sr-print > header > h1 > span.header-rp,
+.print #sr-print > header > h1 > span.header-deped {
+    text-transform: none;
+    font-family: 'Old English Text MT', 'Times New Roman', serif;
+}
+
+.print #sr-print > header > h1 > span.header-rp {
+    font-size: 12pt;
+}
+
+.print #sr-print > header > h1 > span.header-deped {
+    font-size: 18pt;
+}
+
+.print #sr-print > header > h1 > span.header-region {
+    /* font-family: "Bookman Old Style", "URW Bookman", serif; */
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt;
+}
+
+.print #sr-print > header > h1 > span.header-sdo {
+    font-family: Arial, Helvetica, sans-serif;
+    /* font-family: Calibri, sans-serif; */
+    font-size: 10.5pt;
+    font-weight: 900;
+}
+
+
+.print #sr-print > header > h2 {
+    margin: 1em 0 1em;
+    text-transform: uppercase;
+    font-size: 11pt;
+}
+
+.print #sr-print > table.pager {
+    width: 100%;
+}
+
+.print #sr-print main > .emp-info > .div-ex {
+    display: grid;
+    margin-top: 0.75em;
+}
+
+.print #sr-print main > .emp-info > .name {
+    grid-template-columns: 0.75in auto auto auto 2.5in;
+}
+
+.print #sr-print main > .emp-info > .birth {
+    grid-template-columns: 0.75in 2in auto 2.5in;
+}
+
+.print #sr-print main > .emp-info > .employeeId {
+    grid-template-columns: 0.75in 2in;
+}
+
+.print #sr-print main > .emp-info > .div-ex > .span-ex {
+    text-align: center;
+}
+
+.print #sr-print main > .emp-info > .div-ex > .span-ex > .blank,
+.print #sr-print main > .emp-info > .employeeId > .blank {
+    display: block;
+    white-space: nowrap;
+    border-bottom: 1px solid;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.print #sr-print main > .emp-info > .div-ex > .span-ex > .label-ex {
+    display: block;
+    font-size: 6pt;
+    text-transform: uppercase;
+}
+
+.print #sr-print main > .emp-info > .div-ex > .span-ex[class$=-comment] {
+    display: flex;
+    padding: 0.25em;
+    font-size: 8pt;
+    text-align: left;
+    align-items: center;
+}
+
+.sr-table-wrapper {
+    margin: 0;
+    padding: 0;
+    background-color: inherit;
+    border: unset;
+}
+
+.emp-info + .sr-table-wrapper {
+    margin: 1.5em 0;
+}
+
+.sr-table-wrapper > .prenote,
+.sr-table-wrapper > .postnote {
+    margin: 0;
+    padding: 0 0.25em;
+    text-align: center;
+    font-size: 9pt;
+}
+
+.sr-table-wrapper > .postnote {
+    text-align: left;
+}
+
+.sr-signatories {
+    padding: 12pt 0 12pt 24pt;
+}
+
+.sr-signatories > * {
+    display: flex;
+    flex-direction: column;
+    clear: both;
+    text-align: center;
+    justify-content: center;
+    min-width: 2in;
+}
+
+.sr-signatories > .certifier {
+    float: right;
+    margin-right: 0.5in;
+}
+
+.sr-signatories > .approver {
+    float: left;
+    margin-left: 0.5in;
+}
+
+.sr-signatories > ::before {
+    text-transform: uppercase;
+    text-align: left;
+    font-weight: bold;
+    margin-left: -24pt;
+}
+
+.sr-signatories > .certifier::before {
+    content: "Certified Correct:";
+}
+
+.sr-signatories > .approver::before {
+    content: "Noted:";
+}
+
+.sr-signatories > * > * {
+    display: block;
+    text-transform: uppercase;
+    padding: 0 3pt;
+}
+
+.sr-signatories > * > .name {
+    height: 0.5in;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.sr-signatories > * > .position {
+    border-top: 1pt solid;
+    font-size: 8pt;
+}
+
+.print footer {
+    margin: 0 -0.5em;
+}
+
+.print footer > .content::before {
+    display: block;
+    content: "";
+    grid-column: 1 / span 2;
+    border-top: 2pt solid;
+    padding-top: 1pt;
+    height: 1pt;
+    border-bottom: 1pt solid;
+    margin-bottom: 0.5em;
+}
+
+.print footer > .content {
+    padding: 0.5em 0.5em 0;
+    display: grid;
+    grid-template: auto auto auto / 2.5cm auto;
+    font-size: 10pt;
+    align-items: center;
+    clear: both;
+}
+
+.print footer > .content > img.sdo-logo {
+    width: 2cm;
+    grid-row-end: span 3;
+    padding-left: 6pt;
+}
+
+.print footer > .content > p {
+    grid-column: 2;
+    margin: 0;
+    padding: 0;
+}
+
+.print footer > .content > p > span[class^="material-"] {
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    height: auto;
+    /* font-size: 0.8em; */
+}
+
+.dialog-ex {
+    font-family: Calibri, sans-serif;
+}
