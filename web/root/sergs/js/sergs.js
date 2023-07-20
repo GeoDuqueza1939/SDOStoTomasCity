@@ -795,3 +795,177 @@ class DeleteServiceRecordEntryDialog extends DialogEx
         return DeleteServiceRecordEntryDialog.#instanceCount;
     }
 }
+
+class UserEditor extends DialogEx
+{
+    constructor()
+    {
+        super();
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), app = new App(), id = "", mode = 0, userData = null)
+    {
+        super.setup(parentHTMLElement);
+        let thisDialog = this;
+        console.log(userData);
+
+        this.mode = mode; // 0: add user; 1: edit user
+        this.app = app;
+
+        this.scrim.classList.add("user-editor");
+        this.caption = (mode ? "Edit" : "Add") + " User";
+        this.captionHeaderLevel = 3;
+
+        this.data = {
+            username:(mode == 1 && userData !== null && userData !== undefined ? userData["username"] : null),
+            employeeId:(mode == 1 && userData !== null && userData !== undefined ? userData["employeeId"] : null),
+            personId:(mode == 1 && userData !== null && userData !== undefined ? userData["personId"] : null)
+        }
+        
+        this.addDataFormEx();
+        // this.formEx.setTitle((mode ? "Edit" : "Add") + " User", 3);
+        this.dataFormEx.id = "user-editor-form";
+        this.dataFormEx.container.name = "user-editor-form";
+        this.dataFormEx.container.setAttribute("method", "POST");
+
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"a", name:"a", inputType:"hidden", value:(this.mode == 0 ? "add" : "update")});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", value:(mode == 1 && userData !== null && userData !== undefined ? userData["employeeId"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"User", column:"employeeId"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && userData !== null && userData !== undefined && "temp_user" in userData && userData["temp_user"] === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", value:(mode == 1 && userData !== null && userData !== undefined ? userData["given_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name:", id:"middle_name", name:"middle_name", value:(mode == 1 && userData !== null && userData !== undefined ? userData["middle_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"middle_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Family Name:", id:"family_name", name:"family_name", value:(mode == 1 && userData !== null && userData !== undefined ? userData["family_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"family_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Spouse Name:", id:"spouse_name", name:"spouse_name", value:(mode == 1 && userData !== null && userData !== undefined ? userData["spouse_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) For married women only", dbInfo:{table:"Person", column:"spouse_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Ext. Name:", id:"ext_name", name:"ext_name", value:(mode == 1 && userData !== null && userData !== undefined ? userData["ext_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) Extension Name, e.g., Jr., III", dbInfo:{table:"Person", column:"ext_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Username:", id:"username", name:"username", value:(mode == 1 && userData !== null && userData !== undefined ? userData["username"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), disable:obj=>obj.control.disabled = (this.mode === 1), inputType:"text", dbInfo:{table:"All_User", column:"username"}});
+        this.dataFormEx.addSpacer();
+
+        this.dataFormEx.addContainerEx(FrameEx.UIExType, {caption:"Access Levels:", addContainerClass:obj=>obj.container.classList.add("user-editor-access-levels"), dbInfo:{column:"user-editor-access-levels"}});
+
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"SeRGS:", id:"sergs_access_level", name:"sergs_access_level", value:(mode == 1 && userData !== null && userData !== undefined ? userData["sergs_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"sergs_access_level"}});
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"OPMS:", id:"opms_access_level", name:"opms_access_level", value:(mode == 1 && userData !== null && userData !== undefined ? userData["opms_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"opms_access_level"}});
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"MPaSIS:", id:"mpasis_access_level", name:"mpasis_access_level", value:(mode == 1 && userData !== null && userData !== undefined ? userData["mpasis_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:4, dbInfo:{table:"All_User", column:"mpasis_access_level"}});
+        this.dataFormEx.addSpacer();
+
+        this.dataFormEx.dbControls["temp_user"].addEvent("change", event=>{
+            this.dataFormEx.dbControls["employeeId"].control.disabled = this.dataFormEx.dbControls["temp_user"].checked;
+        });
+
+        this.addStatusPane();
+
+        this.setupDialogButtons([
+            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
+                let dialog = this.uiEx.parentUIEx.parentDialogEx;
+                let form = dialog.dataFormEx;
+
+                var person = {};
+                var user = {};
+                var error = "";
+    
+                for (const dbColName in form.dbControls) {
+                    var value = form.dbControls[dbColName].value;
+                    if (dbColName == "temp_user")
+                    {
+                        user[dbColName] = form.dbControls[dbColName].checked;
+                    }
+                    else if ((value !== null && value !== undefined/* && !MPASIS_App.isEmptySpaceString(value)*/) || typeof(value) == "number")
+                    {
+                        if (form.dbInfo["Person"].includes(dbColName))
+                        {
+                            person[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                        }
+                        else
+                        {
+                            user[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                        }
+                    }
+                    
+                    if (dbColName == "employeeId" && (user["employeeId"] === null || user["employeeId"] === undefined) && !form.dbControls["temp_user"].checked)
+                    {
+                        error += "Employee ID should not be blank for non-temporary user accounts.<br>";
+                    }
+                    else if (dbColName == "given_name" && (person["given_name"] === null || person["given_name"] === undefined) && form.dbControls["temp_user"].checked)
+                    {
+                        error += "Given Name should not be blank.<br>";
+                    }
+                    else if (dbColName == "username" && (user["username"] === null || user["username"] === undefined))
+                    {
+                        error += "Username should not be blank.<br>";
+                    }
+                }
+    
+                user["personId"] = dialog.data["personId"];
+    
+                if (error != "")
+                {
+                    dialog.raiseError(error);
+                }
+                else
+                {
+                    // // DEBUG
+                    // console.log(form.dbControls, person, user, MPASIS_App.processURL);
+    
+                    // return;
+                    // // DEBUG
+    
+                    postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                        var response;
+    
+                        if (event.target.readyState == 4 && event.target.status == 200)
+                        {
+                            response = JSON.parse(event.target.responseText);
+    
+                            if (response.type == "Error")
+                            {
+                                dialog.raiseError(response.content);
+                            }
+                            else if (response.type == "Success")
+                            {
+                                dialog.showSuccess(response.content);
+                                if ("searchButton" in dialog.app.temp)
+                                {
+                                    dialog.app.temp["searchButton"].fields[0].click();
+                                }
+                                await sleep(3000);
+                                dialog.close();
+                            }
+                            else if (response.type == "Debug")
+                            {
+                                new MsgBox(form.container.parentElement, response.content, "OK");
+                                console.log(response.content);
+                            }
+                            else
+                            {
+                                console.log(response.content, event.target);
+                            }
+                        }
+                    });
+                }
+            }}, {text:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                this.uiEx.parentUIEx.parentDialogEx.close();
+            }}
+        ]);
+
+        this.buttonGrpEx.controlExs[0].control.setAttribute("form", "add-employee-dialog");
+        this.buttonGrpEx.controlExs[1].control.setAttribute("form", "add-employee-dialog");
+
+        // TEMP
+        this.dataFormEx.dbControls["employeeId"].control.disabled = true;
+        this.dataFormEx.dbControls["temp_user"].control.disabled = true;
+        if (this.mode == 1)
+            return;
+            this.dataFormEx.dbControls["temp_user"].check();
+        // TEMP
+
+        return this;
+    }
+}
+

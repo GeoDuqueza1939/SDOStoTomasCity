@@ -2426,4 +2426,388 @@ class MPASIS_App extends App
     }
 }
 
+class AssignRoles extends DialogEx
+{
+    #rolesTableEx = null;
+    #selectorLinks = {};
+
+    constructor()
+    {
+        super();
+    }
+    
+    setup(parentHTMLElement = new HTMLElement())
+    {
+        super.setup(parentHTMLElement);
+        let thisDialog = this;
+
+        this.scrim.classList.add("assign-roles");
+
+        this.caption = "Assign Roles";
+        this.captionHeaderLevel = 3;
+        this.setupDialogButtons([
+            {text:"OK", clickCallback:event=>{
+                let hrRoles = {};
+
+                for (const key in this.#selectorLinks)
+                {
+                    hrRoles[key] = this.#selectorLinks[key].selected.map(item=>({name:item.text, personId:item.value}));
+                }
+
+                console.log(hrRoles);
+            }, tooltip:"Assign roles and close dialog."},
+            {text:"Cancel", clickCallback:event=>thisDialog.close(), tooltip:"Close dialog and discard any changes."}
+        ]);
+
+        this.#rolesTableEx = new TableEx();
+        this.rolesTableEx.setup(this.dialogBox);
+        this.addExContent(this.rolesTableEx);
+        this.rolesTableEx.setupHeaders([{name:"role", text:"Role"}, {name:"assigned_staff", text:"Assigned Staff/Officer"}]);
+        [
+            ["appointing_officer", "Appointing Authority:", "Assign"],
+            ["hrmo", "HRMO:", "Assign"],
+            ["hrmpsb_chair", "HRMPSB Chairperson:", "Assign"],
+            ["hrmpsb_secretariat", "HRMPSB Secretariat:", "Add"],
+            ["hrmpsb_member_level1", "HRMPSB Members (<i>Level 1</i>):", "Add"],
+            ["hrmpsb_member_level2", "HRMPSB Members (<i>Level 2</i>):", "Add"],
+            ["hrmpsb_member_level3", "HRMPSB Members (<i>Level 3</i>):", "Add"],
+        ].forEach(key=>{
+            this.rolesTableEx.addRow({"role":key[1]});
+            this.#selectorLinks[key[0]] = new SelectorLink(this.rolesTableEx.rows.slice(-1)[0].td["assigned_staff"], key[2], key[2] === "Add", "Nothing to add");
+            for (const item of [{name:"Dr. Neil G. Angeles, Ed.D.",personId:0}, {name:"Jessamae O. Castromero",personId:1}, {name:"Dr. Roselyn Q. Golfo, Ph.D.",personId:2}, {name:"Guillerma L. Bilog, Ed.D.",personId:3}, {name:"Carina V. Pedragosa",personId:4}, {name:"Catalina M. Calinawan",personId:5}, {name:"Jaime Tolentino",personId:6}])
+            {
+                this.#selectorLinks[key[0]].addItem(item.name, item.personId);
+            }
+        });
+    }
+
+    get rolesTableEx()
+    {
+        return this.#rolesTableEx;
+    }
+}
+
+class UserEditor extends DialogEx
+{
+    constructor()
+    {
+        super();
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), app = new App(), id = "", mode = 0, userData = null)
+    {
+        // super(app.main, id);
+        super.setup(parentHTMLElement);
+        let thisDialog = this;
+        console.log(app.main);
+
+        this.mode = mode; // 0: add user; 1: edit user
+        this.app = app;
+
+        this.scrim.classList.add("user-editor");
+        this.caption = (mode ? "Edit" : "Add") + " User";
+        this.captionHeaderLevel = 3;
+
+        this.data = {
+            username:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["username"] : null),
+            employeeId:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["employeeId"] : null),
+            personId:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["personId"] : null)
+        }
+        
+        this.addDataFormEx();
+        // this.formEx.setTitle((mode ? "Edit" : "Add") + " User", 3);
+        this.dataFormEx.id = "user-editor-form";
+        this.dataFormEx.container.name = "user-editor-form";
+        this.dataFormEx.container.setAttribute("method", "POST");
+
+        // [
+        //     {label:"Employee ID", type:"input", colName:"employeeId", table:"User", tooltip:""},
+        //     {label:"Temporary account only", type:"checkbox", colName:"temp_user", table:"", tooltip:"Temporary accounts are accounts that are not bound to employee information"},
+        //     {label:"Given Name", type:"input", colName:"given_name", table:"Person", tooltip:"Enter the applicant's given name. This is required."},
+        //     {label:"Middle Name", type:"input", colName:"middle_name", table:"Person", tooltip:"Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none."},
+        //     {label:"Family Name", type:"input", colName:"family_name", table:"Person", tooltip:"Enter the applicant's family name. For married women, please enter the maiden last name."},
+        //     {label:"Spouse Name", type:"input", colName:"spouse_name", table:"Person", tooltip:"For married women, please enter the spouse's last name. Leave blank for none."},
+        //     {label:"Ext. Name", type:"input", colName:"ext_name", table:"Person", tooltip:"Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none."},
+        //     {label:"Username", type:"input", colName:"username", table:"All_User", tooltip:""}
+        // ].forEach(field=>{
+        //     this.dataFormEx.addControlEx(field.label, field.type, (mode == 1 && field.colName != "temp_user" && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? "" : ""), field.tooltip, field.colName, field.table);
+        //     this.dataFormEx.dbInputEx[field.colName].container.classList.add(field.colName);
+        //     if (field.colName.includes("_name"))
+        //     {
+        //         // this.formEx.dbInputEx[field.colName].setWidth("11em");
+        //     }
+        //     if (field.colName == "employeeId")
+        //     {
+        //         // this.formEx.dbInputEx[field.colName].setWidth("9em");
+        //         this.formEx.dbInputEx[field.colName].showColon();
+        //     }
+        //     if (field.type == "checkbox")
+        //     {
+        //         this.formEx.dbInputEx[field.colName].reverse();
+        //     }
+        //     else if (field.colName == "username")
+        //     {
+        //         this.formEx.dbInputEx[field.colName].showColon();
+        //     }
+        //     if (this.mode != 0 && field.colName == "temp_user")
+        //     {
+        //         this.formEx.dbInputEx[field.colName].check(userData[field.colName]);
+        //     }
+        //     this.formEx.addSpacer();
+        // });
+
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"a", name:"a", inputType:"hidden", value:(this.mode == 0 ? "add" : "update")});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["employeeId"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"User", column:"employeeId"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && MPASIS_App.isDefined(userData) && "temp_user" in userData && userData["temp_user"] === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["given_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name:", id:"middle_name", name:"middle_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["middle_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"middle_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Family Name:", id:"family_name", name:"family_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["family_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"family_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Spouse Name:", id:"spouse_name", name:"spouse_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["spouse_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) For married women only", dbInfo:{table:"Person", column:"spouse_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Ext. Name:", id:"ext_name", name:"ext_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["ext_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional) Extension Name, e.g., Jr., III", dbInfo:{table:"Person", column:"ext_name"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Username:", id:"username", name:"username", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["username"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), disable:obj=>obj.control.disabled = (this.mode === 1), inputType:"text", dbInfo:{table:"All_User", column:"username"}});
+        this.dataFormEx.addSpacer();
+
+        this.dataFormEx.addContainerEx(FrameEx.UIExType, {caption:"Access Levels:", addContainerClass:obj=>obj.container.classList.add("user-editor-access-levels"), dbInfo:{column:"user-editor-access-levels"}});
+        // this.dataFormEx.displayExs["user-editor-access-levels"].showColon();
+        // this.dataFormEx.dbContainers["user-editor-access-levels"].container.classList.add("user-editor-access-levels");
+
+        // [
+        //     {label:"SeRGS", type:"number", colName:"sergs_access_level", table:"All_User", tooltip:"Access level for the Service Record Generation System"},
+        //     {label:"OPMS", type:"number", colName:"opms_access_level", table:"All_User", tooltip:"Access level for the Online Performance Management System"},
+        //     {label:"MPaSIS", type:"number", colName:"mpasis_access_level", table:"All_User", tooltip:"Access level for the Merit Promotion and Selection Information System"}
+        // ].forEach(field=>{
+        //     this.formEx.addInputEx(field.label, field.type, (mode == 1 && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? 0 : 0), field.tooltip, field.colName, field.table);
+        //     this.formEx.displayExs["user-editor-access-levels"].addContent(this.formEx.dbInputEx[field.colName].container);
+        //     this.formEx.dbInputEx[field.colName].setMin(0);
+        //     this.formEx.dbInputEx[field.colName].setMax(field.label == "MPaSIS" ? 4 : 10);
+        //     this.formEx.dbInputEx[field.colName].fields[0].classList.add("right");
+        //     this.formEx.addSpacer();
+        // });
+
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"SeRGS:", id:"sergs_access_level", name:"sergs_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["sergs_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"sergs_access_level"}});
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"OPMS:", id:"opms_access_level", name:"opms_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["opms_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"opms_access_level"}});
+        this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"MPaSIS:", id:"mpasis_access_level", name:"mpasis_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["mpasis_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:4, dbInfo:{table:"All_User", column:"mpasis_access_level"}});
+        this.dataFormEx.addSpacer();
+
+        this.dataFormEx.dbControls["temp_user"].addEvent("change", event=>{
+            this.dataFormEx.dbControls["employeeId"].control.disabled = this.dataFormEx.dbControls["temp_user"].checked;
+        });
+
+        this.addStatusPane();
+
+        this.setupDialogButtons([
+            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
+                let dialog = this.uiEx.parentUIEx.parentDialogEx;
+                let form = dialog.dataFormEx;
+
+                var person = {};
+                var user = {};
+                var error = "";
+    
+                for (const dbColName in form.dbControls) {
+                    var value = form.dbControls[dbColName].value;
+                    if (dbColName == "temp_user")
+                    {
+                        user[dbColName] = form.dbControls[dbColName].checked;
+                    }
+                    else if ((MPASIS_App.isDefined(value)/* && !MPASIS_App.isEmptySpaceString(value)*/) || typeof(value) == "number")
+                    {
+                        if (form.dbInfo["Person"].includes(dbColName))
+                        {
+                            person[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                        }
+                        else
+                        {
+                            user[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                        }
+                    }
+                    
+                    if (dbColName == "employeeId" && (user["employeeId"] === null || user["employeeId"] === undefined) && !form.dbControls["temp_user"].checked)
+                    {
+                        error += "Employee ID should not be blank for non-temporary user accounts.<br>";
+                    }
+                    else if (dbColName == "given_name" && (person["given_name"] === null || person["given_name"] === undefined) && form.dbControls["temp_user"].checked)
+                    {
+                        error += "Given Name should not be blank.<br>";
+                    }
+                    else if (dbColName == "username" && (user["username"] === null || user["username"] === undefined))
+                    {
+                        error += "Username should not be blank.<br>";
+                    }
+                }
+    
+                user["personId"] = dialog.data["personId"];
+    
+                if (error != "")
+                {
+                    dialog.raiseError(error);
+                }
+                else
+                {
+                    // // DEBUG
+                    // console.log(form.dbControls, person, user, MPASIS_App.processURL);
+    
+                    // return;
+                    // // DEBUG
+    
+                    postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                        var response;
+    
+                        if (event.target.readyState == 4 && event.target.status == 200)
+                        {
+                            response = JSON.parse(event.target.responseText);
+    
+                            if (response.type == "Error")
+                            {
+                                dialog.raiseError(response.content);
+                            }
+                            else if (response.type == "Success")
+                            {
+                                dialog.showSuccess(response.content);
+                                if ("searchButton" in dialog.app.temp)
+                                {
+                                    dialog.app.temp["searchButton"].fields[0].click();
+                                }
+                                await sleep(3000);
+                                dialog.close();
+                            }
+                            else if (response.type == "Debug")
+                            {
+                                new MsgBox(form.container.parentElement, response.content, "OK");
+                                console.log(response.content);
+                            }
+                            else
+                            {
+                                console.log(response.content, event.target);
+                            }
+                        }
+                    });
+                }
+            }}, {text:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                this.uiEx.parentUIEx.parentDialogEx.close();
+            }}
+        ]);
+
+        this.buttonGrpEx.controlExs[0].control.setAttribute("form", "add-employee-dialog");
+        this.buttonGrpEx.controlExs[1].control.setAttribute("form", "add-employee-dialog");
+
+        // var dialog = this;
+        // var form = this.formEx;
+        // var btnGrp = form.addFormButtonGrp(2);
+        // btnGrp.container.classList.add("user-editor-buttons");
+        // form.addStatusPane();
+        // btnGrp.inputExs[0].setLabelText("Save");
+        // btnGrp.inputExs[0].setTooltipText("");
+        /*
+        btnGrp.inputExs[0].addEvent("click", (event)=>{
+            var person = {};
+            var user = {};
+            var error = "";
+
+            for (const dbColName in form.dbInputEx) {
+                var value = form.dbInputEx[dbColName].getValue();
+                if (dbColName == "temp_user")
+                {
+                    user[dbColName] = form.dbInputEx[dbColName].isChecked();
+                }
+                else if ((MPASIS_App.isDefined(value) && !MPASIS_App.isEmptySpaceString(value)) || typeof(value) == "number")
+                {
+                    if (form.dbTableName[dbColName] == "Person")
+                    {
+                        person[dbColName] = value;
+                    }
+                    else
+                    {
+                        user[dbColName] = value;
+                    }
+                }
+                else if (dbColName == "employeeId" && !form.dbInputEx["temp_user"].isChecked())
+                {
+                    error += "Employee ID should not be blank for non-temporary user accounts.<br>";
+                }
+                else if (dbColName == "given_name" && form.dbInputEx["temp_user"].isChecked())
+                {
+                    error += "Given Name should not be blank.<br>";
+                }
+                else if (dbColName == "username")
+                {
+                    error += "Username should not be blank.<br>";
+                }
+            }
+
+            user["personId"] = dialog.data["personId"];
+
+            if (error != "")
+            {
+                form.raiseError(error);
+            }
+            else
+            {
+                // // DEBUG
+                // console.log(form.dbInputEx, person, user, MPASIS_App.processURL);
+
+                // return;
+                // // DEBUG
+
+                postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                    var response;
+
+                    if (event.target.readyState == 4 && event.target.status == 200)
+                    {
+                        response = JSON.parse(event.target.responseText);
+
+                        if (response.type == "Error")
+                        {
+                            form.raiseError(response.content);
+                        }
+                        else if (response.type == "Success")
+                        {
+                            form.showSuccess(response.content);
+                            dialog.app.temp["searchButton"].fields[0].click();
+                            await sleep(3000);
+                            dialog.close();
+                        }
+                        else if (response.type == "Debug")
+                        {
+                            new MsgBox(form.container.parentElement, response.content, "OK");
+                            console.log(response.content);
+                        }
+                        else
+                        {
+                            console.log(response.content, event.target);
+                        }
+                    }
+                });
+            }
+        });
+        */
+        // btnGrp.inputExs[1].setLabelText("Close");
+        // btnGrp.inputExs[1].setTooltipText("");
+        // btnGrp.inputExs[1].addEvent("click", event=>{
+        //     this.close();
+        // });
+
+        // form.container.parentElement.appendChild(btnGrp.container);
+
+        // TEMP
+        this.dataFormEx.dbControls["employeeId"].control.disabled = true;
+        this.dataFormEx.dbControls["temp_user"].control.disabled = true;
+        if (this.mode == 1)
+            return;
+            this.dataFormEx.dbControls["temp_user"].check();
+        // TEMP
+
+        return this;
+    }
+}
+
 var app = new MPASIS_App(document.getElementById("mpasis"));
