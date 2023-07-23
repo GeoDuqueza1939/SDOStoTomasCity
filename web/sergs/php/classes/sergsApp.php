@@ -65,14 +65,8 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
         return (isset($_SESSION['user']) && isset($_SESSION['user']['sergs_access_level']) ? $_SESSION['user']['sergs_access_level'] : 0);
     }
 
-    public function run($pageId = "dashboard")
+    private function validateUserSession($requiresSignIn)
     {
-        $requiresSignIn = true;
-        $pageTitle = $this->getName() . ' | Department of Education | Sto. Tomas City SDO';
-        $pageType = PageType::SERGS;
-        // $addDebug = false;
-        $addDebug = true;
-
         if (isValidUserSession())
         {
             if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout' || !isset($_COOKIE['user']))
@@ -93,13 +87,86 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
         }
         else
         {
-            echo('NO USER<br>');
-
             if ($requiresSignIn)
             {
+                echo('NO USER<br>');
                 header('Location: /login?app=sergs&src=' . $_SERVER['PHP_SELF']);
             }
+            else
+            {
+                $this->sendResponse('Error', 'Invalid session. Please sign in to use this API.');
+                die();
+            }
         }
+    }
+
+    private function sendResponse($type, $content) // "Success", "Info", "Error", "Text", "Username", "JSON", "DataRows", "DataRow", "User", "Entries", "Entry", "UI"
+    {
+        $response = [
+            'type'=>$type,
+            'content'=>$content
+        ];
+
+        echo(json_encode($response));
+    }
+
+    public function runAPI()
+    {
+        $requiresSignIn = false;
+
+        $this->validateUserSession($requiresSignIn);
+
+        if (isset($_REQUEST['a']))
+        {
+            switch ($_REQUEST['a'])
+            {
+                case 'update':
+                    if (isset($_REQUEST['update']))
+                    {
+                        switch ($_REQUEST['update'])
+                        {
+                            case 'pswd':
+                                if (isset($_REQUEST['data'])) // CHANGE TO `POST` IN PROD
+                                {
+                                    $data = json_decode($_REQUEST['data'], true); // CHANGE TO `POST` IN PROD
+                                    
+                                    $this->sendResponse('Data', $data['user']['username']);
+                                }
+                                else
+                                {
+                                    $this->sendResponse('Error', 'Invalid update request');
+                                }
+                                break;
+                            default:
+                                $this->sendResponse('Error', 'Unknown update keyword');
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        $this->sendResponse('Error', 'Nothing to update');
+                    }
+                    break;
+                default:
+                    $this->sendResponse('Error', 'Unknown action');
+                    break;
+            }
+        }
+        else
+        {
+            $this->sendResponse('Error', 'Unknown request');
+        }
+    }
+
+    public function run($pageId = "dashboard")
+    {
+        $requiresSignIn = true;
+        $pageTitle = $this->getName() . ' | Department of Education | Sto. Tomas City SDO';
+        $pageType = PageType::SERGS;
+        // $addDebug = false;
+        $addDebug = true;
+
+        $this->validateUserSession($requiresSignIn);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -152,12 +219,18 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
                 case "print":
                     $this->generatePrintUI();
                     break;
+                case "account":
+                    $this->generateAccountUI();
+                    break;
+                case "my-account":
+                    $this->generateMyAccountUI();
+                    break;
+            case "other-account":
+                    $this->generateOtherAccountUI();
+                    break;
                 case "archived":
                 case "search-requests":
                 case "system-logs":
-                case "account":
-                case "my-account":
-                case "other-account":
                 case "settings":
                 default:
                     $this->generateTempUI($pageId);
@@ -1367,6 +1440,57 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         </section><?php
     }
 
+    private function generateAccountUI()
+    {
+        $accessLevel = $this->getUserAccessLevel();
+
+        if ($accessLevel < 1)
+        {
+            $this->generateForbidden();
+            return;
+        } ?>
+        <section id="main-account">
+            <h2>Account Management</h2>
+            
+            <div class="div-ex account-contents">
+                <ul class="card-link">
+                    <li><a href="/sergs/account/edit/">My Account</a></li> <?php
+                if ($accessLevel < 9 && $accessLevel > 1)
+                { ?>
+                    <li><a href="/sergs/account/edit_other/">Other Accounts</a></li> <?php
+                } ?>
+                    <li><a href="?a=logout">Sign Out</a></li>
+                </ul>
+            </div>
+        </section><?php
+    }
+
+    private function generateMyAccountUI()
+    {
+        $accessLevel = $this->getUserAccessLevel();
+
+        if ($accessLevel < 1)
+        {
+            $this->generateForbidden();
+            return;
+        } ?>
+        <section id="main-my-account">
+            <h2>My Account</h2>
+
+            <p class="center">Welcome to your account settings, <?php echo($_SESSION['user']['given_name']); ?>!</p>
+
+            <div class="div-ex my-account-contents">
+                <ul class="card-link">
+                    <li><a href="#" aria-role="button" onclick="new UserEditor().setup(app.main, app, 'my-user-editor', 1, JSON.parse(SeRGS_App.getCookie('user')));">Edit my account details</a></li>
+                    <li><a href="#" aria-role="button" onclick="new PasswordEditor().setup(app, 'my-password-editor', true);">Change my password</a></li>
+                </ul>
+            </div>
+        </section><?php
+    }
+
+    private function generateOtherAccountUI()
+    {}
+
     private function generatePrintUI()
     {
         $errorMsg = '';
@@ -1562,11 +1686,11 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                         <div class="div-ex sr-signatories"><!-- TEMP -->
                                             <span class="span-ex certifier">
                                                 <span class="name">Jessamae O. Castromero</span>
-                                                <span class="position">AO II/OIC-Administrative Office IV</span>
+                                                <span class="position">Administrative Officer IV</span>
                                             </span>
                                             <span class="span-ex approver">
                                                 <span class="name">Catalina M. Calinawan</span>
-                                                <span class="position">AO II/OIC-Administrative Office V</span>
+                                                <span class="position">Administrative Officer V</span>
                                             </span>
                                         </div>
                                     </div>

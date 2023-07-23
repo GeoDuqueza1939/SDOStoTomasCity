@@ -8,7 +8,7 @@ if (typeof window === "null" || typeof window === "undefined")
 
 class SeRGS_App extends App
 {
-    static processURL = "/sergs/php/process.php";
+    static processURL = "/sergs/api.php";
     static enum = {};
 
     constructor(container)
@@ -581,7 +581,7 @@ class SeRGS_App extends App
         let srTableEx = document.getElementById("sr-table-entry").uiEx;
 
         let srData = srTableEx.rows.map(rowInfo=>{
-            var rowData = {};
+            let rowData = {};
 
             for (const key in rowInfo.td)
             {
@@ -805,9 +805,9 @@ class UserEditor extends DialogEx
 
     setup(parentHTMLElement = new HTMLElement(), app = new App(), id = "", mode = 0, userData = null)
     {
-        super.setup(parentHTMLElement);
         let thisDialog = this;
-        console.log(userData);
+        super.setup(parentHTMLElement);
+        // console.log(this);
 
         this.mode = mode; // 0: add user; 1: edit user
         this.app = app;
@@ -866,12 +866,12 @@ class UserEditor extends DialogEx
                 let dialog = this.uiEx.parentUIEx.parentDialogEx;
                 let form = dialog.dataFormEx;
 
-                var person = {};
-                var user = {};
-                var error = "";
+                let person = {};
+                let user = {};
+                let error = "";
     
                 for (const dbColName in form.dbControls) {
-                    var value = form.dbControls[dbColName].value;
+                    let value = form.dbControls[dbColName].value;
                     if (dbColName == "temp_user")
                     {
                         user[dbColName] = form.dbControls[dbColName].checked;
@@ -916,8 +916,8 @@ class UserEditor extends DialogEx
                     // return;
                     // // DEBUG
     
-                    postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
-                        var response;
+                    postData(SeRGS_App.processURL, "app=sergs&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                        let response;
     
                         if (event.target.readyState == 4 && event.target.status == 200)
                         {
@@ -969,3 +969,151 @@ class UserEditor extends DialogEx
     }
 }
 
+class PasswordEditor extends DialogEx
+{
+    constructor()
+    {
+        super();
+    }
+
+    setup(app = new App(), id = "", requireCurrentPassword = false, requireChange = false, async = true) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
+    {
+        // super(app.main, id);
+        let thisPasswordEditor = this;
+        super.setup(app.main);
+        console.log(app);
+
+        this.app = app;
+
+        this.scrim.classList.add("password-editor");
+        this.caption = "Change Password";
+        this.captionHeaderLevel = 3;
+
+        this.addDataFormEx();
+
+        this.dataFormEx.id = "passord-editor-form";
+        this.dataFormEx.container.name = "password-editor-form";
+        this.dataFormEx.container.setAttribute("method", "POST");
+
+        let passwordRetypeFunc = passwordRetypeEvent=>{
+            let newPass = this.dataFormEx.dbControls["new_password"].value;
+            let newPass2 = this.dataFormEx.dbControls["retype_new_password"].value;
+            let newPassBlank = newPass === "" && newPass2 === "";
+            let passMatch = newPass !== "" && newPass === newPass2;
+            let allFilled = newPass !== "" && newPass2 !== "" && (!requireCurrentPassword || this.dataFormEx.dbControls["password"].value !== "");
+
+            this.buttonGrpEx.controlExs[0].enable(passMatch && allFilled);
+
+            if (newPassBlank || passMatch && allFilled)
+            {
+                this.resetStatus();
+            }
+            else if (passMatch && !allFilled)
+            {
+                this.raiseError("All password fields are required");
+            }
+            else
+            {
+                this.raiseError("New passwords do not match");
+            }
+        };
+
+        [
+            {label:"Current Password:", type:"password", colName:"password", table:"All_User", tooltip:"Type your old password"},
+            {label:"New Password:", type:"password", colName:"new_password", table:"All_User", tooltip:"Type new password"},
+            {label:"Retype New Password:", type:"password", colName:"retype_new_password", table:"All_User", tooltip:"Retype new password"}
+        ].forEach((field, index)=>{
+            if (requireCurrentPassword || field.colName != "password")
+            {
+                if (index > (requireCurrentPassword ? 0 : 1))
+                {
+                    this.dataFormEx.addSpacer();
+                }
+                this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:field.label, id:field.colName, name:field.colName, value:"", addContainerClass:obj=>obj.container.classList.add(field.colName), inputType:field.type, tooltip:field.tooltip, dbInfo:{table:field.table, column:field.colName}});
+            }
+
+            if (field.colName in this.dataFormEx.dbControls)
+            {
+                this.dataFormEx.dbControls[field.colName].addEvent("change", passwordRetypeFunc);
+                this.dataFormEx.dbControls[field.colName].addEvent("keydown", passwordRetypeFunc);
+                this.dataFormEx.dbControls[field.colName].addEvent("keypress", passwordRetypeFunc);
+                this.dataFormEx.dbControls[field.colName].addEvent("keyup", passwordRetypeFunc);
+            }
+        });
+
+        console.log(this);
+
+        this.addStatusPane();
+        this.statusTimeOut = -1;
+
+        this.setupDialogButtons([
+            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(changePasswordEvent){
+                let passwordDetails = {
+                    requireCurrentPassword:requireCurrentPassword,
+                    password:(requireCurrentPassword ? this.uiEx.parentUIEx.parentDialogEx.dataFormEx.dbControls["password"].value : null),
+                    new_password:this.uiEx.parentUIEx.parentDialogEx.dataFormEx.dbControls["new_password"].value,
+                    user:this.uiEx.parentUIEx.parentDialogEx.app.currentUser
+                }
+    
+                // // DEBUG
+                // console.log(passwordDetails);
+
+                window.location = "/sergs/api.php?a=update&update=pswd&data=" + packageData(passwordDetails);
+    
+                return;
+                // // DEBUG
+    
+                postData(SeRGS_App.processURL, "a=update&update=pswd&data=" + packageData(passwordDetails), updatePasswordEvent=>{
+                    let response;
+    
+                    if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)
+                    {
+                        response = JSON.parse(updatePasswordEvent.target.responseText);
+    
+                        if (response.type == "Error")
+                        {
+                            new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
+                        }
+                        else if (response.type == "Debug")
+                        {
+                            new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
+                            console.log(response.content);
+                        }
+                        else if (response.type == "Success")
+                        {
+                            new MsgBox(thisPasswordEditor.app.main, response.content, "OK", ()=>{
+                                thisPasswordEditor.app.navClick("signout");
+                            });
+                        }
+                    }
+                });
+            }}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                this.uiEx.parentUIEx.parentDialogEx.close();
+            }}
+        ]);
+
+        this.buttonGrpEx.controlExs[0].disable();
+
+        // var btnGrp = this.formEx.addFormButtonGrp(2);
+        // btnGrp.container.classList.add("password-editor-buttons");
+        // this.dialogBox.appendChild(btnGrp.container);
+
+        // btnGrp.inputExs[0].setLabelText("Save");
+        // btnGrp.inputExs[0].setTooltipText("Save new password");
+        // btnGrp.inputExs[0].disable()
+        // btnGrp.inputExs[0].addEvent("click", );
+
+        // btnGrp.inputExs[1].setLabelText("Cancel");
+        // btnGrp.inputExs[1].setTooltipText("");
+        // btnGrp.inputExs[1].addEvent("click", changePasswordEvent=>{
+        //     this.close();
+        // });
+
+        if (requireChange)
+        {
+            // btnGrp.inputExs[1].setInline();
+            // btnGrp.inputExs[1].hide();
+            // this.closeBtn.classList.add("hidden");
+        }
+    }
+}

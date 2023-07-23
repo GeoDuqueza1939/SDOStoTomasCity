@@ -2810,4 +2810,120 @@ class UserEditor extends DialogEx
     }
 }
 
+class PasswordEditor extends Old_DialogEx
+{
+    constructor(app = new App(), id = "", requireCurrentPassword = false, requireChange = false) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
+    {
+        super(app.main, id);
+        this.app = app;
+
+        var thisPasswordEditor = this;
+
+        this.scrim.classList.add("password-editor");
+
+        this.addFormEx();
+        this.formEx.setTitle("Change Password", 3);
+
+        [
+            {label:"Current Password", type:"password", colName:"password", table:"All_User", tooltip:"Type your old password"},
+            {label:"New Password", type:"password", colName:"new_password", table:"All_User", tooltip:"Type new password"},
+            {label:"Retype New Password", type:"password", colName:"retype_new_password", table:"All_User", tooltip:"Retype new password"}
+        ].forEach((field, index)=>{
+            if (requireCurrentPassword || field.colName != "password")
+            {
+                this.formEx.addInputEx(field.label, field.type, "", field.tooltip, field.colName, field.table);
+            }
+
+            var passwordRetypeFunc = passwordRetypeEvent=>{
+                var passMatch = MPASIS_App.isEmpty(this.formEx.dbInputEx["retype_new_password"].getValue()) || this.formEx.dbInputEx["new_password"].getValue() == this.formEx.dbInputEx["retype_new_password"].getValue();
+                var allFilled = !MPASIS_App.isEmpty(this.formEx.dbInputEx["new_password"].getValue()) && !MPASIS_App.isEmpty(this.formEx.dbInputEx["retype_new_password"].getValue()) && (!requireCurrentPassword || !MPASIS_App.isEmpty(this.formEx.dbInputEx["password"].getValue()));
+
+                btnGrp.inputExs[0].enable(null, passMatch && allFilled);
+                
+                if (passMatch)
+                {
+                    this.formEx.resetStatus();
+                }
+                else
+                {
+                    this.formEx.raiseError("New passwords do not match");
+                }
+            };
+
+            if (field.colName in this.formEx.dbInputEx)
+            {
+                this.formEx.dbInputEx[field.colName].addEvent("change", passwordRetypeFunc);
+                this.formEx.dbInputEx[field.colName].addEvent("keydown", passwordRetypeFunc);
+                this.formEx.dbInputEx[field.colName].addEvent("keypress", passwordRetypeFunc);
+                this.formEx.dbInputEx[field.colName].addEvent("keyup", passwordRetypeFunc);
+            }
+
+        });
+
+        this.formEx.addStatusPane();
+        this.formEx.setStatusMsgTimeout(-1);
+
+        var btnGrp = this.formEx.addFormButtonGrp(2);
+        btnGrp.container.classList.add("password-editor-buttons");
+        this.dialogBox.appendChild(btnGrp.container);
+
+        btnGrp.inputExs[0].setLabelText("Save");
+        btnGrp.inputExs[0].setTooltipText("Save new password");
+        btnGrp.inputExs[0].disable()
+        btnGrp.inputExs[0].addEvent("click", changePasswordEvent=>{
+            var passwordDetails = {
+                requireCurrentPassword:requireCurrentPassword,
+                password:(requireCurrentPassword ? this.formEx.dbInputEx["password"].getValue() : null),
+                new_password:this.formEx.dbInputEx["new_password"].getValue(),
+                user:this.app.currentUser
+            }
+
+            // // DEBUG
+            // console.log(passwordDetails);
+
+            // return;
+            // // DEBUG
+
+            postData(MPASIS_App.processURL, "a=update&passd=" + packageData(passwordDetails), updatePasswordEvent=>{
+                var response;
+
+                if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)
+                {
+                    response = JSON.parse(updatePasswordEvent.target.responseText);
+
+                    if (response.type == "Error")
+                    {
+                        new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
+                    }
+                    else if (response.type == "Debug")
+                    {
+                        new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
+                        console.log(response.content);
+                    }
+                    else if (response.type == "Success")
+                    {
+                        new MsgBox(thisPasswordEditor.app.main, response.content, "OK", ()=>{
+                            thisPasswordEditor.app.navClick("signout");
+                        });
+                    }
+                }
+            });
+
+        });
+
+        btnGrp.inputExs[1].setLabelText("Cancel");
+        btnGrp.inputExs[1].setTooltipText("");
+        btnGrp.inputExs[1].addEvent("click", changePasswordEvent=>{
+            this.close();
+        });
+
+        if (requireChange)
+        {
+            btnGrp.inputExs[1].setInline();
+            btnGrp.inputExs[1].hide();
+            this.closeBtn.classList.add("hidden");
+        }
+    }
+}
+
 var app = new MPASIS_App(document.getElementById("mpasis"));

@@ -2126,6 +2126,24 @@ class ControlEx extends UIEx
         }
     }
 
+    get enabled()
+    {
+        return (this.control instanceof HTMLElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLTextAreaElement || this.control instanceof HTMLButtonElement ? !this.control.disabled : false);
+    }
+
+    enable(setting = true)
+    {
+        if (this.control instanceof HTMLInputElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLTextAreaElement || this.control instanceof HTMLButtonElement)
+        {
+            this.control.disabled = !setting;
+        }
+    }
+
+    disable()
+    {
+        this.enable(false);
+    }
+
     get vertical()
     {
         return (this.container instanceof HTMLElement && this.container.classList.contains("vertical"));
@@ -2186,7 +2204,7 @@ class ControlEx extends UIEx
         }
     }
 
-    setStatus(statusMsg = "", statusType = "information")
+    setStatus(statusMsg = "", statusType = "information", setResetTimeOut = true)
     {
         if (!(this.statusPane instanceof HTMLElement))
         {
@@ -2195,41 +2213,49 @@ class ControlEx extends UIEx
         this.statusPane.classList.add(statusType);
         this.statusPane.innerHTML = statusMsg;
 
-        this.#statusResetTimeOut = window.setTimeout(() => {
-            this.resetStatus();
-            this.#statusResetTimeOut = null;
-        }, this.statusTimeOut * 1000);
+        if (setResetTimeOut && this.statusTimeOut > 0)
+        {
+            this.#statusResetTimeOut = window.setTimeout(() => {
+                this.resetStatus();
+            }, this.statusTimeOut * 1000);
+        }
     }
 
-    showInfo(statusMsg = "")
+    showInfo(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "information");
+        this.setStatus(statusMsg, "information", setResetTimeOut);
     }
     
-    showSuccess(statusMsg = "")
+    showSuccess(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "success");
+        this.setStatus(statusMsg, "success", setResetTimeOut);
     }
     
-    showSuccess(statusMsg = "")
+    showWait(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "wait");
+        this.setStatus(statusMsg, "wait", setResetTimeOut);
     }
     
-    showWarning(statusMsg = "")
+    showWarning(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "warning");
+        this.setStatus(statusMsg, "warning", setResetTimeOut);
     }
     
-    raiseError(statusMsg = "")
+    raiseError(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "error");
+        this.setStatus(statusMsg, "error", setResetTimeOut);
     }
 
     resetStatus()
     {
         if (this.statusPane instanceof HTMLElement)
         {
+            if (this.#statusResetTimeOut !== null && this.#statusResetTimeOut !== undefined)
+            {
+                window.clearTimeout(this.#statusResetTimeOut);
+                this.#statusResetTimeOut = null;
+            }
+            
             this.statusPane.innerHTML = "";
             this.statusPane.setAttribute("class", "status-pane");
         }
@@ -6315,7 +6341,7 @@ class DialogEx extends ContainerEx
         this.statusPane = ElementEx.createSimple("span", ElementEx.NO_NS, "status-pane", this.#dialogContentEx.container);
     }
 
-    setStatus(statusMsg = "", statusType = "information")
+    setStatus(statusMsg = "", statusType = "information", setResetTimeOut = true)
     {
         if (!(this.statusPane instanceof HTMLElement))
         {
@@ -6327,41 +6353,49 @@ class DialogEx extends ContainerEx
         this.statusPane.classList.add(statusType);
         this.statusPane.innerHTML = statusMsg;
 
-        this.#statusResetTimeOut = window.setTimeout(() => {
-            this.resetStatus();
-            this.#statusResetTimeOut = null;
-        }, this.statusTimeOut * 1000);
+        if (setResetTimeOut && this.statusTimeOut > 0)
+        {
+            this.#statusResetTimeOut = window.setTimeout(() => {
+                this.resetStatus();
+            }, this.statusTimeOut * 1000);
+        }
     }
 
-    showInfo(statusMsg = "")
+    showInfo(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "information");
+        this.setStatus(statusMsg, "information", setResetTimeOut);
     }
     
-    showSuccess(statusMsg = "")
+    showSuccess(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "success");
+        this.setStatus(statusMsg, "success", setResetTimeOut);
     }
     
-    showWait(statusMsg = "")
+    showWait(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "wait");
+        this.setStatus(statusMsg, "wait", setResetTimeOut);
     }
     
-    showWarning(statusMsg = "")
+    showWarning(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "warning");
+        this.setStatus(statusMsg, "warning", setResetTimeOut);
     }
     
-    raiseError(statusMsg = "")
+    raiseError(statusMsg = "", setResetTimeOut = true)
     {
-        this.setStatus(statusMsg, "error");
+        this.setStatus(statusMsg, "error", setResetTimeOut);
     }
 
     resetStatus()
     {
         if (this.statusPane instanceof HTMLElement)
         {
+            if (this.#statusResetTimeOut !== null && this.#statusResetTimeOut !== undefined)
+            {
+                window.clearTimeout(this.#statusResetTimeOut);
+                this.#statusResetTimeOut = null;
+            }
+            
             this.statusPane.innerHTML = "";
             this.statusPane.setAttribute("class", "status-pane");
         }

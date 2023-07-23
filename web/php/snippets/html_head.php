@@ -2,6 +2,8 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv=”Cache-Control” content=”no-cache” />
+<meta http-equiv=”Cache-Control” content=”no-store” />
 <title><?php echo($pageTitle);?></title>
 <link href="/styles/default.css" rel="stylesheet" />
 <link href="/styles/main.css" rel="stylesheet" />
@@ -19,6 +21,14 @@
 <script src="/js/async.js"></script>
 <script src="/js/classes/ExClass.js"></script>
 <script src="/js/classes/UIEx.js"></script>
+<script src="/js/libs/jsbn/base64.js"></script>
+<!-- <script src="/js/libs/jsbn/sha1.js"></script> -->
+<script src="/js/libs/jsbn/jsbn.js"></script>
+<script src="/js/libs/jsbn/jsbn2.js"></script>
+<script src="/js/libs/jsbn/prng4.js"></script>
+<script src="/js/libs/jsbn/rng.js"></script>
+<script src="/js/libs/jsbn/rsa.js"></script>
+<script src="/js/libs/jsbn/rsa2.js"></script>
 <?php
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 
