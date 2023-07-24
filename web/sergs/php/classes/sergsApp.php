@@ -27,6 +27,110 @@ class SeRGS_App extends App
         $this->setupEnums();
         // $this->br();
         // die(json_encode($this->enum));
+
+        $this->testEncryption();
+        // $this->prepareEncryption();
+    }
+
+    private function prepareEncryption()
+    {
+        if (isset($_SESSION['cltsk']) && isset ($_SESSION['cltkd'])) // cltsk: client private key; cltkd: client key data
+        {
+
+        }
+        else
+        {
+            $config = array(
+                'digest_alg' => 'ripemd320',
+                'private_key_bits' => 1024,
+                'private_key_type' => OPENSSL_KEYTYPE_RSA
+            );
+            $_SESSION['srvsk'] = openssl_pkey_new($config);
+            $_SESSION['srvkd'] = openssl_pkey_get_details($_SESSION['srvsk']);
+            $pubKey = $_SESSION['srvkd']['key'];
+            $rsa = $_SESSION['srvkd']['rsa'];
+
+            $n = bin2hex($rsa['n']);
+            $e = bin2hex($rsa['e']);
+            $d = bin2hex($rsa['d']);
+            $p = bin2hex($rsa['p']);
+            $q = bin2hex($rsa['q']);
+            $dmp1 = bin2hex($rsa['dmp1']);
+            $dmq1 = bin2hex($rsa['dmq1']);
+            $iqmp = bin2hex($rsa['iqmp']);
+    
+            $keyCookie = ['n'=>$n, 'e'=>$e, 'd'=>$d, 'p'=>$p, 'q'=>$q, 'dmp1'=>$dmp1, 'dmq1'=>$dmq1, 'iqmp'=>$iqmp];
+    
+            setcookie('skd', json_encode($keyCookie), time() + 60 * 60 * 24, '/');    
+        }
+    }
+    
+    private function testEncryption()
+    {
+        $msg = "I'm gonna be the very best where no one ever was. EUREKA!!!!!!!!!!!!!!!!!!!!";
+
+        $config = array(
+            'digest_alg' => 'ripemd320',
+            'private_key_bits' => 1024,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA
+        );
+        $privKey = openssl_pkey_new($config);
+        $keyData = openssl_pkey_get_details($privKey);
+        $pubKey = $keyData['key'];
+        
+        openssl_public_encrypt($msg, $crypt, $pubKey);
+
+        setcookie('message', json_encode(['orig'=>$msg, 'crypt'=>bin2hex($crypt)]), time() + 60 * 60 * 24, '/');
+        
+        openssl_private_decrypt($crypt, $decrypt, $privKey);
+
+        $n = bin2hex($keyData['rsa']['n']);
+        $e = bin2hex($keyData['rsa']['e']);
+        $d = bin2hex($keyData['rsa']['d']);
+        $p = bin2hex($keyData['rsa']['p']);
+        $q = bin2hex($keyData['rsa']['q']);
+        $dmp1 = bin2hex($keyData['rsa']['dmp1']);
+        $dmq1 = bin2hex($keyData['rsa']['dmq1']);
+        $iqmp = bin2hex($keyData['rsa']['iqmp']);
+
+        $keyCookie = ['n'=>$n, 'e'=>$e, 'd'=>$d, 'p'=>$p, 'q'=>$q, 'dmp1'=>$dmp1, 'dmq1'=>$dmq1, 'iqmp'=>$iqmp];
+
+        setcookie('kd', json_encode($keyCookie), time() + 60 * 60 * 24, '/');
+        
+        ?>
+<script src="/js/ajax.js"></script>
+<script src="/js/elements.js"></script>
+<script src="/js/types.js"></script>
+<script src="/js/async.js"></script>
+<script src="/js/classes/ExClass.js"></script>
+<script src="/js/classes/UIEx.js"></script>
+<script src="/js/libs/jsbn/base64.js"></script>
+<!-- <script src="/js/libs/jsbn/sha1.js"></script> -->
+<script src="/js/libs/jsbn/jsbn.js"></script>
+<script src="/js/libs/jsbn/jsbn2.js"></script>
+<script src="/js/libs/jsbn/prng4.js"></script>
+<script src="/js/libs/jsbn/rng.js"></script>
+<script src="/js/libs/jsbn/rsa.js"></script>
+<script src="/js/libs/jsbn/rsa2.js"></script>
+<script src="/sergs/js/sergs.js"></script>
+
+<script>
+let keyData = JSON.parse(SeRGS_App.getCookie('kd'));
+let crypt = JSON.parse(SeRGS_App.getCookie('message'))['crypt'];
+// console.log(keyData);
+
+let rsa = new RSAKey();
+
+rsa.setPrivate(keyData["n"], keyData["e"], keyData["d"]);
+let decrypt = rsa.decrypt(crypt);
+console.log(decrypt);
+</script>
+        <?php
+
+        // setcookie('crypt', '', time() -60 * 60 * 24, '/');
+        var_dump($_COOKIE);
+
+        die();
     }
     
     private function setupEnums()

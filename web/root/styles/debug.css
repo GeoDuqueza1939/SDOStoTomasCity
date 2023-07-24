@@ -12,7 +12,7 @@
 
 .debug:hover {
     max-height: 50%;
-    max-width: 50em;
+    max-width: calc(100vw * 0.95);
     overflow: auto;
 }
 

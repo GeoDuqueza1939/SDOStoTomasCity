@@ -1,9 +1,41 @@
 "use strict";
 
-if (typeof window === "null" || typeof window === "undefined")
+if (typeof window === "null" || typeof window === "undefined") // imports to aid VSCode Intellisense
 {
     import("../../js/classes/ExClass.js");
     import("../../js/classes/UIEx.js");
+    import("../../js/libs/jsbn/jsbn.js");
+    import("../../js/libs/jsbn/jsbn2.js");
+    import("../../js/libs/jsbn/rsa.js");
+    import("../../js/libs/jsbn/rsa2.js");
+    import("../../js/libs/jsbn/rng.js");
+    import("../../js/libs/jsbn/prng4.js");
+    import("../../js/libs/jsbn/base64.js");
+    import("../../js/libs/jsbn/sha1.js");
+}
+
+class Ajax
+{
+    static postData(procUrl, data, func)
+    {
+        var xmlhttp;
+        xmlhttp = (window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP"));
+        xmlhttp.onreadystatechange = func;
+        
+        xmlhttp.open("POST", procUrl, true);
+        xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlhttp.send(data);
+    }
+    
+    static packageData(objData, rsaKey = null)
+    {
+        let data = JSON.stringify(objData);
+
+        data = data.replace(/'/g, "''");
+
+        return data;
+    }
+    
 }
 
 class SeRGS_App extends App
@@ -56,7 +88,7 @@ class SeRGS_App extends App
             case "signout":
                 SeRGS_App.setCookie("user", "", -1);
                 SeRGS_App.setCookie("current_view", "", -1);
-                postData(SeRGS_App.processURL, "app=sergs&a=logout", postEvent=>{
+                Ajax.postData(SeRGS_App.processURL, "app=sergs&a=logout", postEvent=>{
                     window.location.reload(true);
                 });
                 break;
@@ -916,7 +948,7 @@ class UserEditor extends DialogEx
                     // return;
                     // // DEBUG
     
-                    postData(SeRGS_App.processURL, "app=sergs&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                    Ajax.postData(SeRGS_App.processURL, "app=sergs&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
                         let response;
     
                         if (event.target.readyState == 4 && event.target.status == 200)
@@ -1058,12 +1090,12 @@ class PasswordEditor extends DialogEx
                 // // DEBUG
                 // console.log(passwordDetails);
 
-                window.location = "/sergs/api.php?a=update&update=pswd&data=" + packageData(passwordDetails);
+                window.location = this.processURL + "?a=update&update=pswd&data=" + Ajax.packageData(passwordDetails);
     
                 return;
                 // // DEBUG
     
-                postData(SeRGS_App.processURL, "a=update&update=pswd&data=" + packageData(passwordDetails), updatePasswordEvent=>{
+                Ajax.postData(SeRGS_App.processURL, "a=update&update=pswd&data=" + Ajax.packageData(passwordDetails), updatePasswordEvent=>{
                     let response;
     
                     if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)

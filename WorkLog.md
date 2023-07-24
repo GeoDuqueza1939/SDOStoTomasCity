@@ -1,5 +1,21 @@
 # Work Log
 
+## 7/24/2023
+TO DO:
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [ ] [SeRGS] Integrate a PHP RSA library/install a PHP RSA plugin
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+I found a few built-in functions in PHP which I could use right away for the encryption. However, setting up the PHP-to-JS encryption handshake proved to be very tedious. I spent most of the work day trying to match up the data being spewed by both ends, only to fail in setting up the keys, not to mention the actual decryption. Eventually, upon realizing that the JSBN library uses string-type hexadecimal data in generating or using encryption keys, I tried converting the PHP RSA data into hexadecimal strings, after which it is used as inputs in generating and using encryption in the client side, and I it finally did the trick. However, my work day is almost up before I realized it. I will have to resume this tomorrow. Hopefully, I would be more productive.
+
 ## 7/21/2023
 TO DO:
 * [x] [SeRGS] Integrate a JavaScript RSA library (temporary only: to implement my own, if I have enough time)
