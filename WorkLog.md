@@ -1,5 +1,21 @@
 # Work Log
 
+## 7/25/2023
+TO DO:
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [x] [SeRGS] Integrate a PHP RSA library/install a PHP RSA plugin
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+I resumed my work to make both ends (PHP and JS) meet in encryption. However, I've already spent the greater part of the day trying to find a way to make them work. At first, I tried to make the client generate an actual PEM-format key, but, to my dismay, the JS library that I found the most suitable for my purposes just can't do it. It can encrypt and decrypt, but all it can generate are numeric data used in the actual generation of the keys. I did consider making my own implementation (and I have already began this a few years back though I was unable to finish due to other priorities), but that would be too time consuming. The next option was making the PHP backend generate the key using the modulus and the exponents produced by the JS frontend, but I couldn't find any native implementation, although I did find a library (phpseclib) which could do it, so I think I'll go with that. However, the JSBN library is unable to encrypt strings or data that exceed the set bit length of the key, so I will still need to add code that will split the data into chunks which will be operable enough for JSBN. Time is running out. I'll need to continue this again, tomorrow.
+
 ## 7/24/2023
 TO DO:
 * [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
