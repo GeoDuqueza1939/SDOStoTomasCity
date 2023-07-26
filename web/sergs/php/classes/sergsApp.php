@@ -62,14 +62,16 @@ class SeRGS_App extends App
             $keyCookie = ['n'=>$n, 'e'=>$e, 'd'=>$d];
             ?>
 
-            <script src="/js/libs/jsbn/base64.js"></script>
-            <script src="/js/libs/jsbn/sha1.js"></script>
             <script src="/js/libs/jsbn/jsbn.js"></script>
             <script src="/js/libs/jsbn/jsbn2.js"></script>
+            <script src="/js/libs/jsbn/base64.js"></script>
+            <script src="/js/libs/jsbn/sha1.js"></script>
             <script src="/js/libs/jsbn/prng4.js"></script>
             <script src="/js/libs/jsbn/rng.js"></script>
             <script src="/js/libs/jsbn/rsa.js"></script>
             <script src="/js/libs/jsbn/rsa2.js"></script>
+            <script src="/js/types.js"></script>
+            <script src="/js/secure.js"></script>
             <script>
                 let serverKeyData = <?php echo(json_encode($keyCookie)); ?>;
                 let serverRsa = new RSAKey();
@@ -180,6 +182,8 @@ class SeRGS_App extends App
 <script src="/js/libs/jsbn/rsa.js"></script>
 <script src="/js/libs/jsbn/rsa2.js"></script>
 <script src="/sergs/js/sergs.js"></script>
+<script src="/js/types.js"></script>
+<script src="/js/secure.js"></script>
 
 <script>
 // let keyData = JSON.parse(SeRGS_App.getCookie('srvkd'));

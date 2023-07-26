@@ -6,12 +6,12 @@ if (typeof window === "null" || typeof window === "undefined") // imports to aid
     import("../../js/classes/UIEx.js");
     import("../../js/libs/jsbn/jsbn.js");
     import("../../js/libs/jsbn/jsbn2.js");
-    import("../../js/libs/jsbn/rsa.js");
-    import("../../js/libs/jsbn/rsa2.js");
-    import("../../js/libs/jsbn/rng.js");
-    import("../../js/libs/jsbn/prng4.js");
     import("../../js/libs/jsbn/base64.js");
     import("../../js/libs/jsbn/sha1.js");
+    import("../../js/libs/jsbn/prng4.js");
+    import("../../js/libs/jsbn/rng.js");
+    import("../../js/libs/jsbn/rsa.js");
+    import("../../js/libs/jsbn/rsa2.js");
 }
 
 class Ajax

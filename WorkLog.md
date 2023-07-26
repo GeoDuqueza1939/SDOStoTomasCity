@@ -1,5 +1,18 @@
 # Work Log
 
+## 7/26/2023
+TO DO:
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
 ## 7/25/2023
 TO DO:
 * [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
