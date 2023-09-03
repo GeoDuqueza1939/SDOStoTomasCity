@@ -1,12 +1,16 @@
 <?php E_STRICT;
 
 require_once(__FILE_ROOT__ . '/php/classes/app.php');
+require_once(__FILE_ROOT__ . '/php/traits/jsmsgdisplay.php');
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 require_once(__FILE_ROOT__ . '/php/audit/log.php');
 require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
+require_once(__FILE_ROOT__ . '/php/secure/sdp.php');
 
 class SeRGS_App extends App
 {
+    use JsMsgDisplay;
+    
     private $enum = array();
     private $jsTailScripts = '';
     private $jsTailScriptCount = 0;
@@ -29,24 +33,130 @@ class SeRGS_App extends App
         // die(json_encode($this->enum));
 
         // $this->jsDebugHTMLOutput(function(){ print_r($_COOKIE); });
-        // $this->testEncryption();
-        $this->prepareEncryption();
+        $this->testEncryption();
+        // $this->prepareEncryption();
     }
 
     private function prepareEncryption()
     {
-        require_once(__FILE_ROOT__ . '/php/libs/phpseclib/Crypt/PublicKeyLoader.php');
+        $bitSize = 512; // 4096 is too big for cookies
 
-        if (isset($_SESSION['cltsk']) && isset ($_SESSION['cltkd'])) // cltsk: client private key; cltkd: client key data
+        if (isset($_SESSION['ck'])) // ck: client key data
+        {
+            return;
+        }
+        elseif (isset($_POST['csk']) && isset($_POST['token'])) // csk : client/server shared key
         {
 
+            // TEMP
+            if (!defined('__FILE_ROOT__'))
+            {
+                define('__FILE_ROOT__', 'C:/xampp/htdocs_local');
+            }
+            // TEMP
+
+            require_once(__FILE_ROOT__ . '/php/libs/phpseclib/Math/BigInteger.php');
+            require_once(__FILE_ROOT__ . '/php/libs/phpseclib/Crypt/Hash.php');
+            require_once(__FILE_ROOT__ . '/php/libs/phpseclib/Crypt/Random.php');
+            require_once(__FILE_ROOT__ . '/php/libs/phpseclib/Crypt/RSA.php');
+
+            $clientSharedKey = $_POST['csk'];
+            $token = $_POST['token'];
+
+            [$iqmp, $dmq1, $dmp1, $q, $p, $d, $e, $n] = $_SESSION['sk']; // sk: server key data
+
+            $serverRsa = new phpseclib\Crypt\RSA();
+
+            // var_dump(new phpseclib\Math\BigInteger($n, 16));
+            // $serverRsa->setHash('ripemd320');
+            // $serverRsa->setEncryptionMode(phpseclib\Crypt\RSA::PRIVATE_FORMAT_XML);
+            // $serverRsa->setEncryptionMode(phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
+            // $serverRsa->setMGFHash('ripemd320');
+            // extract($serverRsa->createKey(512));
+
+            $serverPrivateKey = $serverRsa->_convertPrivateKey(
+                new phpseclib\Math\BigInteger($n, 16),
+                new phpseclib\Math\BigInteger($e, 16),
+                new phpseclib\Math\BigInteger($d, 16),
+                [1=>new phpseclib\Math\BigInteger($p, 16), 2=>new phpseclib\Math\BigInteger($q, 16)],
+                [1=>new phpseclib\Math\BigInteger($dmp1, 16), 2=>new phpseclib\Math\BigInteger($dmq1, 16)],
+                [2=>new phpseclib\Math\BigInteger($iqmp, 16)]
+            );
+
+            // $serverPublicKey = $serverRsa->_convertPublicKey(
+            //     new phpseclib\Math\BigInteger($n, 16),
+            //     new phpseclib\Math\BigInteger($e, 16)
+            // );
+
+            // $serverPrivateKey = $_SESSION['ssk'];
+            // $serverPublicKey = $_SESSION['spk'];
+
+            // $serverRsa->setPrivateKey($serverPrivateKey);
+            $msg = 'hello';
+
+            // $serverRsa->loadKey($serverPrivateKey, phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1);
+            $serverRsa->setPrivateKey($serverPrivateKey, phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1);
+            // $crypt = $serverRsa->encrypt($msg);
+            // var_dump($crypt);
+            // var_dump($serverRsa->getPrivateKey());
+            
+            $serverPublicKey = $serverRsa->getPublicKey();
+            // $serverRsa->loadKey($serverPublicKey);
+            // $decrypt = $serverRsa->decrypt($crypt);
+            // var_dump($decrypt);
+            // var_dump($serverRsa->getPublicKey());
+
+            $encJson = base64_decode($clientSharedKey);
+            $encChunks = json_decode($encJson);
+            $stringChunks = [];
+
+            var_dump($_SESSION['sk']);
+            // var_dump($serverRsa);
+            var_dump($serverPublicKey);
+            var_dump($serverPrivateKey);
+            // var_dump(
+            //     openssl_
+            // );
+
+            openssl_pkey_export(openssl_pkey_get_private($serverPrivateKey), $sk);
+            // openssl_pkey_export(openssl_pkey_get_public($serverPublicKey), $pk);
+            var_dump($sk);
+
+            foreach ($encChunks as $encChunk)
+            {
+                openssl_private_decrypt($encChunk, $stringChunk, openssl_pkey_get_private($serverPrivateKey));
+                // var_dump($stringChunk);
+                // openssl_private_decrypt($encChunk, $stringChunk, $serverRsa->getPrivateKey());
+                // $stringChunk = $serverRsa->decrypt($encChunk);
+                array_push($stringChunks, $stringChunk);
+            }
+            var_dump(json_encode($stringChunks));
+            // unset($_POST['token']);
+
+            
+            // var_dump('Encrypted Hello: ' . bin2hex($serverRsa->encrypt('Hellow')));
+            // openssl_public_encrypt('Hellow', $encHellow, $serverPublicKey);
+            $encHellow = $serverRsa->encrypt('Hellow');
+            var_dump('Encrypted Hellow: ' . bin2hex($encHellow));
+            // openssl_private_decrypt($encHellow, $decHellow, $serverPrivateKey);
+            openssl_private_decrypt($encHellow, $decHellow, openssl_pkey_get_private($serverPrivateKey));
+            var_dump('Decrypted Hellow: ' . $decHellow);
+            // $serverRsa->loadKey($serverPrivateKey);
+            // var_dump('Decrypted Hellow2: ' . $serverRsa->decrypt($encHellow));
+
+            
+
+            die();
+
+            echo($n);
         }
         else
         {
-            $bitSize = 1024; // 4096 is too big for cookies
+            $sdp = new SecureDataPackager();
+            $sdp->createKey($bitSize);
 
             $config = array(
-                'digest_alg' => 'ripemd320',
+                'digest_alg' => 'ripemd320', // this and sha256 might not be used in PKCS in phpseclib
                 'private_key_bits' => $bitSize,
                 'private_key_type' => OPENSSL_KEYTYPE_RSA
             );
@@ -55,11 +165,29 @@ class SeRGS_App extends App
             $pubKey = $keyData['key'];
             $rsa = $keyData['rsa'];
 
+            // openssl_public_encrypt('Hellow', $encHellow, $pubKey);
+            // var_dump('Encrypted Hellow: ' . bin2hex($encHellow));
+            // openssl_private_decrypt($encHellow, $decHellow, $privKey);
+            // var_dump('Decrypted Hellow: ' . ($decHellow));
+            echo('<br>');
+            echo('<br>');
+            var_dump($pubKey);
+            echo('<br>');
+            openssl_pkey_export($privKey, $privKeyExport);
+            var_dump($privKeyExport);
+            $_SESSION['ssk'] = $privKeyExport;
+            $_SESSION['spk'] = $pubKey;
+
             $n = bin2hex($rsa['n']);
             $e = bin2hex($rsa['e']);
             $d = bin2hex($rsa['d']);
-
-            $keyCookie = ['n'=>$n, 'e'=>$e, 'd'=>$d];
+            $p = bin2hex($rsa['p']);
+            $q = bin2hex($rsa['q']);
+            $dmp1 = bin2hex($rsa['dmp1']);
+            $dmq1 = bin2hex($rsa['dmq1']);
+            $iqmp = bin2hex($rsa['iqmp']);
+    
+            $_SESSION['sk'] = [$iqmp, $dmq1, $dmp1, $q, $p, $d, $e, $n]; // sk: server key data
             ?>
 
             <script src="/js/libs/jsbn/jsbn.js"></script>
@@ -72,59 +200,49 @@ class SeRGS_App extends App
             <script src="/js/libs/jsbn/rsa2.js"></script>
             <script src="/js/types.js"></script>
             <script src="/js/secure.js"></script>
+            <script src="/js/storage.js"></script>
+            <script src="/js/ajax.js"></script><!-- TEMP ONLY!!! REIMPLEMENT BETTER AJAX CODE USING PROMISES -->
             <script>
-                let serverKeyData = <?php echo(json_encode($keyCookie)); ?>;
-                let serverRsa = new RSAKey();
-                let clientRsa = new RSAKey();
-                let msg = "Hi, World!";
-                msg += "Hi, World!";
-                msg += "Hi, World!";
-                msg += "Hi, World!";
-                msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                // msg += "Hi, World!";
-                msg += "DONE";
-                let encmsg = "";
-                let codmsg = btoa(msg);
+                let serverKeyData = <?php echo(json_encode(['n'=>$n, 'e'=>$e, 'd'=>$d])); ?>;
+                let serverPubKey = new RSAKey();
+                let clientPrivKey = new RSAKey();
 
-                // console.log(serverKeyData);
+                serverPubKey.setPublic(serverKeyData["n"], serverKeyData["e"]);
+                clientPrivKey.generate(<?php echo($bitSize); ?>, '10001');
 
-                serverRsa.setPublic(serverKeyData["n"], serverKeyData["e"]);
-                clientRsa.generate(<?php echo($bitSize); ?>, '10001');
-                // console.log(clientRsa);
-                // let crypted = serverRsa.encrypt(JSON.stringify(clientRsa));
-                encmsg = serverRsa.encrypt(codmsg);
-                console.log(encmsg);
-                console.log(codmsg);
-                // console.log(crypted);
-                serverRsa.setPrivate(serverKeyData["n"], serverKeyData["e"], serverKeyData["d"]);
-                // console.log(serverRsa.decrypt(crypted));
-                console.log(serverRsa.decrypt(encmsg));
-                console.log(atob(serverRsa.decrypt(encmsg)));
+                let clientSharedKeyRecipe = [clientPrivKey.d.toString(16), clientPrivKey.e.toString(16), clientPrivKey.n.toString(16)];
+                
+                // console.log(clientSharedKeyRecipe);
+
+                let clientSharedKey = SDP.packageData(clientSharedKeyRecipe, serverPubKey, <?php echo($bitSize); ?>);
+                let token = SDP.encryptValue(Storage.getCookie("PHPSESSID"), serverPubKey, <?php echo($bitSize); ?>);
+                
+                // console.log(clientSharedKey, token);
+
+                // serverPubKey.setPrivate(serverKeyData["n"], serverKeyData["e"], serverKeyData["d"]);
+
+                // console.log(SDP.unpackData(clientSharedKey, serverPubKey, <?php echo($bitSize); ?>));
+
+                postData(window.location.href, "csk=" + clientSharedKey + "&token=" + token, function(){
+                    let response = null;
+
+                    if (this.readyState === 4 && this.status === 200)
+                    {
+                        console.log(this.responseText);
+
+                        // response = JSON.parse(this.responseText);
+                        // window.location.reload();
+
+                    }
+                });
+
             </script>
             <?php
     
             // setcookie('srvkd', json_encode($keyCookie), time() + 60 * 60 * 24, '/');
 
-            $this->jsDebugHTMLOutput(function(){ print_r($_COOKIE); });            
+            $this->jsDebugHTMLOutput(function(){ print_r($_COOKIE); });
+            $this->jsDebugHTMLOutput(function(){ print_r($_REQUEST); });
         }
 
         die();
@@ -132,37 +250,96 @@ class SeRGS_App extends App
     
     private function testEncryption()
     {
+        require_once(__FILE_ROOT__ . '/php/secure/sdp.php');
+
         $msg = "I'm gonna be the very best where no one ever was. EUREKA!!!!!!!!!!!!!!!!!!!!";
         $bitSize = 1024;
+        $keyDataOpenSSL = null;
+        $privKeyOpenSSL = null;
+        $pubKeyOpenSSL = null;
+        $rsaOpenSSL = null;
+        $rsa = new phpseclib\Crypt\RSA();
+        $sdp = new SecureDataPackager();
 
-        $config = array(
-            'digest_alg' => 'ripemd320',
-            'private_key_bits' => $bitSize,
-            'private_key_type' => OPENSSL_KEYTYPE_RSA
-        );
-        $privKey = openssl_pkey_new($config);
-        $keyData = openssl_pkey_get_details($privKey);
-        $pubKey = $keyData['key'];
-        $rsa = $keyData['rsa'];
+        $this->jsDebugHTMLOutput(fn()=>print_r($rsa), 'Sample RSA Object');
 
-        $this->jsDebugHTMLOutput(fn()=>print_r($keyData));            
+        // unset($_SESSION['privKey']);
+        if (isset($_SESSION['privKey']))
+        {
+            $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
+            $sdp->setKeyFromString($_SESSION['privKey']);
+        }
+        else
+        {
+            $rsa->setPrivateKeyFormat(\phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
+            extract($rsa->createKey($bitSize));
+            // $this->jsDebugHTMLOutput(fn()=>(var_dump([$privatekey, $publickey])));
+            $_SESSION['privKey'] = $privatekey;
+            $_SESSION['pubKey'] = $publickey;
+
+            $sdp->createKey($bitSize);
+        }
         
-        openssl_public_encrypt($msg, $crypt, $pubKey);
+        $this->jsDebugHTMLOutput(fn()=>print_r($sdp->getKey()), 'SDP: RSA Key');
+        // $this->jsDebugHTMLOutput(fn()=>print_r($sdp->getKeyPair()), 'SDP: Loaded keys');
+        // $this->jsDebugHTMLOutput(fn()=>print_r($sdp->getBitSize()), 'SDP: Bit size');
 
+        $privKeyOpenSSL = openssl_pkey_get_private($_SESSION['privKey']);
+        // $this->jsDebugHTMLOutput(fn()=>(var_dump($rsa->_parseKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1))));
+        $keyDataOpenSSL = openssl_pkey_get_details($privKeyOpenSSL);
+        $pubKeyOpenSSL = $keyDataOpenSSL['key']; // string-based key
+        $rsaOpenSSL = $keyDataOpenSSL['rsa']; // rsa data
+
+        $this->jsDebugHTMLOutput(fn()=>print_r($keyDataOpenSSL), 'Server OpenSSL Key Components');
+        openssl_private_encrypt($msg, $crypt, $privKeyOpenSSL);
         setcookie('message', json_encode(['orig'=>$msg, 'crypt'=>bin2hex($crypt)]), time() + 60 * 60 * 24, '/');
+        openssl_public_decrypt($crypt, $decrypt, $pubKeyOpenSSL);
+        $this->jsDebugHTMLOutput(fn()=>print_r([
+            'message'=>$msg,
+            'ciphered'=>$crypt,
+            'deciphered'=>$decrypt
+        ]), 'Server Test Encrypt/Decrypt (OpenSSL)');
         
-        openssl_private_decrypt($crypt, $decrypt, $privKey);
+        $rsa->loadKey($_SESSION['pubKey'], \phpseclib\Crypt\RSA::PUBLIC_FORMAT_PKCS1);
+        $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
+        $crypt = $rsa->encrypt($msg);
+        $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
+        $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
+        $decrypt = $rsa->decrypt($crypt);
+        $this->jsDebugHTMLOutput(fn()=>print_r([
+            'message'=>$msg,
+            'ciphered'=>$crypt,
+            'deciphered'=>$decrypt
+        ]), 'Server Test Encrypt/Decrypt (phpseclib)');
 
-        $n = bin2hex($rsa['n']);
-        $e = bin2hex($rsa['e']);
-        $d = bin2hex($rsa['d']);
-        $p = bin2hex($rsa['p']);
-        $q = bin2hex($rsa['q']);
-        $dmp1 = bin2hex($rsa['dmp1']);
-        $dmq1 = bin2hex($rsa['dmq1']);
-        $iqmp = bin2hex($rsa['iqmp']);
+        $this->jsDebugHTMLOutput(fn()=>print_r([
+            'message'=>$msg,
+            'ciphered'=>$sdp->encrypt($msg),
+            'deciphered'=>$sdp->decrypt($sdp->encrypt($msg))
+        ]), 'Server Test Encrypt/Decrypt (SDP)');
+
+        // DON'T DELETE; FOR FUTURE SAMPLE
+        $n = bin2hex($rsaOpenSSL['n']);
+        $e = bin2hex($rsaOpenSSL['e']);
+        $d = bin2hex($rsaOpenSSL['d']);
+        $p = bin2hex($rsaOpenSSL['p']);
+        $q = bin2hex($rsaOpenSSL['q']);
+        $dmp1 = bin2hex($rsaOpenSSL['dmp1']);
+        $dmq1 = bin2hex($rsaOpenSSL['dmq1']);
+        $iqmp = bin2hex($rsaOpenSSL['iqmp']);
+        
+        $n = $rsa->modulus->toHex();
+        $e = $rsa->publicExponent->toHex();
+        $d = $rsa->exponent->toHex();
+        $p = $rsa->primes[1]->toHex();
+        $q = $rsa->primes[2]->toHex();
+        $dmp1 = $rsa->exponents[1]->toHex();
+        $dmq1 = $rsa->exponents[2]->toHex();
+        $iqmp = $rsa->coefficients[2]->toHex();
 
         $keyCookie = ['n'=>$n, 'e'=>$e, 'd'=>$d, 'p'=>$p, 'q'=>$q, 'dmp1'=>$dmp1, 'dmq1'=>$dmq1, 'iqmp'=>$iqmp];
+        
+        // $this->jsDebugHTMLOutput(fn()=>print_r($keyCookie), '$keyCookie');
 
         setcookie('srvkd', json_encode($keyCookie), time() + 60 * 60 * 24, '/');
         
@@ -182,24 +359,36 @@ class SeRGS_App extends App
 <script src="/js/libs/jsbn/rsa.js"></script>
 <script src="/js/libs/jsbn/rsa2.js"></script>
 <script src="/sergs/js/sergs.js"></script>
-<script src="/js/types.js"></script>
 <script src="/js/secure.js"></script>
 
 <script>
 // let keyData = JSON.parse(SeRGS_App.getCookie('srvkd'));
 let keyData = <?php echo(json_encode($keyCookie)); ?>;
 let crypt = JSON.parse(SeRGS_App.getCookie('message'))['crypt'];
-// console.log(keyData);
+console.log(keyData);
 
 let rsa = new RSAKey();
 
 rsa.setPrivate(keyData["n"], keyData["e"], keyData["d"]);
+console.log(rsa);
 let decrypt = rsa.decrypt(crypt);
 console.log(decrypt);
 
 SeRGS_App.setCookie('srvkd', '', -1);
 SeRGS_App.setCookie('message', '', -1);
+// SeRGS_App.setCookie('token', '', -1);
+// SeRGS_App.setCookie('tok', '', -1);
+// SeRGS_App.setCookie('x', '', -1);
 // console.log(document.cookie);
+
+let newMsg = "All it takes is a will to win!";
+let encrypt = rsa.encrypt(newMsg);
+SeRGS_App.setCookie('encrypt', encrypt, 1);
+console.log(encrypt, rsa.decrypt(encrypt));
+
+let sessId = rsa.encrypt(SeRGS_App.getCookie('PHPSESSID'));
+SeRGS_App.setCookie('token', sessId, 1);
+console.log(sessId, rsa.decrypt(sessId));
 
 </script>
         <?php
@@ -207,17 +396,73 @@ SeRGS_App.setCookie('message', '', -1);
         // UNNECESSARY: THESE ARE UNSET ON THE NEXT GET
         // unset($_COOKIE['srvkd']);
         // unset($_COOKIE['message']);
-        $this->jsDebugHTMLOutput(function(){ print_r($_COOKIE); });
+        // unset($_COOKIE['token']);
+        // unset($_COOKIE['tok']);
+        // unset($_COOKIE['x']);
+        // unset($_SESSION['sk']);
+        // unset($_SESSION['ssk']);
+        // unset($_SESSION['spk']);
+        // unset($_SESSION['privKey']);
+        // unset($_SESSION['pubKey']);
+
+        $this->jsDebugHTMLOutput(fn()=>print_r($_COOKIE), 'Cookies Variable');
+        $this->jsDebugHTMLOutput(fn()=>print_r($_SESSION), 'Session Variable');
+
+        $padding = 5;
+
+        $rsa = new \phpseclib\Crypt\RSA();
+        // $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1);
+        $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8); // also works, although fails when key header is BEGIN RSA PRIVATE KEY
+
+        $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
+        // $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_NONE); // also works, but has A LOT of extra characters before the decrypted text
+        // $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_OAEP); // doesn't work at all
+
+        $types = array( // only these four work for keys from OpenSSL
+            \phpseclib\Crypt\RSA::PUBLIC_FORMAT_PKCS1_RAW,
+            \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1,
+            \phpseclib\Crypt\RSA::PUBLIC_FORMAT_PKCS1,
+            \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8,
+        );
+
+        $this->jsDebugHTMLOutput(fn()=>(var_dump($rsa)), 'RSA Object (phpseclib)');
+
+        $oKey = openssl_pkey_get_private($_SESSION['privKey']);
+        
+        $detoken = '';
+        openssl_private_decrypt($_COOKIE['token'], $detoken, $oKey, $padding);
+        $this->jsDebugHTMLOutput(fn()=>(print_r($_COOKIE['token'])), 'Client-encypted PHPSESSID token passed via cookies');
+        $this->jsDebugHTMLOutput(fn()=>(var_dump($detoken)), 'Server OpenSSL-decrypted token');
+        $this->jsDebugHTMLOutput(fn()=>(var_dump('[' . $rsa->decrypt(hex2bin($_COOKIE['token'])) . ']')), 'phpseclib-decrypted token');
+        
+        $decrypt = '';
+        openssl_private_decrypt($_COOKIE['encrypt'], $decrypt, $oKey, $padding);
+        $this->jsDebugHTMLOutput(fn()=>(print_r($_COOKIE['encrypt'])), 'Client-encypted test message passed via cookies');
+        $this->jsDebugHTMLOutput(fn()=>(var_dump($decrypt)), 'Server OpenSSL-decrypted test message');
+        $this->jsDebugHTMLOutput(fn()=>(var_dump('[' . $rsa->decrypt(hex2bin($_COOKIE['encrypt'])) . ']')), 'phpseclib-decrypted test message');
+        
+        foreach ([$oKey, $rsa->getPublicKey(), $rsa->getPrivateKey(\phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8)] as $pKey)
+        {
+            $this->jsDebugHTMLOutput(fn()=>(var_dump($pKey)), 'Key');
+        }
+
+        $rsa->loadKey($_SESSION['pubKey'], \phpseclib\Crypt\RSA::PUBLIC_FORMAT_PKCS1);
+        $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
+        $val = $rsa->encrypt('<em>Hello!</em> How do you do?');
+        $this->jsDebugHTMLOutput(fn()=>(var_dump($val)), 'phpseclib-encrypted test message');
+        
+        $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
+        $this->jsDebugHTMLOutput(fn()=>(var_dump($rsa->decrypt($val))), 'phpseclib-decrypted test message');
 
         die();
     }
     
     private function setupEnums()
     {
-        $this->enum['appointmentStatus'] = $this->getDB_SDO()->select('ENUM_Emp_Appointment_Status', '*');
-        $this->enum['positions'] = $this->getDB_SDO()->select('Position', 'plantilla_item_number, position_title, parenthetical_title, salary_grade, place_of_assignment, filled');
-        $this->enum['position_titles'] = array_values(array_map(fn($row) => $row['position_title'], $this->getDB_SDO()->select('Position', 'position_title', 'GROUP BY position_title')));
-        $this->enum['salaryGrade'] = $this->getDB_SDO()->select('Salary_Table', 'salary_grade, step_increment, salary, effectivity_date'/*, 'WHERE effectivity_date >= "2023-01-01"'*/);
+        $this->enum['appointmentStatus'] = $this->getDB_SDO()->select('ENUM_Emp_Appointment_Status', '*') ?? [];
+        $this->enum['positions'] = $this->getDB_SDO()->select('Position', 'plantilla_item_number, position_title, parenthetical_title, salary_grade, place_of_assignment, filled') ?? [];
+        $this->enum['position_titles'] = array_values(array_map(fn($row) => $row['position_title'], $this->getDB_SDO()->select('Position', 'position_title', 'GROUP BY position_title') ?? []));
+        $this->enum['salaryGrade'] = $this->getDB_SDO()->select('Salary_Table', 'salary_grade, step_increment, salary, effectivity_date'/*, 'WHERE effectivity_date >= "2023-01-01"'*/) ?? [];
     }
 
     private function writeJSEnums()
@@ -2599,87 +2844,6 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         }
     
         return array('fieldStr'=>$fieldStr, 'valueStr'=>$valueStr, 'fieldValueStr'=>$fieldValueStr);
-    }
-    
-    private function jsMsgBox($caption, $msg, $type = 0, $funcName = "serverMsg")
-    {
-        $funcName .= $this->jsTailScriptCount;
-        $typeIcon = ($type > 0 && $type < 8 ? '<span class=\"material-icons-round'
-            . ($type === 1 ? ' blue' : ($type === 2 ? ' green' : ($type === 3 ? ' orange' : ($type === 4 ? ' orange' : ($type === 5 ? ' crimson' : ($type === 6 ? ' red' : ' magenta'))))))
-            . ' message-box-icon\">'
-            . ($type === 1 ? 'info' : ($type === 2 ? 'check_circle' : ($type === 3 ? 'cancel' : ($type === 4 ? 'warning' : ($type === 5 ? 'error' : ($type === 6 ? 'error' : 'bug_report'))))))
-            . '</span> ' : '');
-        
-        ?>
-<script>
-function <?php echo($funcName); ?>() {
-    new MessageBox().setup(app.main, "<?php echo(htmlentities($caption, ENT_QUOTES)); ?>", ("<?php echo($typeIcon . htmlentities($msg, ENT_QUOTES)); ?>").replace(/&lt;(.+?)&gt;/g, "<$1>"));
-}
-</script><?php
-        $this->jsTailScripts .= "if ($funcName !== null && $funcName !== undefined && ElementEx.type($funcName) === \"function\")\n{\n    $funcName();\n}\n";
-        $this->jsTailScriptCount++;
-    }
-
-    private function jsMsgConsole($msg, $funcName = "serverMsg")
-    {
-        $funcName .= $this->jsTailScriptCount; ?>
-<script>
-function <?php echo($funcName); ?>() {
-    console.log(JSON.parse("<?php echo(preg_replace('/"/', '\"', $msg)); ?>"));
-}
-</script><?php
-        $this->jsTailScripts += "if ($funcName !== null && $funcName !== undefined && ElementEx.type($funcName) === \"function\")\n{\n    $funcName();\n}\n";
-        $this->jsTailScriptCount++;
-    }
-
-    private function jsSimpleMsgBox($msg)
-    { 
-        $this->jsMsgBox('SeRGS Message', $msg, 0, 'simpleMsg');
-    }
-        
-    private function jsInfoMsgBox($msg)
-    { 
-        $this->jsMsgBox('SeRGS Info', $msg, 1, 'infoMsg');
-    }
-        
-    private function jsSuccessMsgBox($msg)
-    { 
-        $this->jsMsgBox('SeRGS Info', $msg, 2, 'infoMsg');
-    }
-        
-    private function jsFailMsgBox($msg)
-    { 
-        $this->jsMsgBox('SeRGS Info', $msg, 3, 'infoMsg');
-    }
-        
-    private function jsWarningMsgBox($msg)
-    { 
-        $this->jsMsgBox('SeRGS Warning', $msg, 4, 'infoMsg');
-    }
-        
-    private function jsExceptionMsgBox($exceptionMsg)
-    { 
-        $this->jsMsgBox('SeRGS Exception', $exceptionMsg, 5, 'exceptionMsg');
-    }
-        
-    private function jsErrorMsgBox($errMsg)
-    { 
-        $this->jsMsgBox('SeRGS Error', $errMsg, 6, 'errorMsg');
-    }
-
-    private function jsDebugMsgBox($debugMsg)
-    { 
-        $this->jsMsgBox('SeRGS Debug', $debugMsg, 7, 'debugMsg');
-    }
-
-    private function jsDebugConsole($msg)
-    { 
-        $this->jsMsgConsole("SeRGS Debug:\n " . $msg);
-    }
-
-    private function jsDebugHTMLOutput($callback)
-    { ?>
-        <div style="margin: 1em; padding: 1em; border: 1px ridge gray; overflow: auto; white-space: pre-wrap;"><?php $callback(); ?></div><?php
     }
 }
 ?>

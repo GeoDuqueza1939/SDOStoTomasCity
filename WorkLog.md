@@ -1,5 +1,69 @@
 # Work Log
 
+## 8/04/2023
+TO DO:
+* [ ] [SeRGS] Recreate the JS SDP class as a non-static SecureDataPackager class (for front-end)
+* [x] [SeRGS] Create the PHP SecureDataPackager class (for back-end)
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+Today, I finished the PHP SDP class. I will have to recreate this later on in the front-end to have seamless handshake and data interchange.
+
+## 8/03/2023
+TO DO:
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+EUREKA! After a few days and another whole morning of fiddling around, I've finally made the JSBN encryption and PHPSECLIB decryption work together! It would be better if I could do the same with OpenSSL PHP extensions, but this will, at least, do for now. I proceeded to remove most of the OpenSSL statements in the test procedure. Tomorrow, I will be busy in integrating the encryption-decryption procedures to the PHP SDP class, which I shall turn into a non-static class.
+
+## 8/02/2023
+TO DO:
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+I felt really ill yesterday so I had to request some time off. I resumed my work today in trying to implement the JSBN-PHPSECLIB handshake.
+
+
+## 7/31/2023
+TO DO:
+* [x] Transition to Windows 11 and XAMPP from Ubuntu Linux and Apache2/PHP/MariaDB
+* [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
+* [ ] [SeRGS] Secure all data exchange
+* [ ] [SeRGS] Add Other Accounts page (based on existing MPaSIS design)
+* [ ] [SeRGS] Add success and fail message whenever saving/updating service record
+* [ ] [MPaSIS] Change font-family (ask for suggestions)
+* [ ] [MPaSIS] Handle tied scores in the rankings
+* [ ] [MPaSIS] Test MPaSIS for production fitness
+* [ ] [MPaSIS] Add signatory names
+* [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
+* [ ] Make `/web/root/secure` folder more secure
+
+Not much happened today. But I did try setting up XAMPP in Windows 11 to get things working again.
+
 ## 7/26/2023
 TO DO:
 * [ ] [SeRGS] Add JS code that creates and encrypts data using RSA key pairs
@@ -12,6 +76,8 @@ TO DO:
 * [ ] [MPaSIS] Add signatory names
 * [ ] [MPaSIS] Provide a field/checkbox for withdrawn applications
 * [ ] Make `/web/root/secure` folder more secure
+
+The pacing of work is slow as these past days because of dealing with encryption. I will have to finish something before I tender my (temporary) resignation. There is also the deal with (re)installing Windows as my laptop's main OS.
 
 ## 7/25/2023
 TO DO:

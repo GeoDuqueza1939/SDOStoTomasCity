@@ -7,8 +7,8 @@ class Type
 {
     /**
      * Get the type of data.
-     * @param {any} data
-     * @returns string
+     * @param {Any} data
+     * @returns {String}
      */
     static get(data)
     {
@@ -17,8 +17,8 @@ class Type
 
     /**
      * Get the type of data. If data is an instance of a certain class, it returns the class name.
-     * @param {any} data
-     * @returns string
+     * @param {Any} data
+     * @returns {String}
      */
     static getEx(data)
     {
@@ -29,8 +29,8 @@ class Type
 
     /**
      * Checks if data is either null or undefined.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isVoid(data)
     {
@@ -39,8 +39,8 @@ class Type
 
     /**
      * Checks if data is a string.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isString(data)
     {
@@ -49,8 +49,8 @@ class Type
 
     /**
      * Checks if data is an empty (zero-length) string.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isEmptyString(data)
     {
@@ -59,14 +59,19 @@ class Type
 
     /**
      * Checks if data is a string of spaces.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isSpaceString(data)
     {
         return this.isString(data) && data.length > 0 && data.trim() === '';
     }
 
+    /**
+     * Checks if data is an array.
+     * @param {Any} data
+     * @returns {Boolean}
+     */
     static isArray(data)
     {
         return this.get(data) === 'array';
@@ -74,8 +79,8 @@ class Type
 
     /**
      * Checks if data is an actual number.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isNumber(data)
     {
@@ -84,8 +89,8 @@ class Type
 
     /**
      * Checks if data is a numeric string.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isNumericString(data)
     {
@@ -94,14 +99,19 @@ class Type
 
     /**
      * Checks if data is either a number or a numeric string.
-     * @param {any} data
-     * @returns boolean
+     * @param {Any} data
+     * @returns {Boolean}
      */
     static isNumeric(data)
     {
         return this.isNumber(data) || this.isNumericString(data);
     }
 
+    /**
+     * Checks if data is an integer.
+     * @param {Any} data
+     * @returns {Boolean}
+     */
     static isInteger(data)
     {
         return this.isNumeric(data) && parseInt(data) === parseFloat(data);
