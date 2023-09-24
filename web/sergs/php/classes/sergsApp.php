@@ -33,7 +33,7 @@ class SeRGS_App extends App
         // die(json_encode($this->enum));
 
         // $this->jsDebugHTMLOutput(function(){ print_r($_COOKIE); });
-        $this->testEncryption();
+        // $this->testEncryption();
         // $this->prepareEncryption();
     }
 
@@ -261,7 +261,7 @@ class SeRGS_App extends App
         $rsa = new phpseclib\Crypt\RSA();
         $sdp = new SecureDataPackager();
 
-        $this->jsDebugHTMLOutput(fn()=>print_r($rsa), 'Sample RSA Object');
+        $this->jsDebugHTMLOutput(function() use($rsa) { print_r($rsa); }, 'Sample RSA Object');
 
         // unset($_SESSION['privKey']);
         if (isset($_SESSION['privKey']))
@@ -273,32 +273,32 @@ class SeRGS_App extends App
         {
             $rsa->setPrivateKeyFormat(\phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
             extract($rsa->createKey($bitSize));
-            // $this->jsDebugHTMLOutput(fn()=>(var_dump([$privatekey, $publickey])));
+            // $this->jsDebugHTMLOutput(function() use($privatekey, $publickey) { var_dump([$privatekey, $publickey]); });
             $_SESSION['privKey'] = $privatekey;
             $_SESSION['pubKey'] = $publickey;
 
             $sdp->createKey($bitSize);
         }
         
-        $this->jsDebugHTMLOutput(fn()=>print_r($sdp->getKey()), 'SDP: RSA Key');
-        // $this->jsDebugHTMLOutput(fn()=>print_r($sdp->getKeyPair()), 'SDP: Loaded keys');
-        // $this->jsDebugHTMLOutput(fn()=>print_r($sdp->getBitSize()), 'SDP: Bit size');
+        $this->jsDebugHTMLOutput(function() use($sdp) { print_r($sdp->getKey()); }, 'SDP: RSA Key');
+        // $this->jsDebugHTMLOutput(function() use($sdp) { print_r($sdp->getKeyPair()); }, 'SDP: Loaded keys');
+        // $this->jsDebugHTMLOutput(function() use($sdp) { print_r($sdp->getBitSize()); }, 'SDP: Bit size');
 
         $privKeyOpenSSL = openssl_pkey_get_private($_SESSION['privKey']);
-        // $this->jsDebugHTMLOutput(fn()=>(var_dump($rsa->_parseKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1))));
+        // $this->jsDebugHTMLOutput(function() use($rsa) { var_dump($rsa->_parseKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS1)); });
         $keyDataOpenSSL = openssl_pkey_get_details($privKeyOpenSSL);
         $pubKeyOpenSSL = $keyDataOpenSSL['key']; // string-based key
         $rsaOpenSSL = $keyDataOpenSSL['rsa']; // rsa data
 
-        $this->jsDebugHTMLOutput(fn()=>print_r($keyDataOpenSSL), 'Server OpenSSL Key Components');
+        $this->jsDebugHTMLOutput(function() use($keyDataOpenSSL) { print_r($keyDataOpenSSL); }, 'Server OpenSSL Key Components');
         openssl_private_encrypt($msg, $crypt, $privKeyOpenSSL);
         setcookie('message', json_encode(['orig'=>$msg, 'crypt'=>bin2hex($crypt)]), time() + 60 * 60 * 24, '/');
         openssl_public_decrypt($crypt, $decrypt, $pubKeyOpenSSL);
-        $this->jsDebugHTMLOutput(fn()=>print_r([
+        $this->jsDebugHTMLOutput(function() use($msg, $crypt, $decrypt) { print_r([
             'message'=>$msg,
             'ciphered'=>$crypt,
             'deciphered'=>$decrypt
-        ]), 'Server Test Encrypt/Decrypt (OpenSSL)');
+        ]); }, 'Server Test Encrypt/Decrypt (OpenSSL)');
         
         $rsa->loadKey($_SESSION['pubKey'], \phpseclib\Crypt\RSA::PUBLIC_FORMAT_PKCS1);
         $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
@@ -306,17 +306,17 @@ class SeRGS_App extends App
         $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
         $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
         $decrypt = $rsa->decrypt($crypt);
-        $this->jsDebugHTMLOutput(fn()=>print_r([
+        $this->jsDebugHTMLOutput(function() use($msg, $crypt, $decrypt) { print_r([
             'message'=>$msg,
             'ciphered'=>$crypt,
             'deciphered'=>$decrypt
-        ]), 'Server Test Encrypt/Decrypt (phpseclib)');
+        ]); }, 'Server Test Encrypt/Decrypt (phpseclib)');
 
-        $this->jsDebugHTMLOutput(fn()=>print_r([
+        $this->jsDebugHTMLOutput(function() use($msg, $sdp) { print_r([
             'message'=>$msg,
             'ciphered'=>$sdp->encrypt($msg),
             'deciphered'=>$sdp->decrypt($sdp->encrypt($msg))
-        ]), 'Server Test Encrypt/Decrypt (SDP)');
+        ]); }, 'Server Test Encrypt/Decrypt (SDP)');
 
         // DON'T DELETE; FOR FUTURE SAMPLE
         $n = bin2hex($rsaOpenSSL['n']);
@@ -339,7 +339,7 @@ class SeRGS_App extends App
 
         $keyCookie = ['n'=>$n, 'e'=>$e, 'd'=>$d, 'p'=>$p, 'q'=>$q, 'dmp1'=>$dmp1, 'dmq1'=>$dmq1, 'iqmp'=>$iqmp];
         
-        // $this->jsDebugHTMLOutput(fn()=>print_r($keyCookie), '$keyCookie');
+        // $this->jsDebugHTMLOutput(function() use($keyCookie) { print_r($keyCookie); }, '$keyCookie');
 
         setcookie('srvkd', json_encode($keyCookie), time() + 60 * 60 * 24, '/');
         
@@ -405,8 +405,8 @@ console.log(sessId, rsa.decrypt(sessId));
         // unset($_SESSION['privKey']);
         // unset($_SESSION['pubKey']);
 
-        $this->jsDebugHTMLOutput(fn()=>print_r($_COOKIE), 'Cookies Variable');
-        $this->jsDebugHTMLOutput(fn()=>print_r($_SESSION), 'Session Variable');
+        $this->jsDebugHTMLOutput(function() { print_r($_COOKIE); }, 'Cookies Variable');
+        $this->jsDebugHTMLOutput(function() { print_r($_SESSION); }, 'Session Variable');
 
         $padding = 5;
 
@@ -425,34 +425,34 @@ console.log(sessId, rsa.decrypt(sessId));
             \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8,
         );
 
-        $this->jsDebugHTMLOutput(fn()=>(var_dump($rsa)), 'RSA Object (phpseclib)');
+        $this->jsDebugHTMLOutput(function() use($rsa) { var_dump($rsa); }, 'RSA Object (phpseclib)');
 
         $oKey = openssl_pkey_get_private($_SESSION['privKey']);
         
         $detoken = '';
         openssl_private_decrypt($_COOKIE['token'], $detoken, $oKey, $padding);
-        $this->jsDebugHTMLOutput(fn()=>(print_r($_COOKIE['token'])), 'Client-encypted PHPSESSID token passed via cookies');
-        $this->jsDebugHTMLOutput(fn()=>(var_dump($detoken)), 'Server OpenSSL-decrypted token');
-        $this->jsDebugHTMLOutput(fn()=>(var_dump('[' . $rsa->decrypt(hex2bin($_COOKIE['token'])) . ']')), 'phpseclib-decrypted token');
+        $this->jsDebugHTMLOutput(function() { print_r($_COOKIE['token']); }, 'Client-encypted PHPSESSID token passed via cookies');
+        $this->jsDebugHTMLOutput(function() use($detoken) { var_dump($detoken); }, 'Server OpenSSL-decrypted token');
+        $this->jsDebugHTMLOutput(function() use($rsa) { var_dump('[' . $rsa->decrypt(hex2bin($_COOKIE['token'])) . ']'); }, 'phpseclib-decrypted token');
         
         $decrypt = '';
         openssl_private_decrypt($_COOKIE['encrypt'], $decrypt, $oKey, $padding);
-        $this->jsDebugHTMLOutput(fn()=>(print_r($_COOKIE['encrypt'])), 'Client-encypted test message passed via cookies');
-        $this->jsDebugHTMLOutput(fn()=>(var_dump($decrypt)), 'Server OpenSSL-decrypted test message');
-        $this->jsDebugHTMLOutput(fn()=>(var_dump('[' . $rsa->decrypt(hex2bin($_COOKIE['encrypt'])) . ']')), 'phpseclib-decrypted test message');
+        $this->jsDebugHTMLOutput(function() { print_r($_COOKIE['encrypt']); }, 'Client-encypted test message passed via cookies');
+        $this->jsDebugHTMLOutput(function() use($decrypt) { var_dump($decrypt); }, 'Server OpenSSL-decrypted test message');
+        $this->jsDebugHTMLOutput(function() use($rsa) { var_dump('[' . $rsa->decrypt(hex2bin($_COOKIE['encrypt'])) . ']'); }, 'phpseclib-decrypted test message');
         
         foreach ([$oKey, $rsa->getPublicKey(), $rsa->getPrivateKey(\phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8)] as $pKey)
         {
-            $this->jsDebugHTMLOutput(fn()=>(var_dump($pKey)), 'Key');
+            $this->jsDebugHTMLOutput(function() use($pKey) { var_dump($pKey); }, 'Key');
         }
 
         $rsa->loadKey($_SESSION['pubKey'], \phpseclib\Crypt\RSA::PUBLIC_FORMAT_PKCS1);
         $rsa->setEncryptionMode(\phpseclib\Crypt\RSA::ENCRYPTION_PKCS1);
         $val = $rsa->encrypt('<em>Hello!</em> How do you do?');
-        $this->jsDebugHTMLOutput(fn()=>(var_dump($val)), 'phpseclib-encrypted test message');
+        $this->jsDebugHTMLOutput(function() use($val) { var_dump($val); }, 'phpseclib-encrypted test message');
         
         $rsa->loadKey($_SESSION['privKey'], \phpseclib\Crypt\RSA::PRIVATE_FORMAT_PKCS8);
-        $this->jsDebugHTMLOutput(fn()=>(var_dump($rsa->decrypt($val))), 'phpseclib-decrypted test message');
+        $this->jsDebugHTMLOutput(function() use($rsa, $val) { var_dump($rsa->decrypt($val)); }, 'phpseclib-decrypted test message');
 
         die();
     }
@@ -461,7 +461,7 @@ console.log(sessId, rsa.decrypt(sessId));
     {
         $this->enum['appointmentStatus'] = $this->getDB_SDO()->select('ENUM_Emp_Appointment_Status', '*') ?? [];
         $this->enum['positions'] = $this->getDB_SDO()->select('Position', 'plantilla_item_number, position_title, parenthetical_title, salary_grade, place_of_assignment, filled') ?? [];
-        $this->enum['position_titles'] = array_values(array_map(fn($row) => $row['position_title'], $this->getDB_SDO()->select('Position', 'position_title', 'GROUP BY position_title') ?? []));
+        $this->enum['position_titles'] = array_values(array_map(function($row) { return $row['position_title']; }, $this->getDB_SDO()->select('Position', 'position_title', 'GROUP BY position_title') ?? []));
         $this->enum['salaryGrade'] = $this->getDB_SDO()->select('Salary_Table', 'salary_grade, step_increment, salary, effectivity_date'/*, 'WHERE effectivity_date >= "2023-01-01"'*/) ?? [];
     }
 
@@ -1617,7 +1617,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                     // $this->jsDebugMsgBox(json_encode($employee, true));
 
                                     // Sort SR data field according to start dates
-                                    usort($sr, fn($sr1, $sr2) => ($sr1['date_start'] < $sr2['date_start'] ? -1 : ($sr1['date_start'] > $sr2['date_start'] ? 1 : ((($sr1['date_end'] < $sr2['date_end'] || is_null($sr2['date_end'])) && !is_null($sr1['date_end'])) ? -1 : ((!is_null($sr2['date_end']) && ($sr1['date_end'] > $sr2['date_end'] || is_null($sr1['date_end']))) ? 1 : 0))))); // ascending order according to date
+                                    usort($sr, function($sr1, $sr2) { return ($sr1['date_start'] < $sr2['date_start'] ? -1 : ($sr1['date_start'] > $sr2['date_start'] ? 1 : ((($sr1['date_end'] < $sr2['date_end'] || is_null($sr2['date_end'])) && !is_null($sr1['date_end'])) ? -1 : ((!is_null($sr2['date_end']) && ($sr1['date_end'] > $sr2['date_end'] || is_null($sr1['date_end']))) ? 1 : 0)))); }); // ascending order according to date
 
                                     foreach ($sr as &$srTOS)
                                     {
@@ -2689,7 +2689,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         $sr[count($sr) - 1][$key] = ($dbSRTOS[$key] === '' ? null : $dbSRTOS[$key]);
                     }
 
-                    $appointments = array_values(array_filter($dbAppointments, fn($dbAppmt) => $dbAppmt['emp_appointmentId'] === $dbSRTOS['appointmentId']));
+                    $appointments = array_values(array_filter($dbAppointments, function($dbAppmt) use($dbSRTOS) { return $dbAppmt['emp_appointmentId'] === $dbSRTOS['appointmentId']; }));
                     $sr[count($sr) - 1]['appointment'] = (count($appointments) === 0 ? null : $appointments[0]);
                 }
             }

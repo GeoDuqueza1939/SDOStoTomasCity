@@ -21,9 +21,12 @@ class SecureDataPackager
 {
     use JsMsgDisplay;
     
-    private ?RSA $rsaKey = null;
-    private ?string $privKey = null;
-    private ?string $pubKey = null;
+    // private ?RSA $rsaKey = null;
+    // private ?string $privKey = null;
+    // private ?string $pubKey = null;
+    private $rsaKey = null;
+    private $privKey = null;
+    private $pubKey = null;
 
     public function __construct()
     {}
@@ -192,7 +195,7 @@ class SecureDataPackager
         $this->rsaKey->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
 
         $stringChunks = $this->_split($stringData, intval($this->getBitSize()) / 16); // split into chunks
-        $encChunks = array_map(fn($stringChunk)=>bin2hex($this->rsaKey->encrypt($stringChunk)), $stringChunks); // encrypt each chunk
+        $encChunks = array_map(function($stringChunk) { return bin2hex($this->rsaKey->encrypt($stringChunk)); }, $stringChunks); // encrypt each chunk
         $encJson = json_encode($encChunks); // generate JSON from encrypted chunks
         $b64String = base64_encode($encJson); // base64 encode for transmission
 
@@ -211,7 +214,7 @@ class SecureDataPackager
         
         $encJson = base64_decode($b64String); // decode JSON from base64 string
         $encChunks = json_decode($encJson); // parse encrypted data chunks from JSON
-        $stringChunks = array_map(fn($encChunk)=>$this->rsaKey->decrypt(hex2bin($encChunk)), $encChunks); // decrypt each chunk
+        $stringChunks = array_map(function($encChunk) { return $this->rsaKey->decrypt(hex2bin($encChunk)); }, $encChunks); // decrypt each chunk
         $stringData = $this->_join($stringChunks);
 
         return $stringData;
@@ -249,9 +252,10 @@ class SecureDataPackager
         $stringArray = [];
         $i = 0;
 
-        while (!(is_string(substr($stringData, $i, $i + $charLength)) && trim(substr($stringData, $i, $i + $charLength)) === ''))
+        // while (!(is_string(substr($stringData, $i, $i + $charLength)) && trim(substr($stringData, $i, $i + $charLength)) === ''))
+        while ($str = substr($stringData, $i, $i + $charLength))
         {
-            array_push($stringArray, substr($stringData, $i, $i + $charLength));
+            array_push($stringArray, $str);
 
             $i += $charLength;
         }

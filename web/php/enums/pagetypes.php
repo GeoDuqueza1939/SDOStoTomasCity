@@ -1,11 +1,27 @@
 <?php
-enum PageType
+// if (version_compare(phpversion(), '8.1', '>='))
+// {
+//     enum PageType
+//     {
+//         case Landing;
+//         case SignIn;
+//         case SignOut;
+//         case SERGS;
+//         case OPMS;
+//         case MPASIS;
+//     }
+// }
+// else
+// {
+//     exit();
+// }
+class PageType
 {
-    case Landing;
-    case SignIn;
-    case SignOut;
-    case SERGS;
-    case OPMS;
-    case MPASIS;
+    const Landing = 1;
+    const SignIn = 2;
+    const SignOut = 3;
+    const SERGS = 4;
+    const OPMS = 5;
+    const MPASIS = 6;
 }
 ?>
