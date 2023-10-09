@@ -24,7 +24,7 @@ class SeRGS_App extends App
         
         require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
         
-        $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, 'ISCreAMS'));
+        $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $ismdbname));
         require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
         $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl));
 
