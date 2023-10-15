@@ -2110,6 +2110,19 @@ class ControlEx extends UIEx
         throw new TypeError("This method/property is not yet implemented! [ControlEx.value]");
     }
 
+    get required()
+    {
+        return (this.control instanceof HTMLElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLTextAreaElement || this.control instanceof HTMLButtonElement ? this.control.required : false);
+    }
+
+    set required(setting = true)
+    {
+        if (this.control instanceof HTMLInputElement || this.control instanceof HTMLSelectElement || this.control instanceof HTMLTextAreaElement || this.control instanceof HTMLButtonElement)
+        {
+            this.control.required = setting;
+        }
+    }
+
     get reversed()
     {
         return this.labelEx !== null && this.labelEx !== undefined && Array.from(this.container.children).findIndex(node => node === this.labelEx.container) > Array.from(this.container.children).findIndex(node => node === this.control);
@@ -5986,6 +5999,7 @@ class DialogEx extends ContainerEx
     #statusTimeOut = 3;
     #statusResetTimeOut = null;
     #escapeKeyEnabled = false;
+	#escapeKeyEventHandler = null;
     #app = null;
 
     constructor()
@@ -6303,7 +6317,7 @@ class DialogEx extends ContainerEx
             this.#buttonGrpEx = new ButtonGroupEx();
         }
 
-        this.buttonGrpEx.setupFromConfig({parentHTMLElement:this.dialogBox, buttonsInfo:buttonsInfo, type:"button", buttonType:"button"});
+        this.buttonGrpEx.setupFromConfig({parentHTMLElement:this.dialogBox, buttonsInfo:buttonsInfo, type:"button"});
         this.buttonGrpEx.container.classList.add("dialog-buttons");
         this.buttonGrpEx.parentDialogEx = this;
     }
@@ -6414,22 +6428,48 @@ class DialogEx extends ContainerEx
         }
     }
 
-    #enableEscapeKey()
+    #enableEscapeKey(enable = true)
     {
-        if (this.dialogBox instanceof HTMLElement && !this.#escapeKeyEnabled)
-        {
-            this.dialogBox.addEventListener("keydown", event=>{
-                if (event.key === "Escape")
+		if (this.dialogBox instanceof HTMLElement)
+		{
+            if (enable)
+            {
+                if (!this.#escapeKeyEnabled)
                 {
-                    this.close();
-                }
-            });
-            this.dialogBox.tabIndex = 0;
-            this.dialogBox.focus();
+                    this.#escapeKeyEventHandler = event=>{
+                        if (event.key === "Escape")
+                        {
+                            this.close();
+                        }
+                    };
+                    this.dialogBox.addEventListener("keydown", this.#escapeKeyEventHandler);
+                    this.dialogBox.tabIndex = 0;
+                    this.dialogBox.focus();
 
-            this.#escapeKeyEnabled = true;
-        }
+                    this.#escapeKeyEnabled = true;
+                }
+            }
+            else if (this.#escapeKeyEnabled)
+            {
+                this.dialogBox.removeEventListener("keydown", this.#escapeKeyEventHandler);
+                this.#escapeKeyEventHandler = null;
+                this.dialogBox.tabIndex = 0;
+                this.dialogBox.focus();
+
+                this.#escapeKeyEnabled = false;
+            }
+		}
     }
+	
+	get escapeKeyEnabled()
+	{
+		return this.#escapeKeyEnabled;
+	}
+	
+	set escapeKeyEnabled(enabled = true)
+	{
+		this.#enableEscapeKey(enabled);
+	}
 
     close()
     {

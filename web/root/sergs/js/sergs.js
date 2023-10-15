@@ -74,6 +74,14 @@ class SeRGS_App extends App
         this.dropDownExs = Array.from(document.querySelectorAll(".drop-down-ex")).map(element=>("uiEx" in element ? element.uiEx : new DropDownEx().setupFromHTMLElement(element)));
         this.divExs = Array.from(document.querySelectorAll(".div-ex")).map(element=>("uiEx" in element ? element.uiEx : new DivEx().setupFromHTMLElement(element)));
 
+        if (this.currentUser["first_signin"] && this.currentUser["first_signin"] != 0)
+        {
+            let passChange = new PasswordEditor()
+            passChange.setup(this, "my-password-editor", true);
+            
+            passChange.statusTimeout = -1;
+            passChange.showInfo("Please set your new password");
+        }
     }
     
     navClick(viewId)
@@ -662,6 +670,26 @@ class SeRGS_App extends App
         }
         return "";
     }
+    
+        static isDefined(value)
+    {
+        return value != null && value != undefined;
+    }
+
+    static isEmptyString(value) // checks if value is empty string
+    {
+        return type(value) == "string" && value == "";
+    }
+
+    static isEmptySpaceString(value) // checks if value is a string of space characters
+    {
+        return type(value) == "string" && (value == "" || value.trim() == "");
+    }
+
+    static isEmpty(value)
+    {
+        return !this.isDefined(value) || this.isEmptyString(value);
+    }
 }
 
 class AddEmployeeDialog extends DialogEx
@@ -691,11 +719,11 @@ class AddEmployeeDialog extends DialogEx
             this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"a", name:"a", inputType:"hidden", value:"add"});
             this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"add", name:"add", inputType:"hidden", value:"employee"});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"Employee", column:"employeeId"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"Employee", column:"employeeId"}, required:true});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary employee ID", id:"is_temporary_empno", name:"is_temporary_empno", addContainerClass:obj=>obj.container.classList.add("temp-emp-id"), tooltip: "Temporary employee ID; for Plantilla Item Numbers, uncheck this item", reverse:undefined, dbInfo:{table:"Employee", column:"is_temporary_empno"}});
+            this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary employee ID", id:"is_temporary_empno", name:"is_temporary_empno", addContainerClass:obj=>obj.container.classList.add("temp-emp-id"), tooltip: "Temporary employee ID; for Appointment numbers and Plantilla Item Numbers, check this item", reverse:undefined, dbInfo:{table:"Employee", column:"is_temporary_empno"}});
             this.dataFormEx.addSpacer();
-            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
+            this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}, required:true});
             this.dataFormEx.addSpacer();
             this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Middle Name:", id:"middle_name", name:"middle_name", addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", tooltip:"(optional)", dbInfo:{table:"Person", column:"middle_name"}});
             this.dataFormEx.addSpacer();
@@ -897,6 +925,7 @@ class UserEditor extends DialogEx
             {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
                 let dialog = this.uiEx.parentUIEx.parentDialogEx;
                 let form = dialog.dataFormEx;
+                console.log(form);
 
                 let person = {};
                 let user = {};
@@ -908,15 +937,15 @@ class UserEditor extends DialogEx
                     {
                         user[dbColName] = form.dbControls[dbColName].checked;
                     }
-                    else if ((value !== null && value !== undefined/* && !MPASIS_App.isEmptySpaceString(value)*/) || typeof(value) == "number")
+                    else if ((value !== null && value !== undefined/* && !SeRGS_App.isEmptySpaceString(value)*/) || typeof(value) == "number")
                     {
                         if (form.dbInfo["Person"].includes(dbColName))
                         {
-                            person[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                            person[dbColName] = (SeRGS_App.isEmptySpaceString(value) ? null : value);
                         }
                         else
                         {
-                            user[dbColName] = (MPASIS_App.isEmptySpaceString(value) ? null : value);
+                            user[dbColName] = (SeRGS_App.isEmptySpaceString(value) ? null : value);
                         }
                     }
                     
@@ -942,13 +971,15 @@ class UserEditor extends DialogEx
                 }
                 else
                 {
-                    // // DEBUG
-                    // console.log(form.dbControls, person, user, MPASIS_App.processURL);
+                    // DEBUG
+                    // console.log(form.dbControls, person, user, SeRGS_App.processURL);
+                    // console.log(dialog.mode);
+                    
     
                     // return;
-                    // // DEBUG
+                    // DEBUG
     
-                    Ajax.postData(SeRGS_App.processURL, "app=sergs&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                    Ajax.postData(SeRGS_App.processURL, "app=sergs&a=" + (dialog.mode == 0 ? "add" : "update") + "&" + (dialog.mode == 0 ? "add" : "update") + "=user&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
                         let response;
     
                         if (event.target.readyState == 4 && event.target.status == 200)
@@ -1008,15 +1039,14 @@ class PasswordEditor extends DialogEx
         super();
     }
 
-    setup(app = new App(), id = "", requireCurrentPassword = false, requireChange = false, async = true) // password change when requireCurrentPassword is false will only push through if the user is properly logged in
+    setup(app = new App(), id = "", firstSignIn = false, requireCurrentPassword = false, requireChange = false, async = true) // password change when requireCurrentPassword is false will only push through if the user is properly logged on
     {
         // super(app.main, id);
         let thisPasswordEditor = this;
         super.setup(app.main);
-        console.log(app);
 
         this.app = app;
-
+		
         this.scrim.classList.add("password-editor");
         this.caption = "Change Password";
         this.captionHeaderLevel = 3;
@@ -1051,17 +1081,21 @@ class PasswordEditor extends DialogEx
         };
 
         [
-            {label:"Current Password:", type:"password", colName:"password", table:"All_User", tooltip:"Type your old password"},
-            {label:"New Password:", type:"password", colName:"new_password", table:"All_User", tooltip:"Type new password"},
-            {label:"Retype New Password:", type:"password", colName:"retype_new_password", table:"All_User", tooltip:"Retype new password"}
+            {label:"Current Password:", type:"password", colName:"password", table:"All_User", tooltip:"Type your old password", required:true},
+            {label:"New Password:", type:"password", colName:"new_password", table:"All_User", tooltip:"Type new password", required:true},
+            {label:"Retype New Password:", type:"password", colName:"retype_new_password", table:"All_User", tooltip:"Retype new password", required:true}
         ].forEach((field, index)=>{
-            if (requireCurrentPassword || field.colName != "password")
+            if (firstSignIn && field.colName == "password")
+            {
+                return;
+            }
+            else if (requireCurrentPassword || field.colName != "password")
             {
                 if (index > (requireCurrentPassword ? 0 : 1))
                 {
                     this.dataFormEx.addSpacer();
                 }
-                this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:field.label, id:field.colName, name:field.colName, value:"", addContainerClass:obj=>obj.container.classList.add(field.colName), inputType:field.type, tooltip:field.tooltip, dbInfo:{table:field.table, column:field.colName}});
+                this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:field.label, id:field.colName, name:field.colName, value:"", addContainerClass:obj=>obj.container.classList.add(field.colName), inputType:field.type, tooltip:field.tooltip, dbInfo:{table:field.table, column:field.colName}, required:field.required});
             }
 
             if (field.colName in this.dataFormEx.dbControls)
@@ -1073,13 +1107,11 @@ class PasswordEditor extends DialogEx
             }
         });
 
-        console.log(this);
-
         this.addStatusPane();
         this.statusTimeOut = -1;
 
         this.setupDialogButtons([
-            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(changePasswordEvent){
+            {text:"Save", buttonType:"button", tooltip:"Save new password", clickCallback:function(changePasswordEvent){
                 let passwordDetails = {
                     requireCurrentPassword:requireCurrentPassword,
                     password:(requireCurrentPassword ? this.uiEx.parentUIEx.parentDialogEx.dataFormEx.dbControls["password"].value : null),
@@ -1087,15 +1119,18 @@ class PasswordEditor extends DialogEx
                     user:this.uiEx.parentUIEx.parentDialogEx.app.currentUser
                 }
     
-                // // DEBUG
+                // DEBUG
                 // console.log(passwordDetails);
+				
+				// console.log(this.app.processURL + "?a=update&update=pswd&data=" + Ajax.packageData(passwordDetails));
+				// console.log(SeRGS_App.processURL);
 
-                window.location = this.processURL + "?a=update&update=pswd&data=" + Ajax.packageData(passwordDetails);
+                // window.location = this.processURL + "?a=update&update=pswd&data=" + Ajax.packageData(passwordDetails);
     
-                return;
-                // // DEBUG
+                //return;
+                // DEBUG
     
-                Ajax.postData(SeRGS_App.processURL, "a=update&update=pswd&data=" + Ajax.packageData(passwordDetails), updatePasswordEvent=>{
+                Ajax.postData(SeRGS_App.processURL, "app=sergs&a=update&update=pswd&data=" + Ajax.packageData(passwordDetails), updatePasswordEvent=>{
                     let response;
     
                     if (updatePasswordEvent.target.readyState == 4 && updatePasswordEvent.target.status == 200)
@@ -1104,48 +1139,55 @@ class PasswordEditor extends DialogEx
     
                         if (response.type == "Error")
                         {
-                            new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
+							thisPasswordEditor.raiseError(response.content);
                         }
                         else if (response.type == "Debug")
                         {
-                            new MsgBox(thisPasswordEditor.app.main, response.content, "Close");
+							thisPasswordEditor.showWarning(response.content);
                             console.log(response.content);
                         }
                         else if (response.type == "Success")
                         {
-                            new MsgBox(thisPasswordEditor.app.main, response.content, "OK", ()=>{
-                                thisPasswordEditor.app.navClick("signout");
-                            });
+                            (new MessageBox()).setup(thisPasswordEditor.app.main, "SeRGS Message", response.content, [
+                                {
+                                    text:"Close",
+                                    buttonType:"button",
+                                    tooltip:"Close",
+                                    clickCallback:clickEvent=>{
+                                        thisPasswordEditor.app.navClick("signout");
+                                    }
+                                }
+                            ]);      
                         }
+						else if (response.type == "Data")
+						{
+							thisPasswordEditor.showInfo("Debug data has been received. Please check the console logs for details.");
+							console.log(response.content);
+						}
                     }
                 });
             }}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
-                this.uiEx.parentUIEx.parentDialogEx.close();
+				if (!requireChange)
+				{
+					this.uiEx.parentUIEx.parentDialogEx.close();
+				}
             }}
         ]);
 
         this.buttonGrpEx.controlExs[0].disable();
 
-        // var btnGrp = this.formEx.addFormButtonGrp(2);
-        // btnGrp.container.classList.add("password-editor-buttons");
-        // this.dialogBox.appendChild(btnGrp.container);
-
-        // btnGrp.inputExs[0].setLabelText("Save");
-        // btnGrp.inputExs[0].setTooltipText("Save new password");
-        // btnGrp.inputExs[0].disable()
-        // btnGrp.inputExs[0].addEvent("click", );
-
-        // btnGrp.inputExs[1].setLabelText("Cancel");
-        // btnGrp.inputExs[1].setTooltipText("");
-        // btnGrp.inputExs[1].addEvent("click", changePasswordEvent=>{
-        //     this.close();
-        // });
-
-        if (requireChange)
+        if (firstSignIn)
         {
-            // btnGrp.inputExs[1].setInline();
-            // btnGrp.inputExs[1].hide();
-            // this.closeBtn.classList.add("hidden");
+            this.caption = "Set Password";
+            this.buttonGrpEx.controlExs[0].caption = "Set";
+            this.buttonGrpEx.controlExs[0].tooltip = "Set password for the first time";
+        }
+            
+        if (firstSignIn || requireChange)
+        {
+            this.buttonGrpEx.controlExs[1].destroy();
+            this.closeBtn.remove();
+            this.escapeKeyEnabled = false;
         }
     }
 }

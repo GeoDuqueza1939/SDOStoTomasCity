@@ -21,9 +21,9 @@ class SeRGS_App extends App
     {
         $this->setName("Service Record Generation System");
         $this->setDynamic(true);
-        
+        		
         require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
-        
+		
         $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $ismdbname));
         require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
         $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl));
@@ -543,11 +543,22 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
         $requiresSignIn = false;
 
         $this->validateUserSession($requiresSignIn);
-
+		
         if (isset($_REQUEST['a']))
         {
             switch ($_REQUEST['a'])
             {
+                case 'add':
+                    if (isset($_REQUEST['add']))
+                    {
+                        $this->sendResponse('Error', 'CODE STUB (ACTION: ADD)!!!');
+                    }
+                    else
+                    {
+                        $this->sendResponse('Error', 'Nothing to add');
+						die();
+                    }
+                    break;
                 case 'update':
                     if (isset($_REQUEST['update']))
                     {
@@ -557,32 +568,46 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
                                 if (isset($_REQUEST['data'])) // CHANGE TO `POST` IN PROD
                                 {
                                     $data = json_decode($_REQUEST['data'], true); // CHANGE TO `POST` IN PROD
-                                    
-                                    $this->sendResponse('Data', $data['user']['username']);
+         
+                                    echo(changePassword($this->getDB_SDO(), $data)); // uses old ajaxResponse; CONVERT TO $this->sendResponse() LATER ON
+                                    exit();
                                 }
                                 else
                                 {
                                     $this->sendResponse('Error', 'Invalid update request');
+									die();
                                 }
+                                break;
+                            case 'user':
+                                if (isset($_REQUEST['user']) && isset($_REQUEST['person'])) // CHANGE TO `POST` IN PROD
+                                {
+                                    echo(updateUser($this->getDB_SDO(), json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
+                                    exit();
+                                }
+								die();
                                 break;
                             default:
                                 $this->sendResponse('Error', 'Unknown update keyword');
+								die();
                                 break;
                         }
                     }
                     else
                     {
                         $this->sendResponse('Error', 'Nothing to update');
+						die();
                     }
                     break;
                 default:
                     $this->sendResponse('Error', 'Unknown action');
+					die();
                     break;
             }
         }
         else
         {
             $this->sendResponse('Error', 'Unknown request');
+            die();
         }
     }
 
@@ -1069,7 +1094,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                 <div class="div-ex emp-id" id="emp-id">
-                    <span class="label-ex">Employee ID:</span> <?php echo($employee['employeeId']); ?>
+                    <span class="label-ex">Employee ID:</span> <?php echo($employee['employeeId'] . ($employee['is_temporary_empno'] ? ' (temporary)' : '')); ?>
 
                 </div><?php
         } ?>
@@ -1604,7 +1629,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             
                                                 for ($i = 0; $i < count($sr); $i++)
                                                 {
-                                                    $sr[$i][$key] = ($value[$i] === '' || ($key === 'date_end' && $value[$i] === 'present') ? null : ($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d)\/(\d\d)\/(\d\d\d\d)/', '\3-\1-\2', $value[$i]) : $value[$i]));
+                                                    $sr[$i][$key] = ($value[$i] === '' || ($key === 'date_end' && $value[$i] === 'to date') ? null : ($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d)\/(\d\d)\/(\d\d\d\d)/', '\3-\1-\2', $value[$i]) : $value[$i]));
                                                 }
                                                 break;
                                             default:
@@ -1739,7 +1764,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                 <div class="div-ex emp-id" id="emp-id">
-                    <span class="label-ex">Employee ID:</span> <?php echo($employee['employeeId']); ?>
+                    <span class="label-ex">Employee ID:</span> <?php echo($employee['employeeId'] . ($employee['is_temporary_empno'] ? ' (temporary)' : '')); ?>
 
                 </div><?php
         } ?>
@@ -1797,7 +1822,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     </thead>
                     <tbody><?php 
                     
-                    $this->generateSRTableRows($sr); ?>
+                    $this->generateSRTableRows($sr, true); ?>
 
                     </tbody>
                 </table>
@@ -1910,7 +1935,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             <div class="div-ex my-account-contents">
                 <ul class="card-link">
                     <li><a href="#" aria-role="button" onclick="new UserEditor().setup(app.main, app, 'my-user-editor', 1, JSON.parse(SeRGS_App.getCookie('user')));">Edit my account details</a></li>
-                    <li><a href="#" aria-role="button" onclick="new PasswordEditor().setup(app, 'my-password-editor', true);">Change my password</a></li>
+                    <li><a href="#" aria-role="button" onclick="new PasswordEditor().setup(app, 'my-password-editor', false, true);">Change my password</a></li>
                 </ul>
             </div>
         </section><?php
@@ -1982,7 +2007,8 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     post_nominal,
                     birth_date,
                     Address.address AS birth_place,
-                    employeeId
+                    employeeId,
+                    is_temporary_empno
                 FROM Person
                 INNER JOIN Employee ON Person.personId = Employee.personId
                 LEFT JOIN Address ON Person.birth_place = Address.addressId
@@ -2013,6 +2039,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         ?>
         <section id="main-print">
             <div class="button-group-ex print-controls">
+                <span class="print-reminder"><b>NOTE:</b> Please set ALL margins in the print settings to 0.</span>
                 <span class="button-ex print-button" title="Open Print Dialog" onclick="window.print();">
                     <button type="button" title="Print"><span class="material-icons-round">print</span><span class="hidden">Print</span></button>
                 </span>
@@ -2037,7 +2064,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         <span class="header-rp">Republic of the Philippines</span>
                         <span class="header-deped">Department of Education</span>
                         <span class="header-region">Region IV-A CALABARZON</span>
-                        <span class="header-sdo">Schools Division of Sto. Tomas City</span>
+                        <span class="header-sdo">Schools Division Office of Sto. Tomas City</span>
                     </h1>
                     <h2>Service Record</h2>
                 </header>
@@ -2058,12 +2085,12 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                         </div>
                                         <div class="div-ex birth">
                                             <span class="label-ex">Birth:</span>
-                                            <span class="span-ex birthdate reversed"><span class="blank"><?php echo($employee['birth_date'] ?? '&nbsp;'); ?></span> <span class="label-ex">(date)</span></span>
+                                            <span class="span-ex birthdate reversed"><span class="blank"><?php echo($employee['birth_date'] ? date_format(date_create($employee['birth_date']), 'F j, Y') : '&nbsp;'); ?></span> <span class="label-ex">(date)</span></span>
                                             <span class="span-ex birthplace reversed"><span class="blank"><?php echo($employee['birth_place'] ?? '&nbsp;'); ?></span> <span class="label-ex">(place)</span></span>
                                             <span class="span-ex birth-comment">(Date herein should be checked from birth baptismal certificate of some official documents)</span>
                                         </div>
                                         <div class="div-ex employeeId">
-                                            <span class="label-ex">Emp. No.:</span> <span class="blank"><?php echo($employee['employeeId']); ?></span>
+                                            <span class="label-ex">Emp. No.:</span> <span class="blank"><?php echo($employee['is_temporary_empno'] ? '' : $employee['employeeId']); ?></span>
                                         </div>
                                     </div>
 
@@ -2080,15 +2107,15 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                                     <th rowspan="3" data-header-name="separation_date" data-contenteditable="true">Date</th>
                                                 </tr>
                                                 <tr>
-                                                    <th colspan="2" data-header-name="inclusive_date">(Inclusive Date)</th>
-                                                    <th rowspan="2" data-header-name="designation" data-contenteditable="true">Designation</th>
-                                                    <th rowspan="2" data-header-name="status" data-contenteditable="true">Status</th>
-                                                    <th rowspan="2" data-header-name="salary" data-contenteditable="true">Salary</th>
-                                                    <th rowspan="2" data-header-name="station" data-contenteditable="true">Station/Place</th>
+                                                    <th colspan="2" data-header-name="inclusive_date" data-parent-header-name="service">(Inclusive Date)</th>
+                                                    <th rowspan="2" data-header-name="designation" data-parent-header-name="appointment" data-contenteditable="true">Designation</th>
+                                                    <th rowspan="2" data-header-name="status" data-parent-header-name="appointment" data-contenteditable="true">Status</th>
+                                                    <th rowspan="2" data-header-name="salary" data-parent-header-name="appointment" data-contenteditable="true">Salary</th>
+                                                    <th rowspan="2" data-header-name="station" data-parent-header-name="office" data-contenteditable="true">Station/Place</th>
                                                 </tr>
                                                 <tr>
-                                                    <th data-header-name="date_start" data-contenteditable="true">From</th>
-                                                    <th data-header-name="date_end" data-contenteditable="true">To</th>
+                                                    <th data-header-name="date_start" data-parent-header-name="inclusive_date" data-contenteditable="true">From</th>
+                                                    <th data-header-name="date_end" data-parent-header-name="inclusive_date" data-contenteditable="true">To</th>
                                                 </tr>
                                             </thead>
                                             <tbody><?php
@@ -2096,15 +2123,12 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                                                 <tr>
-                                                    <td colspan="9">Not available. To request a service record update, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
+                                                    <td colspan="9">Not available.</td>
                                                 </tr><?php
         }
         else
         {
-            // for ($i = 0; $i < 15; $i++)    // DEBUG
-            // {                               // DEBUG
             $this->generateSRTableRows($sr);
-            // }                               // DEBUG
         } ?>
 
                                             </tbody>
@@ -2114,7 +2138,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                         <div class="div-ex sr-signatories"><!-- TEMP -->
                                             <span class="span-ex certifier">
                                                 <span class="name">Jessamae O. Castromero</span>
-                                                <span class="position">Administrative Officer IV</span>
+                                                <span class="position">Administrative Officer IV/HRMO</span>
                                             </span>
                                             <span class="span-ex approver">
                                                 <span class="name">Catalina M. Calinawan</span>
@@ -2131,13 +2155,17 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
                 <footer id="sr-footer">
                     <div class="div-ex content">
+                        <img class="matatag-bagongpilipinas-logo" src="/images/logo-depedmatatag-bagongpilipinas.png" alt="logo:DepEd MATATAG - Bagong Pilipinas" />
                         <img class="sdo-logo" src="/images/logo-depedstotomas.webp" alt="logo:Department of Education" />
-                        <p><span class="material-icons-round">pin_drop</span> Brgy. Poblacion IV, Sto. Tomas City, Batangas</p>
-                        <p><span class="material-icons-round">alternate_email</span> sdo.santotomas@deped.gov.ph</p>
-                        <p><span class="material-icons-round">phone</span> (043) 702-8674</p>
+                        <p><b>Address:</b><!--<span class="material-icons-round">pin_drop</span>--> Brgy. Poblacion IV, Sto. Tomas City, Batangas</p>
+                        <p><b>Telephone No.:</b><!--<span class="material-icons-round">phone</span>--> (043) 702-8674</p>
+                        <p><b>Email Address:</b><!--<span class="material-icons-round">alternate_email</span>--> <a href="mailto:sdo.santotomas@deped.gov.ph">sdo.santotomas@deped.gov.ph</a></p>
+                        <p><b>Website:</b><!--<span class="material-icons-round">language</span>--> <a href="https://depedstotomascity.com.ph">depedstotomascity.com.ph</a></p>
+                        <img class="sdo-motto" src="/images/logo-tawagko-transparent-cropped.png" alt="logo:Tomasino Ako, Wagi Ang Gawi Ko" />
                     </div>
                 </footer>
             </section>
+            <script src="/sergs/js/sergsprint.js"></script>
         </section><?php
     }
 
@@ -2191,7 +2219,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 lwop_count,
                 separation_date
             FROM Emp_Term_of_Service etos
-            INNER JOIN (SELECT * FROM SDOStoTomas.Date_Range WHERE description = 'Term of Service') dater ON etos.date_rangeId = dater.date_rangeId
+            INNER JOIN (SELECT * FROM `$dbname`.Date_Range WHERE description = 'Term of Service') dater ON etos.date_rangeId = dater.date_rangeId
             LEFT JOIN Workplace workpl ON etos.workplaceId = workpl.workplaceId
             INNER JOIN Institution inst ON workpl.institutionId = inst.institutionId
             INNER JOIN Address addr ON workpl.addressId = addr.addressId
@@ -2698,7 +2726,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         return $sr;
     }
 
-    private function generateSRTableRows($sr)
+    private function generateSRTableRows($sr, $forEditing = false)
     {
         foreach ($sr as &$srTOS)
         { ?>
@@ -2794,9 +2822,10 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     case "date_end":
                     case "designation": case "status": case "salary":
                     case "station": case "branch": case "lwop_count":
-                    case "separation_date": ?>
+                    case "separation_date": 
+                        //$formatter = numfmt_create('en-PH', NumberFormatter::CURRENCY); ?>
 
-                            <td <?php echo($key === 'date_start' && trim($invalidDateStartClass) !== '' ? ' class=' . trim($invalidDateStartClass) : ($key === 'date_end' && trim($invalidDateEndClass) !== '' ? ' class=' . trim($invalidDateEndClass) : ($key === 'designation' && trim($invalidDesignationClass) !== '' ? 'class=' . trim($invalidDesignationClass) : ($key === 'status' && trim($invalidStatusClass) !== '' ? 'class=' . trim($invalidStatusClass) : ($key === 'salary' && trim($invalidSalaryClass) !== '' ? 'class=' . trim($invalidSalaryClass) : ($key === 'station' && trim($invalidStationClass) !== '' ? 'class=' . trim($invalidStationClass) : '')))))); ?>><?php echo($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d\d\d)-(\d\d)-(\d\d)/', '\2/\3/\1', (is_null($value) ? ($key === 'date_end' ? 'present' : '') : $value)) : ($key === 'status' ? (is_null($value) || $value === '-1' || $value === '' ? '' : $this->enum['appointmentStatus'][array_search($value, array_column($this->enum['appointmentStatus'], 'index'))]['appointment_status']) : $value)); ?></td><?php
+                            <td class="<?php echo($key); echo($key === 'date_start' && trim($invalidDateStartClass) !== '' ? ' ' . trim($invalidDateStartClass) : ($key === 'date_end' && trim($invalidDateEndClass) !== '' ? ' ' . trim($invalidDateEndClass) : ($key === 'designation' && trim($invalidDesignationClass) !== '' ? ' ' . trim($invalidDesignationClass) : ($key === 'status' && trim($invalidStatusClass) !== '' ? ' ' . trim($invalidStatusClass) : ($key === 'salary' && trim($invalidSalaryClass) !== '' ? ' ' . trim($invalidSalaryClass) : ($key === 'station' && trim($invalidStationClass) !== '' ? ' ' . trim($invalidStationClass) : '')))))); ?>"><?php echo($key === 'date_start' || $key === 'date_end' || $key === 'separation_date' ? preg_replace('/(\d\d\d\d)-(\d\d)-(\d\d)/', '\2/\3/\1', (is_null($value) ? ($key === 'date_end' ? 'to date' : '') : $value)) : ($key === 'status' ? (is_null($value) || $value === '-1' || $value === '' ? '' : $this->enum['appointmentStatus'][array_search($value, array_column($this->enum['appointmentStatus'], 'index'))]['appointment_status']) : ($key === 'salary' && !$forEditing ? number_format($value, 2) : ($key === 'lwop_count' && $value === 0 ? 'None' : $value)))); ?></td><?php
                         break;
                     default:
                         break;

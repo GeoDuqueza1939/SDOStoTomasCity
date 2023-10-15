@@ -50,6 +50,18 @@
     z-index: 1;
 }
 
+.print .print-controls > .print-reminder {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-style: italic;
+    color: white;
+    font-size: 0.75em;
+    float: left;
+    height: 2.75em;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+}
+
 .print .print-controls > .button-ex > button,
 .print .print-controls > .fields > .input-ex > .fields > button {
     margin: 0;
