@@ -2,9 +2,11 @@
 
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
 require_once(__FILE_ROOT__ . '/php/audit/log.php');
+require_once(__FILE_ROOT__ . '/php/classes/ajaxResponse.php');
 
 function getUserFetchQuery($includePassword = false)
 {
+	require(__FILE_ROOT__ . '/php/secure/dbcreds.php');
     return
         'SELECT 
             username,
@@ -24,12 +26,12 @@ function getUserFetchQuery($includePassword = false)
             pin,
             temp_user' . ($includePassword ? ', password' : '') . '
         FROM (
-            SELECT username, personId, "" AS employeeId, sergs_access_level, opms_access_level, mpasis_access_level, first_signin, pin, TRUE AS is_temporary_user, 1 AS temp_user' . ($includePassword ? ', password' : '') . ' FROM SDOStoTomas.Temp_User
+            SELECT username, personId, "" AS employeeId, sergs_access_level, opms_access_level, mpasis_access_level, first_signin, pin, TRUE AS is_temporary_user, 1 AS temp_user' . ($includePassword ? ', password' : '') . " FROM `$dbname`.Temp_User
             UNION
-            SELECT username, "" AS personId, employeeId, sergs_access_level, opms_access_level, mpasis_access_level, first_signin, pin, FALSE AS is_temporary_user, 0 AS temp_user' . ($includePassword ? ', password' : '') . ' FROM SDOStoTomas.User
+            SELECT username, '' AS personId, employeeId, sergs_access_level, opms_access_level, mpasis_access_level, first_signin, pin, FALSE AS is_temporary_user, 0 AS temp_user" . ($includePassword ? ', password' : '') . " FROM `$dbname`.User
         ) AS All_User
-        LEFT OUTER JOIN SDOStoTomas.Employee ON All_User.employeeId=Employee.employeeId
-        LEFT OUTER JOIN SDOStoTomas.Person ON All_User.personId=Person.personId OR Employee.personId=Person.personId';
+        LEFT OUTER JOIN `$dbname`.Employee ON All_User.employeeId=Employee.employeeId
+        LEFT OUTER JOIN `$dbname`.Person ON All_User.personId=Person.personId OR Employee.personId=Person.personId";
 
 }
 
@@ -189,17 +191,20 @@ function updateUser(DatabaseConnection $dbconn, $user, $person)
     {
         if (isset($user['personId']))
         {
-            foreach ($person as $key => $value)
-            {
-                $fieldValueStr .= (trim($fieldValueStr) == '' ? '': ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'");
-            }
+			if (!is_null($person))
+			{				
+				foreach ($person as $key => $value)
+				{
+					$fieldValueStr .= (trim($fieldValueStr) == '' ? '': ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'");
+				}
 
-            $dbconn->update('Person', $fieldValueStr, 'WHERE personId=\'' . $user['personId'] . '\'');
+				$dbconn->update('Person', $fieldValueStr, 'WHERE personId=\'' . $user['personId'] . '\'');
 
-            if (!is_null($dbconn->lastException))
-            {
-                return json_encode(new ajaxResponse('Error', 'Exception encountered while updating personal details'));
-            }
+				if (!is_null($dbconn->lastException))
+				{
+					return json_encode(new ajaxResponse('Error', 'Exception encountered while updating personal details'));
+				}
+			}
         }
         else
         {
@@ -223,7 +228,7 @@ function updateUser(DatabaseConnection $dbconn, $user, $person)
                 ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
                 ($isTempUser ? 'temp_' : '') . 'username_op'=>$user['username']
             ));
-            return json_encode(new ajaxResponse('Success', ($isTempUser ? 'Temporary u' : 'U') . 'ser successfully updated'));
+            return json_encode(new ajaxResponse('Success', ($isTempUser ? 'Temporary u' : 'U') . 'ser successfully updated. <br><br>Please sign out and sign in again to update your session.'));
         }
         else
         {
@@ -290,13 +295,20 @@ function changePassword(DatabaseConnection $dbconn, $passwordDetails)
         if (isset($password) && is_string($password))
         {
             $password = hash('ripemd320', $password);
+            
+            $dbResults = $dbconn->select(($user['temp_user'] == 0 ? '' : 'Temp_') . 'User', 'username', "WHERE username='$username' AND password='$password';");
+            
+            if (is_null($dbResults) || count($dbResults) == 0)
+            {
+                return json_encode(new ajaxResponse('Error', 'Your current password does not match'));
+            }
+            
+            $dbconn->update(($user['temp_user'] == 0 ? '' : 'Temp_') . 'User', "password='$newPassword', first_signin=0", "WHERE username='$username' AND password='$password'");
         }
         else
         {
-            return json_encode(new ajaxResponse('Error', 'The entered current password is invalid'));
+            return json_encode(new ajaxResponse('Error', 'Your current password is invalid'));
         }
-
-        $dbconn->update(($user['temp_user'] == 0 ? '' : 'Temp_') . 'User', "password='$newPassword', first_signin=0", "WHERE username='$username' AND password='$password'");
     }
     elseif (isset($_SESSION['user'])) // require a user to be logged in when current password is not required
     {
@@ -307,8 +319,15 @@ function changePassword(DatabaseConnection $dbconn, $passwordDetails)
         // FORBIDDEN
         return json_encode(new ajaxResponse('Error', 'Password can only be changed when signed in'));
     }
-
-    return json_encode(new ajaxResponse('Success', 'Password successfully updated!<br><br>You will now be signed out of your session.'));
+            
+    if (is_null($dbconn->lastException))
+    {
+        return json_encode(new ajaxResponse('Success', 'Password successfully updated!<br><br>You will now be signed out of your session.'));
+    }
+    else
+    {
+        return json_encode(new ajaxResponse('Error', 'An error was encountered while trying to change your password.<br><br>' . $dbconn->lastException->getMessage() . '<br><br>Last SQL String: ' . $dbconn->lastSQLStr));
+    }
 }
 
 function resetPassword(DatabaseConnection $dbconn)

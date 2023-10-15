@@ -54,7 +54,10 @@
     else
     {
         // ERROR
-        var_dump($dbconn->lastException->getMessage());
+        if (!is_null($this->getDBConn(0)->lastException))
+            var_dump($this->getDBConn(0)->lastException->getMessage());
+		else
+			var_dump($this->getDBConn(0)->lastException);
     }
 ?>
         </ul>

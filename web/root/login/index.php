@@ -10,7 +10,7 @@ require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 $requiresSignIn = true;
 $pageTitle = 'Sign-in to SDO Services | Sto. Tomas City SDO';
 $pageType = PageType::SignIn;
-$addDebug = true;
+$addDebug = false;
 ?>
 <!DOCTYPE html>
 <html lang="en">

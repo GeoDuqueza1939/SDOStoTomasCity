@@ -14,7 +14,7 @@ class MPASIS_App extends App
         
         require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
         
-        $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, 'ISCreAMS'));
+        $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $ismdbname));
         require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
         $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl));
     }
@@ -34,8 +34,8 @@ class MPASIS_App extends App
         $requiresSignIn = true;
         $pageTitle = $this->getName() . ' | Department of Education | Sto. Tomas City SDO';
         $pageType = PageType::MPASIS;
-        $addDebug = false;
-        // $addDebug = true;
+        // $addDebug = false;
+        $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,7 +75,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/nav_full.php'); // general nav
             
             <h3>Summary</h3>
             <ul>
-                <li><b>Available Positions:</b> <?php echo count($this->getDB_SDO()->select('Position', '*', 'WHERE filled=FALSE'));?></li>
+                <li><b>Available Positions:</b> <?php echo count($this->getDB_SDO()->select('Position', '*', 'WHERE filled=FALSE')); ?></li>
                 <li><b>Applications Entered:</b> <?php echo count($this->getDB_SDO()->select('Job_Application', '*', ''));?></li>
                 <li><b>Unique Applicants:</b> <?php echo count($this->getDB_SDO()->executeQuery('SELECT Person.personId FROM Job_Application INNER JOIN Person ON Job_Application.personId=Person.personId GROUP BY personId'));?></li>
             </ul>

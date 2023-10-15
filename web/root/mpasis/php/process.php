@@ -31,7 +31,9 @@ class ajaxResponse implements JsonSerializable
 	}
 	
 	// override to allow json_encode() to convert an instance of this class
-	public function jsonSerialize () : mixed
+	//public function jsonSerialize () : mixed
+	#[\ReturnTypeWillChange]
+	public function jsonSerialize ()
 	{ 
 		return $this->to_array();
     }
@@ -152,14 +154,14 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         score_skill,
         score_bei,
         potential_notes
-    FROM SDOStoTomas.Person pe
-    INNER JOIN SDOStoTomas.Job_Application ja ON ja.personId = pe.personId
-    LEFT JOIN SDOStoTomas.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
-    LEFT JOIN SDOStoTomas.ENUM_Civil_Status ecs ON pe.civil_status = ecs.index
-    LEFT JOIN SDOStoTomas.Religion r ON pe.religionId = r.religionId
-    LEFT JOIN SDOStoTomas.Ethnicity eth ON pe.ethnicityId = eth.ethnicityId
-    LEFT JOIN SDOStoTomas.Address presAdd ON pe.present_addressId = presAdd.addressId
-    LEFT JOIN SDOStoTomas.Address permAdd ON pe.permanent_addressId = permAdd.addressId"
+    FROM `$dbname`.Person pe
+    INNER JOIN `$dbname`.Job_Application ja ON ja.personId = pe.personId
+    LEFT JOIN `$dbname`.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
+    LEFT JOIN `$dbname`.ENUM_Civil_Status ecs ON pe.civil_status = ecs.index
+    LEFT JOIN `$dbname`.Religion r ON pe.religionId = r.religionId
+    LEFT JOIN `$dbname`.Ethnicity eth ON pe.ethnicityId = eth.ethnicityId
+    LEFT JOIN `$dbname`.Address presAdd ON pe.present_addressId = presAdd.addressId
+    LEFT JOIN `$dbname`.Address permAdd ON pe.permanent_addressId = permAdd.addressId"
     . (is_null($where) || (is_string($where) && trim($where) == "") ? "" : " WHERE $where")
     . (is_null($limit) || !is_numeric($limit) ? "" : " LIMIT $limit");
 
@@ -348,7 +350,7 @@ if (isValidUserSession())
                         break;
                     case 'tempuser':
                         $dbResults = $dbconn->executeQuery(
-                            'SELECT 
+                            "SELECT 
                                 given_name,
                                 middle_name,
                                 family_name,
@@ -358,9 +360,9 @@ if (isValidUserSession())
                                 sergs_access_level,
                                 opms_access_level,
                                 mpasis_access_level
-                            FROM SDOStoTomas.Person
-                            INNER JOIN SDOStoTomas.Temp_User
-                            ON Person.personId=Temp_User.personId' . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE Temp_User.username LIKE "' . trim($_REQUEST['k']) . '";')
+                            FROM `$dbname`.Person
+                            INNER JOIN `$dbname`.Temp_User
+                            ON Person.personId=Temp_User.personId" . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE Temp_User.username LIKE "' . trim($_REQUEST['k']) . '";')
                         );
     
                         if (is_null($dbconn->lastException))
@@ -379,12 +381,12 @@ if (isValidUserSession())
                         break;
                     case 'searchApplicationByName':
                         $dbResults = $dbconn->executeQuery(
-                            'SELECT
+                            "SELECT
                                 *
-                            FROM SDOStoTomas.Person
-                            INNER JOIN SDOStoTomas.Job_Application
+                            FROM `$dbname`.Person
+                            INNER JOIN `$dbname`.Job_Application
                             ON Person.personId=Job_Application.personId
-                            WHERE Person.given_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.family_name LIKE "%' . $_REQUEST['name'] . '%" OR Person.spouse_name LIKE "%' . $_REQUEST['name'] . '%"'
+                            WHERE Person.given_name LIKE '%" . $_REQUEST['name'] . "%' OR Person.family_name LIKE '%" . $_REQUEST['name'] . '%" OR Person.spouse_name LIKE "%' . $_REQUEST['name'] . '%"'
                         );
                         $results = [];
 
@@ -1407,13 +1409,13 @@ if (isValidUserSession())
                         return;
                     }
                 }
-                elseif (isset($_REQUEST['user']))
-                {
-                    echo(updateUser($dbconn, json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
-                }
                 elseif (isset($_REQUEST['passd']))
                 {
                     echo(changePassword($dbconn, json_decode($_REQUEST['passd'], true)));
+                }
+                elseif (isset($_REQUEST['user']))
+                {
+                    echo(updateUser($dbconn, json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
                 }
                 return;
                 break;

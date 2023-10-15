@@ -231,7 +231,19 @@ class DatabaseConnection
 
 	private function tableExists($tableName)
 	{
-		return count($this->executeStatement("SHOW TABLE STATUS FROM `$this->dbname` WHERE NAME = '$tableName';")) > 0;
+		// ? ><div style="white-space: pre-wrap; padding-top: 3em;">< ?php
+		// echo($this->dbname . '.' . $tableName . ': ');
+		// //var_dump($this->executeStatement("SELECT Count(*) FROM information_schema.TABLES;"));
+		// //var_dump($this->executeStatement("SHOW TABLE STATUS FROM `$this->dbname` WHERE NAME = '$tableName';"));
+		// //var_dump($this->executeStatement("SELECT Count(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='$this->dbname' AND Table_Name='$tableName';"));
+		// //echo 'Select 1:';
+		// var_dump($this->executeStatement("SELECT 1 FROM `$this->dbname`.`$tableName`;"));
+		// var_dump($this->executeStatement("SELECT 1 FROM `$tableName`;"));
+		// var_dump($_SERVER['HTTP_HOST']);
+		// var_dump($_SERVER['SERVER_NAME']);
+		// ? ></div>< ?php
+        return ($_SERVER['HTTP_HOST'] === 'sdostctest.orgfree.com' && $_SERVER['SERVER_NAME'] === 'sdostctest.orgfree.com') || count($this->executeStatement("SELECT Count(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='$this->dbname' AND Table_Name='$tableName';")) > 0 ||
+            count($this->executeStatement("SHOW TABLE STATUS FROM `$this->dbname` WHERE NAME = '$tableName';")) > 0;
 	}
 
 	public function select($table, $fieldStr, $criteriaStr = '')
