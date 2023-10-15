@@ -90,12 +90,15 @@
     padding: 1.5em 2em 1em;
     width: 23em;
     background-color: white;
+    box-shadow: 2px 2px 5px rgb(61, 61, 61);
 }
 
 .login-page form > fieldset > legend {
     display: block;
     font-size: 1em;
     /* background-color: white; */
+    padding-top: 4em;
+    margin-bottom: -1em;
 }
 
 .login-page form > fieldset .textbox,

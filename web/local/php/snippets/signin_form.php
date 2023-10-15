@@ -8,11 +8,11 @@
                 <span class="textbox"><input type="text" name="unm" id="unm" placeholder="Username/Email address"></span>
                 <span class="textbox"><input type="password" name="pwd" id="pwd" placeholder="Password"></span>
                 <span class="button"><button class="btn btn-primary" type="submit">Login</button></span>
-                <span class="button"><button class="btn btn-secondary" type="button">Create Account</button> </span><?php if ($isInvalidSignIn)
+                <span class="button"><button class="btn btn-secondary" type="button" disabled>Create Account</button> </span><?php if ($isInvalidSignIn)
                 { ?>
                     <p style="font-style: italic; color: red;">Invalid username or password</p>
                 <?php } ?>
-                <span class="link"><a href="">Forgot password...</a></span>
+                <!--<span class="link"><a href="#">Forgot password...</a></span>-->
                 <input type="hidden" name="a" value="login">
             </fieldset>
         </form>
