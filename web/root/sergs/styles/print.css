@@ -15,6 +15,77 @@
     --font-size-station: 1em;
     --font-size-date-start: 1em;
     --font-size-date-end: 1em;
+
+    --font-family-print-default: Calibri, sans-serif;
+    --font-size-print-default: 11pt;
+
+    --font-size-page-header: 10pt;
+    --font-family-page-header: inherit;
+    --width-page-header-deped-logo: 2cm;
+    --font-size-page-header-rp: 12pt;
+    --font-family-page-header-rp: "Old English Text MT", "Bookman Old Style", "URW Bookman", Times, serif;
+    --font-size-page-header-deped: 18pt;
+    --font-family-page-header-deped: "Old English Text MT", "Bookman Old Style", Times, serif;
+    --font-size-page-header-region: 11pt;
+    --font-family-page-header-region: "Times New Roman", Times, serif;
+    --font-size-page-header-sdo: 10.5pt;
+    --font-family-page-header-sdo: Tahoma, Geneva, Verdana, Calibri, sans-serif;
+
+    --font-family-sr-form-title: inherit;
+    --font-size-sr-form-title: 12pt;
+
+    --font-family-sr-form-emp-info: inherit;
+    --font-size-sr-form-emp-info: 10pt;
+
+    --font-family-sr-form-emp-info-label: inherit;
+    --font-size-sr-form-emp-info-label: inherit;
+    --line-height-sr-form-emp-info-label: 12pt;
+    
+    --font-family-sr-form-emp-info-sublabel: inherit;
+    --font-size-sr-form-emp-info-sublabel: 6pt;
+    --line-height-sr-form-emp-info-sublabel: inherit;
+    
+    --font-family-sr-form-emp-info-blank: inherit;
+    --font-size-sr-form-emp-info-blank: 11pt;
+    --line-height-sr-form-emp-info-blank: 12pt;
+
+    --font-family-sr-form-emp-info-comment: inherit;
+    --font-size-sr-form-emp-info-comment: 8pt;
+    --line-height-sr-form-emp-info-comment: 12pt;
+
+    --font-family-sr-table-prenote: inherit;
+    --font-size-sr-table-prenote: 8pt;
+    --line-height-sr-table-prenote: inherit;
+    --text-align-sr-table-prenote: center;
+
+    --font-family-sr-table-postnote: var(--font-family-sr-table-prenote);
+    --font-size-sr-table-postnote: var(--font-size-sr-table-prenote);
+    --line-height-sr-table-postnote: var(--line-height-sr-table-prenote);
+    --text-align-sr-table-postnote: var(--text-align-sr-table-prenote);
+
+    --font-family-sr-table: inherit;
+    --font-size-sr-table: 10pt;
+    --text-align-sr-table: center;
+    --valign-sr-table: middle;
+
+    --font-family-sr-table-th: var(--font-family-sr-table);
+    --font-size-sr-table-th: 11pt;
+    --text-align-sr-table-th: var(--text-align-sr-table);
+    --valign-sr-table-th: var(--valign-sr-table);
+
+    --font-family-sr-table-th-small: var(--font-family-sr-table-th);
+    --font-size-sr-table-th-small: 9pt;
+    --text-align-sr-table-th-small: var(--text-align-sr-table-th);
+    --valign-sr-table-th-small: var(--valign-sr-table-th);
+
+    --font-family-sr-signatory: inherit;
+    --font-size-sr-signatory: 11pt;
+
+    --height-sr-table-td: 24pt;
+
+    --font-family-timestamp: inherit;
+    --font-size-timestamp: 8pt;
+    --font-style-timestamp: italic;
 }
 
 @media only print {
@@ -78,8 +149,8 @@ body {
 }
 
 #sr-print {
-    font-size: 10pt;
-    font-family: Calibri, sans-serif;
+    font-size: var(--font-size-print-default);
+    font-family: var(--font-family-print-default);
     max-width: 8.5in;
     margin: 0 auto;
     /* padding: 0.5in; */
@@ -95,7 +166,7 @@ body {
 
 .print #sr-print > header > h1 {
     margin: 0;
-    font-size: 10pt;
+    font-size: var(--font-size-page-header);
     border-bottom: 2pt solid;
 }
 
@@ -107,7 +178,7 @@ body {
 }
 
 .print #sr-print > header > h1 > img.deped-logo {
-    width: 2cm;
+    width: var(--width-page-header-deped-logo);
 }
 
 .print #sr-print > header > h1 > span {
@@ -121,28 +192,26 @@ body {
 .print #sr-print > header > h1 > span.header-rp,
 .print #sr-print > header > h1 > span.header-deped {
     text-transform: none;
-    font-family: 'Old English Text MT', 'Times New Roman', serif;
 }
 
 .print #sr-print > header > h1 > span.header-rp {
-    font-size: 12pt;
+    font-family: var(--font-family-page-header-rp);
+    font-size: var(--font-size-page-header-rp);
 }
 
 .print #sr-print > header > h1 > span.header-deped {
-    font-size: 18pt;
+    font-family: var(--font-family-page-header-deped);
+    font-size: var(--font-size-page-header-deped);
 }
 
 .print #sr-print > header > h1 > span.header-region {
-    /* font-family: "Bookman Old Style", "URW Bookman", serif; */
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 11pt;
+    font-family: var(--font-family-page-header-region);
+    font-size: var(--font-size-page-header-region);
 }
 
 .print #sr-print > header > h1 > span.header-sdo {
-    font-family: Tahoma, Geneva, Verdana, sans-serif;
-    /* font-family: Arial, Helvetica, sans-serif; */
-    /* font-family: Calibri, sans-serif; */
-    font-size: 10.5pt;
+    font-family: var(--font-family-page-header-sdo);
+    font-size: var(--font-size-page-header-sdo);
     font-weight: 900;
 }
 
@@ -150,11 +219,17 @@ body {
 .print #sr-print > header > h2 {
     margin: 1em 0 1em;
     text-transform: uppercase;
-    font-size: 11pt;
+    font-family: var(--font-family-sr-form-title);
+    font-size: var(--font-size-sr-form-title);
 }
 
 .print #sr-print > table.pager {
     width: 100%;
+}
+
+.print #sr-print main > .emp-info {
+    font-family: var(--font-family-sr-form-emp-info);
+    font-size: var(--font-size-sr-form-emp-info);
 }
 
 .print #sr-print main > .emp-info > .div-ex {
@@ -178,11 +253,20 @@ body {
     text-align: center;
 }
 
+.print #sr-print main > .emp-info > .div-ex > .label-ex {
+    font-family: var(--font-family-sr-form-emp-info-label);
+    font-size: var(--font-size-sr-form-emp-info-label);
+    line-height: var(--line-height-sr-form-emp-info-label);
+}
+
 .print #sr-print main > .emp-info > .div-ex > .span-ex > .blank,
 .print #sr-print main > .emp-info > .employeeId > .blank {
     display: block;
     white-space: nowrap;
     border-bottom: 1px solid;
+    font-family: var(--font-family-sr-form-emp-info-blank);
+    font-size: var(--font-size-sr-form-emp-info-blank);
+    line-height: var(--line-height-sr-form-emp-info-blank);
     font-weight: bold;
     text-transform: uppercase;
     text-align: center;
@@ -190,14 +274,18 @@ body {
 
 .print #sr-print main > .emp-info > .div-ex > .span-ex > .label-ex {
     display: block;
-    font-size: 6pt;
+    font-family: var(--font-family-sr-form-emp-info-sublabel);
+    font-size: var(--font-size-sr-form-emp-info-sublabel);
+    line-height: var(--line-height-sr-form-emp-info-sublabel);
     text-transform: uppercase;
 }
 
 .print #sr-print main > .emp-info > .div-ex > .span-ex[class$=-comment] {
     display: flex;
     padding: 0.25em;
-    font-size: 8pt;
+    font-family: var(--font-family-sr-form-emp-info-comment);
+    font-size: var(--font-size-sr-form-emp-info-comment);
+    line-height: var(--line-height-sr-form-emp-info-comment);
     text-align: left;
     align-items: center;
 }
@@ -213,20 +301,54 @@ body {
     margin: 1.5em 0;
 }
 
-.sr-table-wrapper > .prenote,
-.sr-table-wrapper > .postnote {
+.sr-table-wrapper > .prenote {
     margin: 0;
     padding: 0 0.25em;
-    text-align: center;
-    font-size: 9pt;
+    text-align: var(--text-align-sr-table-prenote);
+    font-family: var(--font-family-sr-table-prenote);
+    font-size: var(--font-size-sr-table-prenote);
+    line-height: var(--line-height-sr-table-prenote);
 }
 
 .sr-table-wrapper > .postnote {
-    text-align: left;
+    margin: 0;
+    padding: 0 0.25em;
+    text-align: var(--text-align-sr-table-postnote);
+    font-family: var(--font-family-sr-table-postnote);
+    font-size: var(--font-size-sr-table-postnote);
+    line-height: var(--line-height-sr-table-postnote);
+}
+
+.sr-table {
+    font-family: var(--font-family-sr-table);
+    font-size: var(--font-size-sr-table);
+    text-align: var(--text-align-sr-table);
+    vertical-align: var(--valign-sr-table);
+}
+
+.sr-table > thead > tr > * {
+    font-family: var(--font-family-sr-table-th);
+    font-size: var(--font-size-sr-table-th);
+    text-align: var(--text-align-sr-table-th);
+    vertical-align: var(--valign-sr-table-th);
+}
+
+.sr-table > thead > tr:first-child > *:nth-child(4),
+.sr-table > thead > tr:first-child > *:nth-child(5) {
+    font-family: var(--font-family-sr-table-th-small);
+    font-size: var(--font-size-sr-table-th-small);
+    text-align: var(--text-align-sr-table-th-small);
+    vertical-align: var(--valign-sr-table-th-small);
+}
+
+.table-ex.sr-table > tbody > tr > * {
+    height: var(--height-sr-table-td);
 }
 
 .sr-signatories {
     padding: 12pt 0 12pt 24pt;
+    font-family: var(--font-family-sr-signatory);
+    font-size: var(--font-size-sr-signatory);
 }
 
 .sr-signatories > * {
@@ -279,7 +401,7 @@ body {
 
 .sr-signatories > * > .position {
     border-top: 1pt solid;
-    font-size: 8pt;
+    text-transform: initial;
 }
 
 .print footer {
