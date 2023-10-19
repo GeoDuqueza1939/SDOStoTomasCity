@@ -14,7 +14,7 @@ unset($_POST['a']);
 unset($_GET['a']);
 
 // redirect back to source URL
-header('Location: ' . (trim($url) == '' ? '/' : $url));
-
+// header('Location: ' . (trim($url) == '' ? '/' : $url));
+?><script>window.location.replace("<?php echo(trim($url) == '' ? '/' : $url); ?>");</script><?php
 // DEBUG
 ?>

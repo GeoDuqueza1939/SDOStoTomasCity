@@ -13,10 +13,12 @@ session_destroy();
 // redirect to login page
 if ($redirectToLogin)
 {
-    header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+    // header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+    ?><script>window.location.replace("<?php echo('/login?src=' . $_SERVER['PHP_SELF']); ?>");</script><?php
 }
 else
 {
-    header('Location: ' . $_SERVER['PHP_SELF']);
+    // header('Location: ' . $_SERVER['PHP_SELF']);
+    ?><script>window.location.replace("<?php echo($_SERVER['PHP_SELF']); ?>");</script><?php
 }
 ?>

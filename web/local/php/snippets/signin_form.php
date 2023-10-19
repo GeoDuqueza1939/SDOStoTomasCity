@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+<html lang="en">
+<?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
+<body>
 <div class="app landing login-page">
     <?php E_STRICT; require_once(__FILE_ROOT__ . '/php/snippets/header_full.php'); ?>
     <section>
@@ -18,3 +22,6 @@
         </form>
     </section>
 </div>
+<?php require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php'); ?>
+</body>
+</html>

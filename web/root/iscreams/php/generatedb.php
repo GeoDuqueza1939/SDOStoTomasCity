@@ -945,7 +945,8 @@ if (isset($_POST['regenerateDB']))
   if ($error == '')
   {
     unset($_POST['regenerateDB']);
-    header('Location: ' . $_SERVER['PHP_SELF']);
+    // header('Location: ' . $_SERVER['PHP_SELF']);
+    ?><script>window.location.replace("<?php echo($_SERVER['PHP_SELF']); ?>");</script><?php
   }
   else
   {

@@ -11,16 +11,12 @@ $requiresSignIn = true;
 $pageTitle = 'Sign-in to SDO Services | Sto. Tomas City SDO';
 $pageType = PageType::SignIn;
 $addDebug = false;
-?>
-<!DOCTYPE html>
-<html lang="en">
-<?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
-<body>
-<?php
+
 if (isValidUserSession())
 {
     // MODE: operation; should redirect to source URL, if available, or to the root directory
-    header('Location: ' . (isset($_REQUEST['src']) ? $_REQUEST['src'] : '/') . (isset($_REQUEST['app']) ? '?app=' . $_REQUEST['app'] : ''));
+    // header('Location: ' . (isset($_REQUEST['src']) ? $_REQUEST['src'] : '/') . (isset($_REQUEST['app']) ? '?app=' . $_REQUEST['app'] : ''));
+    ?><script>window.location.replace("<?php echo(isset($_REQUEST['src']) ? $_REQUEST['src'] : '/') . (isset($_REQUEST['app']) ? '?app=' . $_REQUEST['app'] : ''); ?>");</script><?php
 }
 else
 {
@@ -39,7 +35,6 @@ else
             $isInvalidSignIn = true;
 
             require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
-            // echo "Invalid credentials";
         }
     }
     else
@@ -50,7 +45,4 @@ else
         require(__FILE_ROOT__ . '/php/snippets/signin_form.php');
     }
 }
-require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 ?>
-</body>
-</html>

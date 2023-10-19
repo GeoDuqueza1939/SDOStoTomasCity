@@ -61,7 +61,8 @@ else
 
     if ($requiresSignIn)
     {
-        header('Location: /login?app=mpasis&src=' . $_SERVER['PHP_SELF']);
+        // header('Location: /login?app=mpasis&src=' . $_SERVER['PHP_SELF']);
+        ?><script>window.location.replace("<?php echo('/login?app=mpasis&src=' . $_SERVER['PHP_SELF']); ?>");</script><?php
     }
 }
 

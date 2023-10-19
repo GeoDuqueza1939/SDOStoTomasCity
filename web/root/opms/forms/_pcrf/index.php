@@ -28,7 +28,8 @@ if (isset($_SESSION['user']))
 elseif ($requiresSignIn)
 {
     // redirect to login
-    header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+    // header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+    ?><script>window.location.replace("<?php echo('/login?src=' . $_SERVER['PHP_SELF']); ?>");</script><?php
 }
 
 require_once(__FILE_ROOT__ . '/opms/php/snippets/header_full.php');

@@ -40,7 +40,8 @@ else
     if ($requiresSignIn)
     {
         // redirect to login
-        header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+        // header('Location: /login?src=' . $_SERVER['PHP_SELF']);
+        ?><script>window.location.replace("<?php echo('/login?src=' . $_SERVER['PHP_SELF']); ?>");</script><?php
     }
 }
 

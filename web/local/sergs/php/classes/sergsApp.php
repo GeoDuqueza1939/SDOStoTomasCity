@@ -505,11 +505,13 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
             elseif (isset($_REQUEST['a']) && $_REQUEST['a'] == 'refresh')
             {
                 unset($_REQUEST['a']);
-                header('Location: ' . $_SERVER['PHP_SELF']);
+                // header('Location: ' . $_SERVER['PHP_SELF']);
+                $this->jsRedirect($_SERVER['PHP_SELF']);
             }
             elseif (isset($_REQUEST['redir']))
             {
-                header('Location: ' . $_REQUEST['redir']);
+                // header('Location: ' . $_REQUEST['redir']);
+                $this->jsRedirect($_REQUEST['redir']);
                 unset($_REQUEST['redir']);
             }
         }
@@ -518,7 +520,8 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
             if ($requiresSignIn)
             {
                 echo('NO USER<br>');
-                header('Location: /login?app=sergs&src=' . $_SERVER['PHP_SELF']);
+                // header('Location: /login?app=sergs&src=' . $_SERVER['PHP_SELF']);
+                $this->jsRedirect('/login?app=sergs&src=' . $_SERVER['PHP_SELF']);
             }
             else
             {
@@ -2873,6 +2876,13 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         }
     
         return array('fieldStr'=>$fieldStr, 'valueStr'=>$valueStr, 'fieldValueStr'=>$fieldValueStr);
+    }
+
+    private function jsRedirect($url)
+    { ?>
+<script>
+window.location.replace("<?php echo($url); ?>");
+</script><?php 
     }
 }
 ?>
