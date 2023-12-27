@@ -46,7 +46,7 @@ class DatabaseConnection
 		// print('DBNAME: ' . $this->dbname . '<br><br>');
 
 		$this->setDDL($ddl);
-		
+
 		if ($this->dbExists())
 		{
 			$this->constructTables(); // will create any missing tables
@@ -74,20 +74,22 @@ class DatabaseConnection
 		if ($this->isConnected())
 		{
 			$this->lastException = new Exception('Connection already exists.');
-
+			
 			return false;
 		}
-
+		
 		try
 		{
 			$this->conn = new PDO($connStr, $this->username, $this->password);
-
+			
 			$this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		}
 		catch (PDOException $e)
 		{
 			$this->lastException = $e;
-
+			
+			die(var_export(PDO::getAvailableDrivers(), true));
+		
 			return false;
 		}
 

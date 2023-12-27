@@ -566,8 +566,8 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
 <body><div class="no-user-scrim"><div class="sdo-logo"></div></div></body>
 </html>
                 <?php
-                // header('Location: /login?app=sergs&src=' . $_SERVER['PHP_SELF']);
-                $this->jsRedirect('/login?app=sergs&src=' . $_SERVER['PHP_SELF']);
+                // header('Location: ' . __BASE__ . '/login?app=sergs&src=' . $_SERVER['PHP_SELF']);
+                $this->jsRedirect(__BASE__ .'/login?app=sergs&src=' . $_SERVER['PHP_SELF']);
             }
             else
             {
