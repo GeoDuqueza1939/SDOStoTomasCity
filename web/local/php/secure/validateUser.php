@@ -16,7 +16,7 @@ function getUserFetchQuery($includePassword = false)
             spouse_name,
             ext_name,
             birth_date,
-            birth_place,
+            Address.address AS birth_place,
             All_User.employeeId,
             Person.personId,
             sergs_access_level,
@@ -31,7 +31,8 @@ function getUserFetchQuery($includePassword = false)
             SELECT username, '' AS personId, employeeId, sergs_access_level, opms_access_level, mpasis_access_level, first_signin, pin, FALSE AS is_temporary_user, 0 AS temp_user" . ($includePassword ? ', password' : '') . " FROM `$dbname`.User
         ) AS All_User
         LEFT OUTER JOIN `$dbname`.Employee ON All_User.employeeId=Employee.employeeId
-        LEFT OUTER JOIN `$dbname`.Person ON All_User.personId=Person.personId OR Employee.personId=Person.personId";
+        LEFT OUTER JOIN `$dbname`.Person ON All_User.personId=Person.personId OR Employee.personId=Person.personId
+        LEFT OUTER JOIN `$dbname`.Address ON Person.birth_place=Address.addressId";
 
 }
 
