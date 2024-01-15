@@ -46,7 +46,7 @@ class DatabaseConnection
 		// print('DBNAME: ' . $this->dbname . '<br><br>');
 
 		$this->setDDL($ddl);
-
+		
 		if ($this->dbExists())
 		{
 			$this->constructTables(); // will create any missing tables
@@ -70,7 +70,7 @@ class DatabaseConnection
 	private function connectToStr($connStr)
 	{
 		// print($connStr . '<br><br>');
-
+		
 		if ($this->isConnected())
 		{
 			$this->lastException = new Exception('Connection already exists.');
@@ -174,7 +174,7 @@ class DatabaseConnection
 	{
 		$stat = true;
 		$backupConn = $this->conn;
-
+		
 		if ($this->dbServerExists() && $this->connect())
 		{
 			$this->disconnect();

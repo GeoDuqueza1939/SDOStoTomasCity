@@ -1,4 +1,4 @@
-        <a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
+        <a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="<?php echo(__BASE__); ?>/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
         <ul id="nav">
 <?php
     $ISId = ($pageType === PageType::SERGS ? 2 : ($pageType === PageType::OPMS ? 3 : ($pageType === PageType::MPASIS ? 4 : 1)));
@@ -15,7 +15,7 @@
                 $id = $navItem['nav_itemId'];
                 $icon = $navItem['icon_tag'];
                 $text = trim($navItem['nav_text']);
-                $url = trim($navItem['url']);
+                $url = __BASE__ . trim($navItem['url']);
                 $navId = trim($navItem['nav_html_id']);
     
                 echo('            <li' . (isset($navId) && $navId != '' ? " id=\"$navId\"" : '') . '>');
@@ -34,7 +34,7 @@
                         {
                             $id = $navItem2['nav_itemId'];
                             $text = trim($navItem2['nav_text']);
-                            $url = trim($navItem2['url']);
+                            $url = __BASE__ . trim($navItem2['url']);
                             $navId = trim($navItem2['nav_html_id']);
         
                             echo('                    <li' . (isset($navId) && $navId != '' ? " id=\"$navId\"" : '') . '>');

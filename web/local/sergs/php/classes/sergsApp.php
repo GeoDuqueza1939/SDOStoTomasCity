@@ -190,18 +190,18 @@ class SeRGS_App extends App
             $_SESSION['sk'] = [$iqmp, $dmq1, $dmp1, $q, $p, $d, $e, $n]; // sk: server key data
             ?>
 
-            <script src="/js/libs/jsbn/jsbn.js"></script>
-            <script src="/js/libs/jsbn/jsbn2.js"></script>
-            <script src="/js/libs/jsbn/base64.js"></script>
-            <script src="/js/libs/jsbn/sha1.js"></script>
-            <script src="/js/libs/jsbn/prng4.js"></script>
-            <script src="/js/libs/jsbn/rng.js"></script>
-            <script src="/js/libs/jsbn/rsa.js"></script>
-            <script src="/js/libs/jsbn/rsa2.js"></script>
-            <script src="/js/types.js"></script>
-            <script src="/js/secure.js"></script>
-            <script src="/js/storage.js"></script>
-            <script src="/js/ajax.js"></script><!-- TEMP ONLY!!! REIMPLEMENT BETTER AJAX CODE USING PROMISES -->
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/jsbn.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/jsbn2.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/base64.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/sha1.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/prng4.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/rng.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/rsa.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/libs/jsbn/rsa2.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/types.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/secure.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/storage.js"></script>
+            <script src="<?php echo(__BASE__); ?>/js/ajax.js"></script><!-- TEMP ONLY!!! REIMPLEMENT BETTER AJAX CODE USING PROMISES -->
             <script>
                 let serverKeyData = <?php echo(json_encode(['n'=>$n, 'e'=>$e, 'd'=>$d])); ?>;
                 let serverPubKey = new RSAKey();
@@ -344,22 +344,22 @@ class SeRGS_App extends App
         setcookie('srvkd', json_encode($keyCookie), time() + 60 * 60 * 24, '/');
         
         ?>
-<script src="/js/ajax.js"></script>
-<script src="/js/elements.js"></script>
-<script src="/js/types.js"></script>
-<script src="/js/async.js"></script>
-<script src="/js/classes/ExClass.js"></script>
-<script src="/js/classes/UIEx.js"></script>
-<script src="/js/libs/jsbn/base64.js"></script>
-<script src="/js/libs/jsbn/sha1.js"></script>
-<script src="/js/libs/jsbn/jsbn.js"></script>
-<script src="/js/libs/jsbn/jsbn2.js"></script>
-<script src="/js/libs/jsbn/prng4.js"></script>
-<script src="/js/libs/jsbn/rng.js"></script>
-<script src="/js/libs/jsbn/rsa.js"></script>
-<script src="/js/libs/jsbn/rsa2.js"></script>
-<script src="/sergs/js/sergs.js"></script>
-<script src="/js/secure.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/ajax.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/elements.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/types.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/async.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/classes/ExClass.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/classes/UIEx.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/base64.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/sha1.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/jsbn.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/jsbn2.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/prng4.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/rng.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/rsa.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/libs/jsbn/rsa2.js"></script>
+<script src="<?php echo(__BASE__); ?>/sergs/js/sergs.js"></script>
+<script src="<?php echo(__BASE__); ?>/js/secure.js"></script>
 
 <script>
 // let keyData = JSON.parse(SeRGS_App.getCookie('srvkd'));
@@ -673,7 +673,7 @@ SeRGS_App.enum["<?php echo($key); ?>"] = <?php echo(json_encode($value)); ?>;<?p
 <!DOCTYPE html>
 <html lang="en">
 <?php require_once(__FILE_ROOT__ . '/php/snippets/html_head.php');?>
-<script src="/sergs/js/sergs.js"></script><?php
+<script src="<?php echo(__BASE__); ?>/sergs/js/sergs.js"></script><?php
         if ($pageId !== 'print')
         {
             $this->writeJSEnums();
@@ -797,17 +797,17 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             <h2>Dashboard</h2>
 
             <form id="redir-requests">
-                <input type="hidden" name="redir" value="/sergs/requests/">
+                <input type="hidden" name="redir" value="<?php echo(__BASE__); ?>/sergs/requests/">
             </form>
             <form id="redir-new-request">
-                <input type="hidden" name="redir" value="/sergs/requests/new_request/">
+                <input type="hidden" name="redir" value="<?php echo(__BASE__); ?>/sergs/requests/new_request/">
             </form>
             <form id="redir-request-list">
-                <input type="hidden" name="redir" value="/sergs/requests/request_list/">
+                <input type="hidden" name="redir" value="<?php echo(__BASE__); ?>/sergs/requests/request_list/">
                 <input type="hidden" name="req" value="user">
             </form>
             <form id="redir-my-service-record">
-                <input type="hidden" name="redir" value="/sergs/sr/my_service_record/">
+                <input type="hidden" name="redir" value="<?php echo(__BASE__); ?>/sergs/sr/my_service_record/">
             </form>
 
             <div class="div-ex dashboard-contents">
@@ -817,7 +817,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
                 <div class="div-ex dashboard-stats-requests-processed">
                     <h4 class="label-ex">Total Requests Processed <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
-                    <!-- By me: 0 [<a href="/sergs/requests/">View All</a>]<br> -->
+                    <!-- By me: 0 [<a href="<?php echo(__BASE__); ?>/sergs/requests/">View All</a>]<br> -->
                     By me: 0 <button type="submit" form="redir-requests" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post">View All</button><br>
                     By everyone: 0
                 </div>
@@ -833,7 +833,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <div class="div-ex dashboard-recent-for-encode">
                     <h4 class="label-ex">Service Record Requests for Encoding/Updating <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                     <div class="dashboard-item-contents">
-                        <!-- None to show [<a href="/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
+                        <!-- None to show [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
                         None to show <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Transact a request">Transact</button>
                     </div>
                 </div><?php
@@ -844,7 +844,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <div class="div-ex dashboard-recent-for-certify">
                     <h4 class="label-ex">Service Record Requests for Certification <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                     <div class="dashboard-item-contents">
-                        <!-- None to show [<a href="/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
+                        <!-- None to show [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
                         None to show <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Transact a request">Transact</button>
                     </div>
                 </div>
@@ -852,7 +852,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <div class="div-ex dashboard-recent-for-approval">
                     <h4 class="label-ex">Service Record Requests for Approval <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                     <div class="dashboard-item-contents">
-                        <!-- None to show [<a href="/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
+                        <!-- None to show [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
                         None to show <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Transact a request">Transact</button>
                     </div>
                 </div><?php
@@ -863,7 +863,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <div class="div-ex dashboard-recent-for-release">
                     <h4 class="label-ex">Service Record Requests for Releasing <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                     <div class="dashboard-item-contents">
-                        <!-- None to show [<a href="/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
+                        <!-- None to show [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Transact a request">Transact</a>]<br> -->
                         None to show <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Transact a request">Transact</button>
                     </div>
                 </div><?php
@@ -872,9 +872,9 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <div class="div-ex dashboard-my-service-record-info">
                     <h4 class="label-ex">My Service Record <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                     <div class="dashboard-item-contents">
-                        <!-- Not available [<a href="/sergs/requests/new_request/" title="Request for encoding/updating of my service record">Request</a>]<br> -->
+                        <!-- Not available [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Request for encoding/updating of my service record">Request</a>]<br> -->
                         Not available <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Request for encoding/updating of my service record">Request</button><br>
-                        <!-- Available [<a href="/sergs/sr/my_service_record/" title="View my service record">View</a>] [<a href="/sergs/requests/new_request/" title="Request for a service record update">Update</a>]<br> -->
+                        <!-- Available [<a href="<?php echo(__BASE__); ?>/sergs/sr/my_service_record/" title="View my service record">View</a>] [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Request for a service record update">Update</a>]<br> -->
                         <!-- Available <button type="submit" form="redir-my-service-record" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="View my service record">View</button> <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Request for a service record update">Update</button> -->
                     </div>
                 </div>
@@ -882,7 +882,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 <div class="div-ex dashboard-my-requests-history">
                     <h4 class="label-ex">My Requests History <a class="dashboard-refresh-link" href="?a=refresh" title="Refresh"><span class="material-icons-round">refresh</span></a></h4>
                     <div class="dashboard-item-contents">
-                        <!-- None to show [<a href="/sergs/requests/new_request/">Transact</a>]<br> -->
+                        <!-- None to show [<a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/">Transact</a>]<br> -->
                         None to show
                         <button type="submit" form="redir-new-request" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="Request encoding/updating of Service Record">Request</button>
                         <button type="submit" form="redir-request-list" formaction="" formenctype="application/x-www-form-urlencoded" formmethod="post" title="View my requests">View</button>
@@ -906,11 +906,11 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             
             <div class="div-ex view-contents">
                 <ul class="card-link">
-                    <li><a href="/sergs/sr/my_service_record/">My Service Record</a></li> <?php
+                    <li><a href="<?php echo(__BASE__); ?>/sergs/sr/my_service_record/">My Service Record</a></li> <?php
                 if ($accessLevel < 9 && $accessLevel > 1)
                 { ?>
-                    <li><a href="/sergs/sr/other/">Other Service Record</a></li>
-                    <li><a href="/sergs/sr/encoding/">Service Record Data Entry Form</a></li> <?php
+                    <li><a href="<?php echo(__BASE__); ?>/sergs/sr/other/">Other Service Record</a></li>
+                    <li><a href="<?php echo(__BASE__); ?>/sergs/sr/encoding/">Service Record Data Entry Form</a></li> <?php
                 } ?>
                 </ul>
             </div>
@@ -949,7 +949,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 </div>
             </div>
 
-            <form id="sr-printer" name="sr-printer" method="GET" action="/sergs/print.php" target="_blank">
+            <form id="sr-printer" name="sr-printer" method="GET" action="<?php echo(__BASE__); ?>/sergs/print.php" target="_blank">
                 <input type="hidden" name="a" value="print">
                 <input type="hidden" name="print" value="sr">
                 <input type="hidden" name="personId" value="<?php echo($_SESSION['user']['personId']); ?>">
@@ -989,7 +989,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                         <tr>
-                            <td colspan="9">Not available. To request a service record update, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
+                            <td colspan="9">Not available. To request a service record update, please click <a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Request for a service record">here</a>.</td>
                         </tr>
         <?php
         }
@@ -1082,7 +1082,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
             </form>
 
-            <form id="sr-printer" name="sr-printer" method="GET" action="/sergs/print.php" target="_blank">
+            <form id="sr-printer" name="sr-printer" method="GET" action="<?php echo(__BASE__); ?>/sergs/print.php" target="_blank">
                 <input type="hidden" name="a" value="print">
                 <input type="hidden" name="print" value="sr"><?php 
         if (!is_null($employee))
@@ -1184,7 +1184,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         { ?>
 
                         <tr>
-                            <td colspan="9"><?php echo(is_null($employee) ? 'Please select and load an employee record to continue.' : 'Not available. To update this employee\'s service record, please click <a href="/sergs/sr/encoding/?' . $_SERVER['QUERY_STRING'] . '" title="Update service record">here</a>. To request an update in behalf of this employee, please click <a href="/sergs/requests/new_request/" title="Request for a service record">here</a>.'); ?></td>
+                            <td colspan="9"><?php echo(is_null($employee) ? 'Please select and load an employee record to continue.' : 'Not available. To update this employee\'s service record, please click <a href="' . __BASE__ . '/sergs/sr/encoding/?' . $_SERVER['QUERY_STRING'] . '" title="Update service record">here</a>. To request an update in behalf of this employee, please click <a href="' . __BASE__ . '/sergs/requests/new_request/" title="Request for a service record">here</a>.'); ?></td>
                         </tr>
         <?php
         }
@@ -1299,12 +1299,12 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         <section id="main-requests">
             <h2>Requests</h2>
             <ul class="card-link">
-                <li><a href="/sergs/requests/request_list/"><?php echo($this->getUserAccessLevel() === 1 ? 'My Requests' : 'Request List'); ?></a></li>
-                <li><a href="/sergs/requests/new_request/">New Request</a></li><?php
+                <li><a href="<?php echo(__BASE__); ?>/sergs/requests/request_list/"><?php echo($this->getUserAccessLevel() === 1 ? 'My Requests' : 'Request List'); ?></a></li>
+                <li><a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/">New Request</a></li><?php
                 if ($accessLevel > 1 && $accessLevel < 9)
                 { ?>
-                <li><a href="/sergs/requests/archive/">Archived Requests</a></li>
-                <li><a href="/sergs/requests/search/">Search</a></li><?php
+                <li><a href="<?php echo(__BASE__); ?>/sergs/requests/archive/">Archived Requests</a></li>
+                <li><a href="<?php echo(__BASE__); ?>/sergs/requests/search/">Search</a></li><?php
                 } ?>
             </ul>
         </section><?php
@@ -1402,7 +1402,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 </span>
             </div>
             <div class="div-ex request-list-table-wrapper">
-                <!-- None found. <a href="/sergs/requests/new_request/" title="Request for a service record">Request a copy</a> -->
+                <!-- None found. <a href="<?php echo(__BASE__); ?>/sergs/requests/new_request/" title="Request for a service record">Request a copy</a> -->
                 <table class="table-ex request-list-table">
                     <thead>
                         <tr>
@@ -1752,7 +1752,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
             </form>
 
-            <form id="sr-printer" name="sr-printer" method="GET" action="/sergs/print.php" target="_blank">
+            <form id="sr-printer" name="sr-printer" method="GET" action="<?php echo(__BASE__); ?>/sergs/print.php" target="_blank">
                 <input type="hidden" name="a" value="print">
                 <input type="hidden" name="print" value="sr"><?php 
         if (!is_null($employee))
@@ -1956,10 +1956,10 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             
             <div class="div-ex account-contents">
                 <ul class="card-link">
-                    <li><a href="/sergs/account/edit/">My Account</a></li> <?php
+                    <li><a href="<?php echo(__BASE__); ?>/sergs/account/edit/">My Account</a></li> <?php
                 if ($accessLevel < 9 && $accessLevel > 1)
                 { ?>
-                    <li><a href="/sergs/account/edit_other/">Other Accounts</a></li> <?php
+                    <li><a href="<?php echo(__BASE__); ?>/sergs/account/edit_other/">Other Accounts</a></li> <?php
                 } ?>
                     <li><a href="?a=logout">Sign Out</a></li>
                 </ul>
@@ -2109,7 +2109,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         } ?>
             <section id="sr-print">
                 <header id="sr-header">
-                    <h1><img class="deped-logo" src="/images/Department_of_Education.svg" alt="logo:Department of Education" />
+                    <h1><img class="deped-logo" src="<?php echo(__BASE__); ?>/images/Department_of_Education.svg" alt="logo:Department of Education" />
                         <span class="header-rp">Republic of the Philippines</span>
                         <span class="header-deped">Department of Education</span>
                         <span class="header-region">Region IV-A CALABARZON</span>
@@ -2204,17 +2204,17 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
                 <footer id="sr-footer">
                     <div class="div-ex content">
-                        <img class="matatag-bagongpilipinas-logo" src="/images/logo-depedmatatag-bagongpilipinas.png" alt="logo:DepEd MATATAG - Bagong Pilipinas" />
-                        <img class="sdo-logo" src="/images/logo-depedstotomas.webp" alt="logo:Department of Education" />
+                        <img class="matatag-bagongpilipinas-logo" src="<?php echo(__BASE__); ?>/images/logo-depedmatatag-bagongpilipinas.png" alt="logo:DepEd MATATAG - Bagong Pilipinas" />
+                        <img class="sdo-logo" src="<?php echo(__BASE__); ?>/images/logo-depedstotomas.webp" alt="logo:Department of Education" />
                         <p><b>Address:</b><!--<span class="material-icons-round">pin_drop</span>--> Brgy. Poblacion IV, Sto. Tomas City, Batangas</p>
                         <p><b>Telephone No.:</b><!--<span class="material-icons-round">phone</span>--> (043) 702-8674</p>
                         <p><b>Email Address:</b><!--<span class="material-icons-round">alternate_email</span>--> <a href="mailto:sdo.santotomas@deped.gov.ph">sdo.santotomas@deped.gov.ph</a></p>
                         <p><b>Website:</b><!--<span class="material-icons-round">language</span>--> <a href="https://depedstotomascity.com.ph">depedstotomascity.com.ph</a></p>
-                        <img class="sdo-motto" src="/images/logo-tawagko-transparent-cropped.png" alt="logo:Tomasino Ako, Wagi Ang Gawi Ko" />
+                        <img class="sdo-motto" src="<?php echo(__BASE__); ?>/images/logo-tawagko-transparent-cropped.png" alt="logo:Tomasino Ako, Wagi Ang Gawi Ko" />
                     </div>
                 </footer>
             </section>
-            <script src="/sergs/js/sergsprint.js"></script>
+            <script src="<?php echo(__BASE__); ?>/sergs/js/sergsprint.js"></script>
         </section><?php
     }
 
@@ -2231,7 +2231,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
         <section id="main-forbidden">
             <h2><span class="material-icons-round red" style="font-weight: bold; vertical-align: middle;">block</span> Unauthorized Access <span class="material-icons-round red" style="font-weight: bold; vertical-align: middle;">front_hand</span></h2>
             <p class="center">Your user access level is not allowed to access this interface.</p>
-            <p class="center">Click <a href="?a=logout" title="Sign out">here to sign out</a> or <a href="/" title="SDO Services Home">here to return to SDO Services Home</a>.</p>
+            <p class="center">Click <a href="?a=logout" title="Sign out">here to sign out</a> or <a href="<?php echo(__BASE__); ?>/" title="SDO Services Home">here to return to SDO Services Home</a>.</p>
             <p class="center">Thank you.</p>
         </section><?php
     }

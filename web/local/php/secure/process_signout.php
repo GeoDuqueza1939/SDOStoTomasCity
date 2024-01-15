@@ -14,7 +14,7 @@ session_destroy();
 if ($redirectToLogin)
 {
     // header('Location: /login?src=' . $_SERVER['PHP_SELF']);
-    ?><script>window.location.replace("<?php echo('/login?src=' . $_SERVER['PHP_SELF']); ?>");</script><?php
+    ?><script>window.location.replace("<?php echo(__BASE__ . '/login?src=' . $_SERVER['PHP_SELF']); ?>");</script><?php
 }
 else
 {

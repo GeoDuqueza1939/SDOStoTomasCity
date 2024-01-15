@@ -41,14 +41,12 @@ function getValidCredentials(string $username, string $password)
     require(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 
     $dbconn = new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl);
-
+    
     $dbResults = $dbconn->executeQuery(getUserFetchQuery(true) . " WHERE username='$username' AND password='" . hash('ripemd320', $password) . "'");
 
+    // $dbResults = $dbconn->executeStatement(getUserFetchQuery(true));
+
     // die(hash('ripemd320', $password));
-    // die(var_export($dbconn, true));
-    // die(var_export($dbconn->lastSQLStr, true));
-    // die(var_export(getUserFetchQuery(true) . " WHERE username='$username' AND password='" . hash('ripemd320', $password) . "'", true));
-    die(var_export($dbResults, true));
    
     if (is_null($dbconn->lastException))
     {
