@@ -368,6 +368,12 @@ body, .app > main {
     text-shadow: 0.02em 0.02em black;
 }
 
+.my-sr .status-pane#sr-status > span.information > span.material-icons-round,
+.other-sr .status-pane#sr-status > span.information > span.material-icons-round,
+.sr-encoding .status-pane#sr-status > span.information > span.material-icons-round {
+    color: #012998;
+}
+
 .my-sr .status-pane#sr-status > span.warning > span.material-icons-round,
 .other-sr .status-pane#sr-status > span.warning > span.material-icons-round,
 .sr-encoding .status-pane#sr-status > span.warning > span.material-icons-round {

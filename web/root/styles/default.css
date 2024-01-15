@@ -231,6 +231,10 @@ table.bordered > tr > *, table.bordered > * > tr > *, .table.bordered > .tr > *,
     font-style: italic;
 }
 
+.non-italic, .non-emphasized {
+    font-style: normal;
+}
+
 .underlined {
     text-decoration: underline;
 }
