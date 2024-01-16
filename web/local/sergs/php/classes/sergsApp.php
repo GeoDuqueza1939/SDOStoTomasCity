@@ -1925,7 +1925,8 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     
                     if ($errorMsg !== '')
                     {
-                        echo('<span class="information"><span class="material-icons-round">info</span>');
+                        // echo('<span class="information"><span class="material-icons-round">info</span>');
+                        echo('<span class="error" title="Status type: Error"><span class="material-icons-round">cancel</span>');
                         echo($errorMsg);
                         echo('</span>');
                         echo('<hr>');
@@ -2368,9 +2369,10 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
             WHERE designation='$designation'
                 AND personId='$personId'
                 AND date_start='$dateStart'
-                AND (date_end IS NULL OR date_end>='$dateEnd')
+                AND date_end" . (is_null($dateEnd) ? ' IS NULL' : ">='$dateEnd'") . "
             ;"
         );
+        // AND (date_end IS NULL OR date_end>='$dateEnd')
 
         if (!is_null($this->getDB_SDO()->lastException))
         {

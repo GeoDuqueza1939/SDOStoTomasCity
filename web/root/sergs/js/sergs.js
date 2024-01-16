@@ -170,8 +170,8 @@ class SeRGS_App extends App
     {
         if (td instanceof HTMLTableCellElement && td.children.length > 0 && td.children[0] instanceof HTMLInputElement && td.children[0].type === "date")
         {
-            td.innerHTML = (td.children[0].value === "" && td.headerName === "date_end" && td.previousElementSibling.textContent !== "" ? "present" : td.children[0].value.replace(/(\d\d\d\d)-(\d\d)-(\d\d)/, "$2\/$3\/$1"));
-            td.innerHTML += "<input type=\"hidden\" name=\"" + td.headerName + "[]\" value=\"" + (td.textContent === "present" ? "" : td.textContent) + "\">";
+            td.innerHTML = (td.children[0].value === "" && td.headerName === "date_end" && td.previousElementSibling.textContent !== "" ? "to date" : td.children[0].value.replace(/(\d\d\d\d)-(\d\d)-(\d\d)/, "$2\/$3\/$1"));
+            td.innerHTML += "<input type=\"hidden\" name=\"" + td.headerName + "[]\" value=\"" + (td.textContent === "to date" ? "" : td.textContent) + "\">";
             this.activateDelRecButton(false, td);
             td.tabIndex = 0;
 
@@ -415,7 +415,7 @@ class SeRGS_App extends App
         
         this.attachRowEventListeners(row);
 
-        row.rowInfo.td["date_end"].innerHTML = row.rowInfo.td["date_end"].innerHTML.replace("present", "");
+        row.rowInfo.td["date_end"].innerHTML = row.rowInfo.td["date_end"].innerHTML.replace("to date", "");
 
         row.children[0].focus();
 
@@ -436,9 +436,9 @@ class SeRGS_App extends App
                     {
                         if (cell.textContent.trim() === "")
                         {
-                            cell.innerHTML = "present" + cell.innerHTML;
+                            cell.innerHTML = "to date" + cell.innerHTML;
                         }
-                        else if (cell.textContent.trim() === "present")
+                        else if (cell.textContent.trim() === "to date")
                         {
                             cell.children[0].value = null;
                         }
