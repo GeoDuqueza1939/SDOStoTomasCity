@@ -2195,6 +2195,13 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                                 <span class="position">Administrative Officer V</span>
                                             </span>
                                         </div>
+
+                                        <div class="div-ex">
+                                            <span class="span-ex">
+                                                <span class="label">Updated as of:</span>
+                                                <span class="datetimestamp"><?php echo(date('M d, Y h:mm A')); ?></span>
+                                            </span>
+                                        </div>
                                     </div>
                                 </main>
                             </td>
@@ -2869,7 +2876,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
 
             if (!is_null($prevDateEnd) && $srTOS['date_start'] > date('Y-m-d', strtotime('+1 day', strtotime($prevDateEnd))))
             {
-                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="information" title="Status type: Information"><span class="material-icons-round" title="Status type: Information">info</span> Date gap <span class="non-italic">(' . date('m/d/Y', strtotime($prevDateEnd)) . ' to ' . date('m/d/Y', strtotime($srTOS['date_start'])) . ')</span> in rows ' . ($i + 1) . ' and ' . ($i + 2) . '</span>';
+                $this->multipleStatus .= (trim($this->multipleStatus) === '' ? '' : '<hr>') . '<span class="information" title="Status type: Information"><span class="material-icons-round" title="Status type: Information">info</span> Date gap <span class="non-italic">(' . date('m/d/Y', strtotime($prevDateEnd)) . ' to ' . date('m/d/Y', strtotime($srTOS['date_start'])) . ')</span> in rows ' . ($i) . ' and ' . ($i + 1) . '</span>';
             }
             
             foreach ($srTOS as $key => $value)

@@ -105,9 +105,24 @@
         margin: 0 !important;
     }
 
+    #sr-print::before {
+        display: block;
+        content: " ";
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: -10;
+        background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("/test/images/logo-depedstotomas.webp");
+        background-size: 6in;
+        background-repeat: no-repeat;
+        background-position: center 3.61in;
+    }
+    
     #sr-print {
         max-width: initial;
-        background-color: initial;
+        background-color: none;
         margin: 0 !important;
         padding: 0.15in 0.4in !important;
         box-shadow: unset !important;
@@ -134,6 +149,10 @@
     .print footer > .content {
         font-size: 0.8em !important;
     }
+
+    #sr-print {
+        background-color: white;
+    }
 }
 
 body {
@@ -155,7 +174,6 @@ body {
     margin: 0 auto;
     /* padding: 0.5in; */
     padding: 0.15in 0.5in;
-    background-color: white;
     box-shadow: 3pt 3pt 5pt black;
 }
 
