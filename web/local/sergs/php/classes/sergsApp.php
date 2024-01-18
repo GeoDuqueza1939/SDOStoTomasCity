@@ -1838,7 +1838,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                 </span>
             </div>
 
-            <form class="data-form-ex sr-table-wrapper" id="sr-table-form" name="sr-table-form" method="GET"><?php
+            <form class="data-form-ex sr-table-wrapper" id="sr-table-form" name="sr-table-form" method="POST"><?php
         if (!is_null($employee))
         { ?>
 
@@ -2117,6 +2117,27 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         <span class="header-sdo">Schools Division Office of Sto. Tomas City</span>
                     </h1>
                     <h2>Service Record</h2>
+
+                    <div class="emp-info">
+                        <div class="div-ex name">
+                            <span class="label-ex">Name:</span>
+                            <span class="span-ex surname reversed"><span class="blank"><?php echo(is_null($employee['spouse_name']) || trim($employee['spouse_name']) === '' ? $employee['family_name'] : $employee['spouse_name']); ?></span> <span class="label-ex">(surname)</span></span>
+                            <span class="span-ex firstname reversed"><span class="blank"><?php echo($employee['given_name'] . (is_null($employee['ext_name']) || trim($employee['ext_name']) === '' ? '' : ' &nbsp; ' . $employee['ext_name'])); ?></span> <span class="label-ex">(first name)</span></span>
+                            <span class="span-ex middlename reversed"><span class="blank"><?php echo(is_null($employee['spouse_name']) || trim($employee['spouse_name']) === '' ? (is_null($employee['middle_name']) || trim($employee['middle_name']) === '' ? '&nbsp;' : $employee['middle_name']) : $employee['family_name']); ?></span> <span class="label-ex">(middle name)</span></span>
+                            <span class="span-ex name-comment">(If married, give also full name and other surname used)</span>
+                        </div>
+                        <div class="div-ex birth">
+                            <span class="label-ex">Birth:</span>
+                            <span class="span-ex birthdate reversed"><span class="blank"><?php echo($employee['birth_date'] ? date_format(date_create($employee['birth_date']), 'F j, Y') : '&nbsp;'); ?></span> <span class="label-ex">(date)</span></span>
+                            <span class="span-ex birthplace reversed"><span class="blank"><?php echo($employee['birth_place'] ?? '&nbsp;'); ?></span> <span class="label-ex">(place)</span></span>
+                            <span class="span-ex birth-comment">(Date herein should be checked from birth baptismal certificate of some official documents)</span>
+                        </div>
+                        <div class="div-ex employeeId">
+                            <span class="label-ex">Emp. No.:</span> <span class="blank"><?php echo($employee['is_temporary_empno'] ? '' : $employee['employeeId']); ?></span>
+                        </div>
+                    </div>
+
+                    <p class="prenote">This is to certify that the employee named herein above actually rendered service in this office or office as indicated below, each line of which is supported by appointment and other papers actually issued and approved by the authorities concerned.</p>
                 </header>
 
                 <table class="pager">
@@ -2125,27 +2146,7 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         <tr>
                             <td>
                                 <main id="sr-content">
-                                    <div class="emp-info">
-                                        <div class="div-ex name">
-                                            <span class="label-ex">Name:</span>
-                                            <span class="span-ex surname reversed"><span class="blank"><?php echo(is_null($employee['spouse_name']) || trim($employee['spouse_name']) === '' ? $employee['family_name'] : $employee['spouse_name']); ?></span> <span class="label-ex">(surname)</span></span>
-                                            <span class="span-ex firstname reversed"><span class="blank"><?php echo($employee['given_name'] . (is_null($employee['ext_name']) || trim($employee['ext_name']) === '' ? '' : ' &nbsp; ' . $employee['ext_name'])); ?></span> <span class="label-ex">(first name)</span></span>
-                                            <span class="span-ex middlename reversed"><span class="blank"><?php echo(is_null($employee['spouse_name']) || trim($employee['spouse_name']) === '' ? (is_null($employee['middle_name']) || trim($employee['middle_name']) === '' ? '&nbsp;' : $employee['middle_name']) : $employee['family_name']); ?></span> <span class="label-ex">(middle name)</span></span>
-                                            <span class="span-ex name-comment">(If married, give also full name and other surname used)</span>
-                                        </div>
-                                        <div class="div-ex birth">
-                                            <span class="label-ex">Birth:</span>
-                                            <span class="span-ex birthdate reversed"><span class="blank"><?php echo($employee['birth_date'] ? date_format(date_create($employee['birth_date']), 'F j, Y') : '&nbsp;'); ?></span> <span class="label-ex">(date)</span></span>
-                                            <span class="span-ex birthplace reversed"><span class="blank"><?php echo($employee['birth_place'] ?? '&nbsp;'); ?></span> <span class="label-ex">(place)</span></span>
-                                            <span class="span-ex birth-comment">(Date herein should be checked from birth baptismal certificate of some official documents)</span>
-                                        </div>
-                                        <div class="div-ex employeeId">
-                                            <span class="label-ex">Emp. No.:</span> <span class="blank"><?php echo($employee['is_temporary_empno'] ? '' : $employee['employeeId']); ?></span>
-                                        </div>
-                                    </div>
-
                                     <div class="div-ex sr-table-wrapper">
-                                        <p class="prenote">This is to certify that the employee named herein above actually rendered service in this office or office as indicated below, each line of which is supported by appointment and other papers actually issued and approved by the authorities concerned.</p>
                                         <table class="table-ex sr-table" id="sr-table-view">
                                             <thead>
                                                 <tr>
@@ -2196,10 +2197,10 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                                             </span>
                                         </div>
 
-                                        <div class="div-ex">
+                                        <div class="div-ex sr-timestamp">
                                             <span class="span-ex">
-                                                <span class="label">Updated as of:</span>
-                                                <span class="datetimestamp"><?php echo(date('M d, Y h:mm A')); ?></span>
+                                                <span class="label">Generated on:</span>
+                                                <span class="datetimestamp"><?php date_default_timezone_set("Asia/Manila"); echo(date('M d, Y g:i A')); ?></span>
                                             </span>
                                         </div>
                                     </div>
