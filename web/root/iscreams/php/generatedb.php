@@ -16,8 +16,8 @@ function regenerateDB($proceed = false)
 
   $dbtype = 'mysql';
   $servername = 'localhost';
-  // $dbname = 'SDOStoTomas';
-  // $ismdbname = 'ISCreAMS';
+  // $dbname = 'SDOStoTomasOLD';
+  // $ismdbname = 'ISCreAMSOLD';
   // $dbuser = 'sdoadmin';
   // $dbpass = 'sdo12345';
   $dbname = '`536605`';

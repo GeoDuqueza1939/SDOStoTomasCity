@@ -2,7 +2,7 @@
 function returnConnection() // KEEP THIS FUNCTION FOR FUTURE USE!!!
 {
     $servername = 'localhost';
-	$dbname = 'SDOStoTomas';
+	$dbname = 'SDOStoTomasOLD';
 	$dbuser = 'root';
 	$dbpass = 'admin';
 

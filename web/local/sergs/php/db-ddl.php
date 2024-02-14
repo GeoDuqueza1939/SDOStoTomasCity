@@ -1,9 +1,9 @@
 <?php
 $ddl = [
-    // "CREATE DATABASE `SDOStoTomas`;", // FIRST ELEMENT SHOULD BE DDL FOR DATABASE
+    // "CREATE DATABASE `$dbname`;", // FIRST ELEMENT SHOULD BE DDL FOR DATABASE
     
 // -- SDOStoTomas.ENUM_Emp_Appointment_Status definition
-    'ENUM_Emp_Appointment_Status'=>"CREATE TABLE `SDOStoTomas`.`ENUM_Emp_Appointment_Status` (
+    'ENUM_Emp_Appointment_Status'=>"CREATE TABLE `$dbname`.`ENUM_Emp_Appointment_Status` (
       `index` tinyint(3) unsigned NOT NULL,
       `appointment_status` varchar(100) NOT NULL,
       PRIMARY KEY (`index`),
@@ -12,7 +12,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.ENUM_Location_Type definition
-    'ENUM_Location_Type'=>"CREATE TABLE `SDOStoTomas`.`ENUM_Location_Type` (
+    'ENUM_Location_Type'=>"CREATE TABLE `$dbname`.`ENUM_Location_Type` (
       `index` tinyint(3) unsigned NOT NULL,
       `location_name` varchar(50) NOT NULL,
       `description` longtext DEFAULT NULL,
@@ -22,7 +22,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.ENUM_SERGS_Access_Level definition
-    'ENUM_SERGS_Access_Level'=>"CREATE TABLE `SDOStoTomas`.`ENUM_SERGS_Access_Level` (
+    'ENUM_SERGS_Access_Level'=>"CREATE TABLE `$dbname`.`ENUM_SERGS_Access_Level` (
       `index` tinyint(3) unsigned NOT NULL,
       `level_name` varchar(50) NOT NULL,
       `description` longtext DEFAULT NULL,
@@ -32,7 +32,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Address definition
-    'Address'=>"CREATE TABLE `SDOStoTomas`.`Address` (
+    'Address'=>"CREATE TABLE `$dbname`.`Address` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `text` longtext DEFAULT NULL,
       PRIMARY KEY (`id`),
@@ -40,7 +40,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Location definition
-    'Location'=>"CREATE TABLE `SDOStoTomas`.`Location` (
+    'Location'=>"CREATE TABLE `$dbname`.`Location` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `name` varchar(100) NOT NULL,
       `location_type` tinyint(3) unsigned NOT NULL DEFAULT 0,
@@ -53,7 +53,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Broad_Location definition
-    'Broad_Location'=>"CREATE TABLE `SDOStoTomas`.`Broad_Location` (
+    'Broad_Location'=>"CREATE TABLE `$dbname`.`Broad_Location` (
       `index` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `locationId` bigint(20) unsigned NOT NULL,
       `broad_locationId` bigint(20) unsigned NOT NULL,
@@ -66,7 +66,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.SET_Address_Location definition
-    'SET_Address_Location'=>"CREATE TABLE `SDOStoTomas`.`SET_Address_Location` (
+    'SET_Address_Location'=>"CREATE TABLE `$dbname`.`SET_Address_Location` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `address` bigint(20) unsigned NOT NULL,
       `location` bigint(20) unsigned NOT NULL,
@@ -79,7 +79,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Date_Range definition
-    'Date_Range'=>"CREATE TABLE `SDOStoTomas`.`Date_Range` (
+    'Date_Range'=>"CREATE TABLE `$dbname`.`Date_Range` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `start` date NOT NULL,
       `end` date DEFAULT NULL,
@@ -89,7 +89,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Emp_Appointment definition
-    'Emp_Appointment'=>"CREATE TABLE `SDOStoTomas`.`Emp_Appointment` (
+    'Emp_Appointment'=>"CREATE TABLE `$dbname`.`Emp_Appointment` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `plantilla_item` varchar(100) NOT NULL,
       `designation` varchar(100) NOT NULL,
@@ -98,7 +98,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Institution definition
-    'Institution'=>"CREATE TABLE `SDOStoTomas`.`Institution` (
+    'Institution'=>"CREATE TABLE `$dbname`.`Institution` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `name` varchar(500) NOT NULL,
       `umbrella_institution` bigint(20) unsigned DEFAULT NULL,
@@ -112,7 +112,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Workplace definition
-    'Workplace'=>"CREATE TABLE `SDOStoTomas`.`Workplace` (
+    'Workplace'=>"CREATE TABLE `$dbname`.`Workplace` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `institution` bigint(20) unsigned DEFAULT NULL,
       `address` bigint(20) unsigned DEFAULT NULL,
@@ -125,7 +125,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Person definition
-    'Person'=>"CREATE TABLE `SDOStoTomas`.`Person` (
+    'Person'=>"CREATE TABLE `$dbname`.`Person` (
         `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
         `given_name` varchar(100) NOT NULL,
         `middle_name` varchar(100) DEFAULT NULL,
@@ -140,7 +140,7 @@ $ddl = [
       ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Employee definition
-    'Employee'=>"CREATE TABLE `SDOStoTomas`.`Employee` (
+    'Employee'=>"CREATE TABLE `$dbname`.`Employee` (
       `employeeId` varchar(30) NOT NULL,
       `personId` bigint(20) unsigned NOT NULL,
       `is_temporary_empno` tinyint(1) NOT NULL DEFAULT 1,
@@ -151,7 +151,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.`User` definition
-    'User'=>"CREATE TABLE `SDOStoTomas`.`User` (
+    'User'=>"CREATE TABLE `$dbname`.`User` (
       `username` varchar(100) NOT NULL,
       `password` varchar(1000) DEFAULT NULL,
       `employeeId` varchar(30) NOT NULL,
@@ -165,7 +165,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.`Leave` definition
-    'Leave'=>"CREATE TABLE `SDOStoTomas`.`Leave` (
+    'Leave'=>"CREATE TABLE `$dbname`.`Leave` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `date_range` bigint(20) unsigned NOT NULL,
       `dates_excluded` bigint(20) unsigned DEFAULT NULL,
@@ -184,7 +184,7 @@ $ddl = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;",
     
     // -- SDOStoTomas.Emp_Term_of_Service definition
-    'Emp_Term_of_Service'=>"CREATE TABLE `SDOStoTomas`.`Emp_Term_of_Service` (
+    'Emp_Term_of_Service'=>"CREATE TABLE `$dbname`.`Emp_Term_of_Service` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
       `date_range` bigint(20) unsigned NOT NULL,
       `appointment` bigint(20) unsigned NOT NULL,
