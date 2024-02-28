@@ -469,12 +469,12 @@ body {
 
 .print footer > .content > img.matatag-bagongpilipinas-logo {
     height: 2cm;
-    grid-row-end: span 4;
+    grid-row-end: span 5;
 }
 
 .print footer > .content > img.sdo-logo {
     height: 1.6cm;
-    grid-row-end: span 4;
+    grid-row-end: span 5;
     /* padding-left: 6pt; */
 }
 
@@ -494,11 +494,39 @@ body {
     text-decoration: underline;
 }
 
+.print footer > .content > table.doc-info {
+    grid-column: 3;
+    width: 16em;
+    border: 1px solid;
+    border-collapse: collapse;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.print footer > .content > table.doc-info tr>* {
+    border: 1px solid;
+    padding: 0 0.75em;
+    font-size: 0.6em;
+}
+
+table.doc-info tr>:nth-child(1) {
+    width: 31.5%;
+}
+
+table.doc-info tr>:nth-child(2) {
+    width: 31.5%;
+}
+
+table.doc-info tr>:nth-child(3) {
+    width: 15%;
+}
+
 .print footer > .content > img.sdo-motto {
     height: 1.8cm;
     grid-column: 4;
     grid-row-start: 2;
-    grid-row-end: span 4;
+    grid-row-end: span 5;
 }
 
 .print footer > .content > p > span[class^="material-"] {

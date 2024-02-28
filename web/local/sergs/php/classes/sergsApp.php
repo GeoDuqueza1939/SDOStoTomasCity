@@ -2219,6 +2219,22 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                         <p><b>Telephone No.:</b><!--<span class="material-icons-round">phone</span>--> (043) 702-8674</p>
                         <p><b>Email Address:</b><!--<span class="material-icons-round">alternate_email</span>--> <a href="mailto:sdo.santotomas@deped.gov.ph">sdo.santotomas@deped.gov.ph</a></p>
                         <p><b>Website:</b><!--<span class="material-icons-round">language</span>--> <a href="https://depedstotomascity.com.ph">depedstotomascity.com.ph</a></p>
+                        <table class="doc-info">
+                            <tbody>
+                                <tr>
+                                    <td>Doc. Ref. Code</td>
+                                    <td></td>
+                                    <td>Rev</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Effectivity</td>
+                                    <td></td>
+                                    <td>Page</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
                         <img class="sdo-motto" src="<?php echo(__BASE__); ?>/images/logo-tawagko-transparent-cropped.png" alt="logo:Tomasino Ako, Wagi Ang Gawi Ko" />
                     </div>
                 </footer>
