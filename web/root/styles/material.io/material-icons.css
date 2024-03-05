@@ -2,28 +2,32 @@
     font-family: 'Material Icons';
     font-style: normal;
     font-weight: 400;
-    src: url(/test/fonts/Material-Icons.woff2) format('woff2');
+    /* src: url(/test/fonts/Material-Icons.woff2) format('woff2'); */
+    src: url(/fonts/Material-Icons.woff2) format('woff2');
 }
 
 @font-face {
     font-family: 'Material Icons Outlined';
     font-style: normal;
     font-weight: 400;
-    src: url(/test/fonts/Material-Icons-Outlined.woff2) format('woff2');
+    /* src: url(/test/fonts/Material-Icons-Outlined.woff2) format('woff2'); */
+    src: url(/fonts/Material-Icons-Outlined.woff2) format('woff2');
 }
 
 @font-face {
     font-family: 'Material Icons Round';
     font-style: normal;
     font-weight: 400;
-    src: url(/test/fonts/Material-Icons-Round.woff2) format('woff2');
+    /* src: url(/test/fonts/Material-Icons-Round.woff2) format('woff2'); */
+    src: url(/fonts/Material-Icons-Round.woff2) format('woff2');
 }
 
 @font-face {
     font-family: 'Material Symbols Rounded';
     font-style: normal;
     font-weight: 100 700;
-    src: url(/test/fonts/Material-Symbols-Rounded.woff2) format('woff2');
+    /* src: url(/test/fonts/Material-Symbols-Rounded.woff2) format('woff2'); */
+    src: url(/fonts/Material-Symbols-Rounded.woff2) format('woff2');
 }
 
 .material-icons {

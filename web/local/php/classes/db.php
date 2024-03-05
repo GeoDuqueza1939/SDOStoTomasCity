@@ -77,7 +77,7 @@ class DatabaseConnection
 			
 			return false;
 		}
-		
+
 		try
 		{
 			$this->conn = new PDO($connStr, $this->username, $this->password);
@@ -88,6 +88,7 @@ class DatabaseConnection
 		{
 			$this->lastException = $e;
 			
+            var_dump($e);
 			die(var_export(PDO::getAvailableDrivers(), true));
 		
 			return false;

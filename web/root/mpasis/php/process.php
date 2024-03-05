@@ -1,7 +1,7 @@
 <?php E_STRICT;
 session_start();
 
-class ajaxResponse implements JsonSerializable
+class ajaxResponse_Extra implements JsonSerializable
 {
 	private $type; // possible values: "Success", "Info", "Error", "Text", "Username", "JSON", "DataRows", "DataRow", "User", "Entries", "Entry"
 	private $content;
@@ -833,7 +833,7 @@ if (isValidUserSession())
         
                         foreach($position as $key=>$value)
                         {
-                            if ($key != 'required_eligibility')
+                            if ($key != 'required_eligibility' && $key != 'loadPosition')
                             {
                                 $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
                                 $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
