@@ -53,6 +53,8 @@ function sendDebug($data)
 
 function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
+    global $dbname;
+
     $query = "SELECT
         application_code,
         pe.personId as personId,
@@ -473,7 +475,7 @@ if (isValidUserSession())
                                 $hrRoles = array(
                                     'appointing_officer' => array('name' => 'Dr. Neil G. Angeles, Ed.D.', 'position' => 'Schools Division Superintendent'),
                                     'hrmo' => array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO'),
-                                    'hrmpsb_chair' => array('name' => 'Dr. Roselyn Q. Golfo, Ph.D.', 'position' => 'Assistant Schools Division Superintendent'),
+                                    'hrmpsb_chair' => array('name' => 'Edward D. Garcia', 'position' => 'Assistant Schools Division Superintendent'),
                                     'hrmpsb_secretariat' => [
                                         array('name' => 'NameA', 'position' => 'PositionA', 'level1' => true, 'level2' => false, 'level3' => false),
                                         array('name' => 'NameB', 'position' => 'PositionB', 'level1' => false, 'level2' => true, 'level3' => false),

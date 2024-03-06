@@ -2474,7 +2474,7 @@ class AssignRoles extends DialogEx
         ].forEach(key=>{
             this.rolesTableEx.addRow({"role":key[1]});
             this.#selectorLinks[key[0]] = new SelectorLink(this.rolesTableEx.rows.slice(-1)[0].td["assigned_staff"], key[2], key[2] === "Add", "Nothing to add");
-            for (const item of [{name:"Dr. Neil G. Angeles, Ed.D.",personId:0}, {name:"Jessamae O. Castromero",personId:1}, {name:"Dr. Roselyn Q. Golfo, Ph.D.",personId:2}, {name:"Guillerma L. Bilog, Ed.D.",personId:3}, {name:"Carina V. Pedragosa",personId:4}, {name:"Catalina M. Calinawan",personId:5}, {name:"Jaime Tolentino",personId:6}])
+            for (const item of [{name:"Dr. Neil G. Angeles, Ed.D.",personId:0}, {name:"Jessamae O. Castromero",personId:1}, {name:"Edward D. Garcia",personId:2}, {name:"Guillerma L. Bilog, Ed.D.",personId:3}, {name:"Carina V. Pedragosa",personId:4}, {name:"Catalina M. Calinawan",personId:5}, {name:"Jaime Tolentino",personId:6}])
             {
                 this.#selectorLinks[key[0]].addItem(item.name, item.personId);
             }

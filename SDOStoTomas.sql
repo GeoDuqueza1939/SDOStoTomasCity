@@ -1407,7 +1407,7 @@ DROP TABLE IF EXISTS `Position`;
 CREATE TABLE `Position` (
   `plantilla_item_number` varchar(50) NOT NULL,
   `position_title` varchar(100) NOT NULL,
-  `parenthetical_title` varchar(100) NOT NULL DEFAULT '',
+  `parenthetical_title` varchar(100) NULL DEFAULT '',
   `salary_grade` tinyint(3) unsigned NOT NULL,
   `position_categoryId` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `place_of_assignment` longtext DEFAULT NULL,
