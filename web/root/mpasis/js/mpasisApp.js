@@ -486,7 +486,199 @@ class MPASIS_App extends App
         field = this.forms["jobData"].addInputEx("Load Position", "buttonEx", "", "Load Position", "loadPosition");
         field.container.style.gridColumn = "1 / span 12";
         field.container.classList.add("right");
-        field.disable();
+        //field.disable();
+        this.forms["jobData"].dbInputEx["loadPosition"].addEvent("click", (loadPositionClickEvent)=>{
+            var retrievePositionDialog = null;
+            if (loadPositionClickEvent.target.innerHTML == "Load Position")
+            {
+            //     var retrieveApplicant = (applicationObj, newApplication = false)=>{
+                        
+            //         console.log(applicationObj, applicantDataForm.dbInputEx);
+
+            //         if (!newApplication)
+            //         {
+            //             applicantDataForm.dbInputEx["position_title_applied"].setDefaultValue(applicationObj["position_title_applied"] ?? "", true);
+            //             applicantDataForm.dbInputEx["parenthetical_title_applied"].setDefaultValue(applicationObj["parenthetical_title_applied"] ?? "", true);
+            //             applicantDataForm.dbInputEx["plantilla_item_number_applied"].setDefaultValue(applicationObj["plantilla_item_number_applied"] ?? "ANY", true);
+            //             plantillaChange();
+            //         }
+
+            //         for (const key in applicationObj)
+            //         {
+            //             if (key in applicantDataForm.dbInputEx)
+            //             {
+            //                 switch (key)
+            //                 {
+            //                     case "position_title_applied":
+            //                     case "parenthetical_title_applied":
+            //                     case "plantilla_item_number_applied":
+            //                         // do nothing; whatever needs to be done here needs to be done earlier
+            //                         break;
+            //                     case "sex":
+            //                         applicantDataForm.dbInputEx[key].setDefaultValue((applicationObj[key] == "Male" ? 1 : (applicationObj[key] == "Female" ? 2 : "")), true);
+            //                         break;
+            //                     case "civil_status":
+            //                         applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["civil_statusIndex"], true);
+            //                         break;
+            //                     case "disability":
+            //                     case "email_address":
+            //                     case "contact_number":
+            //                         if (applicationObj[key].length > 0)
+            //                         {
+            //                             applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key].map(number=>number[key]).join(";"), true);
+            //                         }
+            //                         break;
+            //                     case "degree_taken":
+            //                         break;
+            //                     case "educational_attainment":
+            //                         applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["educational_attainmentIndex"], true);
+            //                         applicantDataForm.dbInputEx["degree_taken"].setDefaultValue(applicationObj["degree_taken"]);
+            //                         applicantDataForm.dbInputEx["degree_taken"].setValue("degree_takenId", applicationObj["degree_taken"]);
+            //                         attainedEducIncrement.innerHTML = computeEducIncrementLevel();
+            //                         break;
+            //                     default:
+            //                         if (!newApplication && !applicantDataForm.dbInputEx[key].isDisabled() && (applicantDataForm.dbInputEx[key].type == "checkbox" || applicantDataForm.dbInputEx[key] == "radio"))
+            //                         {
+            //                             applicantDataForm.dbInputEx[key].check(applicationObj[key] == 1);
+            //                         }
+            //                         else if (!newApplication || key != "application_code")
+            //                         {
+            //                             applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key] ?? "", true);
+            //                         }
+            //                         break;
+            //                 }
+            //             }
+            //             else
+            //             {
+            //                 switch (key)
+            //                 {
+            //                     case "present_address":
+            //                         applicantDataForm.dbInputEx["address"].setDefaultValue(applicationObj["permanent_address"] ?? applicationObj["present_address"] ?? "", true);
+            //                         break;
+            //                     case "ethnic_group":
+            //                         applicantDataForm.dbInputEx["ethnicity"].setDefaultValue(applicationObj[key] ?? "", true);
+            //                         break;
+            //                     case "relevant_training":
+            //                         while(trainingInputExs.length > 0)
+            //                         {
+            //                             trainingInputExs.slice(-1)[0]["trainingInputEx"]["removeRowBtn"].removeRowOverride = true;
+            //                             trainingInputExs.slice(-1)[0]["trainingInputEx"]["removeRowBtn"].fields[0].click();
+            //                         }
+
+            //                         for (const training of applicationObj[key])
+            //                         {
+            //                             addTrainingBtn.fields[0].click();
+            //                             trainingInputExs.slice(-1)[0]["trainingInputEx"].setDefaultValue(training["descriptive_name"], true);
+            //                             trainingInputExs.slice(-1)[0]["trainingHoursInputEx"].setDefaultValue(training["hours"], true);
+            //                         }
+            //                         attainedTrainingIncrement.innerHTML = computeTrainingIncrementLevel();
+            //                         break;
+            //                     case "has_more_unrecorded_training":
+            //                         moreTraining.check(applicationObj[key] == 1);
+            //                         break;
+            //                     case "has_more_unrecorded_work_experience":
+            //                         moreWorkExp.check(applicationObj[key] == 1);
+            //                         break;
+            //                     case "relevant_work_experience":
+            //                         while(workExpInputExs.length > 0)
+            //                         {
+            //                             workExpInputExs.slice(-1)[0]["workExpInputEx"]["removeRowBtn"].removeRowOverride = true;
+            //                             workExpInputExs.slice(-1)[0]["workExpInputEx"]["removeRowBtn"].fields[0].click();
+            //                         }
+
+            //                         for (const workExp of applicationObj[key])
+            //                         {
+            //                             addWorkExpBtn.fields[0].click();
+            //                             workExpInputExs.slice(-1)[0]["workExpInputEx"].setDefaultValue(workExp["descriptive_name"], true);
+            //                             workExpInputExs.slice(-1)[0]["workExpStartDateInputEx"].setDefaultValue(workExp["start_date"], true);
+            //                             workExpInputExs.slice(-1)[0]["workExpEndDateInputEx"].setDefaultValue(workExp["end_date"], true);
+            //                             workExpInputExs.slice(-1)[0]["workExpDuration"].setHTMLContent(ScoreSheet.convertDurationToString(ScoreSheet.getDuration(workExp["start_date"], workExp["end_date"])));
+            //                         }
+            //                         attainedWorkExpIncrement.innerHTML = computeWorkExpIncrement();
+            //                         break;
+            //                     case "relevant_eligibility":
+            //                         applicantDataForm.dbInputEx["eligibilityId"].setDefaultValue(applicationObj[key].map(elig=>elig["eligibilityId"]), true);
+            //                         applicantDataForm.dbInputEx["eligibilityId"].inputExs[1]["changeElig"]();
+            //                         break;
+            //                     default:
+            //                         break;
+            //                 }
+            //             }
+            //         }
+
+            //         if (!newApplication)
+            //         {
+            //             applicantDataForm.dbInputEx["application_code"].disable();
+            //         }
+
+            //         applicantDataBtnGrp.inputExs[0].setLabelText(newApplication ? "Save" : "Update");
+
+            //         loadApplicant.setLabelText("Reset Form");
+            //     };
+
+            //     retrievePositionDialog = new JobApplicationSelectorDialog(this, "applicant-data-job-application-selector-dialog", [
+            //         {label:"New", tooltip:"Create a new application from the selected application's data", callbackOnClick:event=>{                
+            //             var searchResult = retrievePositionDialog.getApplicantListBox();
+                        
+            //             if (typeof(searchResult.getValue()) == "string" && searchResult.getValue() == "" || searchResult.getValue() == null)
+            //             {
+            //                 retrievePositionDialog.formEx.raiseError("Please select an item to load before continuing");
+            //                 return;
+            //             }
+            //             else
+            //             {
+            //                 applicantDataForm.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0]
+            //                 retrieveApplicant(applicantDataForm.dataLoaded, true);
+            //             }
+                        
+            //             retrievePositionDialog.close();
+            //         }},
+            //         {label:"Edit", tooltip:"Load selected application for editing", callbackOnClick:event=>{                
+            //             var searchResult = retrievePositionDialog.getApplicantListBox();
+                        
+            //             if (typeof(searchResult.getValue()) == "string" && searchResult.getValue() == "" || searchResult.getValue() == null)
+            //             {
+            //                 retrievePositionDialog.formEx.raiseError("Please select an item to load before continuing");
+            //                 return;
+            //             }
+            //             else
+            //             {
+            //                 applicantDataForm.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0]
+            //                 retrieveApplicant(applicantDataForm.dataLoaded, false);
+            //             }
+                        
+            //             retrievePositionDialog.close();
+            //         }},
+            //         {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+            //             retrievePositionDialog.close();
+            //         }}
+            //     ]);
+
+            //     retrievePositionDialog.getDialogButton(0).disable();
+            //     retrievePositionDialog.getDialogButton(1).disable();
+
+            //     ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
+            //         retrievePositionDialog.getApplicantQueryBox().addEvent(eventType, event=>retrievePositionDialog.getDialogButton(0).disable());
+            //         retrievePositionDialog.getApplicantQueryBox().addEvent(eventType, event=>retrievePositionDialog.getDialogButton(1).disable());
+            //     });
+    
+            //     retrievePositionDialog.getApplicantListBox().addEvent("click", selectOptionEvent=>{
+            //         retrievePositionDialog.getDialogButton(0).enable();
+            //         retrievePositionDialog.getDialogButton(1).enable();
+            //     });
+            }
+            else if (loadPositionClickEvent.target.innerHTML == "Reset Form")
+            {
+            //     this.showScrim();
+                
+            //     // applicantDataForm.resetForm();
+            //     window.location.reload(true);
+
+            //     loadPositionClickEvent.target.innerHTML = "Load Existing Applicant";
+            }
+            alert("TESTING AGAIN!");
+            
+        });
 
         field = this.forms["jobData"].addInputEx("Position Title", "text", "", "", "position_title", "Position");
         field.container.style.gridColumn = "1 / span 6";
