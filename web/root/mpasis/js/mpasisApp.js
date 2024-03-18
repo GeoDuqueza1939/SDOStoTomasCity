@@ -2851,7 +2851,7 @@ class UserEditor extends DialogEx
                     // return;
                     // // DEBUG
     
-                    postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
+                    postData(MPASIS_App.processURL, "app=mpasis&a=" + (dialog.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
                         var response;
     
                         if (event.target.readyState == 4 && event.target.status == 200)

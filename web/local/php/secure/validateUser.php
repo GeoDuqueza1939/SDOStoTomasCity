@@ -163,7 +163,7 @@ function addUser(DatabaseConnection $dbconn, $user, $person, $calledByUpdateUser
     $valueStr = '';
     
     foreach ($user as $key => $value) {
-        if ((($isTempUser && $key != 'employeeId') || $key != 'personId') && $key != 'temp_user')
+        if ($key != 'temp_user' && (($isTempUser && $key != 'employeeId') || (!$isTempUser && $key != 'personId')))
         {
             $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
             $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;

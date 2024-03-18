@@ -1449,8 +1449,7 @@ if (isValidUserSession())
                     {
                         logAction('mpasis', ($isTempUser ? 21 : 15), array(
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            ($isTempUser ? 'temp_' : '') . 'username_op'=>$username,
-                            'application_code'=>$applicationCode
+                            ($isTempUser ? 'temp_' : '') . 'username_op'=>$username
                         ));
                         echo(json_encode(new ajaxResponse('Success', 'User: ' . $_REQUEST['username'] . ' has been deleted.')));
                     }
