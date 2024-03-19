@@ -5200,6 +5200,7 @@ class IERForm extends Old_FormEx
     
                                 for (const jobApplication of thisIERForm.fetchedApplications)
                                 {
+                                    isQualified = true;
                                     row = {};
                                 
                                     for (const key in jobApplication)
