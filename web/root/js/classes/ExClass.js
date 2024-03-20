@@ -4939,7 +4939,7 @@ class ScoreSheet extends Old_FormEx
         if (days <= 0)
         {
             months--;
-            days += daysPerMonth[(end.m == 0 ? 12 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0); // also adjust for leap years
+            days += daysPerMonth[(end.m == 0 ? 11 : end.m - 1)] + (end.y % 4 == 0 && end.m >= 1 || start.y % 4 == 0 && start.m <= 1 ? 1 : 0); // also adjust for leap years
         }
 
         if (months < 0)
