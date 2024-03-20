@@ -3852,7 +3852,7 @@ class ScoreSheet extends Old_FormEx
                         scoreSheetElementUI.displays["trainIncrementsApplicant"].displayEx.setHTMLContent(applicantTrainingIncrement.toString());
                         scoreSheetElementUI.displays["trainIncrementsQS"].displayEx.setHTMLContent(requiredTrainingIncrement.toString());
                         scoreSheetElementUI.displays["trainIncrements"].displayEx.setHTMLContent(trainingIncrementAboveQS.toString());
-                        scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "N/A" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement);
+                        scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "N/A" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement && relevantTrainingHours >= requiredTrainingHours);
                     }
 
                     score = ScoreSheet.getTrainingScore(trainingIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
@@ -5257,6 +5257,7 @@ class IERForm extends Old_FormEx
                                             
                                                 isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
                                                 isQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                isQualified &&= (totalHours >= position["required_training_hours"]);
                                                 break;
                                             case "relevant_work_experience":
                                                 var totalDuration = null, duration = null;
