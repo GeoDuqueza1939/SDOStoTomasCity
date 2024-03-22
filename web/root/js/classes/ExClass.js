@@ -5961,6 +5961,8 @@ class CARForm extends Old_FormEx
                                 thisCARForm.carTable.removeAllRows();
 
                                 thisCARForm.jobApplications = thisCARForm.jobApplications.filter(jobApplication=>{
+                                    isQualified = true;
+
                                     for (const key in jobApplication)
                                     {
                                         switch (key)
@@ -5981,6 +5983,7 @@ class CARForm extends Old_FormEx
                                             
                                                 isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
                                                 isQualified &&= (positions[0]["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                isQualified &&= totalHours >= positions[0]["required_training_hours"];
                                                 break;
                                             case "relevant_work_experience":
                                                 var totalDuration = null, duration = null;
