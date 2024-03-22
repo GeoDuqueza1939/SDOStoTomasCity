@@ -5101,8 +5101,19 @@ class IERForm extends Old_FormEx
             this.displayExs["ier-position-qs"].addContent(this.addDisplayEx("div", field.id, "", field.label).container);
         });
 
+        posInfo.appendChild(this.addInputEx("Hide personal data", "checkbox", "", "Hide personal data", "ier-hide-personal-data").container);
+        [this.dbInputEx["ier-hide-personal-data"]].forEach(field=>{
+            field.container.classList.add("ier-hide-personal-data");
+            field.check();
+            field.reverse();
+            field.addEvent("change", hidePersonalDataEvent=>{
+                this.displayExs["ier-table"].container.classList.toggle("hide-personal-data", field.isChecked());
+            });
+        });
+
         this.addDisplayEx("div-table", "ier-table");
         this.displayExs["ier-table"].container.classList.add("ier-table");
+        this.displayExs["ier-table"].container.classList.add("hide-personal-data");
         this.displayExs["ier-table"].setHeaders([
             {colHeaderName:"row_number", colHeaderText:"No."},
             {colHeaderName:"application_code", colHeaderText:"Application Code"},
@@ -5407,6 +5418,7 @@ class IERForm extends Old_FormEx
 
         ierForPrint.document.getElementById("ier-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
 
         var printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
         ierForPrint.document.body.insertBefore(printButtonGroup.container, ierForPrint.document.body.children[0]);
@@ -5853,8 +5865,19 @@ class CARForm extends Old_FormEx
         this.dbInputEx["final_deliberation_date"].addEvent("focus", function(event){this.type = "date";});
         this.dbInputEx["final_deliberation_date"].addEvent("blur", function(event){this.type = "text";});
 
+        posInfo.appendChild(this.addInputEx("Hide personal data", "checkbox", "", "Hide personal data", "car-hide-personal-data").container);
+        [this.dbInputEx["car-hide-personal-data"]].forEach(field=>{
+            field.container.classList.add("car-hide-personal-data");
+            field.check();
+            field.reverse();
+            field.addEvent("change", hidePersonalDataEvent=>{
+                this.displayExs["car-table"].container.classList.toggle("hide-personal-data", field.isChecked());
+            });
+        });
+
         this.carTable = this.addDisplayEx("div-table", "car-table");
         this.carTable.container.classList.add("car-table");
+        this.carTable.container.classList.add("hide-personal-data");
 
         this.carTable.setHeaders([
             {colHeaderName:"row_number",colHeaderText:"No."},
@@ -6164,7 +6187,8 @@ class CARForm extends Old_FormEx
         signatoryAppointer.container.classList.add("appointer");
 
         carForPrint.document.getElementById("car-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
-        carForPrint.document.getElementById("car-form-input-ex2").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
+        carForPrint.document.getElementById("car-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
+        carForPrint.document.getElementById("car-form-input-ex3").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
         
         var printButtonGroup = new InputEx(null, "print-car-controls", "buttonExs");
         carForPrint.document.body.insertBefore(printButtonGroup.container, carForPrint.document.body.children[0]);

@@ -292,6 +292,31 @@ REINSTATE FOR PRINTOUT
     text-align: center;
 }
 
+.ier-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(3),
+.ier-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(4),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(1),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(2),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(3),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(4),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(5),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(6),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(7),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(8),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(9),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(3),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(4),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(5),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(6),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(7),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(8),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(9),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(10),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(11),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(12) {
+    display: none;
+    visibility: hidden;
+}
+
 .query-results-users {
     display: block;
     max-width: 100%;
@@ -876,6 +901,12 @@ REINSTATE FOR PRINTOUT
 .car-table > .content > table > tbody > tr > :nth-child(2) {
     text-align: left;
     white-space: nowrap;
+}
+
+.car-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(2),
+.car-table.hide-personal-data > .content > table > tbody > tr > :nth-child(2) {
+    display: none;
+    visibility: hidden;
 }
 
 .car-form > .fields > .car-update {

@@ -98,6 +98,31 @@ body.print {
     font-size: 1em;
 }
 
+.ier-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(3),
+.ier-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(4),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(1),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(2),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(3),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(4),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(5),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(6),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(7),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(8),
+.ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(9),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(3),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(4),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(5),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(6),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(7),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(8),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(9),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(10),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(11),
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(12) {
+    display: none;
+    visibility: hidden;
+}
+
 .ier-table > .content > table > * > tr > * {
     border: 1px solid;
 }
@@ -382,6 +407,12 @@ body.print {
 
 .car-table > .content > table > * > tr > * {
     border: 1px solid black;
+}
+
+.car-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(2),
+.car-table.hide-personal-data > .content > table > tbody > tr > :nth-child(2) {
+    display: none;
+    visibility: hidden;
 }
 
 .car-printout-signatory {
