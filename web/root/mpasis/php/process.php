@@ -473,19 +473,20 @@ if (isValidUserSession())
                                 $enumEducAttainment = $dbconn->select('ENUM_Educational_Attainment', '*', '');
 
                                 $hrRoles = array(
-                                    'appointing_officer' => array('name' => 'Dr. Neil G. Angeles, Ed.D.', 'position' => 'Schools Division Superintendent'),
+                                    'appointing_officer' => array('name' => 'Neil G. Angeles, CESO VI', 'position' => 'Schools Division Superintendent'),
                                     'hrmo' => array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO'),
                                     'hrmpsb_chair' => array('name' => 'Edward D. Garcia', 'position' => 'Assistant Schools Division Superintendent'),
                                     'hrmpsb_secretariat' => [
-                                        array('name' => 'NameA', 'position' => 'PositionA', 'level1' => true, 'level2' => false, 'level3' => false),
-                                        array('name' => 'NameB', 'position' => 'PositionB', 'level1' => false, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Jenina R. Patricio', 'position' => 'Administrative Officer II', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        // array('name' => 'NameA', 'position' => 'PositionA', 'level1' => true, 'level2' => false, 'level3' => false),
+                                        // array('name' => 'NameB', 'position' => 'PositionB', 'level1' => false, 'level2' => true, 'level3' => false),
                                     ],
                                     'hrmpsb_members' => [
-                                        array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => '', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Carina V. Pedragosa', 'position' => '', 'level1' => false, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Catalina M. Calinawan', 'position' => '', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Jaime Tolentino', 'position' => '', 'level1' => true, 'level2' => false, 'level3' => false),
+                                        array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV/HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Carina V. Pedragosa', 'position' => 'Planning Officer II', 'level1' => false, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Mark Anthony Silvestre', 'position' => 'Administrative Assistant III', 'level1' => true, 'level2' => false, 'level3' => false),
                                     ]
                                 );
 

@@ -5395,7 +5395,7 @@ class IERForm extends Old_FormEx
         htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["hrmo"]["name"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
             signatory.addContent(node);
             signatory.addContent(document.createTextNode(" "));
-            if (node.classList.contains("name"))
+            if (node.classList.contains("name") || node.classList.contains("date"))
             {
                 node.addEventListener("dblclick", fieldModeChange);
                 node.title = "Please double-click to edit.";
@@ -6068,6 +6068,8 @@ class CARForm extends Old_FormEx
                                 }
 
                                 selectPositionDialog.close();
+
+                                thisCARForm.dbInputEx["car-control-buttons"].getItemAt(1).enable();
                             }
                             // else if (response.type == "Success")
                             // {
@@ -6088,7 +6090,10 @@ class CARForm extends Old_FormEx
         var carControlButtons = this.addInputEx("", "buttonExs", "", "", "car-control-buttons");
         carControlButtons.container.classList.add("car-control-buttons");
         carControlButtons.addItem("Update", "Update", "Update field values to database").disable();
-        carControlButtons.addItem("Print", "Print", "Print the Comparative Assessment Result form").addEvent("click", this.generatePrinterFriendly);
+        [carControlButtons.addItem("Print", "Print", "Print the Comparative Assessment Result form")].forEach(field=>{
+            field.disable();
+            field.addEvent("click", this.generatePrinterFriendly);
+        });
 
         // this.addInputEx("Print", "buttonEx", "Print", "Print the Comparative Assessment Result form", "car-print-button");
 
@@ -6146,9 +6151,9 @@ class CARForm extends Old_FormEx
             }
         };
         [0, 1, 2, 3, 4].forEach(i=>{
-            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 2 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)])[(i > 2 ? i - 1 : i)]));
-            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 2 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"]/* + "<br>" + member["position"]*/) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 4 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[i]));
+            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 4 ? "chair" : "member")));
+            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "<br>" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 4 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
                 if (node.classList.contains("name-position"))
@@ -6157,7 +6162,7 @@ class CARForm extends Old_FormEx
                     node.title = "Please double-click to edit.";
                 }
             });
-            signatoryHRMPSBMember[i].container.classList.add(i == 2 ? "chair" : "member");
+            signatoryHRMPSBMember[i].container.classList.add(i == 4 ? "chair" : "member");
             signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
@@ -6173,7 +6178,7 @@ class CARForm extends Old_FormEx
                 event.target.setAttribute("contenteditable", true);
             }
         };
-        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"] + "<br>" + document.hrRoles["appointing_officer"]["position"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
             if (node.classList.contains("name-position"))

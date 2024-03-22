@@ -160,10 +160,10 @@ body.print {
 }
 
 .ier-printout-signatory > .content > .date {
-    width: 7em;
+    min-width: 7em;
     border-bottom: 1px solid;
     display: inline-block;
-    text-align: left;
+    text-align: center;
     margin-left: 3em;
 }
 
