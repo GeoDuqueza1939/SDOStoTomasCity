@@ -5794,6 +5794,11 @@ class IESForm extends Old_FormEx
         htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["hrmpsb_chair"]["name"]) + "</div> <div class=\"date\"></div>").forEach(node=>{
             signatoryHRMPSBChair.addContent(node);
             signatoryHRMPSBChair.addContent(document.createTextNode(" "));
+            if (node.classList.contains("name"))
+            {
+                node.addEventListener("dblclick", fieldModeChange);
+                node.title = "Please double-click to edit.";
+            }
         });
         signatoryHRMPSBChair.container.classList.add("ies-printout-signatory-hrmpsb");
 
