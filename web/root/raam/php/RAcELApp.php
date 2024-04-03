@@ -1,13 +1,22 @@
 <?php
 class RAcEL_App
 {
-    RAcEL_App()
+    public function __construct()
     {}
 
-    function run()
-    {
+    public function run()
+    {}
 
+    public function isLoggedOn() : Boolean
+    {
+        return true;
     }
+
+    public function writeHTMLHead()
+    {}
+
+    public function writeHTMLTail()
+    {}
 }
 
 ?>
