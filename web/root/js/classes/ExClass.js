@@ -3706,11 +3706,65 @@ class ScoreSheet extends Old_FormEx
 
     static getScoreSheetElements(positionObj, jobApplication) // COMPUTATION INCLUDES NON-EXISTENT SALARY GRADES IN THE NON-TEACHING POSITIONS (23, 25-26); CONSIDER IN FUTURE ISSUES; MAY ALSO CONFUSE DEVELOPERS DURING USE, ESPECIALLY WHEN THE NAME OF VARIABLE IS `scoreSheet`
     {
-        var salaryGrade, positionCategory, positionRequiresExp, applicantHasPriorWorkExp;
+        var positionTitle, salaryGrade, positionCategory, positionRequiresExp, applicantHasPriorWorkExp, criteria;
         // console.log(positionObj, jobApplication);
-        [salaryGrade, positionCategory, positionRequiresExp, applicantHasPriorWorkExp] = [positionObj["salary_grade"], positionObj["position_categoryId"], (positionObj["required_work_experience_years"] > 0), (jobApplication["relevant_work_experience"].length > 0)];
+        [positionTitle, salaryGrade, positionCategory, positionRequiresExp, applicantHasPriorWorkExp] = [positionObj["position_title"], positionObj["salary_grade"], positionObj["position_categoryId"], (positionObj["required_work_experience_years"] > 0), (jobApplication["relevant_work_experience"].length > 0)];
 
-        var criteria = [
+        criteria = [
+            {
+                id:"summary",
+                type:"summary",
+                label:"Summary of Ratings",
+                dbColName:"summary",
+                dbTableName:"",
+                content:[
+                    {id:"summary_criteria",type:"summary-header",label:"Criteria",dbColName:"summary_criteria",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_weight",type:"summary-header",label:"Weight",dbColName:"summary_weight",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_score",type:"summary-header",label:"Score",dbColName:"summary_score",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_total_label",type:"summary-footer",label:"Grand Total:",dbColName:"summary_total_label",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_total_weight",type:"summary-footer",label:"0%",dbColName:"summary_total_weight",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
+                    {id:"summary_total_score",type:"summary-footer",label:"0.000",dbColName:"summary_total_score",dbTableName:"",content:[],parentId:"summary",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
+                ],
+                parentId:null,
+                score:0,
+                weight:-1,
+                maxPoints:0,
+                min:0,
+                max:0,
+                step:0
+            },
+            {
+                id:"citation",
+                type:"criteria1",
+                label:"Performance",
+                dbColName:"performance",
+                dbTableName:"",
+                content:[
+                    {id:"most_recent_performance_rating",type:"input-number",label:"Performance Rating (Year 3)",shortLabel:"Perf. Rating (Year 3)",dbColName:"most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:35,maxPoints:0,min:0,max:5,step:0.1},
+                ],
+                parentId:"null",
+                score:0,
+                weight:35,
+                maxPoints:0,
+                min:0,
+                max:0,
+                step:0,
+                getPointsManually:function(mode = 0){
+                    
+                },
+            },
+
+        ];
+
+        switch (positionTitle)
+        {
+            case "Teacher II":
+            case "Teacher III":
+                return criteria;
+                break;
+        } 
+
+        criteria = [
             {
                 id:"summary",
                 type:"summary",
