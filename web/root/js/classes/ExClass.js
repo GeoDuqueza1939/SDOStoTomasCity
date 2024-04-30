@@ -3535,21 +3535,36 @@ class ScoreSheet extends Old_FormEx
                     var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"])[0];
 
                     // Education
-                    scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
+                    if (scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education") != null && scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education").length > 0)
+                    {
+                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
+                    }
                     
                     // Training
-                    scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
+                    if (scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training") != null && scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training").length > 0)
+                    {
+                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
+                    }
 
                     // Experience
-                    scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
+                    if (scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience") != null && scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience").length > 0)
+                    {
+                        scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
+                    }
 
                     // Performance
                     scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
 
                     if (MPASIS_App.isDefined(scoreSheetElementUI))
                     {
-                        scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
-                        scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
+                        if ("position_req_work_exp" in scoreSheetElementUI.displays)
+                        {
+                            scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
+                        }
+                        if ("applicant_has_prior_exp" in scoreSheetElementUI.displays)
+                        {
+                            scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
+                        }
                     }
 
                     for (const key in scoreSheet.dbInputEx)
@@ -3734,13 +3749,15 @@ class ScoreSheet extends Old_FormEx
                 step:0
             },
             {
-                id:"citation",
+                id:"performance",
                 type:"criteria1",
-                label:"Performance",
+                label:"Performance (FEATURE INCOMPLETE!!!)",
                 dbColName:"performance",
                 dbTableName:"",
                 content:[
-                    {id:"most_recent_performance_rating",type:"input-number",label:"Performance Rating (Year 3)",shortLabel:"Perf. Rating (Year 3)",dbColName:"most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:35,maxPoints:0,min:0,max:5,step:0.1},
+                    {id:"third_most_recent_performance_rating",type:"input-number",label:"Performance Rating (Year 1)",shortLabel:"Perf. Rating (Year 1)",dbColName:"third_most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:-1,maxPoints:0,min:0,max:5,step:0.1},
+                    {id:"second_most_recent_performance_rating",type:"input-number",label:"Performance Rating (Year 2)",shortLabel:"Perf. Rating (Year 2)",dbColName:"second_most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:-1,maxPoints:0,min:0,max:5,step:0.1},
+                    {id:"most_recent_performance_rating",type:"input-number",label:"Performance Rating (Year 3)",shortLabel:"Perf. Rating (Year 3)",dbColName:"most_recent_performance_rating",dbTableName:"Job_Application",content:[],parentId:"performance",score:1,weight:-1,maxPoints:0,min:0,max:5,step:0.1},
                 ],
                 parentId:"null",
                 score:0,
@@ -3750,7 +3767,17 @@ class ScoreSheet extends Old_FormEx
                 max:0,
                 step:0,
                 getPointsManually:function(mode = 0){
+                    var ratingsTotal = 0, ratingsCount = 0;
+
+                    for (const scoreSheetElementUI of this.contents)
+                    {
+                        ratingsTotal += scoreSheetElementUI.getPoints();
+                        ratingsCount++;
+
+                    }
                     
+                    // return Math.trunc(ratingsTotal / ratingsCount * 20 * this.scoreSheetElement.weight / 100 * 1000) / 1000;
+                    return Math.round(ratingsTotal / ratingsCount * 20 * this.scoreSheetElement.weight / 100 * 1000) / 1000;
                 },
             },
 
