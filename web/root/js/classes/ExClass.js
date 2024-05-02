@@ -3612,6 +3612,8 @@ class ScoreSheet extends Old_FormEx
                             var tableName = scoreSheet.dbTableName[colName];
                             var dbInputEx = scoreSheet.dbInputEx[colName];
             
+                            console.log(colName);
+
                             switch (colName)
                             {
                                 case "applicant_name": case "applicant_option_label":
@@ -3633,6 +3635,10 @@ class ScoreSheet extends Old_FormEx
                                 case "relevant_work_experience":
                                 case "religionId":
                                 case "sex":
+                                    break;
+                                // UNIMPLEMENTED IN DATABASE AND API!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                case "second_most_recent_performance_rating":
+                                case "third_most_recent_performance_rating":
                                     break;
                                 default:
                                     jobApplication[colName] = dbInputEx.getValue();

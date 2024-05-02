@@ -1408,7 +1408,7 @@ if (isValidUserSession())
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details')));
+                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details' . '<br><br>' . $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                         return;
                     }
                 }
