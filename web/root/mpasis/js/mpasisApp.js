@@ -28,7 +28,8 @@ class MPASIS_App extends App
 {
     static processURL = "/mpasis/php/process.php";
     // static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
-    static defaultEndDate = "2024-03-15";
+    // static defaultEndDate = "2024-03-15";
+    static defaultEndDate = (new Date()).toLocaleDateString();
 
     constructor(container)
     {
