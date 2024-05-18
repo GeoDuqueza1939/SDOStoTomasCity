@@ -6316,7 +6316,7 @@ class RQAForm extends Old_FormEx
 
         this.container.classList.add("rqa-form");
 
-        this.setTitle("Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA)", 2);
+        this.setTitle("Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA)", 2);
 
         this.position = null;
         this.positions = [];
@@ -6360,8 +6360,30 @@ class RQAForm extends Old_FormEx
         this.dbInputEx["final_deliberation_date"].addEvent("focus", function(event){this.type = "date";});
         this.dbInputEx["final_deliberation_date"].addEvent("blur", function(event){this.type = "text";});
 
+        posInfo.appendChild(this.addInputEx("Hide personal data", "checkbox", "", "Hide personal data", "rqa-hide-personal-data").container);
+        [this.dbInputEx["rqa-hide-personal-data"]].forEach(field=>{
+            field.container.classList.add("rqa-hide-personal-data");
+            field.check();
+            field.reverse();
+            field.addEvent("change", hidePersonalDataEvent=>{
+                this.displayExs["rqa-table"].container.classList.toggle("hide-personal-data", field.isChecked());
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Hide zero (0) scores", "checkbox", "", "Hide zero (0) scores", "rqa-hide-zero-scores").container);
+        [this.dbInputEx["rqa-hide-zero-scores"]].forEach(field=>{
+            field.container.classList.add("rqa-hide-zero-scores");
+            field.check();
+            field.reverse();
+            field.addEvent("change", hidePersonalDataEvent=>{
+                this.displayExs["rqa-table"].container.classList.toggle("hide-zero-scores", field.isChecked());
+            });
+        });
+
         this.rqaTable = this.addDisplayEx("div-table", "rqa-table");
         this.rqaTable.container.classList.add("rqa-table");
+        this.rqaTable.container.classList.add("hide-personal-data");
+        this.rqaTable.container.classList.add("hide-zero-scores");
 
         this.rqaTable.setHeaders([
             {colHeaderName:"row_number",colHeaderText:"No."},
@@ -6401,7 +6423,7 @@ class RQAForm extends Old_FormEx
         this.rqaTable.thead.children[0].appendChild(this.rqaTable.thead.children[1].children[9]);
 
         this.dbInputEx["rqa-select-position-button"].addEvent("click", clickEvent=>{
-            var selectPositionDialog = new PositionSelectorDialog(this.app, "car-position-selector", [
+            var selectPositionDialog = new PositionSelectorDialog(this.app, "rqa-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
                     var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
                     var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
@@ -6439,6 +6461,8 @@ class RQAForm extends Old_FormEx
                                 thisRQAForm.rqaTable.removeAllRows();
 
                                 thisRQAForm.jobApplications = thisRQAForm.jobApplications.filter(jobApplication=>{
+                                    isQualified = true;
+
                                     for (const key in jobApplication)
                                     {
                                         switch (key)
@@ -6540,6 +6564,11 @@ class RQAForm extends Old_FormEx
                                         row["row_number"] = thisRQAForm.rqaTable.rows.length + 1;
                                         row["total"] = "<b>" + row["total"].toFixed(3) + "</b>";
                                         thisRQAForm.rqaTable.addRow(row);
+
+                                        if (row["total"] === "<b>0.000</b>")
+                                        {
+                                            thisRQAForm.rqaTable.rows.slice(-1)[0]["tr"].classList.add("zero-score");
+                                        }
                                     }
                                 }
 

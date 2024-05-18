@@ -1019,6 +1019,17 @@ REINSTATE FOR PRINTOUT
     white-space: nowrap;
 }
 
+.rqa-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(2),
+.rqa-table.hide-personal-data > .content > table > tbody > tr > :nth-child(2) {
+    display: none;
+    visibility: hidden;
+}
+
+.rqa-table.hide-zero-scores > .content > table > tbody > tr.zero-score {
+    display: none;
+    visibility: hidden;
+}
+
 .rqa-form > .fields > .rqa-update {
     display: block;
     text-align: right;
