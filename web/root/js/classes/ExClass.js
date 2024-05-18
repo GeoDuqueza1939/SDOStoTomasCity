@@ -6419,8 +6419,6 @@ class RQAForm extends Old_FormEx
                     this.dbInputEx["final_deliberation_date"].setDefaultValue(positions[0]["final_deliberation_date"] ?? "", true);
                     this.dbInputEx["final_deliberation_date"].setTooltipText(positions[0]["final_deliberation_date"] ?? "");
 
-                    console.log("TEMP");
-
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
                         var response = null, rows = [], row = null, isQualified = true;
 
@@ -6428,6 +6426,8 @@ class RQAForm extends Old_FormEx
                         {
                             response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
 
+                            // console.log(response);
+        
                             if (response.type == "Error")
                             {
                                 new MsgBox(thisRQAForm.app.main, response.content, "Close");
@@ -6445,8 +6445,6 @@ class RQAForm extends Old_FormEx
                                         {
                                             case "educational_attainment":
                                                 isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
-                                                console.log(ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]), ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
-                                                console.log(jobApplication);
                                                 isQualified &&= (positions[0]["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
                                                 break;
                                             case "relevant_training":
@@ -6483,9 +6481,7 @@ class RQAForm extends Old_FormEx
                                                 break;
                                             default:
                                                 break;
-                                        }
-
-                                        // console.log(isQualified, "<=>" , key);
+                                        }                                    
                                     }
 
                                     return isQualified;
@@ -6536,7 +6532,8 @@ class RQAForm extends Old_FormEx
                                 
                                 for (const row of rows)
                                 {      
-                                    var isQualified = (row["total"] >= 70); // MAY CHANGE DEPENDING ON HR POLICY
+                                    // var isQualified = (row["total"] >= 70); // MAY CHANGE DEPENDING ON HR POLICY
+                                    var isQualified = (row["total"] >= 0); // MAY CHANGE DEPENDING ON HR POLICY
                                     
                                     if (isQualified)
                                     {
