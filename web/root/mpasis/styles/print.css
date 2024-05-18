@@ -415,6 +415,10 @@ body.print {
     visibility: hidden;
 }
 
+.car-table > .content > table > tbody > tr > :nth-child(3) {
+    white-space: nowrap;
+}
+
 .car-printout-signatory {
     display: block;
     font-size: 0.8em;
@@ -560,6 +564,10 @@ body.print {
 
 .rqa-table > .content > table > * > tr > * {
     border: 1px solid black;
+}
+
+.rqa-table > .content > table > tbody > tr > :nth-child(3) {
+    white-space: nowrap;
 }
 
 .rqa-printout-signatory {

@@ -6311,12 +6311,11 @@ class RQAForm extends Old_FormEx
 
         super(app.mainSections["main-car-rqa"], id, useFormElement);
         this.app = app;
-
         thisRQAForm = this;
 
         this.container.classList.add("rqa-form");
 
-        this.setTitle("Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA)", 2);
+        this.setTitle("Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA)", 2);
 
         this.position = null;
         this.positions = [];
@@ -6573,6 +6572,8 @@ class RQAForm extends Old_FormEx
                                 }
 
                                 selectPositionDialog.close();
+
+                                thisRQAForm.dbInputEx["rqa-control-buttons"].getItemAt(1).enable();
                             }
                             // else if (response.type == "Success")
                             // {
@@ -6597,13 +6598,18 @@ class RQAForm extends Old_FormEx
         var rqaControlButtons = this.addInputEx("", "buttonExs", "", "", "rqa-control-buttons");
         rqaControlButtons.container.classList.add("rqa-control-buttons");
         rqaControlButtons.addItem("Update", "Update", "Update field values to database").disable();
-        rqaControlButtons.addItem("Print", "Print", "Print the Comparative Assessment Result form").addEvent("click", this.generatePrinterFriendly);
+        [rqaControlButtons.addItem("Print", "Print", "Print the Comparative Assessment Result form")].forEach(field=>{
+            field.disable();
+            field.addEvent("click", this.generatePrinterFriendly);
+        });
+
+        thisRQAForm = this;
     }
 
     generatePrinterFriendly(rqaPrintClickEvent)
     {
         var thisRQAForm = rqaPrintClickEvent.target.inputEx.parentInputEx.parentFormEx, rqaForPrint = window.open("", "_blank");
-        
+
         var nodeDoctype = rqaForPrint.document.implementation.createDocumentType("html", "", "");
         if(rqaForPrint.document.doctype) {
             rqaForPrint.document.replaceChild(nodeDoctype, rqaForPrint.document.doctype);
@@ -6652,9 +6658,9 @@ class RQAForm extends Old_FormEx
         };
         
         [0, 1, 2, 3, 4].forEach(i=>{
-            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 2 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)])[(i > 2 ? i - 1 : i)]));
-            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 2 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"]/* + "<br>" + member["position"]*/) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 2 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 4 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[i]));
+            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 4 ? "chair" : "member")));
+            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "<br>" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 4 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
                 if (node.classList.contains("name-position"))
@@ -6663,22 +6669,39 @@ class RQAForm extends Old_FormEx
                     node.title = "Please double-click to edit.";
                 }
             });
-            signatoryHRMPSBMember[i].container.classList.add(i == 2 ? "chair" : "member");
+            signatoryHRMPSBMember[i].container.classList.add(i == 4 ? "chair" : "member");
             signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 
         var signatoryAppointer = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
-        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+        var fieldModeChange = event=>{
+            if (event.target.isContentEditable)
+            {
+                event.target.removeAttribute("contenteditable");
+            }
+            else
+            {
+                event.target.setAttribute("contenteditable", true);
+            }
+        };
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"] + "<br>" + document.hrRoles["appointing_officer"]["position"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
+            if (node.classList.contains("name-position"))
+            {
+                node.addEventListener("dblclick", fieldModeChange);
+                node.title = "Please double-click to edit.";
+            }
         });
         // signatoryAppointer.showColon();
         signatory.addContent(signatoryAppointer.container);
         signatoryAppointer.container.classList.add("appointer");
         
         rqaForPrint.document.getElementById("rqa-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex2").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex4").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
         
         var printButtonGroup = new InputEx(null, "print-rqa-controls", "buttonExs");
         rqaForPrint.document.body.insertBefore(printButtonGroup.container, rqaForPrint.document.body.children[0]);
