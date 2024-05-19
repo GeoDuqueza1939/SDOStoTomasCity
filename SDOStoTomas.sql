@@ -893,7 +893,7 @@ CREATE TABLE `MPASIS_History` (
   `mpasis_action` tinyint(3) unsigned NOT NULL,
   `username` varchar(100) DEFAULT NULL,
   `temp_username` varchar(100) DEFAULT NULL,
-  `application_code` bigint(20) unsigned DEFAULT NULL,
+  `application_code` varchar(100) DEFAULT NULL,
   `position_title` varchar(100) DEFAULT NULL,
   `plantilla_item_number` varchar(50) DEFAULT NULL,
   `username_op` varchar(100) DEFAULT NULL,
