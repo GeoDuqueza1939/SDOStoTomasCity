@@ -5156,6 +5156,8 @@ class IERForm extends Old_FormEx
         this.app = app;
 
         var posInfo = null, thisIERForm = this;
+
+        this.position = null;
         
         this.container.classList.add("ier-form");
 
@@ -5254,6 +5256,8 @@ class IERForm extends Old_FormEx
                     this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
                     
                     var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
+
+                    thisIERForm.position = position;
                     
                     this.displayExs["ier-position-salary-grade"].setHTMLContent("SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")");
                     
@@ -5302,6 +5306,11 @@ class IERForm extends Old_FormEx
                                 for (const jobApplication of thisIERForm.fetchedApplications)
                                 {
                                     isQualified = true;
+                                    let isEducQualified = true;
+                                    let isExpQualified = true;
+                                    let isTrainQualified = true;
+                                    let isEligQualified = true;
+
                                     row = {};
                                 
                                     for (const key in jobApplication)
@@ -5337,8 +5346,10 @@ class IERForm extends Old_FormEx
                                                     row["education"] = jobApplication[key];
                                                 }
     
-                                                isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
-                                                isQualified &&= (position["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                isEducQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
+                                                isEducQualified &&= (position["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+
+                                                isQualified &&= isEducQualified;
                                                 break;
                                             case "relevant_training":
                                                 var totalHours = 0;
@@ -5356,9 +5367,11 @@ class IERForm extends Old_FormEx
                                                     row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
                                                 }
                                             
-                                                isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
-                                                isQualified &&= (totalHours >= position["required_training_hours"]);
+                                                isTrainQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isTrainQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                isTrainQualified &&= (totalHours >= position["required_training_hours"]);
+
+                                                isQualified &&= isTrainQualified;
                                                 break;
                                             case "relevant_work_experience":
                                                 var totalDuration = null, duration = null;
@@ -5377,8 +5390,10 @@ class IERForm extends Old_FormEx
                                                     row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
                                                 }
                                                 
-                                                isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(position["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isQualified &&= (position["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                isExpQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(position["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isExpQualified &&= (position["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+
+                                                isQualified &&= isExpQualified;
                                                 break;
                                             case "relevant_eligibility":
                                                 if (jobApplication[key].length > 0)
@@ -5395,7 +5410,9 @@ class IERForm extends Old_FormEx
     
                                                 var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), position["required_eligibility"]);
     
-                                                isQualified &&= (valElig != 0);
+                                                isEligQualified &&= (valElig != 0);
+
+                                                isQualified &&= isEligQualified;
                                                 break;
                                             default:
                                                 row[key] = jobApplication[key];
@@ -5410,6 +5427,24 @@ class IERForm extends Old_FormEx
                                     row["row_number"] = this.displayExs["ier-table"].rows.length + 1;
     
                                     this.displayExs["ier-table"].addRow(row);
+
+                                    let createLink = ElementEx.create("a");
+
+                                    createLink.append(this.displayExs["ier-table"].rows.slice(-1)[0].td['remarks'].childNodes[0]);
+                                    this.displayExs["ier-table"].rows.slice(-1)[0].td['remarks'].append(createLink);
+
+                                    createLink.IERForm = this;
+                                    createLink.rowData = row;
+                                    createLink.rowIndex = this.displayExs["ier-table"].rows.length - 1;
+                                    createLink.jobApplication = jobApplication;
+                                    createLink.qualifications = {
+                                        educ: isEducQualified,
+                                        exp: isExpQualified,
+                                        training: isTrainQualified,
+                                        elig: isEligQualified,
+                                    };
+
+                                    createLink.addEventListener("click", this.generateLetterToApplicant);
                                 }
                             }
                             // else if (response.type == "Success")
@@ -5517,6 +5552,263 @@ class IERForm extends Old_FormEx
         printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{ierForPrint.close()});
 
         ierForPrint.alert("Please click on the print button to continue");
+    }
+
+    generateLetterToApplicant(event)
+    {
+        // console.log(event.target.IERForm.displayExs["ier-table"].rows[event.target.rowIndex]);
+
+        let thisIERForm = event.target.IERForm, letterForPrint = window.open("", "_blank");
+
+        let nodeDoctype = letterForPrint.document.implementation.createDocumentType("html", "", "");
+        if(letterForPrint.document.doctype) {
+            letterForPrint.document.replaceChild(nodeDoctype, letterForPrint.document.doctype);
+        } else {
+            letterForPrint.document.insertBefore(nodeDoctype, letterForPrint.document.childNodes[0]);
+        }
+        letterForPrint.document.title = "Letter to Applicant [printer-friendly version]";
+        letterForPrint.document.body.classList.add("print");
+
+        createElementEx(NO_NS, "base", letterForPrint.document.head, null, "href", window.location.origin);
+
+        [
+            "/styles/default.css",
+            "/styles/main.css",
+            "/styles/ExClass.css",
+            "/styles/print.css",
+            "/styles/material.io/material-icons.css",
+            "/mpasis/styles/main.css",
+            "/mpasis/styles/print.css"
+        ].forEach(cssURL=>{
+            letterForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
+        });
+
+        console.log(thisIERForm.position, event.target.rowData, event.target.rowIndex, event.target.jobApplication, event.target.qualifications);
+
+        let letterData = {
+            positionApplied: thisIERForm.position["position_title"]
+                + (thisIERForm.position["parenthetical_title"] === null || thisIERForm.position["parenthetical_title"].trim() === "" ? "" : " (" + thisIERForm.position["parenthetical_title"] + ")"),
+            positionAppliedWithPlantilla: thisIERForm.position["position_title"]
+                + (thisIERForm.position["parenthetical_title"] === null || thisIERForm.position["parenthetical_title"].trim() === "" ? "" : " (" + thisIERForm.position["parenthetical_title"] + ")")
+                + (thisIERForm.position["plantilla_item_number"] === null || thisIERForm.position["plantilla_item_number"].trim() === "" || thisIERForm.position["plantilla_item_number"].search("MPASIS-") >= 0 ? "" : " <br><br>" + thisIERForm.position["plantilla_item_number"]),
+            placeOfAssignment: thisIERForm.position["place_of_assignment"],
+            educQS: thisIERForm.displayExs["ier-position-qs-education"].content.innerHTML,
+            expQS: thisIERForm.displayExs["ier-position-qs-experience"].content.innerHTML,
+            trainingQS: thisIERForm.displayExs["ier-position-qs-training"].content.innerHTML,
+            eligQS: thisIERForm.displayExs["ier-position-qs-eligibility"].content.innerHTML,
+            applicationCode: event.target.rowData["application_code"],
+            applicantFullName: MPASIS_App.getFullName(event.target.jobApplication["given_name"], event.target.jobApplication["middle_name"], event.target.jobApplication["family_name"], event.target.jobApplication["spouse_name"], event.target.jobApplication["ext_name"], false, true),
+            applicantLastName: (event.target.rowData["sex"] === "Male" ? "Mr. " : (event.target.rowData["sex"] === "Female" ? "Ms. " : ""))
+                + event.target.rowData["applicant_name"].slice(0, event.target.rowData["applicant_name"].search(",")),
+            applicantAddress: event.target.rowData["address"],
+            educApplicant: event.target.rowData["education"],
+            expApplicant: "Relevant work experience: " + event.target.rowData["experience_years"],
+            trainingApplicant: event.target.rowData["training_hours"],
+            eligApplicant: event.target.rowData["eligibility"],
+            educQualified: (event.target.qualifications["educ"] ? "Q" : "Disq") + "ualified",
+            expQualified: (event.target.qualifications["exp"] ? "Q" : "Disq") + "ualified",
+            trainingQualified: (event.target.qualifications["training"] ? "Q" : "Disq") + "ualified",
+            eligQualified: (event.target.qualifications["elig"] ? "Q" : "Disq") + "ualified",
+        };
+        
+        let letter = ElementEx.create("section", ElementEx.NO_NS, letterForPrint.document.body, null, "id", "letter-print");
+        let letterHeader = ElementEx.create("header", ElementEx.NO_NS, letter, null, "id", "letter-header");
+        let letterHeaderText = ElementEx.create("h1", ElementEx.NO_NS, letterHeader);
+        ElementEx.create("img", ElementEx.NO_NS, letterHeaderText, null, "class", "deped-logo", "src", "/images/Department_of_Education.svg", "alt", "logo:Department of Education");
+        [
+            {class:"header-rp", text:"Republic of the Philippines"},
+            {class:"header-deped", text:"Department of Education"},
+            {class:"header-region", text:"Region IV-A CALABARZON"},
+            {class:"header-sdo", text:"Schools Division Office of Sto. Tomas City"},
+        ].forEach(obj=>{
+            ElementEx.addText(" ", letterHeaderText);
+            ElementEx.addText(obj.text, ElementEx.createSimple("span", ElementEx.NO_NS, obj.class, letterHeaderText));
+        });
+        
+        ElementEx.addText("\n", letterHeader);
+        
+        let letterMain = ElementEx.create("main", ElementEx.NO_NS, letter, null, "id", "letter-main");
+
+        // INSERT CODE HERE ==>
+        console.log(letterData);
+        
+        let letterDate = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-date", letterMain);
+        [ElementEx.create("p", ElementEx.NO_NS, letterDate)].forEach(p=>{
+            ElementEx.addText((new Date()).toLocaleDateString("en-US", {month:"long", day:"numeric", year:"numeric"}), p);
+            thisIERForm.attachFieldModeChange(p);
+        });
+
+        let letterAddressee = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-addressee", letterMain);
+        [ElementEx.create("p", ElementEx.NO_NS, letterAddressee)].forEach(p=>{
+            [
+                {class:"name",text:letterData.applicantFullName},
+                {class:"address",text:letterData.applicantAddress},
+            ].forEach((obj, index)=>{
+                if (index > 0)
+                {
+                    ElementEx.create("br", ElementEx.NO_NS, p);
+                    ElementEx.addText("\n", p);
+                }
+                [ElementEx.createSimple("span", ElementEx.NO_NS, obj.class, p)].forEach(span=>{
+                    ElementEx.addText(obj.text, span);
+                    thisIERForm.attachFieldModeChange(span);
+                });
+            });
+        });
+
+        let letterSalutation = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-salutation", letterMain);
+        [ElementEx.create("p", ElementEx.NO_NS, letterSalutation)].forEach(p=>{
+            ElementEx.addText("Dear ", p);
+            ElementEx.addText(letterData.applicantLastName, ElementEx.createSimple("span", ElementEx.NO_NS, "last-name", p))
+        });
+
+        let letterBody = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-body", letterMain);
+
+        (event.target.innerHTML === "Qualified" ? [
+            "Congratulations!",
+            "Please be informed that based on the initial evaluation, your qualifications are found to be substantial vis-&agrave;-vis the Civil Service Commission (CSC)-approved Qualification Standards (QS) of <span class=\"position-applied\">" + letterData.positionApplied + "</span> position under <span class=\"place-of-assignment\">" + letterData.placeOfAssignment + "</span>. Below are the results of the initial evaluation conducted by the undersigned dated <span class=\"evaluation-date\">" + (new Date()).toLocaleDateString("en-US", {month:"long", day:"numeric", year:"numeric"}) + "</span>.",
+        ] : [
+            "Please be informed of the results of the initial evaluation of your qualifications vis-&agrave;-vis the Civil Service Commission (CSC)-approved Qualification Standards (QS) of <span class=\"position-applied\">" + letterData.positionApplied + "</span> position under <span class=\"place-of-assignment\">" + letterData.placeOfAssignment + "</span>, as follows:",
+        ]).forEach(para=>{
+            ElementEx.create("p", ElementEx.NO_NS, letterBody).innerHTML = para;
+        });
+
+        let qualificationTable = ElementEx.createSimple("table", ElementEx.NO_NS, "qualification-table", letterBody);
+        [ElementEx.create("tr", ElementEx.NO_NS, ElementEx.create("thead", ElementEx.NO_NS, qualificationTable))].forEach(tr=>{
+            [
+                "Position Applied For",
+                "CSC-approved QS of the Position",
+                "Your Qualifications",
+                "Remarks/Details",
+            ].forEach(text=>{
+                ElementEx.addText(text, ElementEx.create("th", ElementEx.NO_NS, tr));
+            });
+        });
+        [ElementEx.create("tbody", ElementEx.NO_NS, qualificationTable)].forEach(tbody=>{
+            [
+                [letterData.positionAppliedWithPlantilla, "<b>Education:</b> " + letterData.educQS, letterData.educApplicant, letterData.educQualified],
+                ["<b>Experience:</b> " + letterData.expQS, letterData.expApplicant, letterData.expQualified],
+                ["<b>Training:</b> " + letterData.trainingQS, letterData.trainingApplicant, letterData.trainingQualified],
+                ["<b>Eligibility:</b> " + letterData.eligQS, letterData.eligApplicant, letterData.eligQualified],
+            ].forEach(rowData=>{
+                [ElementEx.create("tr", ElementEx.NO_NS, tbody)].forEach(tr=>{
+                    rowData.forEach(data=>{
+                        [ElementEx.create("td", ElementEx.NO_NS, tr)].forEach(td=>{
+                            td.innerHTML = data;
+                            if (data === letterData.positionAppliedWithPlantilla)
+                            {
+                                td.setAttribute("rowspan", 4);
+                            }
+                        });
+                    });
+                });
+            });
+        });
+
+        (event.target.innerHTML === "Qualified" ? [
+            "Please be advised of your assigned application code <span class=\"application-code\">" + letterData.applicationCode + "</span> which shall be used as you proceed with the next stage of the selection process. Failure to reply within 3 days upon receipt of this correspondence will invalidate your application. You may refer to the official issuances of the SDO Sto. Tomas City for the additional announcements in this regard. For inquiries, you may communicate with <a href=\"tel:0437028674\">(043) 702-8674</a>/<a href=\"tel:09556534958\">09556534958</a> and <a href=\"mailto:sdostc.personnel@deped.gov.ph\">sdostc.personnel@deped.gov.ph</a>.",
+            "Thank you.",
+        ] : [
+            "While your qualifications made a favorable impression, we regret to inform you that you did not meet the minimum QS set for the <span class=\"position-applied\">" + letterData.positionApplied + "</span> position. You may, however, continue to submit job applications in response to other vacancy announcements that we publish at <a href=\"https://www.csc.gov.ph/careers\">www.csc.gov.ph/careers</a>, DepEd bulletin boards, and official website at <a href=\"https://depedstotomascity.com.ph\">depedstotomascity.com.ph</a>.",
+            "The results of the initial evaluation shall be released and posted for transparency purposes. You may refer to your assigned application code <span class=\"application-code\">" + letterData.applicationCode + "</span> in the official posting of the results.",
+            "Thank you and we wish you the best of luck in your future success.",
+        ]).forEach(para=>{
+            ElementEx.create("p", ElementEx.NO_NS, letterBody).innerHTML = para;
+        });
+
+        let letterClosing = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-closing", letterMain);
+        ElementEx.addText("Very truly yours,", ElementEx.createSimple("p", ElementEx.NO_NS, "letter-compliment", letterClosing));
+        [ElementEx.createSimple("p", ElementEx.NO_NS, "letter-sender", letterClosing)].forEach(p=>{
+            [
+                {class:"name",text:"Jessamae O. Castromero"},
+                {class:"position",text:"Administrative Officer IV\u2013HRMO"},
+            ].forEach((obj, index)=>{
+                if (index > 0)
+                {
+                    ElementEx.create("br", ElementEx.NO_NS, p);
+                    ElementEx.addText("\n", p);
+                }
+                [ElementEx.createSimple("span", ElementEx.NO_NS, obj.class, p)].forEach(span=>{
+                    ElementEx.addText(obj.text, span);
+                    thisIERForm.attachFieldModeChange(span);
+                });
+            });
+        });
+
+        let letterPostScript = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-post-script", letterMain);
+
+        // <== INSERT CODE HERE
+        
+        ElementEx.addText("\n", letterHeader);
+        let letterFooter = ElementEx.create("main", ElementEx.NO_NS, letter, null, "id", "letter-footer");
+        let letterFooterContainer = ElementEx.create("div", ElementEx.NO_NS, letterFooter, null, "class", "div-ex content");
+        [
+            {class:"matatag-bagongpilipinas-logo", src:"/images/logo-depedmatatag-bagongpilipinas.png", alt:"logo:DepEd MATATAG - Bagong Pilipinas"},
+            {class:"sdo-logo", src:"/images/logo-depedstotomas.webp", alt:"logo:Department of Education"},
+        ].forEach((img, index)=>{
+            if (index > 0)
+            {
+                ElementEx.addText(" ", letterFooterContainer);
+            }
+            ElementEx.create("img", ElementEx.NO_NS, letterFooterContainer, null, "class", img.class, "src", img.src, "alt", img.alt);
+        });
+
+        [
+            "<b>Address:</b><!--<span class=\"material-icons-round\">pin_drop</span>--> Brgy. Poblacion IV, Sto. Tomas City, Batangas",
+            "<b>Telephone No.:</b><!--<span class=\"material-icons-round\">phone</span>--> (043) 702-8674",
+            "<b>Email Address:</b><!--<span class=\"material-icons-round\">alternate_email</span>--> <a href=\"mailto:sdo.santotomas@deped.gov.ph\">sdo.santotomas@deped.gov.ph</a>",
+            "<b>Website:</b><!--<span class=\"material-icons-round\">language</span>--> <a href=\"https://depedstotomascity.com.ph\">depedstotomascity.com.ph</a>",
+        ].forEach((innerHTML, index)=>{
+            if (index > 0)
+            {
+                ElementEx.addText("\n", letterFooterContainer);
+            }
+            ElementEx.create("p", ElementEx.NO_NS, letterFooterContainer).innerHTML = innerHTML;
+        });
+        
+        ElementEx.addText("\n", letterFooterContainer);
+
+        let docInfo = ElementEx.create("table", ElementEx.NO_NS, letterFooterContainer);
+        let docInfoBody = ElementEx.create("tbody", ElementEx.NO_NS, docInfo);
+        [
+            ["Doc. Ref. Code", "", "Rev", ""],
+            ["Effectivity", "", "Page", ""],
+        ].forEach(rowData=>{
+            [ElementEx.create("tr", ElementEx.NO_NS, docInfoBody)].forEach(tr=>{
+                rowData.forEach(data=>{
+                    ElementEx.addText(data, ElementEx.create("td", ElementEx.NO_NS, tr));
+                });
+            });
+        });
+
+        ElementEx.addText("\n", letterFooterContainer);
+        ElementEx.create("img", ElementEx.NO_NS, letterFooterContainer, null, "class", "sdo-motto", "src", "/images/logo-tawagko-transparent-cropped.png", "alt", "logo:Tomasino Ako, Wagi Ang Gawi Ko");
+
+        let printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
+        letterForPrint.document.body.insertBefore(printButtonGroup.container, letterForPrint.document.body.children[0]);
+        printButtonGroup.container.classList.add("print-controls");
+        printButtonGroup.addItem("<span class=\"material-icons-round green\">print</span>", "", "Print").addEvent("click", clickPrintEvent=>{letterForPrint.print()});
+        printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{letterForPrint.close()});
+
+        letterForPrint.alert("Please click on the print button to continue");
+    }
+
+    attachFieldModeChange(element)
+    {
+        element.title = "Double-click to edit";
+        element.addEventListener("dblclick", IERForm.fieldModeChange);
+    }
+
+    static fieldModeChange(event)
+    {
+        if (event.target.isContentEditable)
+        {
+            event.target.removeAttribute("contenteditable");
+        }
+        else
+        {
+            event.target.setAttribute("contenteditable", true);
+        }
     }
 }
 
@@ -6315,7 +6607,7 @@ class RQAForm extends Old_FormEx
 
         this.container.classList.add("rqa-form");
 
-        this.setTitle("Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA)", 2);
+        this.setTitle("Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA)", 2);
 
         this.position = null;
         this.positions = [];
@@ -6616,7 +6908,7 @@ class RQAForm extends Old_FormEx
         } else {
             rqaForPrint.document.insertBefore(nodeDoctype, rqaForPrint.document.childNodes[0]);
         }
-        rqaForPrint.document.title = "Comparative Assessment Result - Registry of Qualified Applicants (CAR-RQA) [printer-friendly version]";
+        rqaForPrint.document.title = "Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA) [printer-friendly version]";
         rqaForPrint.document.body.classList.add("print");
         
         createElementEx(NO_NS, "base", rqaForPrint.document.head, null, "href", window.location.origin);
