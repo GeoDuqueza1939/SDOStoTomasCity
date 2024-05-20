@@ -292,6 +292,16 @@ REINSTATE FOR PRINTOUT
     text-align: center;
 }
 
+.ier-table a.link-generate-letter {
+    text-decoration: none;
+    color: blue;
+}
+
+.ier-table a.link-generate-letter:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .ier-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(3),
 .ier-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(4),
 .ier-table.hide-personal-data > .content > table > thead > tr:last-child > :nth-child(1),

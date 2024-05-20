@@ -5428,7 +5428,7 @@ class IERForm extends Old_FormEx
     
                                     this.displayExs["ier-table"].addRow(row);
 
-                                    let createLink = ElementEx.create("a");
+                                    let createLink = ElementEx.createSimple("a", ElementEx.NO_NS, "link-generate-letter");
 
                                     createLink.append(this.displayExs["ier-table"].rows.slice(-1)[0].td['remarks'].childNodes[0]);
                                     this.displayExs["ier-table"].rows.slice(-1)[0].td['remarks'].append(createLink);
@@ -5670,8 +5670,17 @@ class IERForm extends Old_FormEx
         ] : [
             "Please be informed of the results of the initial evaluation of your qualifications vis-&agrave;-vis the Civil Service Commission (CSC)-approved Qualification Standards (QS) of <span class=\"position-applied\">" + letterData.positionApplied + "</span> position under <span class=\"place-of-assignment\">" + letterData.placeOfAssignment + "</span>, as follows:",
         ]).forEach(para=>{
-            ElementEx.create("p", ElementEx.NO_NS, letterBody).innerHTML = para;
+            [ElementEx.create("p", ElementEx.NO_NS, letterBody)].forEach(p=>{
+                p.innerHTML = para;
+                let els = p.getElementsByClassName("evaluation-date");
+                if (els.length > 0)
+                {
+                    thisIERForm.attachFieldModeChange(els[0]);
+                }
+            });
         });
+
+        
 
         let qualificationTable = ElementEx.createSimple("table", ElementEx.NO_NS, "qualification-table", letterBody);
         [ElementEx.create("tr", ElementEx.NO_NS, ElementEx.create("thead", ElementEx.NO_NS, qualificationTable))].forEach(tr=>{
@@ -5740,7 +5749,7 @@ class IERForm extends Old_FormEx
         // <== INSERT CODE HERE
         
         ElementEx.addText("\n", letterHeader);
-        let letterFooter = ElementEx.create("main", ElementEx.NO_NS, letter, null, "id", "letter-footer");
+        let letterFooter = ElementEx.create("footer", ElementEx.NO_NS, letter, null, "id", "letter-footer");
         let letterFooterContainer = ElementEx.create("div", ElementEx.NO_NS, letterFooter, null, "class", "div-ex content");
         [
             {class:"matatag-bagongpilipinas-logo", src:"/images/logo-depedmatatag-bagongpilipinas.png", alt:"logo:DepEd MATATAG - Bagong Pilipinas"},
@@ -5768,7 +5777,7 @@ class IERForm extends Old_FormEx
         
         ElementEx.addText("\n", letterFooterContainer);
 
-        let docInfo = ElementEx.create("table", ElementEx.NO_NS, letterFooterContainer);
+        let docInfo = ElementEx.createSimple("table", ElementEx.NO_NS, "doc-info", letterFooterContainer);
         let docInfoBody = ElementEx.create("tbody", ElementEx.NO_NS, docInfo);
         [
             ["Doc. Ref. Code", "", "Rev", ""],

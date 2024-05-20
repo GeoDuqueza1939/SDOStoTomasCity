@@ -3,6 +3,95 @@
     width: 297mm;
     height: 210;
 } */
+:root {
+    --page-margin-top: 2.2in;
+    --page-margin-bottom: 1in;
+    /* --page-margin-bottom: 3in; */
+    --font-size-service: 1em;
+    --font-size-appointment: 1em;
+    --font-size-office: 1em;
+    --font-size-branch: 1em;
+    --font-size-lwop-count: 1em;
+    --font-size-separation-date: 1em;
+    --font-size-inclusive-date: 1em;
+    --font-size-designation: 1em;
+    --font-size-status: 1em;
+    --font-size-salary: 1em;
+    --font-size-station: 1em;
+    --font-size-date-start: 1em;
+    --font-size-date-end: 1em;
+
+    --font-family-print-default: Calibri, sans-serif;
+    --font-size-print-default: 11pt;
+
+    --font-size-page-header: 10pt;
+    --font-family-page-header: inherit;
+    --width-page-header-deped-logo: 2cm;
+    --font-size-page-header-rp: 12pt;
+    --font-family-page-header-rp: "Old English Text MT", "Bookman Old Style", "URW Bookman", Times, serif;
+    --font-size-page-header-deped: 18pt;
+    --font-family-page-header-deped: "Old English Text MT", "Bookman Old Style", Times, serif;
+    --font-size-page-header-region: 11pt;
+    --font-family-page-header-region: "Times New Roman", Times, serif;
+    --font-size-page-header-sdo: 10.5pt;
+    --font-family-page-header-sdo: Tahoma, Geneva, Verdana, Calibri, sans-serif;
+
+    --font-family-sr-form-title: inherit;
+    --font-size-sr-form-title: 12pt;
+
+    --font-family-sr-form-emp-info: inherit;
+    --font-size-sr-form-emp-info: 10pt;
+
+    --font-family-sr-form-emp-info-label: inherit;
+    --font-size-sr-form-emp-info-label: inherit;
+    --line-height-sr-form-emp-info-label: 12pt;
+    
+    --font-family-sr-form-emp-info-sublabel: inherit;
+    --font-size-sr-form-emp-info-sublabel: 6pt;
+    --line-height-sr-form-emp-info-sublabel: inherit;
+    
+    --font-family-sr-form-emp-info-blank: inherit;
+    --font-size-sr-form-emp-info-blank: 11pt;
+    --line-height-sr-form-emp-info-blank: 12pt;
+
+    --font-family-sr-form-emp-info-comment: inherit;
+    --font-size-sr-form-emp-info-comment: 8pt;
+    --line-height-sr-form-emp-info-comment: 12pt;
+
+    --font-family-sr-table-prenote: inherit;
+    --font-size-sr-table-prenote: 8pt;
+    --line-height-sr-table-prenote: inherit;
+    --text-align-sr-table-prenote: center;
+
+    --font-family-sr-table-postnote: var(--font-family-sr-table-prenote);
+    --font-size-sr-table-postnote: var(--font-size-sr-table-prenote);
+    --line-height-sr-table-postnote: var(--line-height-sr-table-prenote);
+    --text-align-sr-table-postnote: var(--text-align-sr-table-prenote);
+
+    --font-family-sr-table: inherit;
+    --font-size-sr-table: 10pt;
+    --text-align-sr-table: center;
+    --valign-sr-table: middle;
+
+    --font-family-sr-table-th: var(--font-family-sr-table);
+    --font-size-sr-table-th: 11pt;
+    --text-align-sr-table-th: var(--text-align-sr-table);
+    --valign-sr-table-th: var(--valign-sr-table);
+
+    --font-family-sr-table-th-small: var(--font-family-sr-table-th);
+    --font-size-sr-table-th-small: 9pt;
+    --text-align-sr-table-th-small: var(--text-align-sr-table-th);
+    --valign-sr-table-th-small: var(--valign-sr-table-th);
+
+    --font-family-sr-signatory: inherit;
+    --font-size-sr-signatory: 11pt;
+
+    --height-sr-table-td: 24pt;
+
+    --font-family-timestamp: inherit;
+    --font-size-timestamp: 8pt;
+    --font-style-timestamp: italic;
+}
 
 @media only screen {
     body.print {
@@ -30,6 +119,72 @@
     }
 }
 
+@media only print {
+    body {
+        background-color: unset !important;
+    }
+
+    .print {
+        padding: 0 !important;
+    }
+
+    .print #letter-print > header#letter-header {
+        position: fixed;
+        top: 0.15in;
+        left: 0.25in;
+        right: 0.25in;
+        margin: 0 !important;
+    }
+
+    #letter-print::before {
+        display: block;
+        content: " ";
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: -10;
+        background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url("/test/images/logo-depedstotomas.webp");
+        background-size: 6in;
+        background-repeat: no-repeat;
+        background-position: center 3.61in;
+    }
+    
+    #letter-print {
+        max-width: initial;
+        background-color: none;
+        margin: 0 !important;
+        padding: 0.15in 0.4in !important;
+        box-shadow: unset !important;
+    }
+
+    .print #letter-main {
+        font-family: "Bookman Old Style", "URW Bookman", serif !important;
+        padding-top: 1.75in !important;
+        padding-left: 0.5in !important;
+        padding-right: 0.5in !important;
+    }
+    
+    .print footer#letter-footer {
+        position: fixed;
+        bottom: 0.15in;
+        left: 0.25in;
+        right: 0.25in;
+        margin: 0 !important;
+    }
+}
+
+@media only screen {
+    .print footer > .content {
+        font-size: 0.8em !important;
+    }
+
+    #letter-print {
+        background-color: white;
+    }
+}
+
 *  {
     font-size: 1em;
 }
@@ -37,6 +192,233 @@
 body.print {
     background-color: unset;
     font-family: "Bookman Old Style", "URW Bookman", serif;
+}
+
+#letter-print {
+    font-size: var(--font-size-print-default);
+    font-family: var(--font-family-print-default);
+    max-width: 8.5in;
+    margin: 0 auto;
+    /* padding: 0.5in; */
+    padding: 0.15in 0.5in;
+    box-shadow: 3pt 3pt 5pt black;
+}
+
+.print #letter-print > header {
+    text-align: center;
+    margin: 0 -0.25in;
+}
+
+.print #letter-print > header > h1 {
+    margin: 0;
+    font-size: var(--font-size-page-header);
+    border-bottom: 2pt solid;
+}
+
+.print #letter-print > header > h1::after {
+    display: block;
+    content: " ";
+    /* border-bottom: 1pt solid; */
+    /* margin-bottom: 1pt; */
+}
+
+.print #letter-print > header > h1 > img.deped-logo {
+    width: var(--width-page-header-deped-logo);
+}
+
+.print #letter-print > header > h1 > span {
+    display: block;
+    margin: 0;
+    padding: 0;
+    text-transform: uppercase;
+    line-height: 1.25em;
+}
+
+.print #letter-print > header > h1 > span.header-rp,
+.print #letter-print > header > h1 > span.header-deped {
+    text-transform: none;
+}
+
+.print #letter-print > header > h1 > span.header-rp {
+    font-family: var(--font-family-page-header-rp);
+    font-size: var(--font-size-page-header-rp);
+}
+
+.print #letter-print > header > h1 > span.header-deped {
+    font-family: var(--font-family-page-header-deped);
+    font-size: var(--font-size-page-header-deped);
+}
+
+.print #letter-print > header > h1 > span.header-region {
+    font-family: var(--font-family-page-header-region);
+    font-size: var(--font-size-page-header-region);
+}
+
+.print #letter-print > header > h1 > span.header-sdo {
+    font-family: var(--font-family-page-header-sdo);
+    font-size: var(--font-size-page-header-sdo);
+    font-weight: 900;
+}
+
+.print #letter-main {
+    font-family: "Bookman Old Style", "URW Bookman", serif;
+    font-size: 10pt;
+    padding-top: 0.5em;
+    padding-left: 3em;
+    padding-right: 3em;
+}
+
+.print .letter-addressee > * > .name,
+.print .letter-salutation > * > .last-name,
+.print .letter-body .position-applied,
+.print .letter-body .place-of-assignment,
+.print .letter-body .evaluation-date,
+.print .letter-body .application-code {
+    font-weight: bold;
+}
+
+.print .letter-addressee > * > .name,
+.print .letter-salutation > * > .last-name,
+.print .letter-body .position-applied {
+    text-transform: uppercase;
+}
+
+.print .letter-body p {
+    text-align: justify;
+}
+
+.print .letter-body a {
+    color: inherit;
+    display: inline-flex;
+}
+
+.print table.qualification-table {
+    border-collapse: collapse;
+    border: 1px solid;
+}
+
+.print table.qualification-table > * > tr > * {
+    padding: 0.025in 0.05in;
+    border: 1px solid black;
+}
+
+.print table.qualification-table > thead > tr > * {
+    background-color: gray;
+    color: white;
+}
+
+.print table.qualification-table > tbody > tr > :last-child {
+    text-align: center;
+}
+
+.print .letter-closing {
+    padding-top: 0.1em;
+}
+
+.print .letter-closing .letter-sender {
+    padding-top: 2em;
+}
+
+.print .letter-closing .letter-sender > .name {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.print footer {
+    margin: 0 -0.25in;
+}
+
+.print footer > .content::before {
+    display: block;
+    content: "";
+    grid-column: 1 / span 4;
+    border-top: 2pt solid;
+    padding-top: 1pt;
+    height: 1pt;
+    /* border-bottom: 1pt solid; */
+    /* margin-bottom: 0.5em; */
+}
+
+.print footer > .content {
+    padding: 0.5em 0.5em 0;
+    display: grid;
+    grid-template: auto auto auto auto /*auto*/ / 4cm 2cm auto 1.5cm;
+    font-size: 10pt;
+    align-items: center;
+    clear: both;
+}
+
+.print footer > .content > img.matatag-bagongpilipinas-logo {
+    height: 2cm;
+    grid-row-end: span 4; /* 5; */
+}
+
+.print footer > .content > img.sdo-logo {
+    height: 1.6cm;
+    grid-row-end: span 4; /* 5; */
+    /* padding-left: 6pt; */
+}
+
+.print footer > .content > p {
+    grid-column: 3;
+    margin: 0;
+    padding: 0;
+}
+
+.print footer > .content > p > a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.print footer > .content > p > a:hover {
+    color: blue;
+    text-decoration: underline;
+}
+
+.print footer > .content > table.doc-info {
+    grid-column: 3;
+    width: 16em;
+    border: 1px solid;
+    border-collapse: collapse;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+    display: none; /* TEMP */
+    visibility: hidden; /* TEMP */
+}
+
+.print footer > .content > table.doc-info tr>* {
+    border: 1px solid;
+    padding: 0 0.75em;
+    font-size: 0.6em;
+}
+
+table.doc-info tr>:nth-child(1) {
+    width: 31.5%;
+}
+
+table.doc-info tr>:nth-child(2) {
+    width: 31.5%;
+}
+
+table.doc-info tr>:nth-child(3) {
+    width: 15%;
+}
+
+.print footer > .content > img.sdo-motto {
+    height: 1.8cm;
+    grid-column: 4;
+    grid-row-start: 2;
+    grid-row-end: span 4; /* 5; */
+}
+
+.print footer > .content > p > span[class^="material-"] {
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    height: auto;
+    font-size: 0.8em;
 }
 
 .print .print-controls {
@@ -125,6 +507,10 @@ body.print {
 
 .ier-table > .content > table > * > tr > * {
     border: 1px solid;
+}
+
+.ier-table a.link-generate-letter {
+    color: black;
 }
 
 .ier-printout-signatory {
