@@ -283,6 +283,10 @@ body.print {
     text-transform: uppercase;
 }
 
+.print .letter-salutation > * {
+    margin: 2em 0;
+}
+
 .print .letter-body p {
     text-align: justify;
 }
@@ -311,8 +315,8 @@ body.print {
     text-align: center;
 }
 
-.print .letter-closing {
-    padding-top: 0.1em;
+.print .letter-closing > * {
+    margin-top: 2em;
 }
 
 .print .letter-closing .letter-sender {

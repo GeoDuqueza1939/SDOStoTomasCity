@@ -5583,7 +5583,9 @@ class IERForm extends Old_FormEx
             letterForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
         });
 
-        console.log(thisIERForm.position, event.target.rowData, event.target.rowIndex, event.target.jobApplication, event.target.qualifications);
+        ElementEx.create("style", ElementEx.NO_NS, letterForPrint.document.head).innerHTML = "@page {size: A4 portrait; margin: 0;}";
+
+        // console.log(thisIERForm.position, event.target.rowData, event.target.rowIndex, event.target.jobApplication, event.target.qualifications);
 
         let letterData = {
             positionApplied: thisIERForm.position["position_title"]
@@ -5598,8 +5600,7 @@ class IERForm extends Old_FormEx
             eligQS: thisIERForm.displayExs["ier-position-qs-eligibility"].content.innerHTML,
             applicationCode: event.target.rowData["application_code"],
             applicantFullName: MPASIS_App.getFullName(event.target.jobApplication["given_name"], event.target.jobApplication["middle_name"], event.target.jobApplication["family_name"], event.target.jobApplication["spouse_name"], event.target.jobApplication["ext_name"], false, true),
-            applicantLastName: (event.target.rowData["sex"] === "Male" ? "Mr. " : (event.target.rowData["sex"] === "Female" ? "Ms. " : ""))
-                + event.target.rowData["applicant_name"].slice(0, event.target.rowData["applicant_name"].search(",")),
+            applicantLastName: event.target.rowData["applicant_name"].slice(0, event.target.rowData["applicant_name"].search(",")),
             applicantAddress: event.target.rowData["address"],
             educApplicant: event.target.rowData["education"],
             expApplicant: "Relevant work experience: " + event.target.rowData["experience_years"],
@@ -5630,7 +5631,7 @@ class IERForm extends Old_FormEx
         let letterMain = ElementEx.create("main", ElementEx.NO_NS, letter, null, "id", "letter-main");
 
         // INSERT CODE HERE ==>
-        console.log(letterData);
+        // console.log(letterData);
         
         let letterDate = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-date", letterMain);
         [ElementEx.create("p", ElementEx.NO_NS, letterDate)].forEach(p=>{
@@ -5659,6 +5660,7 @@ class IERForm extends Old_FormEx
         let letterSalutation = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-salutation", letterMain);
         [ElementEx.create("p", ElementEx.NO_NS, letterSalutation)].forEach(p=>{
             ElementEx.addText("Dear ", p);
+            ElementEx.addText((event.target.rowData["sex"] === "Male" ? "Mr. " : (event.target.rowData["sex"] === "Female" ? "Ms. " : "")), ElementEx.create("b", ElementEx.NO_NS, p))
             ElementEx.addText(letterData.applicantLastName, ElementEx.createSimple("span", ElementEx.NO_NS, "last-name", p))
         });
 

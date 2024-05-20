@@ -695,7 +695,7 @@ DROP TABLE IF EXISTS `Job_Application`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `Job_Application` (
-  `application_code` varchar(20) NOT NULL,
+  `application_code` varchar(50) NOT NULL,
   `personId` bigint(20) unsigned NOT NULL,
   `position_title_applied` varchar(100) DEFAULT NULL,
   `parenthetical_title_applied` varchar(100) DEFAULT NULL,
@@ -893,7 +893,7 @@ CREATE TABLE `MPASIS_History` (
   `mpasis_action` tinyint(3) unsigned NOT NULL,
   `username` varchar(100) DEFAULT NULL,
   `temp_username` varchar(100) DEFAULT NULL,
-  `application_code` varchar(100) DEFAULT NULL,
+  `application_code` varchar(50) DEFAULT NULL,
   `position_title` varchar(100) DEFAULT NULL,
   `plantilla_item_number` varchar(50) DEFAULT NULL,
   `username_op` varchar(100) DEFAULT NULL,
@@ -1477,7 +1477,7 @@ DROP TABLE IF EXISTS `Relevant_Eligibility`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `Relevant_Eligibility` (
   `relevant_eligibilityId` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `application_code` varchar(20) NOT NULL,
+  `application_code` varchar(50) NOT NULL,
   `eligibilityId` tinyint(3) unsigned DEFAULT NULL,
   PRIMARY KEY (`relevant_eligibilityId`),
   KEY `eligibilityId` (`eligibilityId`),
@@ -1507,8 +1507,8 @@ DROP TABLE IF EXISTS `Relevant_Training`;
 CREATE TABLE `Relevant_Training` (
   `relevant_trainingId` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `descriptive_name` longtext NOT NULL,
-  `hours` tinyint(3) unsigned NOT NULL DEFAULT 0,
-  `application_code` varchar(20) NOT NULL,
+  `hours` float unsigned NOT NULL DEFAULT 0,
+  `application_code` varchar(50) NOT NULL,
   PRIMARY KEY (`relevant_trainingId`),
   KEY `Relevant_Training_FK` (`application_code`),
   CONSTRAINT `Relevant_Training_FK` FOREIGN KEY (`application_code`) REFERENCES `Job_Application` (`application_code`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -1537,7 +1537,7 @@ CREATE TABLE `Relevant_Work_Experience` (
   `descriptive_name` longtext NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
-  `application_code` varchar(20) NOT NULL,
+  `application_code` varchar(50) NOT NULL,
   PRIMARY KEY (`relevant_work_experienceId`),
   KEY `Relevant_Work_Experience_FK` (`application_code`),
   CONSTRAINT `Relevant_Work_Experience_FK` FOREIGN KEY (`application_code`) REFERENCES `Job_Application` (`application_code`) ON DELETE CASCADE ON UPDATE CASCADE
