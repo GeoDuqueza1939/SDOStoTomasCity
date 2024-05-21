@@ -5566,6 +5566,15 @@ class IERForm extends Old_FormEx
         } else {
             letterForPrint.document.insertBefore(nodeDoctype, letterForPrint.document.childNodes[0]);
         }
+
+        [
+            {httpEquiv:"Cache-Control", content:"no-cache, no-store, must-revalidate"},
+            {httpEquiv:"Pragma", content:"no-cache"},
+            {httpEquiv:"Expires", content:"0"},
+        ].forEach(meta=>{
+            ElementEx.create("meta", ElementEx.NO_NS, letterForPrint.document.head, null, "http-equiv", meta.httpEquiv, "content", meta.content);
+        });
+
         letterForPrint.document.title = "Letter to Applicant [printer-friendly version]";
         letterForPrint.document.body.classList.add("print");
 
@@ -5602,10 +5611,10 @@ class IERForm extends Old_FormEx
             applicantFullName: MPASIS_App.getFullName(event.target.jobApplication["given_name"], event.target.jobApplication["middle_name"], event.target.jobApplication["family_name"], event.target.jobApplication["spouse_name"], event.target.jobApplication["ext_name"], false, true),
             applicantLastName: event.target.rowData["applicant_name"].slice(0, event.target.rowData["applicant_name"].search(",")),
             applicantAddress: event.target.rowData["address"],
-            educApplicant: event.target.rowData["education"],
-            expApplicant: "Relevant work experience: " + event.target.rowData["experience_years"],
-            trainingApplicant: event.target.rowData["training_hours"],
-            eligApplicant: event.target.rowData["eligibility"],
+            educApplicant: event.target.rowData["education"] ?? "None",
+            expApplicant: "Relevant work experience: " + (event.target.rowData["experience_years"] ?? "None"),
+            trainingApplicant: event.target.rowData["training_hours"] ?? "Total hours of training: None",
+            eligApplicant: event.target.rowData["eligibility"] ?? "None",
             educQualified: (event.target.qualifications["educ"] ? "Q" : "Disq") + "ualified",
             expQualified: (event.target.qualifications["exp"] ? "Q" : "Disq") + "ualified",
             trainingQualified: (event.target.qualifications["training"] ? "Q" : "Disq") + "ualified",
