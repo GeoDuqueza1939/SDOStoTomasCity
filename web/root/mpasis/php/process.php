@@ -51,7 +51,7 @@ function sendDebug($data)
     exit;
 }
 
-function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = 0, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
+function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = null, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
     global $dbname;
 
@@ -731,7 +731,7 @@ if (isValidUserSession())
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                             'remarks'=>"Retrieve applicant name or application code with the search string: $srcStr"
                         ));
-                        exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'", 100));
+                        exit(selectJobApplications($dbconn, "given_name LIKE '%$srcStr%' OR middle_name LIKE '%$srcStr%' OR family_name LIKE '%$srcStr%' OR spouse_name LIKE '%$srcStr%' OR ext_name LIKE '%$srcStr%' OR application_code LIKE '%$srcStr%'"));
                         break;
                     case 'applicationsByPosition':
                         $positionTitle = trim(isset($_REQUEST['positionTitle']) && !is_null($_REQUEST['positionTitle']) ? $_REQUEST['positionTitle'] : '');
@@ -751,7 +751,7 @@ if (isValidUserSession())
                             'plantilla_item_number'=>$plantilla,
                             'remarks'=>"Retrieve applicants by position applied; WHERE clause: $where"
                         ));
-                        exit(selectJobApplications($dbconn, $where, 100, false));
+                        exit(selectJobApplications($dbconn, $where, null, false));
                         break;
                     default:
                         break;

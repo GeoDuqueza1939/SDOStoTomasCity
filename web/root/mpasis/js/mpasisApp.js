@@ -1114,7 +1114,7 @@ class MPASIS_App extends App
         field.container.style.gridColumn = "9 / span 4";
         field.setVertical();
 
-        field = applicantDataForm.addInputEx("Spouse's Name", "text", "", "Spouse's Name; for married women", "spouse_name", "Person");
+        field = applicantDataForm.addInputEx("Spouse's Last Name", "text", "", "Spouse's Last Name; for married women", "spouse_name", "Person");
         field.setPlaceholderText("(optional)");
         field.container.style.gridColumn = "1 / span 4";
         field.setVertical();
@@ -2518,7 +2518,7 @@ class MPASIS_App extends App
         return !this.isDefined(value) || this.isEmptyString(value);
     }
 
-    static getFullName(givenName, middleName, familyName, spouseName, extName, lastNameFirst = false, middleInitialOnly = true)
+    static getFullName(givenName, middleName, familyName, spouseName, extName, lastNameFirst = false, middleInitialOnly = true, includeMaidenMiddleName = false)
     {
         var nameArr = null;
 
@@ -2528,6 +2528,11 @@ class MPASIS_App extends App
         }
 
         nameArr = [givenName, middleName, familyName, spouseName, extName];
+
+        if (!includeMaidenMiddleName && this.isDefined(middleName) && !this.isEmptySpaceString(middleName) && this.isDefined(familyName) && !this.isEmptySpaceString(familyName) && this.isDefined(spouseName) && !this.isEmptySpaceString(spouseName))
+        {
+            nameArr.splice(1, 1);
+        }
 
         if (lastNameFirst)
         {
@@ -2541,10 +2546,15 @@ class MPASIS_App extends App
                     break;
                 }
             }
-
+ 
             if (middleInitialOnly && nameArr.length > 3)
             {
                 nameArr[2] = this.getNameInitials(nameArr[2]);
+            }
+
+            if (this.isDefined(extName) && !this.isEmptySpaceString(extName))
+            {
+                nameArr[1] += " " + extName.trim();
             }
         }
         else if (middleInitialOnly)
