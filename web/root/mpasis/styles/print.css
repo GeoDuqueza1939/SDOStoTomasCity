@@ -320,7 +320,14 @@ body.print {
 }
 
 .print .letter-closing .letter-sender {
-    padding-top: 2em;
+    padding-top: 0em;
+}
+
+.print .letter-signature {
+    display: block;
+    height: 4em;
+    margin-bottom: -1.5em;
+    margin-left: 4em;
 }
 
 .print .letter-closing .letter-sender > .name {

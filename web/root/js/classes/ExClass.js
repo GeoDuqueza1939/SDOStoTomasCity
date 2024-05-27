@@ -3852,7 +3852,7 @@ class ScoreSheet extends Old_FormEx
                     var educAttainment = jobApplication["educational_attainmentIndex"];
                     var degreeTaken = jobApplication["degree_taken"];
                     var educNotes = jobApplication["educ_notes"] ?? "none";
-                    var hasSpecEduc = (jobApplication["has_specific_education_required"] == null ? "N/A" : (jobApplication["has_specific_education_required"] == 1 ? "Yes" : "No"));
+                    var hasSpecEduc = (positionObj["specific_education_required"] == null ? "N/A" : (jobApplication["has_specific_education_required"] != 0 && jobApplication["has_specific_education_required"] != null ? "Yes" : "No"));
                     
                     var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
                     var incrementObj = document.mpsEducIncrement.filter(increment=>(increment["baseline_educational_attainment"] == positionObj["required_educational_attainment"]));
@@ -3922,7 +3922,7 @@ class ScoreSheet extends Old_FormEx
                     var trainNotes = jobApplication["train_notes"] ?? "none";
                     var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
                     var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
-                    var hasSpecTraining = (jobApplication["has_specific_training"] == null ? "N/A" : (jobApplication["has_specific_training"] == 1 ? "Yes" : "No"));
+                    var hasSpecTraining = (positionObj["specific_training_required"] == null ? "N/A" : (jobApplication["has_specific_training"] != 0 && jobApplication["has_specific_training"] != null ? "Yes" : "No"));
                     var hasMoreTraining = (jobApplication["has_more_unrecorded_training"] == null ? "N/A" : (jobApplication["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
                     var requiredTrainingHours = positionObj["required_training_hours"];
                     var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
@@ -3981,7 +3981,7 @@ class ScoreSheet extends Old_FormEx
                     var workExpNotes = jobApplication["work_exp_notes"] ?? "none";
                     var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? MPASIS_App.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): {y:0, m:0, d:0});
                     var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
-                    var hasSpecWorkExp = (jobApplication["has_specific_work_experience"] == null ? "N/A" : (jobApplication["has_specific_work_experience"] == 1 ? "Yes" : "No"));
+                    var hasSpecWorkExp = (positionObj["specific_work_experience_required"] == null ? "N/A" : (jobApplication["has_specific_work_experience"] != 0 && jobApplication["has_specific_work_experience"] != null ? "Yes" : "No"));
                     var hasMoreWorkExp = (jobApplication["has_more_unrecorded_work_experience"] == null ? "N/A" : (jobApplication["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
                     var requiredWorkExpYears = positionObj["required_work_experience_years"];
                     var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
@@ -5299,9 +5299,9 @@ class IERForm extends Old_FormEx
                             {
                                 thisIERForm.fetchedApplications = JSON.parse(response.content);
     
-                                // console.log(thisIERForm.fetchedApplications);
-    
                                 this.displayExs["ier-table"].removeAllRows();
+
+                                thisIERForm.fetchedApplications.sort((a, b)=>(a["application_code"] > b["application_code"] ? 1 : (a["application_code"] < b["application_code"] ? -1 : 0)));
     
                                 for (const jobApplication of thisIERForm.fetchedApplications)
                                 {
@@ -5347,7 +5347,7 @@ class IERForm extends Old_FormEx
                                                 }
     
                                                 isEducQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
-                                                isEducQualified &&= (position["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                isEducQualified &&= ((position["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
 
                                                 isQualified &&= isEducQualified;
                                                 break;
@@ -5368,7 +5368,7 @@ class IERForm extends Old_FormEx
                                                 }
                                             
                                                 isTrainQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(position["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isTrainQualified &&= (position["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                isTrainQualified &&= ((position["specific_training_required"] == null) || ((jobApplication["has_specific_training"] != 0) && (jobApplication["has_specific_training"] != null)));
                                                 isTrainQualified &&= (totalHours >= position["required_training_hours"]);
 
                                                 isQualified &&= isTrainQualified;
@@ -5391,7 +5391,7 @@ class IERForm extends Old_FormEx
                                                 }
                                                 
                                                 isExpQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(position["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isExpQualified &&= (position["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                isExpQualified &&= ((position["specific_work_experience_required"] == null) || ((jobApplication["has_specific_work_experience"] != 0) && (jobApplication["has_specific_work_experience"] != null)));
 
                                                 isQualified &&= isExpQualified;
                                                 break;
@@ -5428,7 +5428,7 @@ class IERForm extends Old_FormEx
                                     rows.push(row);
     
                                     row["row_number"] = this.displayExs["ier-table"].rows.length + 1;
-    
+
                                     this.displayExs["ier-table"].addRow(row);
 
                                     let createLink = ElementEx.createSimple("a", ElementEx.NO_NS, "link-generate-letter");
@@ -5520,7 +5520,7 @@ class IERForm extends Old_FormEx
                 event.target.setAttribute("contenteditable", true);
             }
         };
-        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["hrmo"]["name"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
+        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<img src=\"/mpasis/images/esign.png\" alt=\"(Signed)\" style=\"display: block; height: 4em; margin-bottom: -2em;\"><span style=\"text-transform: uppercase; display: inline;\">" + document.hrRoles["hrmo"]["name"] + "</span>" + document.hrRoles["hrmo"]["position"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
             signatory.addContent(node);
             signatory.addContent(document.createTextNode(" "));
             if (node.classList.contains("name") || node.classList.contains("date"))
@@ -5742,6 +5742,8 @@ class IERForm extends Old_FormEx
         let letterClosing = ElementEx.createSimple("div", ElementEx.NO_NS, "letter-closing", letterMain);
         ElementEx.addText("Very truly yours,", ElementEx.createSimple("p", ElementEx.NO_NS, "letter-compliment", letterClosing));
         [ElementEx.createSimple("p", ElementEx.NO_NS, "letter-sender", letterClosing)].forEach(p=>{
+            p.innerHTML += "<img src=\"/mpasis/images/esign.png\" alt=\"(Signed)\" class=\"letter-signature\">";
+
             [
                 {class:"name",text:"Jessamae O. Castromero"},
                 {class:"position",text:"Administrative Officer IV\u2013HRMO"},
@@ -6340,6 +6342,8 @@ class CARForm extends Old_FormEx
 
                     var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
 
+                    console.log(positions);
+
                     this.positions = positions;
 
                     this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
@@ -6381,7 +6385,7 @@ class CARForm extends Old_FormEx
                                         {
                                             case "educational_attainment":
                                                 isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
-                                                isQualified &&= (positions[0]["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                isQualified &&= ((positions[0]["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
                                                 break;
                                             case "relevant_training":
                                                 var totalHours = 0;
@@ -6394,7 +6398,7 @@ class CARForm extends Old_FormEx
                                                 }
                                             
                                                 isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isQualified &&= (positions[0]["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                isQualified &&= ((positions[0]["specific_training_required"] == null) || ((jobApplication["has_specific_training"] != 0) && (jobApplication["has_specific_training"] != null)));
                                                 isQualified &&= totalHours >= positions[0]["required_training_hours"];
                                                 break;
                                             case "relevant_work_experience":
@@ -6409,7 +6413,7 @@ class CARForm extends Old_FormEx
                                                 }
                                                 
                                                 isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(positions[0]["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isQualified &&= (positions[0]["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                isQualified &&= ((positions[0]["specific_work_experience_required"] == null) || ((jobApplication["has_specific_work_experience"] != 0) && (jobApplication["has_specific_work_experience"] != null)));
                                                 break;
                                             case "relevant_eligibility":
                                                 var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), positions[0]["required_eligibility"]);
@@ -6747,6 +6751,7 @@ class RQAForm extends Old_FormEx
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    console.log(positions);
                     this.positions = positions;
 
                     this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
@@ -6785,7 +6790,7 @@ class RQAForm extends Old_FormEx
                                         {
                                             case "educational_attainment":
                                                 isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
-                                                isQualified &&= (positions[0]["specific_education_required"] == null || jobApplication["has_specific_education_required"] != 0 || jobApplication["has_specific_education_required"]);
+                                                isQualified &&= ((positions[0]["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
                                                 break;
                                             case "relevant_training":
                                                 var totalHours = 0;
@@ -6798,7 +6803,8 @@ class RQAForm extends Old_FormEx
                                                 }
                                             
                                                 isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isQualified &&= (positions[0]["specific_training_required"] == null || jobApplication["has_specific_training"] != 0 || jobApplication["has_specific_training"]);
+                                                isQualified &&= ((positions[0]["specific_training_required"] == null) || ((jobApplication["has_specific_training"] != 0) && (jobApplication["has_specific_training"] != null)));
+                                                isQualified &&= totalHours >= positions[0]["required_training_hours"];
                                                 break;
                                             case "relevant_work_experience":
                                                 var totalDuration = null, duration = null;
@@ -6812,7 +6818,7 @@ class RQAForm extends Old_FormEx
                                                 }
                                                 
                                                 isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(positions[0]["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
-                                                isQualified &&= (positions[0]["specific_work_experience_required"] == null || jobApplication["has_specific_work_experience"] != 0 || jobApplication["has_specific_work_experience"]);
+                                                isQualified &&= ((positions[0]["specific_work_experience_required"] == null) || ((jobApplication["has_specific_work_experience"] != 0) && (jobApplication["has_specific_work_experience"] != null)));
                                                 break;
                                             case "relevant_eligibility":
                                                 var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), positions[0]["required_eligibility"]);
