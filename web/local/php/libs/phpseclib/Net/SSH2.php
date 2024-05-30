@@ -1005,7 +1005,7 @@ class SSH2
      * @var bool
      * @access private
      */
-    var $retry_connect = false;
+    var $login_credentials_finalized = false;
 
     /**
      * Binary Packet Buffer
@@ -2292,7 +2292,7 @@ class SSH2
     function login($username)
     {
         $args = func_get_args();
-        if (!$this->retry_connect) {
+        if (!$this->login_credentials_finalized) {
             $this->auth[] = $args;
         }
 
@@ -2383,6 +2383,7 @@ class SSH2
 
             foreach ($newargs as $arg) {
                 if ($this->_login_helper($username, $arg)) {
+                    $this->login_credentials_finalized = true;
                     return true;
                 }
             }
@@ -2418,10 +2419,14 @@ class SSH2
                 return false;
             }
 
+            $bad_key_size_fix = $this->bad_key_size_fix;
             $response = $this->_get_binary_packet();
             if ($response === false) {
-                if ($this->retry_connect) {
-                    $this->retry_connect = false;
+                // bad_key_size_fix is only ever re-assigned to true
+                // under certain conditions. when it's newly set we'll
+                // retry the connection with that new setting but we'll
+                // only try it once.
+                if ($bad_key_size_fix != $this->bad_key_size_fix) {
                     if (!$this->_connect()) {
                         return false;
                     }
@@ -2790,10 +2795,12 @@ class SSH2
     {
         $this->agent = $agent;
         $keys = $agent->requestIdentities();
+        $orig_algorithms = $this->supported_private_key_algorithms;
         foreach ($keys as $key) {
             if ($this->_privatekey_login($username, $key)) {
                 return true;
             }
+            $this->supported_private_key_algorithms = $orig_algorithms;
         }
 
         return false;
@@ -3551,7 +3558,6 @@ class SSH2
     function _reconnect()
     {
         $this->_reset_connection(NET_SSH2_DISCONNECT_CONNECTION_LOST);
-        $this->retry_connect = true;
         if (!$this->_connect()) {
             return false;
         }
@@ -3575,7 +3581,6 @@ class SSH2
         $this->hmac_check = $this->hmac_create = false;
         $this->hmac_size = false;
         $this->session_id = false;
-        $this->retry_connect = true;
         $this->get_seq_no = $this->send_seq_no = 0;
     }
 
@@ -3816,6 +3821,28 @@ class SSH2
                     }
                     $payload = $this->_get_binary_packet($skip_channel_filter);
                 }
+                break;
+            case NET_SSH2_MSG_EXT_INFO:
+                $this->_string_shift($payload, 1);
+                if (strlen($payload) < 4) {
+                    return false;
+                }
+                $nr_extensions = unpack('Nlength', $this->_string_shift($payload, 4));
+                for ($i = 0; $i < $nr_extensions['length']; $i++) {
+                    if (strlen($payload) < 4) {
+                        return false;
+                    }
+                    $temp = unpack('Nlength', $this->_string_shift($payload, 4));
+                    $extension_name = $this->_string_shift($payload, $temp['length']);
+                    if ($extension_name == 'server-sig-algs') {
+                        if (strlen($payload) < 4) {
+                            return false;
+                        }
+                        $temp = unpack('Nlength', $this->_string_shift($payload, 4));
+                        $this->supported_private_key_algorithms = explode(',', $this->_string_shift($payload, $temp['length']));
+                    }
+                }
+                $payload = $this->_get_binary_packet($skip_channel_filter);
         }
 
         // see http://tools.ietf.org/html/rfc4252#section-5.4; only called when the encryption has been activated and when we haven't already logged in
