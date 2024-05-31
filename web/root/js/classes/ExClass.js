@@ -5203,6 +5203,14 @@ class IERForm extends Old_FormEx
             });
         });
 
+        posInfo.appendChild(this.addInputEx("Add HRMO e-signature", "checkbox", "", "Add HRMO e-signature", "ier-add-hrmo-e-sign").container);
+        [this.dbInputEx["ier-add-hrmo-e-sign"]].forEach(field=>{
+            field.container.classList.add("ier-add-hrmo-e-sign");
+            field.check();
+            field.reverse();
+        });
+
+
         this.addDisplayEx("div-table", "ier-table");
         this.displayExs["ier-table"].container.classList.add("ier-table");
         this.displayExs["ier-table"].container.classList.add("hide-personal-data");
@@ -5520,7 +5528,7 @@ class IERForm extends Old_FormEx
                 event.target.setAttribute("contenteditable", true);
             }
         };
-        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<img src=\"/mpasis/images/esign.png\" alt=\"(Signed)\" style=\"display: block; height: 4em; margin-bottom: -2em;\"><span style=\"text-transform: uppercase; display: inline;\">" + document.hrRoles["hrmo"]["name"] + "</span>" + document.hrRoles["hrmo"]["position"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
+        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<img src=\"/mpasis/images/esign.png\" alt=\"(Signed)\" class=\"ier-signature" + (thisIERForm.dbInputEx["ier-add-hrmo-e-sign"].isChecked() ? "" : " hidden") + "\"><span style=\"text-transform: uppercase; display: inline;\">" + document.hrRoles["hrmo"]["name"] + "</span>" + document.hrRoles["hrmo"]["position"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
             signatory.addContent(node);
             signatory.addContent(document.createTextNode(" "));
             if (node.classList.contains("name") || node.classList.contains("date"))
@@ -5547,6 +5555,7 @@ class IERForm extends Old_FormEx
         ierForPrint.document.getElementById("ier-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
 
         var printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
         ierForPrint.document.body.insertBefore(printButtonGroup.container, ierForPrint.document.body.children[0]);

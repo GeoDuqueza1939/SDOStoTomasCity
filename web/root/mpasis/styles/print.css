@@ -549,6 +549,12 @@ table.doc-info tr>:nth-child(3) {
     min-height: 1.2em;
 }
 
+.ier-printout-signatory > .content > .name > .ier-signature {
+    display: block;
+    height: 4em;
+    margin-bottom: -2em;
+}
+
 .ier-printout-signatory > .content > .position {
     border-top: 1px solid;
     padding: 0 1em;
