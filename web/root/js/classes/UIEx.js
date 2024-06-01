@@ -630,13 +630,13 @@ class ContainerEx extends UIEx
                         this[key] = config[key].trim();
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -644,10 +644,6 @@ class ContainerEx extends UIEx
                             {
                                 this[key] = config[key];
                             }
-                        }
-                        else if (ElementEx.type(config[key]) === "function")
-                        {
-                            config[key](this);
                         }
                         else
                         {
@@ -2398,13 +2394,13 @@ class TextboxEx extends ControlEx
                         this[key] = config[key].trim();
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -2412,10 +2408,6 @@ class TextboxEx extends ControlEx
                             {
                                 this[key] = config[key];
                             }
-                        }
-                        else if (ElementEx.type(config[key]) === "function")
-                        {
-                            config[key](this);
                         }
                         else
                         {
@@ -3506,13 +3498,13 @@ class ButtonEx extends ControlEx
                     case "parentHTMLElement":
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -3725,13 +3717,13 @@ class ButtonGroupEx extends ControlEx
                         }
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -4613,13 +4605,13 @@ class RadioButtonEx extends ControlEx
                         this.check(config.checked);
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -4627,10 +4619,6 @@ class RadioButtonEx extends ControlEx
                             {
                                 this[key] = config[key];
                             }
-                        }
-                        else if (ElementEx.type(config[key]) === "function")
-                        {
-                            config[key](this);
                         }
                         else
                         {
@@ -4842,13 +4830,13 @@ class RadioButtonGroupEx extends ControlEx
                         });
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -5463,13 +5451,13 @@ class DataFormEx extends ContainerEx
                         this.setTitle(config.title, ("titleHeadingLevel" in config ? config.titleHeadingLevel : 1));
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -6055,13 +6043,13 @@ class DialogEx extends ContainerEx
                         this[key] = config[key].trim();
                         break;
                     default:
-                        if (key in this)
+                        if (ElementEx.type(config[key]) === "function")
                         {
-                            if (ElementEx.type(config[key]) === "function")
-                            {
-                                config[key](this);
-                            }
-                            else if (ElementEx.type(this[key]) === "function")
+                            config[key](this);
+                        }
+                        else if (key in this)
+                        {
+                            if (ElementEx.type(this[key]) === "function")
                             {
                                 this[key](config[key]);
                             }
@@ -6069,10 +6057,6 @@ class DialogEx extends ContainerEx
                             {
                                 this[key] = config[key];
                             }
-                        }
-                        else if (ElementEx.type(config[key]) === "function")
-                        {
-                            config[key](this);
                         }
                         else
                         {
