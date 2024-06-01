@@ -2918,75 +2918,6 @@ class PositionSelectorDialog extends Old_DialogEx
     }
 }
 
-class JobApplicationSelectorDialog extends Old_DialogEx
-{
-    constructor(app = new MPASIS_App(), id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}])
-    {
-        super(app.main, id);
-        this.app = app;
-
-        this.scrim.classList.add("job-application-selector");
-        this.addFormEx();
-        this.formEx.setTitle("Select Job Application", 3);
-
-        this.formEx.addInputEx("Enter an applicant name or application code", "text", "", "Type to populate list", "applicantQueryBox");
-        this.getApplicantQueryBox().showColon();
-        this.getApplicantQueryBox().container.classList.add("applicant-query-box");
-
-        this.formEx.addInputEx("Choose the job application to load", "radio-select", "", "", "applicantListBox", "", true);
-        this.getApplicantListBox().reverse();
-        this.getApplicantListBox().setStatusMsgTimeout(-1);
-        this.getApplicantListBox().showInfo("None to show");
-        this.getApplicantListBox().container.classList.add("applicant-list-box");
-
-        this.controlButtons = this.formEx.addFormButtonGrp(buttonConfig.length);
-        this.controlButtons.container.classList.add("job-application-selector-buttons");
-        buttonConfig.forEach((btn, btnIndex)=>{
-            this.controlButtons.inputExs[btnIndex].setLabelText(btn.label);
-            this.controlButtons.inputExs[btnIndex].setTooltipText(btn.tooltip ?? "");
-            this.controlButtons.inputExs[btnIndex].addEvent("click", btn.callbackOnClick);
-        });
-
-        this.getApplicantListBox().runAfterFilling = ()=>{
-
-        };
-
-        var keyEventFunc = keyEvent=>{
-            this.getApplicantListBox().clearList();
-
-            this.getApplicantListBox().show();
-
-            this.getApplicantListBox().setStatusMsgTimeout = -1;
-            this.getApplicantListBox().showWait("Retrieving . . .");
-
-            this.getApplicantListBox().fillItemsFromServer(MPASIS_App.processURL, "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + this.getApplicantQueryBox().getValue(), "applicant_option_label", "application_code");
-        }
-
-        // this.getApplicantQueryBox().addEvent("change", keyEventFunc);
-        this.getApplicantQueryBox().addEvent("keyup", keyEventFunc);
-        // this.getApplicantQueryBox().addEvent("keydown", keyEventFunc);
-        // this.getApplicantQueryBox().addEvent("keypress", keyEventFunc);
-    }
-
-    getApplicantListBox()
-    {
-        return this.formEx.dbInputEx["applicantListBox"];
-    }
-
-    getApplicantQueryBox()
-    {
-        return this.formEx.dbInputEx["applicantQueryBox"];
-    }
-
-    getDialogButton(index = 0)
-    {
-        if (type(index) == "number" && index >= 0 && index < this.controlButtons.inputExs.length)
-        {
-            return this.controlButtons.inputExs[index];
-        }
-    }
-}
-
 class JobQSEntryForm extends Old_FormEx // CODE STUB: SHOULD BE EXPANDED IMMEDIATELY
 {
     constructor(app = new MPASIS_App(), id = "", useFormElement = true)
@@ -3446,18 +3377,287 @@ class ScoreSheet extends Old_FormEx
 
         if (this.innerHTML == "Load Application")
         {
-            retrieveApplicantDialog = new JobApplicationSelectorDialog(scoreSheet.app, "scoresheet-job-application-selector-dialog", [
-                {label:"Load", tooltip:"Load selected", callbackOnClick:event=>{
+            // retrieveApplicantDialog = new JobApplicationSelectorDialog(scoreSheet.app, "scoresheet-job-application-selector-dialog", [
+            //     {label:"Load", tooltip:"Load selected", callbackOnClick:event=>{
+            //         var scoreSheetElementUI = null, weight = 0;
+            //         var searchResult = retrieveApplicantDialog.getApplicantListBox();
+
+            //         retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
+            //         retrieveApplicantDialog.formEx.showWait("Loading");
+                    
+            //         this.scrim = new ScrimEx(this.inputEx.parentFormEx.container);
+            //         this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
+                    
+            //         scoreSheet.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
+                    
+            //         if (!("applicantInfo" in scoreSheet.displayExs))
+            //         {
+            //             div = scoreSheet.addDisplayEx("div", "applicantInfo");
+            //             div.setFullWidth();
+            //             div.container.style.gridColumn = "span 12";
+            //             div.content.style.display = "grid";
+            //             div.content.style.gridTemplateColumns = "auto auto";
+            //             div.content.style.gridGap = "0.5em 1em";            
+    
+            //             [
+            //                 {colName:"application_code", label:"Application Code"},
+            //                 {colName:"applicant_name", label:"Applicant's Name"},
+            //                 {colName:"present_school", label:"School", tableName:"Job_Application"},
+            //                 {colName:"present_position", label:"Present Position", tableName:"Job_Application"},
+            //                 {colName:"present_designation", label:"Designation", tableName:"Job_Application"},
+            //                 {colName:"present_district", label:"District", tableName:"Job_Application"},
+            //                 {colName:"position_title_applied", label:"Position Applied For"}
+            //             ].forEach(obj=>{
+            //                 if (obj == "")
+            //                 {
+            //                     div.addLineBreak();
+            //                     return;
+            //                 }
+            //                 var inputEx = scoreSheet.addInputEx(obj.label, "text", "", "", obj.colName, obj.tableName);
+            //                 inputEx.setVertical();
+            //                 div.addContent(inputEx.container);
+            //                 inputEx.enable(null, inputEx != scoreSheet.dbInputEx["application_code"] && inputEx != scoreSheet.dbInputEx["applicant_name"] && inputEx != scoreSheet.dbInputEx["position_title_applied"]);
+            //                 inputEx.fields[0].style.color = "black";
+
+            //                 if (obj.colName == "application_code")
+            //                 {
+            //                     div.addContent(this.inputEx.container);
+            //                     this.inputEx.container.style.gridColumn = "span 1";        
+            //                 }
+            //             });
+            //         }
+            
+            //         scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.jobApplication["application_code"], true);
+            //         scoreSheet.dbInputEx["applicant_name"].setDefaultValue(MPASIS_App.getFullName(scoreSheet.jobApplication["given_name"], scoreSheet.jobApplication["middle_name"], scoreSheet.jobApplication["family_name"], scoreSheet.jobApplication["spouse_name"], scoreSheet.jobApplication["ext_name"], true, false), true);
+            //         scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"], true);
+
+            //         scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
+            //         scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication);
+
+            //         for (const criteria of scoreSheet.scoreSheetElements)
+            //         {
+            //             if (criteria.weight != 0)
+            //             {
+            //                 div = new ScoreSheetElementUI(scoreSheet, criteria);
+
+            //                 if (div.scoreSheetElement.id == "summary")
+            //                 {
+            //                     scoreSheet.summaryUI = div;
+
+            //                     scoreSheet.summary["summary_total_score"] = scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_score"];
+            //                 }
+            //                 else
+            //                 {
+            //                     scoreSheet.scoreSheetElementUIs.push(div);
+            //                     scoreSheet.fieldWrapper.appendChild(scoreSheet.summaryUI.container);
+
+            //                     if (scoreSheet.summaryUI != null && scoreSheet.summaryUI != undefined)
+            //                     {
+            //                         scoreSheet.summaryUI.container.displayTableEx.addRow({"summary_criteria":criteria.label, "summary_weight":criteria.weight + "%","summary_score":0});
+            //                         scoreSheet.summary[criteria.id] = scoreSheet.summaryUI.container.displayTableEx.rows.slice(-1)[0]["td"]["summary_score"];
+            //                         weight += criteria.weight;
+            //                     }
+            //                 }                                
+            //             }
+            //         }
+
+            //         scoreSheet.summaryUI.container.displayTableEx.fRows[0]["td"]["summary_total_weight"].innerHTML = weight + "%";
+
+            //         var appliedPosition = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"] || position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"])[0];
+
+            //         // Education
+            //         if (scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education") != null && scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education").length > 0)
+            //         {
+            //             scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0].getPoints();
+            //         }
+                    
+            //         // Training
+            //         if (scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training") != null && scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training").length > 0)
+            //         {
+            //             scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0].getPoints();
+            //         }
+
+            //         // Experience
+            //         if (scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience") != null && scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience").length > 0)
+            //         {
+            //             scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0].getPoints();
+            //         }
+
+            //         // Performance
+            //         scoreSheetElementUI = scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
+
+            //         if (MPASIS_App.isDefined(scoreSheetElementUI))
+            //         {
+            //             if ("position_req_work_exp" in scoreSheetElementUI.displays)
+            //             {
+            //                 scoreSheetElementUI.displays["position_req_work_exp"].displayEx.check(scoreSheet.positionApplied["required_work_experience_years"] != null && scoreSheet.positionApplied["required_work_experience_years"] > 0);
+            //             }
+            //             if ("applicant_has_prior_exp" in scoreSheetElementUI.displays)
+            //             {
+            //                 scoreSheetElementUI.displays["applicant_has_prior_exp"].displayEx.check(scoreSheet.jobApplication["relevant_work_experience"].length > 0);
+            //             }
+            //         }
+
+            //         for (const key in scoreSheet.dbInputEx)
+            //         {
+            //             switch (key)
+            //             {
+            //                 case "application_code":
+            //                 case "applicant_name":
+            //                 case "position_title_applied":
+            //                 case "present_designation":
+            //                 case "present_district":
+            //                 case "present_position":
+            //                 case "present_school":
+            //                     // do nothing
+            //                     break;
+            //                 default:
+            //                     if (key in scoreSheet.jobApplication)
+            //                     {
+            //                         scoreSheet.dbInputEx[key].setDefaultValue(scoreSheet.jobApplication[key] ?? (scoreSheet.dbInputEx[key].type == "number" || scoreSheet.dbInputEx[key].type == "radio-select" ? 0 : ""), true);
+            //                     }
+            //                     else
+            //                     {
+            //                         console.log(key, " is not in jobApplication");
+            //                     }
+            //                     break;
+            //             }
+            //         }
+
+            //         var applicantDataBtnGrp = scoreSheet.addFormButtonGrp(2);
+            //         applicantDataBtnGrp.setFullWidth();
+            //         applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+            //         applicantDataBtnGrp.inputExs[0].setLabelText("Save");
+            //         applicantDataBtnGrp.inputExs[0].setTooltipText("");
+            //         applicantDataBtnGrp.inputExs[0].addEvent("click", (clickEvent)=>{
+            //             var jobApplication = {};
+            
+            //             if (scoreSheet.dbInputEx["application_code"].getValue() == "")
+            //             {
+            //                 new MsgBox(scoreSheet.container, "Please load an application to use the scoresheet.", "OK");
+            
+            //                 return;
+            //             }
+            
+            //             for (const colName in scoreSheet.dbInputEx) {
+            //                 var tableName = scoreSheet.dbTableName[colName];
+            //                 var dbInputEx = scoreSheet.dbInputEx[colName];
+            
+            //                 console.log(colName);
+
+            //                 switch (colName)
+            //                 {
+            //                     case "applicant_name": case "applicant_option_label":
+            //                     case "age": case "birth_date": case "birth_place": case "civil_status": case "civil_statusIndex":
+            //                     case "degree_taken": case "educational_attainment": case "educational_attainmentIndex":
+            //                     case "ethnicityId":
+            //                     case "given_name": case "middle_name": case "family_name": case "spouse_name": case "ext_name":
+            //                     case "has_more_unrecorded_training":
+            //                     case "has_more_unrecorded_work_experience":
+            //                     case "has_specific_competency_required":
+            //                     case "has_specific_education_required":
+            //                     case "has_specific_training":
+            //                     case "has_specific_work_experience":
+            //                     case "permanent_addressId":
+            //                     case "personId":
+            //                     case "present_addressId":
+            //                     case "relevant_eligibility":
+            //                     case "relevant_training":
+            //                     case "relevant_work_experience":
+            //                     case "religionId":
+            //                     case "sex":
+            //                         break;
+            //                     // UNIMPLEMENTED IN DATABASE AND API!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //                     case "second_most_recent_performance_rating":
+            //                     case "third_most_recent_performance_rating":
+            //                         break;
+            //                     default:
+            //                         jobApplication[colName] = dbInputEx.getValue();
+            //                         break;
+            //                 }
+            //             }
+                        
+            //             // console.log(scoreSheet.dbTableName, scoreSheet.dbInputEx);
+            
+            //             // DEBUG
+            //             // console.log(jobApplication);
+                        
+            //             // new MsgBox(scoreSheet.container, "Application Code:" + jobApplication["application_code"] + " has been updated!", "OK");
+            
+            //             // return;
+            //             // DEBUG
+            
+            //             // DATA SETS PACKAGED IN JSON THAT HAVE SINGLE QUOTES SHOULD BE MODIFIED AS PACKAGED TEXT ARE NOT AUTOMATICALLY FIXED BY PHP AND SQL
+            //             postData(MPASIS_App.processURL, "app=mpasis&a=update&jobApplication=" + packageData(jobApplication), (event)=>{
+            //                 var response;
+            
+            //                 if (event.target.readyState == 4 && event.target.status == 200)
+            //                 {
+            //                     response = JSON.parse(event.target.responseText);
+            
+            //                     if (response.type == "Error")
+            //                     {
+            //                         new MsgBox(scoreSheet.container, response.content, "Close");
+            //                     }
+            //                     else if (response.type == "Success")
+            //                     {
+            //                         new MsgBox(scoreSheet.container, response.content, "OK");
+            //                     }
+            //                 }
+            //             });
+            //         });
+            //         applicantDataBtnGrp.inputExs[1].setLabelText("Reset");
+            //         applicantDataBtnGrp.inputExs[1].setTooltipText("");
+            //         applicantDataBtnGrp.inputExs[1].addEvent("click", (event)=>{
+            //             window.location.reload(true);
+            //         }); // TO IMPLEMENT IN FORMEX/INPUTEX
+            //         applicantDataBtnGrp.container.style.gridColumn = "1 / span 12";
+            //         applicantDataBtnGrp.fieldWrapper.classList.add("right");
+            //         applicantDataBtnGrp.setStatusMsgTimeout(20);                
+                                    
+            //         // update total points for all criteria
+            //         // for (const criteria of scoreSheet.scoreSheetElementUIs)
+            //         // {
+            //         //     if (criteria.scoreSheetElement.id != "education" && criteria.scoreSheetElement.id != "training" && criteria.scoreSheetElement.id != "experience")
+            //         //     {
+            //         //         criteria.getPoints();
+            //         //     }
+            //         // }
+
+            //         scoreSheet.summaryUI.getPoints();
+
+            //         retrieveApplicantDialog.close();
+            //         this.innerHTML = "Reset Score Sheet";
+
+            //         this.scrim.destroy();
+            //     }},
+            //     {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+            //         retrieveApplicantDialog.close();
+            //     }}
+            // ]);
+            
+            // retrieveApplicantDialog.getDialogButton(0).disable();
+
+            // ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
+            //     retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(0).disable());
+            // });
+
+            // retrieveApplicantDialog.getApplicantListBox().addEvent("click", selectOptionEvent=>{
+            //     retrieveApplicantDialog.getDialogButton(0).enable();
+            // });
+            retrieveApplicantDialog = new JobApplicationSelectorDialogEx();
+            retrieveApplicantDialog.setup(scoreSheet.container, scoreSheet.app, "scoresheet-job-application-selector-dialog", [
+                {caption:"Load", buttonType:"button", enable:false, tooltip:"Load selected", clickCallback:event=>{
                     var scoreSheetElementUI = null, weight = 0;
                     var searchResult = retrieveApplicantDialog.getApplicantListBox();
 
-                    retrieveApplicantDialog.formEx.setStatusMsgTimeout(-1);
-                    retrieveApplicantDialog.formEx.showWait("Loading");
+                    retrieveApplicantDialog.statusTimeout = -1;
+                    retrieveApplicantDialog.showWait("Loading");
                     
                     this.scrim = new ScrimEx(this.inputEx.parentFormEx.container);
                     this.scrim.addContent(htmlToElement("<span class=\"status-pane wait\"><span class=\"status-marker\"></span> <span class=\"status-message\">Please wait</span></span>"));
                     
-                    scoreSheet.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
+                    scoreSheet.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.value)[0];
                     
                     if (!("applicantInfo" in scoreSheet.displayExs))
                     {
@@ -3700,13 +3900,11 @@ class ScoreSheet extends Old_FormEx
 
                     this.scrim.destroy();
                 }},
-                {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+                {caption:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:event=>{
                     retrieveApplicantDialog.close();
                 }}
             ]);
             
-            retrieveApplicantDialog.getDialogButton(0).disable();
-
             ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
                 retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(0).disable());
             });

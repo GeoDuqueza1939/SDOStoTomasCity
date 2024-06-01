@@ -800,6 +800,40 @@ REINSTATE FOR PRINTOUT
     text-align: right;
 }
 
+#applicant-data-job-application-selector-dialog > .applicant-query-box.vertical,
+#scoresheet-job-application-selector-dialog > .applicant-query-box.vertical {
+    display: flex;
+    flex-direction: column;
+}
+
+#applicant-data-job-application-selector-dialog > .applicant-query-box.vertical > input[type=text],
+#scoresheet-job-application-selector-dialog > .applicant-query-box.vertical > input[type=text] {
+    margin-right: 2em;
+}
+
+#applicant-data-job-application-selector-dialog > .applicant-query-box.vertical > .applicant-search-button,
+#scoresheet-job-application-selector-dialog > .applicant-query-box.vertical > .applicant-search-button {
+    align-self: flex-end;
+    margin-top:-1.3em;
+}
+
+#applicant-data-job-application-selector-dialog .applicant-search-button > button,
+#scoresheet-job-application-selector-dialog .applicant-search-button > button {
+    margin: 0;
+    padding: 0;
+    width: 2em;
+    text-align: center;
+}
+
+#applicant-data-job-application-selector-dialog > .applicant-list-box.vertical,
+#scoresheet-job-application-selector-dialog > .applicant-list-box.vertical {
+    display: flex;
+    flex-direction: column;
+    max-height: 50vh;
+    overflow: auto;
+    margin-top: 0.5em;
+}
+
 .car-form {
     /* display: block; */
     /* font-family: "Bookman Old Style", "URW Bookman", serif; */

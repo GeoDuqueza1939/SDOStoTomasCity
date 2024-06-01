@@ -1787,7 +1787,7 @@ class MPASIS_App extends App
             {
                 var retrieveApplicant = (applicationObj, newApplication = false)=>{
                         
-                    console.log(applicationObj, applicantDataForm.dbInputEx);
+                    // console.log(applicationObj, applicantDataForm.dbInputEx);
 
                     if (!newApplication)
                     {
@@ -1910,46 +1910,44 @@ class MPASIS_App extends App
                     loadApplicant.setLabelText("Reset Form");
                 };
 
-                retrieveApplicantDialog = new JobApplicationSelectorDialog(this, "applicant-data-job-application-selector-dialog", [
-                    {label:"New", tooltip:"Create a new application from the selected application's data", callbackOnClick:event=>{                
-                        var searchResult = retrieveApplicantDialog.getApplicantListBox();
+                retrieveApplicantDialog = new JobApplicationSelectorDialogEx();
+                retrieveApplicantDialog.setup(this.main, this, "applicant-data-job-application-selector-dialog", [
+                    {caption:"New", buttonType:"button", enable:false, tooltip:"Create a new application from the selected application's data", clickCallback:event=>{                
+                        let searchResult = retrieveApplicantDialog.getApplicantListBox();
                         
-                        if (typeof(searchResult.getValue()) == "string" && searchResult.getValue() == "" || searchResult.getValue() == null)
+                        if (typeof(searchResult.value) == "string" && searchResult.value == "" || searchResult.value == null)
                         {
-                            retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
+                            retrieveApplicantDialog.raiseError("Please select an item to load before continuing");
                             return;
                         }
                         else
                         {
-                            applicantDataForm.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0]
+                            applicantDataForm.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.value)[0]
                             retrieveApplicant(applicantDataForm.dataLoaded, true);
                         }
                         
                         retrieveApplicantDialog.close();
                     }},
-                    {label:"Edit", tooltip:"Load selected application for editing", callbackOnClick:event=>{                
+                    {caption:"Edit", buttonType:"button", enable:false, tooltip:"Load selected application for editing", clickCallback:event=>{                
                         var searchResult = retrieveApplicantDialog.getApplicantListBox();
                         
-                        if (typeof(searchResult.getValue()) == "string" && searchResult.getValue() == "" || searchResult.getValue() == null)
+                        if (typeof(searchResult.value) == "string" && searchResult.value == "" || searchResult.value == null)
                         {
-                            retrieveApplicantDialog.formEx.raiseError("Please select an item to load before continuing");
+                            retrieveApplicantDialog.raiseError("Please select an item to load before continuing");
                             return;
                         }
                         else
                         {
-                            applicantDataForm.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0]
+                            applicantDataForm.dataLoaded = searchResult.data.filter(data=>data["application_code"] == searchResult.value)[0]
                             retrieveApplicant(applicantDataForm.dataLoaded, false);
                         }
                         
                         retrieveApplicantDialog.close();
                     }},
-                    {label:"Cancel", tooltip:"Close dialog", callbackOnClick:event=>{
+                    {caption:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:event=>{
                         retrieveApplicantDialog.close();
                     }}
                 ]);
-
-                retrieveApplicantDialog.getDialogButton(0).disable();
-                retrieveApplicantDialog.getDialogButton(1).disable();
 
                 ["change", "keydown", "keyup", "keypress"].forEach(eventType=>{
                     retrieveApplicantDialog.getApplicantQueryBox().addEvent(eventType, event=>retrieveApplicantDialog.getDialogButton(0).disable());
@@ -3012,6 +3010,151 @@ class UserEditor extends DialogEx
         // TEMP
 
         return this;
+    }
+}
+
+class JobApplicationSelectorDialogEx extends DialogEx
+{
+    constructor()
+    {
+        super();
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), app = new App(), id = "", buttonsConfig = [{caption:"Close",tooltip:"Close dialog box",clickCallback:JobApplicationSelectorDialogEvent=>this.close()}])
+    {
+        super.setup(parentHTMLElement);
+        let thisDialog = this;
+        this.app = app;
+
+        this.scrim.classList.add("job-application-selector");
+        this.caption = "Select Job Application";
+        this.captionHeaderLevel = 3;
+        this.addDataFormEx("div");
+        this.dataFormEx.id = id;
+        
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Enter an applicant name or application code:", tooltip:"Press [ENTER] to populate list", addContainerClass:obj=>obj.container.classList.add("applicant-query-box"), vertical:true, dbInfo:{column:"applicantQueryBox"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(ButtonEx.UIExType, {caption:"\u{1f50d}", tooltip:"Click to populate list", addContainerClass:obj=>obj.container.classList.add("applicant-search-button"), dbInfo:{column:"applicantSearchButton"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(RadioButtonGroupEx.UIExType, {label:"Choose the job application to load", containerType:"frame", setupCustom:obj=>{ obj.container.classList.add("applicant-list-box"); obj.addStatusPane(); obj.statusMsgTimeout = -1; obj.showInfo("None to show", false); }, vertical:true, dbInfo:{column:"applicantListBox"}});
+
+        this.getApplicantQueryBox().container.appendChild(this.dataFormEx.dbControls["applicantSearchButton"].container);
+
+        this.getApplicantListBox().reverse();
+
+        this.setupDialogButtons(buttonsConfig);
+
+        this.getApplicantListBox().runAfterFilling = ()=>{
+            this.getApplicantListBox().reverse();
+        };
+
+        var keyEventFunc = ()=>{
+            this.getApplicantListBox().removeAllItems();
+
+            this.getApplicantListBox().statusTimeout = -1;
+            this.getApplicantListBox().showWait("Retrieving . . .");
+
+            this.getApplicantListBox().fillItemsFromServer(MPASIS_App.processURL, "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + this.getApplicantQueryBox().value, "applicant_option_label", "application_code");
+        }
+
+        this.dataFormEx.dbControls["applicantSearchButton"].addEvent("click", keyEventFunc);
+
+        this.getApplicantQueryBox().addEvent("keypress",  keyEvent=>{
+            if (keyEvent.key === "Enter")
+            {
+                this.dataFormEx.dbControls["applicantSearchButton"].click();
+            }
+        });
+
+        return this;
+    }
+    
+    getApplicantListBox() // CONVERT TO PROPERTY
+    {
+        return this.dataFormEx.dbControls["applicantListBox"];
+    }
+
+    getApplicantQueryBox() // CONVERT TO PROPERTY
+    {
+        return this.dataFormEx.dbControls["applicantQueryBox"];
+    }
+
+    getDialogButton(index = 0)
+    {
+        if (type(index) == "number" && index >= 0 && index < this.buttonGrpEx.controlExs.length)
+        {
+            return this.buttonGrpEx.controlExs[index];
+        }
+    }
+}
+
+class JobApplicationSelectorDialog extends Old_DialogEx
+{
+    constructor(app = new MPASIS_App(), id = "", buttonConfig = [{label:"Close",tooltip:"Close dialog box",callbackOnClick:JobApplicationSelectorDialogEvent=>this.close()}])
+    {
+        super(app.main, id);
+        this.app = app;
+
+        this.scrim.classList.add("job-application-selector");
+        this.addFormEx();
+        this.formEx.setTitle("Select Job Application", 3);
+
+        this.formEx.addInputEx("Enter an applicant name or application code", "text", "", "Type to populate list", "applicantQueryBox");
+        this.getApplicantQueryBox().showColon();
+        this.getApplicantQueryBox().container.classList.add("applicant-query-box");
+
+        this.formEx.addInputEx("Choose the job application to load", "radio-select", "", "", "applicantListBox", "", true);
+        this.getApplicantListBox().reverse();
+        this.getApplicantListBox().setStatusMsgTimeout(-1);
+        this.getApplicantListBox().showInfo("None to show");
+        this.getApplicantListBox().container.classList.add("applicant-list-box");
+
+        this.controlButtons = this.formEx.addFormButtonGrp(buttonConfig.length);
+        this.controlButtons.container.classList.add("job-application-selector-buttons");
+        buttonConfig.forEach((btn, btnIndex)=>{
+            this.controlButtons.inputExs[btnIndex].setLabelText(btn.label);
+            this.controlButtons.inputExs[btnIndex].setTooltipText(btn.tooltip ?? "");
+            this.controlButtons.inputExs[btnIndex].addEvent("click", btn.callbackOnClick);
+        });
+
+        this.getApplicantListBox().runAfterFilling = ()=>{
+
+        };
+
+        var keyEventFunc = keyEvent=>{
+            this.getApplicantListBox().clearList();
+
+            this.getApplicantListBox().show();
+
+            this.getApplicantListBox().setStatusMsgTimeout = -1;
+            this.getApplicantListBox().showWait("Retrieving . . .");
+
+            this.getApplicantListBox().fillItemsFromServer(MPASIS_App.processURL, "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + this.getApplicantQueryBox().getValue(), "applicant_option_label", "application_code");
+        }
+
+        // this.getApplicantQueryBox().addEvent("change", keyEventFunc);
+        this.getApplicantQueryBox().addEvent("keyup", keyEventFunc);
+        // this.getApplicantQueryBox().addEvent("keydown", keyEventFunc);
+        // this.getApplicantQueryBox().addEvent("keypress", keyEventFunc);
+    }
+
+    getApplicantListBox()
+    {
+        return this.formEx.dbInputEx["applicantListBox"];
+    }
+
+    getApplicantQueryBox()
+    {
+        return this.formEx.dbInputEx["applicantQueryBox"];
+    }
+
+    getDialogButton(index = 0)
+    {
+        if (type(index) == "number" && index >= 0 && index < this.controlButtons.inputExs.length)
+        {
+            return this.controlButtons.inputExs[index];
+        }
     }
 }
 

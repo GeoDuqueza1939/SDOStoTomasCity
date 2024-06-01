@@ -3360,6 +3360,11 @@ class InputButtonEx extends ControlEx
         }
     }
 
+    click()
+    {
+        this.control.click();
+    }
+
     get label()
     {
         return super.caption;
@@ -3486,16 +3491,17 @@ class ButtonEx extends ControlEx
             //     this.buttonType = config.buttonType.trim();
             // }
 
-            // if ("clickCallback" in config)
-            // {
-            //     this.addEvent("click", config.clickCallback);
-            // }
+            if ("clickCallback" in config)
+            {
+                this.addEvent("click", config.clickCallback);
+            }
 
             for (const key in config)
             {
                 switch (key)
                 {
                     case "parentHTMLElement":
+                    case "clickCallback":
                         break;
                     default:
                         if (ElementEx.type(config[key]) === "function")
@@ -3583,6 +3589,11 @@ class ButtonEx extends ControlEx
                 throw new SyntaxError("Element to be configured should have the class name \"" + this.type + "-ex\"");
             }
         }
+    }
+
+    click()
+    {
+        this.control.click();
     }
 
     get label()
@@ -3713,7 +3724,8 @@ class ButtonGroupEx extends ControlEx
                     case "buttonsInfo":
                         for (const buttonInfo of config.buttonsInfo)
                         {
-                            this.addButton(buttonInfo.text, buttonInfo.buttonType, buttonInfo.tooltip, buttonInfo.clickCallback);
+                            buttonInfo.parentHTMLElement = this.container;
+                            this.addButton(buttonInfo.text, buttonInfo.buttonType, buttonInfo.tooltip, buttonInfo.clickCallback, buttonInfo);
                         }
                         break;
                     default:
@@ -3860,7 +3872,7 @@ class ButtonGroupEx extends ControlEx
         }
     }
 
-    addButton(text = "", buttonType = "button", tooltip = "", clickCallback = clickEvent=>{})
+    addButton(text = "", buttonType = "button", tooltip = "", clickCallback = clickEvent=>{}, buttonInfo = null)
     {
         let button = null;
         if (this.spacer.length == 0)
@@ -3871,11 +3883,25 @@ class ButtonGroupEx extends ControlEx
         this.container.appendChild(this.spacer.slice(-1)[0]);
         if (this.type === "button")
         {
-            button = new ButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:buttonType, tooltip:tooltip});
+            if (buttonInfo === null)
+            {
+                button = new ButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:buttonType, tooltip:tooltip});
+            }
+            else
+            {
+                button = new ButtonEx().setupFromConfig(buttonInfo);
+            }
         }
         else
         {
-            button = new InputButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:buttonType, tooltip:tooltip});
+            if (buttonInfo === null)
+            {
+                button = new InputButtonEx().setupFromConfig({parentHTMLElement:this.container, caption:text, buttonType:buttonType, tooltip:tooltip});
+            }
+            else
+            {
+                button = new InputButtonEx().setupFromConfig(buttonInfo);
+            }
         }
         button.addEvent("click", clickCallback);
         button.parentUIEx = this;
@@ -4785,6 +4811,7 @@ class RadioButtonGroupEx extends ControlEx
     #containerEx = null;
     #controlExs = [];
     #optionType = "";
+    isFilling = false;
  
     constructor()
     {
@@ -5145,6 +5172,22 @@ class RadioButtonGroupEx extends ControlEx
         }
     }
 
+    addStatusPane()
+    {
+        if (!(this.statusPane instanceof HTMLElement))
+        {
+            if (this.spacer.length === 0)
+            {
+                this.spacer.push(document.createTextNode(" "));
+            }
+
+            this.spacer.push(document.createTextNode(" "));
+
+            this.statusPane = ElementEx.createSimple("span", ElementEx.NO_NS, "status-pane", this.container);
+            this.statusPane.before(this.spacer.slice(-1)[0]);
+        }
+    }
+
     select(index = -1)
     {
         if (index >= 0 && index < this.controlExs.length)
@@ -5154,6 +5197,39 @@ class RadioButtonGroupEx extends ControlEx
         else
         {
             this.selectedOptions.forEach(option => option.uncheck());
+        }
+    }
+
+    addEvent(eventType = "click", callback = event=>{})
+    {
+        const eventTypes = ["click", "keydown", "keyup", "keypress", "change", "focus", "blur"]; //  add more if necessary
+
+        if (!eventTypes.includes(eventType))
+        {
+            throw new SyntaxError("Unknown event type.");
+        }
+
+        if (ElementEx.type(callback) !== "function")
+        {
+            throw new TypeError("Callback should be a function.");
+        }    
+        
+        if (ElementEx.isElement(this.container))
+        {
+            if (this.eventCallbacks[eventType] === null || this.eventCallbacks[eventType] === undefined)
+            {
+                this.eventCallbacks[eventType] = [];
+            }
+
+            this.eventCallbacks[eventType].push(callback);
+
+            this.#controlExs.forEach(controlEx=>{
+                controlEx.addEvent(eventType, this.eventCallbacks[eventType].slice(-1)[0]);
+            });
+        }
+        else
+        {
+            throw new ReferenceError("This UIEx object is not yet setup.");
         }
     }
 
@@ -5183,11 +5259,77 @@ class RadioButtonGroupEx extends ControlEx
                 item.reverse();
             }
         }
+        for (const event in this.eventCallbacks)
+        {
+            this.eventCallbacks[event].forEach(callback=>{
+                item.addEvent(event, callback);
+            });
+        }
     }
 
     addItems(...items)
     {
         items.forEach(item=>this.addItem(item.text, item.value, item.isChecked, item.tooltip));
+    }
+
+    fillItems(dataRows, labelColName = "", valueColName = "", tooltipColName = "")
+    {
+        this.isFilling = true;
+        for (const dataRow of dataRows) {
+            var label = (dataRow[labelColName] ?? "").toString();
+            var value = (dataRow[valueColName] ?? "").toString();
+            var tooltip = (dataRow[tooltipColName] ?? "").toString();
+            this.addItem(label, value, false, tooltip);
+        }
+        this.isFilling = false;
+    }
+
+    fillItemsFromServer(url, postQueryString, labelColName = "", valueColName = "", tooltipColName = "")
+    {
+        this.isFilling = true;
+
+        postData(url, postQueryString, (event)=>{
+            var response;
+            var data = null;
+
+            if (event.target.readyState == 4 && event.target.status == 200)
+            {
+                response = JSON.parse(event.target.responseText);
+
+                if (response.type == "Error")
+                {
+                    this.resetStatus();
+                    this.raiseError("AJAX Error: " + response.content);
+                }
+                else if (response.type == "Info")
+                {
+                    this.resetStatus();
+                    this.showInfo(response.content);
+                }
+                else if (response.type == "Data")
+                {
+                    this.resetStatus();
+                    data = JSON.parse(response.content);
+
+                    this.data = data;
+
+                    this.fillItems(data, labelColName, valueColName, tooltipColName);
+
+                    if (this.runAfterFilling != null)
+                    {
+                        this.runAfterFilling();
+                    }
+
+                    this.isFilling = false;
+                }
+                else if (response.type == "Debug")
+                {
+                    this.resetStatus();
+                    console.log("DEBUG: " + response.content);
+                    new MsgBox(this.container, "DEBUG: " + response.content, "OK");
+                }
+            }
+        });
     }
 
     removeItem(index = -1)
@@ -5301,6 +5443,22 @@ class CheckboxGroupEx extends RadioButtonGroupEx
                 this.select(-1);
                 console.warn("WARNING: Option not found.");
             }
+        }
+    }
+
+    addStatusPane()
+    {
+        if (!(this.statusPane instanceof HTMLElement))
+        {
+            if (this.spacer.length === 0)
+            {
+                this.spacer.push(document.createTextNode(" "));
+            }
+
+            this.spacer.push(document.createTextNode(" "));
+
+            this.statusPane = ElementEx.createSimple("span", ElementEx.NO_NS, "status-pane", this.container);
+            this.statusPane.before(this.spacer.slice(-1)[0]);
         }
     }
 
@@ -6106,9 +6264,9 @@ class DialogEx extends ContainerEx
     //     return this.formEx;
     // }
 
-    addDataFormEx()
+    addDataFormEx(type = "form")
     {
-        this.dataFormEx = new DataFormEx().setup(this.dialogBox);
+        this.dataFormEx = new DataFormEx().setup(this.dialogBox, type);
         this.#dialogContentEx.addExContent(this.dataFormEx);
         this.dataFormEx.parentDialogEx = this;
 
@@ -6294,7 +6452,7 @@ class DialogEx extends ContainerEx
         return this.#closeBtn;
     }
 
-    setupDialogButtons(buttonsInfo = [{text:"Text1", clickCallback:clickEvent=>{}, tooltip:""}])
+    setupDialogButtons(buttonsInfo = [{caption:"Text1", buttonType:"button", clickCallback:clickEvent=>{}, tooltip:""}])
     {
         if (buttonsInfo.length > 0 && (this.#buttonGrpEx === null || this.#buttonGrpEx === undefined))
         {
