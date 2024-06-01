@@ -44,7 +44,7 @@ class DatabaseConnection
 		$this->dbname = $dbname;
 
 		// print('DBNAME: ' . $this->dbname . '<br><br>');
-
+		
 		$this->setDDL($ddl);
 		
 		if ($this->dbExists())
@@ -77,7 +77,7 @@ class DatabaseConnection
 			
 			return false;
 		}
-
+		
 		try
 		{
 			$this->conn = new PDO($connStr, $this->username, $this->password);
@@ -88,12 +88,12 @@ class DatabaseConnection
 		{
 			$this->lastException = $e;
 			
-            var_dump($e);
+            var_dump($e->getMessage());
 			die(var_export(PDO::getAvailableDrivers(), true));
-		
+			
 			return false;
 		}
-
+		
 		$this->clearLastException();
 		$this->lastConnStr = $connStr;
 		
@@ -125,7 +125,7 @@ class DatabaseConnection
 		{
 			return $this->connectToStr("mysql:host=$this->servername");
 		}
-
+		
 		return false;
 	}
 
@@ -157,7 +157,7 @@ class DatabaseConnection
 	{
 		$stat = true;
 		$backupConn = $this->conn;
-
+		
 		if ($this->connectToServer())
 		{
 			$this->disconnect();
@@ -166,7 +166,7 @@ class DatabaseConnection
 		{
 			$stat = false;
 		}
-
+		
 		$this->conn = $backupConn;
 		return $stat;
 	}
@@ -184,7 +184,7 @@ class DatabaseConnection
 		{
 			$stat = false;
 		}
-
+		
 		$this->conn = $backupConn;
 		return $stat;
 	}

@@ -1,19 +1,25 @@
 <?php E_STRICT;
 
 require_once(__FILE_ROOT__ . '/php/classes/app.php');
+require_once(__FILE_ROOT__ . '/php/traits/jsmsgdisplay.php');
 require_once(__FILE_ROOT__ . '/php/enums/pagetypes.php');
 require_once(__FILE_ROOT__ . '/php/audit/log.php');
 require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 class MPASIS_App extends App
 {
+    use JsMsgDisplay;
+    private $jsTailScripts = '';
+    private $jsTailScriptCount = 0;
+
+
     public function __construct()
     {
         $this->setName("Merit Promotion and Selection Information System");
         $this->setDynamic(true);
         
         require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
-        
+
         $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $ismdbname));
         require_once(__FILE_ROOT__ . '/sergs/php/db-ddl.php');
         $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, $ddl));
