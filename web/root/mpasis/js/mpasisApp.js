@@ -2649,7 +2649,7 @@ class AssignRoles extends DialogEx
         this.caption = "Assign Roles";
         this.captionHeaderLevel = 3;
         this.setupDialogButtons([
-            {text:"OK", clickCallback:event=>{
+            {caption:"OK", clickCallback:event=>{
                 let hrRoles = {};
 
                 for (const key in this.#selectorLinks)
@@ -2659,7 +2659,7 @@ class AssignRoles extends DialogEx
 
                 console.log(hrRoles);
             }, tooltip:"Assign roles and close dialog."},
-            {text:"Cancel", clickCallback:event=>thisDialog.close(), tooltip:"Close dialog and discard any changes."}
+            {caption:"Cancel", clickCallback:event=>thisDialog.close(), tooltip:"Close dialog and discard any changes."}
         ]);
 
         this.#rolesTableEx = new TableEx();
@@ -2703,6 +2703,7 @@ class UserEditor extends DialogEx
         super.setup(parentHTMLElement);
         let thisDialog = this;
         console.log(app.main);
+        console.log(userData);
 
         this.mode = mode; // 0: add user; 1: edit user
         this.app = app;
@@ -2764,7 +2765,7 @@ class UserEditor extends DialogEx
         this.dataFormEx.addSpacer();
         this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["employeeId"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"User", column:"employeeId"}});
         this.dataFormEx.addSpacer();
-        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && MPASIS_App.isDefined(userData) && "temp_user" in userData && userData["temp_user"] === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
+        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && MPASIS_App.isDefined(userData) && "temp_user" in userData && parseInt(userData["temp_user"]) === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
         this.dataFormEx.addSpacer();
         this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["given_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
         this.dataFormEx.addSpacer();
@@ -2808,7 +2809,7 @@ class UserEditor extends DialogEx
         this.addStatusPane();
 
         this.setupDialogButtons([
-            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
+            {caption:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
                 let dialog = this.uiEx.parentUIEx.parentDialogEx;
                 let form = dialog.dataFormEx;
 
@@ -2895,7 +2896,7 @@ class UserEditor extends DialogEx
                         }
                     });
                 }
-            }}, {text:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+            }}, {caption:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
                 this.uiEx.parentUIEx.parentDialogEx.close();
             }}
         ]);
