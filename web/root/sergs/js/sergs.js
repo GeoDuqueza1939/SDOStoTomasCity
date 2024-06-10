@@ -320,13 +320,13 @@ class SeRGS_App extends App
         if (salaryList.length !== 0 && !salaryList.includes(parseFloat(tr.rowInfo.td["salary"].children[0].value)) && tr.rowInfo.td["salary"].childNodes[0].textContent !== "")
         {
             new MessageBox().setup(app.main, "SeRGS Dialog", "The salary specified on this record/row does not match <br>any of the salaries for this position that were effective <br>during the service duration. <br><br>Do you want to delete this salary?", [
-                { text:"Yes", buttonType:"button", addStyle:obj=>{console.log(obj);}, clickCallback:clickEvent=>{
+                { caption:"Yes", buttonType:"button", addStyle:obj=>{console.log(obj);}, clickCallback:clickEvent=>{
                     tr.rowInfo.td["salary"].childNodes[0].textContent = "";
                     tr.rowInfo.td["salary"].children[0].removeAttribute("value");
                     tr.rowInfo.td["salary"].children[1].removeAttribute("value");
                     clickEvent.target.uiEx.parentUIEx.parentDialogEx.close();
                 }},
-                { text:"No", buttonType:"button", clickCallback:clickEvent=>{
+                { caption:"No", buttonType:"button", clickCallback:clickEvent=>{
                     clickEvent.target.uiEx.parentUIEx.parentDialogEx.close();
                 }},
             ]);
@@ -746,9 +746,9 @@ class AddEmployeeDialog extends DialogEx
             this.addStatusPane();
         
             this.setupDialogButtons([
-                {text:"Save", buttonType:"submit", tooltip:"Save employee information"/*, clickCallback:function(clickEvent){
+                {caption:"Save", buttonType:"submit", tooltip:"Save employee information"/*, clickCallback:function(clickEvent){
                     console.log(this.uiEx.parentUIEx.parentDialogEx.dataFormEx.dbValues); // TEMP
-                }*/}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                }*/}, {caption:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
                     this.uiEx.parentUIEx.parentDialogEx.close();
                 }}
             ]);
@@ -820,12 +820,12 @@ class DeleteServiceRecordEntryDialog extends DialogEx
             this.addStatusPane();
         
             this.setupDialogButtons([
-                {text:"Continue", buttonType:"button", tooltip:"Delete the specified service record entry", clickCallback:function(clickEvent){
+                {caption:"Continue", buttonType:"button", tooltip:"Delete the specified service record entry", clickCallback:function(clickEvent){
                     row.uiEx.rows.splice(row.uiEx.rows.findIndex(rowInfo=>rowInfo === row.rowInfo), 1)[0].tr.remove();
                     Array.from(document.getElementsByClassName('sr-delete-record')).forEach(srSaveUpdateBtnEx=>srSaveUpdateBtnEx.children[0].disabled = true);
                     Array.from(document.getElementsByClassName('sr-save-update')).forEach(srSaveUpdateBtnEx=>srSaveUpdateBtnEx.children[0].disabled = false);
                     this.uiEx.parentUIEx.parentDialogEx.close();
-                }}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+                }}, {caption:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
                     this.uiEx.parentUIEx.parentDialogEx.close();
                 }}
             ]);
@@ -893,7 +893,7 @@ class UserEditor extends DialogEx
         this.dataFormEx.addSpacer();
         this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Employee ID:", id:"employeeId", name:"employeeId", value:(mode == 1 && userData !== null && userData !== undefined ? userData["employeeId"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("employee-id"), inputType:"text", dbInfo:{table:"User", column:"employeeId"}});
         this.dataFormEx.addSpacer();
-        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && userData !== null && userData !== undefined && "temp_user" in userData && userData["temp_user"] === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
+        this.dataFormEx.addControlEx(CheckboxEx.UIExType, {label:"Temporary account only", id:"temp_user", name:"temp_user", check:(mode == 1 && userData !== null && userData !== undefined && "temp_user" in userData && parseInt(userData["temp_user"]) === 1), addContainerClass:obj=>obj.container.classList.add("temp-user"), tooltip:"Temporary accounts are accounts that are not bound to employee information", reverse:undefined, dbInfo:{column:"temp_user"}});
         this.dataFormEx.addSpacer();
         this.dataFormEx.addControlEx(TextboxEx.UIExType, {label:"Given Name:", id:"given_name", name:"given_name", value:(mode == 1 && userData !== null && userData !== undefined ? userData["given_name"] ?? "" : ""), addContainerClass:obj=>obj.container.classList.add("name"), inputType:"text", dbInfo:{table:"Person", column:"given_name"}});
         this.dataFormEx.addSpacer();
@@ -922,7 +922,7 @@ class UserEditor extends DialogEx
         this.addStatusPane();
 
         this.setupDialogButtons([
-            {text:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
+            {caption:"Save", buttonType:"button", tooltip:"Save employee information", clickCallback:function(clickEvent){
                 let dialog = this.uiEx.parentUIEx.parentDialogEx;
                 let form = dialog.dataFormEx;
                 console.log(form);
@@ -1012,7 +1012,7 @@ class UserEditor extends DialogEx
                         }
                     });
                 }
-            }}, {text:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+            }}, {caption:"Close", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
                 this.uiEx.parentUIEx.parentDialogEx.close();
             }}
         ]);
@@ -1111,7 +1111,7 @@ class PasswordEditor extends DialogEx
         this.statusTimeOut = -1;
 
         this.setupDialogButtons([
-            {text:"Save", buttonType:"button", tooltip:"Save new password", clickCallback:function(changePasswordEvent){
+            {caption:"Save", buttonType:"button", tooltip:"Save new password", clickCallback:function(changePasswordEvent){
                 let passwordDetails = {
                     requireCurrentPassword:requireCurrentPassword,
                     password:(requireCurrentPassword ? this.uiEx.parentUIEx.parentDialogEx.dataFormEx.dbControls["password"].value : null),
@@ -1150,7 +1150,7 @@ class PasswordEditor extends DialogEx
                         {
                             (new MessageBox()).setup(thisPasswordEditor.app.main, "SeRGS Message", response.content, [
                                 {
-                                    text:"Close",
+                                    caption:"Close",
                                     buttonType:"button",
                                     tooltip:"Close",
                                     clickCallback:clickEvent=>{
@@ -1166,7 +1166,7 @@ class PasswordEditor extends DialogEx
 						}
                     }
                 });
-            }}, {text:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
+            }}, {caption:"Cancel", buttonType:"button", tooltip:"Close dialog", clickCallback:function(clickEvent){
 				if (!requireChange)
 				{
 					this.uiEx.parentUIEx.parentDialogEx.close();
