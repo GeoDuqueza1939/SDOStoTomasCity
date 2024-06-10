@@ -6645,7 +6645,7 @@ class MessageBox extends DialogEx
         this.autoId = this.UIExType + MessageBox.#instanceCount++;
     }
 
-    setup(parentHTMLElement = new HTMLElement(), caption = "", message = "", buttonsInfo = [{text:"Close", buttonType:"button", tooltip:"Close message box", clickCallback:clickEvent=>this.close()}])
+    setup(parentHTMLElement = new HTMLElement(), caption = "", message = "", buttonsInfo = [{caption:"Close", buttonType:"button", tooltip:"Close message box", clickCallback:clickEvent=>this.close()}])
     {
         try
         {
