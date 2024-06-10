@@ -71,7 +71,13 @@ switch ($pageType)
 <link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
 <link href="<?php echo(__BASE__); ?>/mpasis/styles/main.css" rel="stylesheet" /><?php
         break;
-    }
+    case PageType::QMIS:
+        break;
+    case PageType::QMISPROPER: ?>
+<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
+<link href="<?php echo(__BASE__); ?>/qmis/proper/styles/main.css" rel="stylesheet" /><?php
+        break;
+}
 
 if ($addDebug)
 { ?>

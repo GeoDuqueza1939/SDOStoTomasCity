@@ -1,0 +1,53 @@
+body, .app > main {
+    background-color: beige;
+}
+
+.app > main {
+    padding: 2em;
+    margin-bottom: 1em;
+}
+
+.app#qmis-proper > main button,
+.app#qmis-proper > main select,
+.app#qmis-proper > main input {
+    font-family: inherit;
+    font-size: inherit;
+    border-width: 1px;
+    border-radius: 0.25em;
+    padding: 0.25em;
+}
+
+.app#qmis-proper > main button {
+    padding: 0.25em 0.5em;
+}
+
+.div-ex.dashboard-contents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5em;
+    justify-content: center;
+}
+
+.div-ex.dashboard-contents > * {
+    border-radius: 1em;
+    background-color: darkgray;
+    width: calc((100% - 1.5em) / 2);
+    padding: 1em;
+    line-height: 1.5;
+}
+
+.div-ex.dashboard-contents > [class*="dashboard-recent-for-"] {
+    width: 100%;
+}
+
+.div-ex.dashboard-contents a.dashboard-refresh-link > span[class^="material-"] {
+    font-size: inherit;
+    margin: 0;
+    padding: 0;
+    width: unset;
+    height: unset;
+}
+
+.div-ex.dashboard-contents > * > h4 {
+    margin: 0 0 1em;
+}

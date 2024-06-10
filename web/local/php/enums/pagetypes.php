@@ -23,5 +23,7 @@ class PageType
     const SERGS = 4;
     const OPMS = 5;
     const MPASIS = 6;
+    const QMIS = 7;
+    const QMISPROPER = 8;
 }
 ?>
