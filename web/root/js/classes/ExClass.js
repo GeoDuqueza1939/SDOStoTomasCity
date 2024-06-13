@@ -4339,7 +4339,7 @@ class ScoreSheet extends Old_FormEx
                 dbColName:"ncoi",
                 dbTableName:"",
                 content:[
-                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:20,step:0.1},
+                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:30,step:0.1},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"ncoi_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"ncoi_notes",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
