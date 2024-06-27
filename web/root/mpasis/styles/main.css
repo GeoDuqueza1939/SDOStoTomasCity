@@ -322,9 +322,24 @@ REINSTATE FOR PRINTOUT
 .ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(9),
 .ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(10),
 .ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(11),
-.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(12) {
+.ier-table.hide-personal-data > .content > table > tbody > tr > :nth-child(12),
+.ier-table.show-contact-info-only > .content > table > thead > tr:first-child > * + * + * + * + *,
+.ier-table.show-contact-info-only > .content > table > thead > tr:last-child > * + *,
+.ier-table.show-contact-info-only > .content > table > tbody > tr > * + * + * + * + *
+{
     display: none;
     visibility: hidden;
+}
+
+.ier-table.show-contact-info-only > .content > table > thead > tr:first-child > :last-child,
+.ier-table.show-contact-info-only > .content > table > thead > tr:last-child > :nth-child(8),
+.ier-table.show-contact-info-only > .content > table > thead > tr:last-child > :nth-child(9),
+.ier-table.show-contact-info-only > .content > table > tbody > tr > :nth-child(11),
+.ier-table.show-contact-info-only > .content > table > tbody > tr > :nth-child(12),
+.ier-table.show-contact-info-only > .content > table > tbody > tr > :last-child
+ {
+    display: table-cell;
+    visibility: visible;
 }
 
 .query-results-users {

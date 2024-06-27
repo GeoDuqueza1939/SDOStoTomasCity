@@ -5398,6 +5398,34 @@ class IERForm extends Old_FormEx
             field.reverse();
             field.addEvent("change", hidePersonalDataEvent=>{
                 this.displayExs["ier-table"].container.classList.toggle("hide-personal-data", field.isChecked());
+                if ("ier-show-contact-info-only" in this.dbInputEx)
+                {
+                    this.dbInputEx["ier-show-contact-info-only"].enable(null, !field.isChecked());
+                    if (field.isChecked())
+                    {
+                        this.dbInputEx["ier-show-contact-info-only"].uncheck();
+                    }
+                }
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Show contact information only", "checkbox", "", "Show contact information only", "ier-show-contact-info-only").container);
+        [this.dbInputEx["ier-show-contact-info-only"]].forEach(field=>{
+            field.container.classList.add("ier-show-contact-info-only");
+            // field.check();
+            field.reverse();
+            field.disable();
+            field.addEvent("change", hidePersonalDataEvent=>{
+                this.displayExs["ier-table"].container.classList.toggle("show-contact-info-only", field.isChecked());
+                if ("ier-hide-personal-data" in this.dbInputEx)
+                {
+                    this.dbInputEx["ier-hide-personal-data"].enable(null, !field.isChecked());
+                    if (field.isChecked())
+                    {
+                        this.dbInputEx["ier-hide-personal-data"].uncheck();
+                    }
+                }
+                this.displayExs["ier-table"].thead.children[0].children[3].colSpan = (field.isChecked() ? 3 : 9);
             });
         });
 
@@ -5407,7 +5435,6 @@ class IERForm extends Old_FormEx
             field.check();
             field.reverse();
         });
-
 
         this.addDisplayEx("div-table", "ier-table");
         this.displayExs["ier-table"].container.classList.add("ier-table");
@@ -5754,6 +5781,7 @@ class IERForm extends Old_FormEx
         ierForPrint.document.getElementById("ier-form-input-ex1").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex4").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
 
         var printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
         ierForPrint.document.body.insertBefore(printButtonGroup.container, ierForPrint.document.body.children[0]);
