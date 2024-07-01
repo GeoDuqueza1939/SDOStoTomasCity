@@ -989,8 +989,12 @@ table.doc-info tr>:nth-child(3) {
 }
 
 .rqa-printout-signatory > .content > .hrmpsb > .content {
-    display: flex;
-    justify-content: space-evenly;
+    /* display: flex;
+    justify-content: space-evenly; */
+    display: grid;
+    grid-template: auto auto / auto auto auto auto auto auto;
+    grid-gap: 3em 1em;
+    padding-top: 2em;
 }
 
 .rqa-printout-signatory > .content > .hrmpsb > .content > * {
@@ -1033,7 +1037,7 @@ table.doc-info tr>:nth-child(3) {
     flex-direction: column;
     align-items: center;
     justify-content: end;
-    height: 5em;
+    height: 6em;
 }
 
 .rqa-printout-signatory > .content > .appointer > .content > .name-position::after {

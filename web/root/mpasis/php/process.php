@@ -482,11 +482,16 @@ if (isValidUserSession())
                                         // array('name' => 'NameB', 'position' => 'PositionB', 'level1' => false, 'level2' => true, 'level3' => false),
                                     ],
                                     'hrmpsb_members' => [
-                                        array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV/HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Jhomar C. Sor, Ed.D.', 'position' => 'CID Chief', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV/HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Carina V. Pedragosa', 'position' => 'Planning Officer II', 'level1' => false, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Mark Anthony Silvestre', 'position' => 'Administrative Assistant III', 'level1' => true, 'level2' => false, 'level3' => false),
+                                        array('name' => 'Oliva P. Regalado', 'position' => 'Master Teacher II', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Edwin P. Miranda', 'position' => 'Publish Schools District Supervisor', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Raymundo F. Hermo', 'position' => 'School Principal III', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Bonifacio DC. Regalado, Jr.', 'position' => 'Head Teacher III', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Mark Anthony Silvestre', 'position' => 'Administrative Assistant III', 'level1' => true, 'level2' => true, 'level3' => false),
                                     ]
                                 );
 
