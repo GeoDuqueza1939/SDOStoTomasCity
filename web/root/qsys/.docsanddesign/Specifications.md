@@ -34,7 +34,7 @@ The system shall exhibit the following user interfaces:
   * kick clients from queues and provide a plausible justification for such action
   * leave a managed queue (a queue with no clients or queue managers will go offline)
   * delete an offline/unmanaged queue (only queues without managers or clients can be deleted; when deleting an unmanaged queue with remaining clients, user will be asked for the queue where the remaining clients will be reassigned in bulk; the last queue can only be deleted if it is both unmanaged and void of clients; managed queues can never be deleted)
-* **Queue Screen** - shows the client numbers on queue and the queues currently entertaining clients. This screen will also show the current time and date and may optionally show advertisements.
+* **Queue Screen** - shows the client numbers on queue and the queues currently entertaining clients. This screen will also show the current time and date and may optionally show advertisements. There should also be a gesture, trigger, or action that will allow focus on a single queue.
 * **Ad Manager** - allows management of displayed/advertised content on the Queue Screen.
 * **Settings** - allows the user to manipulate various user and system settings. User management functions, available only to administrator accounts, will also be available in this screen.
 * **FAQ**
