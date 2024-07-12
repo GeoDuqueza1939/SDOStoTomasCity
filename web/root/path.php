@@ -6,9 +6,10 @@
 // define('__FILE_ROOT__', 'C:/XAMPP/htdocs-offline');
 // define('__FILE_ROOT__', 'C:/XAMPP/htdocs-local');
 // define('__WEB_ROOT__', 'C:/XAMPP/htdocs');
-//define('__FILE_ROOT__', 'C:/XAMPP/htdocs_local');
-//define('__WEB_ROOT__', 'C:/XAMPP/htdocs');
-define('__FILE_ROOT__', 'C:/inetpub/wwwroot/test/local');
-define('__WEB_ROOT__', 'C:/inetpub/wwwroot/test');
-define('__BASE__', '/test');
+define('__FILE_ROOT__', 'C:/XAMPP/htdocs_local');
+define('__WEB_ROOT__', 'C:/XAMPP/htdocs');
+// define('__FILE_ROOT__', 'C:/inetpub/wwwroot/test/local');
+// define('__WEB_ROOT__', 'C:/inetpub/wwwroot/test');
+// define('__BASE__', '/test');
+define('__BASE__', '');
 ?>
