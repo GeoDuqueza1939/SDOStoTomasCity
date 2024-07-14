@@ -196,7 +196,7 @@
             <dia:string>#queueId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -286,7 +286,7 @@
             <dia:string>#queueId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -346,7 +346,7 @@
             <dia:string>#parent_queueId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -476,7 +476,7 @@
             <dia:string>#logId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -946,7 +946,7 @@
             <dia:string>#managed_queueId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -1036,7 +1036,7 @@
             <dia:string>#configId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -1096,7 +1096,7 @@
             <dia:string>#session_timeout#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>#Values in minutes; Non-positive integers disables timeout (default: 30)#</dia:string>
@@ -1326,7 +1326,7 @@
             <dia:string>#configId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -1406,7 +1406,7 @@
             <dia:string>#default_session_timeout#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>#Values in minutes; Non-positive integers disables timeout (default: 30)#</dia:string>
@@ -1548,7 +1548,7 @@
         <dia:point val="35.075,9.57"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="35.075,9.57;44.075,13.07"/>
+        <dia:rectangle val="35.075,9.57;43.69,13.07"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
@@ -1557,7 +1557,7 @@
         <dia:point val="35.075,9.57"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
-        <dia:real val="9"/>
+        <dia:real val="8.6150000000000002"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
         <dia:real val="3.5"/>
@@ -1656,7 +1656,7 @@
             <dia:string>#queueId#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#LONGINT#</dia:string>
+            <dia:string>#BIGINT#</dia:string>
           </dia:attribute>
           <dia:attribute name="comment">
             <dia:string>##</dia:string>
@@ -1738,7 +1738,7 @@
         <dia:point val="48.325,2.9"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="44.075,2.25;49.325,11.77"/>
+        <dia:rectangle val="43.69,2.25;49.325,11.77"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
@@ -1747,7 +1747,7 @@
         <dia:point val="48.325,2.9"/>
         <dia:point val="49.325,2.9"/>
         <dia:point val="49.325,11.77"/>
-        <dia:point val="44.075,11.77"/>
+        <dia:point val="43.69,11.77"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>

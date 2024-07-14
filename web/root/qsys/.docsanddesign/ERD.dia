@@ -95,7 +95,7 @@
         <dia:real val="0.10000000000000001"/>
       </dia:attribute>
       <dia:attribute name="name">
-        <dia:string>#QSYS_Clients#</dia:string>
+        <dia:string>#QSYS_Client#</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
         <dia:string>#Queue numbers or ID tag numbers#</dia:string>
