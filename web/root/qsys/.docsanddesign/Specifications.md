@@ -1,6 +1,7 @@
 # SPECIFICATIONS
+
 ___
-> Target System: Queuing System<br>
+> Target System: Queuing System\
 > Document Version: 0.00
 ___
 
@@ -40,7 +41,7 @@ The system shall exhibit the following user interfaces:
 * **FAQ**
 * **Terms of Use**
 
-### User Authentication ###
+### User Authentication
 
 The system shall allow existing users to authenticate using their username and password. The password shall be stored in hashed form. Once authentication during sign-in is successful, the system shall provide the user session with a unique session ID, which should expire in a set timeout unless server requests are made within the grace period, a user has joined a queue as a queue manager, or timeout setting is non-positive.
 
