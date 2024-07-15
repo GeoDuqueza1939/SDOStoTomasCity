@@ -57,12 +57,12 @@ class QSys_App extends App
 
     private function redirectToLogin()
     {
-        $this->jsRedirect(__BASE__ . '/qsys/login?src=' . $_SERVER['PHP_SELF']);
+        $this->redirect(__BASE__ . '/qsys/login?redir=' . $_SERVER['PHP_SELF']);
     }
 
     private function redirectToDashboard()
     {
-        $this->jsRedirect(__BASE__ . '/qsys/dashboard/');
+        $this->redirect(__BASE__ . '/qsys/dashboard/');
     }
 
     private function setupEnums()
@@ -70,16 +70,22 @@ class QSys_App extends App
 
     private function generateDashboardUI()
     { 
-        $this->htmlHead('Dashboard'); ?>
+        $this->htmlHead('Dashboard');
+        $this->htmlHeader('Dashboard');
+        $this->htmlNav(); ?>
 
-        <?php $this->htmlTail();
+        <?php $this->htmlFooter(); 
+        $this->htmlTail();
     }
 
     private function generateQueueManagerUI()
     { 
-        $this->htmlHead('Queue Manager'); ?>
+        $this->htmlHead('Queue Manager');
+        $this->htmlHeader('Queue Manager');
+        $this->htmlNav(); ?>
 
-        <?php $this->htmlTail();
+        <?php $this->htmlFooter(); 
+        $this->htmlTail();
     }
 
     private function generateQueueScreenUI()
@@ -92,10 +98,10 @@ class QSys_App extends App
     private function generateLoginUI()
     { 
         $this->htmlHead('Sign In'); ?>
-<section class="login">
+<main id="login">
     <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" <?php // TEMP ?>style="max-width: 3in;"<?php // TEMP ?> /></span>
     <form id="login-form" name="login-form" method="post">
-        <h1>Q<i>S</i><i>y</i><i>s</i> Login</h1>
+        <h1><span class="qsys-ttemp-logo">Q<i>S</i><i>y</i><i>s</i></span> Login</h1>
         <div class="textbox-ex"><label for="usr">Username</label> <input id="usr" name="usr" type="text" placeholder="Username" required autofocus></div>
         <div class="textbox-ex"><label for="pw">Password</label> <input id="pw" name="pw" type="password" placeholder="Password" required></div>
         <div class="checkbox-ex"><input id="remember-user" name="remember-user" type="checkbox"> <label for="remember-user">Remember me</label></div>
@@ -105,8 +111,7 @@ class QSys_App extends App
         </div>
     </form>
     <form id="redir-qscreen" name="redir-qscreen" action="<?php echo(__BASE__); ?>/qsys/queue" method="get"></form>
-</section>
-        <?php $this->htmlTail();
+</main><?php $this->htmlTail();
     }
 
     private function htmlHead($subtitle = NULL)
@@ -135,8 +140,42 @@ class QSys_App extends App
 <?php
     }
 
+    private function htmlHeader($pageTitle = NULL)
+    { ?>
+    <header>
+        <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" <?php // TEMP ?>style="max-width: 1in;"<?php // TEMP ?> /></span>
+        <h1><span class="qsys-ttemp-logo">Q<i>S</i><i>y</i><i>s</i></span></h1>
+        <h2><?php echo($pageTitle); ?></h2>
+        <span class="button-ex"><button id="nav-button" name="nav-button" type="button">=</button></span>
+    </header><?php
+    }
+
+    private function htmlNav()
+    { ?>
+
+    <nav>
+        <ul>
+            <li><a href="<?php echo(__BASE__); ?>/qsys/dashboard">Dashboard</a></li>
+            <li><a href="<?php echo(__BASE__); ?>/qsys/queue">Queue Screen</a></li>
+            <li><a href="<?php echo(__BASE__); ?>/qsys/qmgr">Queue Manager</a></li>
+            <!--li><a href="<?php echo(__BASE__); ?>/qsys/qmgr">Ad/Content Manager</a></li>
+            <li><a href="<?php echo(__BASE__); ?>/qsys/qmgr">Settings</a></li>
+            <li><a href="<?php echo(__BASE__); ?>/qsys/qmgr">Help</a></li-->
+        </ul>
+    </nav><?php
+    }
+
+    private function htmlFooter()
+    { ?>
+
+    <footer>
+        <p>&copy; 2024 DepEd Sto. Tomas City</p>
+    </footer><?php
+    }
+
     private function htmlTail()
     { ?>
+
 </div>
 </body>
 </html>
@@ -148,6 +187,11 @@ class QSys_App extends App
 <script>
 window.location.replace("<?php echo($url); ?>");
 </script><?php 
+    }
+
+    private function redirect($url) // will only work if no other headers precede this call
+    {
+        header('Location: ' . $url);
     }
 }
 
