@@ -70,46 +70,46 @@ class QSys_App extends App
 
     private function generateDashboardUI()
     { 
-        $this->generateHTMLHead('Dashboard');
-?>
+        $this->htmlHead('Dashboard'); ?>
 
-<?php
-        $this->generateHTMLTail();
+        <?php $this->htmlTail();
     }
 
     private function generateQueueManagerUI()
     { 
-        $this->generateHTMLHead('Queue Manager');
-?>
+        $this->htmlHead('Queue Manager'); ?>
 
-<?php
-        $this->generateHTMLTail();
+        <?php $this->htmlTail();
     }
 
     private function generateQueueScreenUI()
     { 
-        $this->generateHTMLHead('Queue Screen');
-?>
+        $this->htmlHead('Queue Screen'); ?>
 
-<?php
-        $this->generateHTMLTail();
+        <?php $this->htmlTail();
     }
 
     private function generateLoginUI()
     { 
-        $this->generateHTMLHead('Sign In');
-?>
+        $this->htmlHead('Sign In'); ?>
 <section class="login">
-    <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" /></span>
-    <form class="login-form">
-
+    <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" <?php // TEMP ?>style="max-width: 3in;"<?php // TEMP ?> /></span>
+    <form id="login-form" name="login-form" method="post">
+        <h1>Q<i>S</i><i>y</i><i>s</i> Login</h1>
+        <div class="textbox-ex"><label for="usr">Username</label> <input id="usr" name="usr" type="text" placeholder="Username" required autofocus></div>
+        <div class="textbox-ex"><label for="pw">Password</label> <input id="pw" name="pw" type="password" placeholder="Password" required></div>
+        <div class="checkbox-ex"><input id="remember-user" name="remember-user" type="checkbox"> <label for="remember-user">Remember me</label></div>
+        <div class="button-group-ex">
+            <span class="button-ex"><button id="sign-in" name="sign-in" type="submit">Sign In</button></span>
+            <span class="button-ex"><button id="redir" name="redir" form="redir-qscreen" value="<?php echo($_SERVER['PHP_SELF']); ?>">Queue Screen</button></span>
+        </div>
     </form>
+    <form id="redir-qscreen" name="redir-qscreen" action="<?php echo(__BASE__); ?>/qsys/queue" method="get"></form>
 </section>
-<?php
-        $this->generateHTMLTail();
+        <?php $this->htmlTail();
     }
 
-    private function generateHTMLHead($subtitle = NULL)
+    private function htmlHead($subtitle = NULL)
     { ?><!DOCTYPE html>
 <html lang="en-PH">
 <head>
@@ -119,7 +119,7 @@ class QSys_App extends App
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title><?php echo(is_null($subtitle) ? $this->getName() : 'QSys' | $subtitle);?></title>
+<title><?php echo(is_null($subtitle) ? $this->getName() : 'QSys | ' . $subtitle);?></title>
 <!-- FAVICON START -->
 <link rel="apple-touch-icon" sizes="180x180" href="<?php echo(__BASE__); ?>/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="<?php echo(__BASE__); ?>/favicon-32x32.png">
@@ -135,7 +135,7 @@ class QSys_App extends App
 <?php
     }
 
-    private function generateHTMLTail()
+    private function htmlTail()
     { ?>
 </div>
 </body>
