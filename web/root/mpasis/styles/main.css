@@ -968,6 +968,11 @@ REINSTATE FOR PRINTOUT
     visibility: hidden;
 }
 
+.car-table.hide-zero-scores > .content > table > tbody > tr.zero-score {
+    display: none;
+    visibility: hidden;
+}
+
 .car-form > .fields > .car-update {
     display: block;
     text-align: right;

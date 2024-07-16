@@ -812,12 +812,6 @@ table.doc-info tr>:nth-child(3) {
     border: 1px solid black;
 }
 
-.car-table.hide-personal-data > .content > table > thead > tr:first-child > :nth-child(2),
-.car-table.hide-personal-data > .content > table > tbody > tr > :nth-child(2) {
-    display: none;
-    visibility: hidden;
-}
-
 .car-table > .content > table > tbody > tr > :nth-child(3) {
     white-space: nowrap;
 }
@@ -838,8 +832,12 @@ table.doc-info tr>:nth-child(3) {
 }
 
 .car-printout-signatory > .content > .hrmpsb > .content {
-    display: flex;
-    justify-content: space-evenly;
+    /* display: flex;
+    justify-content: space-evenly; */
+    display: grid;
+    grid-template: auto auto / auto auto auto auto auto auto;
+    grid-gap: 3em 1em;
+    padding-top: 2em;
 }
 
 .car-printout-signatory > .content > .hrmpsb > .content > * {
@@ -1013,6 +1011,7 @@ table.doc-info tr>:nth-child(3) {
     align-items: center;
     justify-content: end;
     height: 5em;
+    font-size: 1em;
 }
 
 .rqa-printout-signatory > .content > .hrmpsb > .content > * > .content > .name-position::after {
@@ -1020,6 +1019,7 @@ table.doc-info tr>:nth-child(3) {
     border-top: 1px solid;
     content: "Name and Position";
     display: block;
+    font-size: 1em;
 }
 
 .rqa-printout-signatory > .content > .appointer {
@@ -1038,6 +1038,7 @@ table.doc-info tr>:nth-child(3) {
     align-items: center;
     justify-content: end;
     height: 6em;
+    font-size: 1em;
 }
 
 .rqa-printout-signatory > .content > .appointer > .content > .name-position::after {
@@ -1045,4 +1046,5 @@ table.doc-info tr>:nth-child(3) {
     border-top: 1px solid;
     content: "Name and Position";
     display: block;
+    font-size: 1em;
 }
