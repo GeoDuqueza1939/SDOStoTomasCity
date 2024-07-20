@@ -55,6 +55,20 @@ class QSys_App extends App
         return true;
     }
 
+    private function getSessionId() // will also be called by isValidLogin() for checking login session
+    {
+        // retrieve session Id from DB
+        return '';
+    }
+
+    private function generateSessionId()
+    {
+        // generate session Id using username, password hash, and login timestamp
+        // store timestamp and session Id in the DB
+        
+        return getSessionId();
+    }
+
     private function redirectToLogin()
     {
         $this->redirect(__BASE__ . '/qsys/login?redir=' . $_SERVER['PHP_SELF']);
