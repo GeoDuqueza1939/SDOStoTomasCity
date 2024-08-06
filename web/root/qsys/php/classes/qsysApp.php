@@ -7,6 +7,9 @@ class QSys_App extends App
 {
     use JsMsgDisplay;
 
+    private $username;
+    private $tokenId;
+
     public function __construct()
     {
         $this->setName('Queuing System');
@@ -19,11 +22,11 @@ class QSys_App extends App
         $this->setupEnums();
     }
 
-    public function run($pageId = 'dashboard')
+    public function run(string $pageId = 'dashboard')
     {
         if ($pageId !== 'login' && $pageId !== 'queue_screen')
         {
-            if (!$this->isValidLogin())
+            if (!$this->isValidSession())
             {
                 $this->redirectToLogin();
             }
@@ -50,25 +53,46 @@ class QSys_App extends App
         }
     }
 
-    private function isValidLogin()
+    private function setupEnums()
+    {}
+
+    /* Account Management Functions */
+    private function createUser(string $username, string $password) // throw exception on any error
+    {}
+
+    private function isValidCredentials(string $username, string $password) : bool
     {
-        return true;
+        return false;
     }
 
-    private function getSessionId() // will also be called by isValidLogin() for checking login session
+    /* User Session Management Functions */
+    private function enterSession(string $username, string $password) // throw exception on any error or upon failing authentication
+    {}
+
+    private function reenterSession() // throw exception on any error or upon failing authentication
+    {}
+
+    private function validateSession() // throw exception on any error
+    {}
+
+    private function generateTokenId()
     {
-        // retrieve session Id from DB
+        // generate token Id using username, password hash, and login timestamp or using random string generator
+        // store timestamp and token Id in the DB
+        
+        return $this->retrieveTokenId();
+    }
+
+    private function retrieveTokenId() // will also be called by isValidSession() for checking login session
+    {
+        // retrieve token Id from DB
         return '';
     }
 
-    private function generateSessionId()
-    {
-        // generate session Id using username, password hash, and login timestamp
-        // store timestamp and session Id in the DB
-        
-        return getSessionId();
-    }
+    private function validateTokenId(string $tokenId) // throw exception on any error
+    {}
 
+    /* Redirects */
     private function redirectToLogin()
     {
         $this->redirect(__BASE__ . '/qsys/login?redir=' . $_SERVER['PHP_SELF']);
@@ -79,13 +103,10 @@ class QSys_App extends App
         $this->redirect(__BASE__ . '/qsys/dashboard/');
     }
 
-    private function setupEnums()
-    {}
-
     private function generateDashboardUI()
     { 
         $this->htmlHead('Dashboard');
-        $this->htmlHeader('Dashboard');
+        $this->htmlHeaderMain('Dashboard');
         $this->htmlNav(); ?>
 
         <?php $this->htmlFooter(); 
@@ -95,7 +116,7 @@ class QSys_App extends App
     private function generateQueueManagerUI()
     { 
         $this->htmlHead('Queue Manager');
-        $this->htmlHeader('Queue Manager');
+        $this->htmlHeaderMain('Queue Manager');
         $this->htmlNav(); ?>
 
         <?php $this->htmlFooter(); 
@@ -106,6 +127,33 @@ class QSys_App extends App
     { 
         $this->htmlHead('Queue Screen'); ?>
 
+    <header>
+        <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" <?php // TEMP ?>style="max-width: 1.5in;"<?php // TEMP ?> /></span>
+        <h1>Now Serving</h1>
+        <div id="now-serving-display">
+            <a href="?queue=test01" class="queue"><span class="queue-name">Test01</span> <span class="queue-serve">1</span></a>
+            <a href="?queue=test02" class="queue"><span class="queue-name">Test02</span> <span class="queue-serve">2</span></a>
+        </div>
+        <a id="link-home" href="<?php echo(__BASE__ . '/qsys'); ?>"><span class="qsys-temp-logo">Q<i>S</i><i>y</i><i>s</i></span> <span class="material-icons-round">home</span></a>
+    </header>
+
+    <main>
+        <section id="regular-clients-queue-display">
+            <h2>Regular</h2>
+        </section>
+        <section id="priority-clients-queue-display">
+            <h2>Priority</h2>
+        </section>
+        <section id="ad-content-display">
+            <h2>SDO News and Updates</h2>
+            <div id="ad-content">
+                carousel
+            </div>
+        </section>
+        <section id="clients-remaining-counter">1</section>
+        <section id="date-time-display"><?php echo(date_format(date_create('now', timezone_open('Asia/Manila')), 'l, F j, Y, h:i A')); ?></section>
+    </main>
+
         <?php $this->htmlTail();
     }
 
@@ -115,7 +163,7 @@ class QSys_App extends App
 <main id="login">
     <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" <?php // TEMP ?>style="max-width: 3in;"<?php // TEMP ?> /></span>
     <form id="login-form" name="login-form" method="post">
-        <h1><span class="qsys-ttemp-logo">Q<i>S</i><i>y</i><i>s</i></span> Login</h1>
+        <h1><span class="qsys-temp-logo">Q<i>S</i><i>y</i><i>s</i></span> Login</h1>
         <div class="textbox-ex"><label for="usr">Username</label> <input id="usr" name="usr" type="text" placeholder="Username" required autofocus></div>
         <div class="textbox-ex"><label for="pw">Password</label> <input id="pw" name="pw" type="password" placeholder="Password" required></div>
         <div class="checkbox-ex"><input id="remember-user" name="remember-user" type="checkbox"> <label for="remember-user">Remember me</label></div>
@@ -123,6 +171,12 @@ class QSys_App extends App
             <span class="button-ex"><button id="sign-in" name="sign-in" type="submit">Sign In</button></span>
             <span class="button-ex"><button id="redir" name="redir" form="redir-qscreen" value="<?php echo($_SERVER['PHP_SELF']); ?>">Queue Screen</button></span>
         </div>
+        <div class="login-error-msg"><?php 
+            if (isset($_POST) && isset($_POST['sign-in']) && !$this->isValidCredentials($_POST['usr'], $_POST['pw']))
+            {
+                var_dump($_POST);
+            } 
+        ?></div>
     </form>
     <form id="redir-qscreen" name="redir-qscreen" action="<?php echo(__BASE__); ?>/qsys/queue" method="get"></form>
 </main><?php $this->htmlTail();
@@ -150,15 +204,15 @@ class QSys_App extends App
 <link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
 </head>
 <body>
-<div class="app qsys">
+<div class="app qsys<?php echo((isset($subtitle) && !is_null($subtitle) && trim($subtitle) !== '' ? ' ' . strtolower(str_replace(' ', '-', $subtitle)) : '') . (isset($_REQUEST['queue']) ? ' ' . strtolower(str_replace(' ', '-', $_REQUEST['queue'])) : '')); ?>">
 <?php
     }
 
-    private function htmlHeader($pageTitle = NULL)
+    private function htmlHeaderMain($pageTitle = NULL)
     { ?>
     <header>
         <span class="institutional-logo-container"><img class="institutional-logo" src="<?php echo(__BASE__ . '/images/logo-depedstotomas.webp'); ?>" alt="SDO Logo" <?php // TEMP ?>style="max-width: 1in;"<?php // TEMP ?> /></span>
-        <h1><span class="qsys-ttemp-logo">Q<i>S</i><i>y</i><i>s</i></span></h1>
+        <h1><span class="qsys-temp-logo">Q<i>S</i><i>y</i><i>s</i></span></h1>
         <h2><?php echo($pageTitle); ?></h2>
         <span class="button-ex"><button id="nav-button" name="nav-button" type="button">=</button></span>
     </header><?php
