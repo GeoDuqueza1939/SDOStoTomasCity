@@ -17,7 +17,7 @@ class QSys_App extends App
 
         require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 
-        $this->addDBConn(new DatabaseConnection($dbtype, $servername, 'root', '', 'SDO_QSys'));
+        // $this->addDBConn(new DatabaseConnection($dbtype, $servername, 'root', '', 'SDO_QSys'));
 
         $this->setupEnums();
     }
@@ -26,7 +26,11 @@ class QSys_App extends App
     {
         if ($pageId !== 'login' && $pageId !== 'queue_screen')
         {
-            if (!$this->isValidSession())
+            try
+            {
+                $this->validateSession();
+            }
+            catch (Exception $ex)
             {
                 $this->redirectToLogin();
             }
@@ -65,6 +69,11 @@ class QSys_App extends App
         return false;
     }
 
+    private function deleteUser(string $username) : bool
+    {
+        return false;
+    }
+
     /* User Session Management Functions */
     private function enterSession(string $username, string $password) // throw exception on any error or upon failing authentication
     {}
@@ -83,7 +92,7 @@ class QSys_App extends App
         return $this->retrieveTokenId();
     }
 
-    private function retrieveTokenId() // will also be called by isValidSession() for checking login session
+    private function retrieveTokenId() // will also be called by validateSession() for checking login session
     {
         // retrieve token Id from DB
         return '';
