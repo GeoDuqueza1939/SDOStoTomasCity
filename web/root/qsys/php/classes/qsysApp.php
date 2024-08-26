@@ -7,8 +7,10 @@ class QSys_App extends App
 {
     use JsMsgDisplay;
 
-    private $username;
-    private $tokenId;
+    private string $username;
+    private string $userSessionId; // not to be confused with a PHP session Id
+    private string $token;
+    private DateTime $sessionTimeStamp;
 
     public function __construct()
     {
@@ -17,7 +19,7 @@ class QSys_App extends App
 
         require_once(__FILE_ROOT__ . '/php/secure/dbcreds.php');
 
-        // $this->addDBConn(new DatabaseConnection($dbtype, $servername, 'root', '', 'SDO_QSys'));
+        $this->addDBConn(new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, 'SDO_QSys'));
 
         $this->setupEnums();
     }
@@ -61,45 +63,147 @@ class QSys_App extends App
     {}
 
     /* Account Management Functions */
-    private function createUser(string $username, string $password) // throw exception on any error
-    {}
+    private function createUser(string $username, string $password, ?DateTime $expiration = null) // throw exception on any error
+    {
+        $db = $this->getDBConn(0);
+        $dbUserTable = 'QSYS_User';
+        $dbResults = [];
+
+        // check if username exists
+        try
+        {
+            $dbResults = $this->retrieveUser($username);
+
+            if (count($dbResults) === 0)
+            {
+                // add new user to database
+                $passwordHash = $this->hashPW($password);
+                $dbResults = $db->insert($dbUserTable, '(username, password_hash, $expiration)', "('$username', '$passwordHash', '$expiration')");
+                if (!is_null($db->lastException))
+                {
+                    throw new Exception('User creation failed.');
+                }
+            }
+            else
+            {
+                throw new Exception('User already exists.');
+            }
+        }
+        catch (Exception $ex)
+        {
+            throw $ex;
+        }
+    }
+
+    private function retrieveUser(string $username) : array
+    {
+        $db = $this->getDBConn(0);
+        $dbUserTable = 'QSYS_User';
+        $dbResults = $db->select($dbUserTable, '*', 'WHERE username = "' . $username . '"');
+
+        if (!is_null($db->lastException))
+        {
+            throw new Exception('Error encountered while retrieving user data.');
+        }
+
+        return $dbResults;
+    }
 
     private function isValidCredentials(string $username, string $password) : bool
     {
+        $dbResults = [];
+
+        try
+        {
+            $dbResults = $this->retrieveUser($username);
+
+            if (count($dbResults) === 0)
+            {
+                return false;
+            }
+            else
+            {
+                return password_verify($password, $dbResults[0]['password_hash']);
+            }
+        }
+        catch (Exception $ex)
+        {
+            throw $ex;
+        }
+
         return false;
     }
 
-    private function deleteUser(string $username) : bool
+    private function isPasswordExpired(string $username) : bool
     {
-        return false;
+        $dbResults = [];
+
+        try
+        {
+            $dbResults = $this->retrieveUser($username);
+
+            if (count($dbResults) === 0)
+            {
+                throw new Exception('User does not exist.');
+            }
+            else
+            {
+                return !is_null($dbResults[0]['expiration']) && (new DateTime()) > $dbResults[0]['expiration'];
+            }
+        }
+        catch (Exception $ex)
+        {
+            throw $ex;
+        }
+
+        return true;
+    }
+
+    private function deleteUser(string $username) // throw exception on any error
+    {
+        if ($username === $this->username)
+        {
+            throw new Exception('Cannot delete current user.');
+        }
+    }
+
+    private function hashPW(string $password) // hashing algorithm or method may be changed in this function
+    {
+        return password_hash($password, PASSWORD_BCRYPT_DEFAULT_COST);
     }
 
     /* User Session Management Functions */
-    private function enterSession(string $username, string $password) // throw exception on any error or upon failing authentication
+    private function enterSession(string $username, string $password, DateTime $validationTimestamp) // throw exception on any error or upon failing authentication
     {}
 
-    private function reenterSession() // throw exception on any error or upon failing authentication
+    private function reenterSession(string $username, string $userSessionId, string $secureToken, DateTime $validationTimestamp) // throw exception on any error or upon failing authentication
     {}
 
     private function validateSession() // throw exception on any error
     {}
 
-    private function generateTokenId()
+    private function generateSecureToken() : string
     {
         // generate token Id using username, password hash, and login timestamp or using random string generator
         // store timestamp and token Id in the DB
         
-        return $this->retrieveTokenId();
+        return $this->retrieveSecureToken();
     }
 
-    private function retrieveTokenId() // will also be called by validateSession() for checking login session
+    private function retrieveSecureToken() : string // will also be called by validateSession() for checking login session
     {
         // retrieve token Id from DB
         return '';
     }
 
-    private function validateTokenId(string $tokenId) // throw exception on any error
+    private function validateSecureToken(string $token) // throw exception on any error
     {}
+
+    /* API */
+    public function runAPI()
+    {
+        
+    }
 
     /* Redirects */
     private function redirectToLogin()
