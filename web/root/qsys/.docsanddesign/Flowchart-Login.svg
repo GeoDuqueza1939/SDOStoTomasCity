@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="59cm" height="33cm" viewBox="16 7 1165 659" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <path style="fill: #008000" d="M 118.996 9 L 156.896,9 C 162.129,9 166.371,13.9249 166.371,20 C 166.371,26.0751 162.129,31 156.896,31 L 118.996,31 C 113.763,31 109.521,26.0751 109.521,20 C 109.521,13.9249 113.763,9 118.996,9z"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 118.996 9 L 156.896,9 C 162.129,9 166.371,13.9249 166.371,20 C 166.371,26.0751 162.129,31 156.896,31 L 118.996,31 C 113.763,31 109.521,26.0751 109.521,20 C 109.521,13.9249 113.763,9 118.996,9"/>
+    <text font-size="12.8" style="fill: #ffffff;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="137.946" y="24.8">
+      <tspan x="137.946" y="24.8">Start</tspan>
+    </text>
+  </g>
+  <g>
+    <path style="fill: #ff0000" d="M 1047.47 641.2 L 1080.52,641.2 C 1085.09,641.2 1088.79,646.125 1088.79,652.2 C 1088.79,658.275 1085.09,663.2 1080.52,663.2 L 1047.47,663.2 C 1042.91,663.2 1039.21,658.275 1039.21,652.2 C 1039.21,646.125 1042.91,641.2 1047.47,641.2z"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 1047.47 641.2 L 1080.52,641.2 C 1085.09,641.2 1088.79,646.125 1088.79,652.2 C 1088.79,658.275 1085.09,663.2 1080.52,663.2 L 1047.47,663.2 C 1042.91,663.2 1039.21,658.275 1039.21,652.2 C 1039.21,646.125 1042.91,641.2 1047.47,641.2"/>
+    <text font-size="12.8" style="fill: #ffffff;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="1064" y="657">
+      <tspan x="1064" y="657">End</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="39.721" y="58.1" width="196.45" height="70"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="39.721" y="58.1" width="196.45" height="70"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="137.946" y="81.9">
+      <tspan x="137.946" y="81.9">Receive client request with</tspan>
+      <tspan x="137.946" y="97.9">session ID, security token, and</tspan>
+      <tspan x="137.946" y="113.9">validation timestamp, if any</tspan>
+    </text>
+  </g>
+  <text font-size="20.32" style="fill: #000000;text-anchor:middle;font-family:serif;font-style:normal;font-weight:700" x="999" y="53.375">
+    <tspan x="999" y="53.375">Login/Session Validation</tspan>
+    <tspan x="999" y="78.775">Procedure (Server Routine)</tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffffff" x="307.71" y="297" width="160.95" height="54"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="307.71" y="297" width="160.95" height="54"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="388.185" y="320.8">
+      <tspan x="388.185" y="320.8">Hash-compare</tspan>
+      <tspan x="388.185" y="336.8">password</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="82.446" y="289" width="111" height="70"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="82.446" y="289" width="111" height="70"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="137.946" y="312.8">
+      <tspan x="137.946" y="312.8">Query database</tspan>
+      <tspan x="137.946" y="328.8">for existence of</tspan>
+      <tspan x="137.946" y="344.8">username</tspan>
+    </text>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="818.817,130.302 942.031,202.42 818.817,274.539 695.602,202.42 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="818.817,130.302 942.031,202.42 818.817,274.539 695.602,202.42 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="818.817" y="191.22">
+      <tspan x="818.817" y="191.22">Are the session ID</tspan>
+      <tspan x="818.817" y="207.22">and timestamp found</tspan>
+      <tspan x="818.817" y="223.22">in the database? </tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="750.842" y="432.834" width="135.95" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="750.842" y="432.834" width="135.95" height="38"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="818.817" y="456.634">
+      <tspan x="818.817" y="456.634">Generate session ID</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="64.221" y="551.5" width="147.45" height="54"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="64.221" y="551.5" width="147.45" height="54"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="137.946" y="575.3">
+      <tspan x="137.946" y="575.3">Display error message</tspan>
+      <tspan x="137.946" y="591.3">in login screen</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="965.9" y="543.5" width="196.2" height="70"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="965.9" y="543.5" width="196.2" height="70"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="1064" y="567.3">
+      <tspan x="1064" y="567.3">Send security token along with</tspan>
+      <tspan x="1064" y="583.3">other requested data as</tspan>
+      <tspan x="1064" y="599.3">cookies over HTTPS only</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,31 137.946,38 137.946,38 137.946,48.3639 "/>
+    <polygon style="fill: #000000" points="137.946,55.8639 132.946,45.8639 137.946,48.3639 142.946,45.8639 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,55.8639 132.946,45.8639 137.946,48.3639 142.946,45.8639 "/>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="137.946,159.886 229.739,202.42 137.946,244.955 46.1526,202.42 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,159.886 229.739,202.42 137.946,244.955 46.1526,202.42 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="137.946" y="199.22">
+      <tspan x="137.946" y="199.22">Is it a login</tspan>
+      <tspan x="137.946" y="215.22">request?</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,128.1 137.946,139 137.946,139 137.946,150.15 "/>
+    <polygon style="fill: #000000" points="137.946,157.65 132.946,147.65 137.946,150.15 142.946,147.65 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,157.65 132.946,147.65 137.946,150.15 142.946,147.65 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="137.946,244.955 137.946,264 137.946,264 137.946,279.264 "/>
+    <polygon style="fill: #008000" points="137.946,286.764 132.946,276.764 137.946,279.264 142.946,276.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="137.946,286.764 132.946,276.764 137.946,279.264 142.946,276.764 "/>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="388.184,141.152 495.562,202.42 388.184,263.689 280.806,202.42 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="388.184,141.152 495.562,202.42 388.184,263.689 280.806,202.42 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="388.184" y="191.22">
+      <tspan x="388.184" y="191.22">Does request</tspan>
+      <tspan x="388.184" y="207.22">need a security</tspan>
+      <tspan x="388.184" y="223.22">token?</tspan>
+    </text>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="388.185,395.228 485.044,451.834 388.185,508.441 291.326,451.834 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="388.185,395.228 485.044,451.834 388.185,508.441 291.326,451.834 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="388.185" y="448.634">
+      <tspan x="388.185" y="448.634">Do the password</tspan>
+      <tspan x="388.185" y="464.634">hashes match?</tspan>
+    </text>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="137.946,383.53 258.163,451.834 137.946,520.138 17.729,451.834 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,383.53 258.163,451.834 137.946,520.138 17.729,451.834 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="137.946" y="440.634">
+      <tspan x="137.946" y="440.634">Are the</tspan>
+      <tspan x="137.946" y="456.634">credentials found in</tspan>
+      <tspan x="137.946" y="472.634">the database? </tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,359 137.946,366 137.946,366 137.946,373.794 "/>
+    <polygon style="fill: #000000" points="137.946,381.294 132.946,371.294 137.946,373.794 142.946,371.294 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="137.946,381.294 132.946,371.294 137.946,373.794 142.946,371.294 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="137.946,520.138 137.946,534 137.946,534 137.946,541.764 "/>
+    <polygon style="fill: #008000" points="137.946,549.264 132.946,539.264 137.946,541.764 142.946,539.264 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="137.946,549.264 132.946,539.264 137.946,541.764 142.946,539.264 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="388.185,508.441 388.185,578.5 221.407,578.5 "/>
+    <polygon style="fill: #ff0000" points="213.907,578.5 223.907,573.5 221.407,578.5 223.907,583.5 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="213.907,578.5 223.907,573.5 221.407,578.5 223.907,583.5 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="258.163,451.834 249,451.834 249,324 297.974,324 "/>
+    <polygon style="fill: #ff0000" points="305.474,324 295.474,329 297.974,324 295.474,319 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="305.474,324 295.474,329 297.974,324 295.474,319 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="524.27" y="58.1" width="187.25" height="70"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="524.27" y="58.1" width="187.25" height="70"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="617.895" y="81.9">
+      <tspan x="617.895" y="81.9">Query database for existence</tspan>
+      <tspan x="617.895" y="97.9">of session ID and timestamp</tspan>
+      <tspan x="617.895" y="113.9">under the username</tspan>
+    </text>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="617.895,402.992 700.701,451.834 617.895,500.676 535.09,451.834 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="617.895,402.992 700.701,451.834 617.895,500.676 535.09,451.834 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="617.895" y="448.634">
+      <tspan x="617.895" y="448.634">Is password</tspan>
+      <tspan x="617.895" y="464.634">expired?</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="485.044,451.834 500.228,451.834 500.228,451.834 525.354,451.834 "/>
+    <polygon style="fill: #008000" points="532.854,451.834 522.854,456.834 525.354,451.834 522.854,446.834 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="532.854,451.834 522.854,456.834 525.354,451.834 522.854,446.834 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="552.832" y="559.5" width="130.125" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="552.832" y="559.5" width="130.125" height="38"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="565.845" y1="559.5" x2="565.845" y2="597.5"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="669.945" y1="559.5" x2="669.945" y2="597.5"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="617.895" y="575.3">
+      <tspan x="617.895" y="575.3">Require user to</tspan>
+      <tspan x="617.895" y="591.3">change password</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="700.701,451.834 700,451.834 700,451.834 741.106,451.834 "/>
+    <polygon style="fill: #ff0000" points="748.606,451.834 738.606,456.834 741.106,451.834 738.606,446.834 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="748.606,451.834 738.606,456.834 741.106,451.834 738.606,446.834 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="388.184,263.689 388.184,281 786.363,281 786.363,295.264 "/>
+    <polygon style="fill: #ff0000" points="786.363,302.764 781.363,292.764 786.363,295.264 791.363,292.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="786.363,302.764 781.363,292.764 786.363,295.264 791.363,292.764 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="229.739,202.42 240,202.42 240,202.42 271.07,202.42 "/>
+    <polygon style="fill: #ff0000" points="278.57,202.42 268.57,207.42 271.07,202.42 268.57,197.42 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="278.57,202.42 268.57,207.42 271.07,202.42 268.57,197.42 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="617.895,500.676 617.895,541 617.895,541 617.895,549.764 "/>
+    <polygon style="fill: #008000" points="617.895,557.264 612.895,547.264 617.895,549.764 622.895,547.264 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="617.895,557.264 612.895,547.264 617.895,549.764 622.895,547.264 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="753.832" y="305" width="130.125" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="753.832" y="305" width="130.125" height="38"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="766.844" y1="305" x2="766.844" y2="343"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="870.944" y1="305" x2="870.944" y2="343"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="818.894" y="328.8">
+      <tspan x="818.894" y="328.8">Process request</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="818.894,343 818.894,387.917 818.817,387.917 818.817,423.098 "/>
+    <polygon style="fill: #000000" points="818.817,430.598 813.817,420.598 818.817,423.098 823.817,420.598 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="818.817,430.598 813.817,420.598 818.817,423.098 823.817,420.598 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="1064,486.834 1064,508 1064,508 1064,533.764 "/>
+    <polygon style="fill: #000000" points="1064,541.264 1059,531.264 1064,533.764 1069,531.264 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="1064,541.264 1059,531.264 1064,533.764 1069,531.264 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="947.424" y="416.834" width="233.15" height="70"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="947.424" y="416.834" width="233.15" height="70"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="1064" y="440.634">
+      <tspan x="1064" y="440.634">Generate and hash security token</tspan>
+      <tspan x="1064" y="456.634">and store with session ID, expiration,</tspan>
+      <tspan x="1064" y="472.634">and validation timestamp</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="886.792,451.834 908,451.834 908,451.834 937.688,451.834 "/>
+    <polygon style="fill: #000000" points="945.188,451.834 935.188,456.834 937.688,451.834 935.188,446.834 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="945.188,451.834 935.188,456.834 937.688,451.834 935.188,446.834 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="388.185,351 388.185,367 388.185,367 388.185,385.492 "/>
+    <polygon style="fill: #000000" points="388.185,392.992 383.185,382.992 388.185,385.492 393.185,382.992 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="388.185,392.992 383.185,382.992 388.185,385.492 393.185,382.992 "/>
+  </g>
+  <g>
+    <ellipse style="fill: #0000ff" cx="617.896" cy="645.217" rx="20.3395" ry="20.2851"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="617.896" cy="645.217" rx="20.3395" ry="20.2851"/>
+    <text font-size="12.8" style="fill: #ffffff;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="617.896" y="650.017">
+      <tspan x="617.896" y="650.017">A</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="617.895,597.5 617.895,606 617.896,606 617.896,615.196 "/>
+    <polygon style="fill: #000000" points="617.896,622.696 612.896,612.696 617.896,615.196 622.896,612.696 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="617.896,622.696 612.896,612.696 617.896,615.196 622.896,612.696 "/>
+  </g>
+  <g>
+    <ellipse style="fill: #0000ff" cx="388.184" cy="93.0999" rx="20.3395" ry="20.2851"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="388.184" cy="93.0999" rx="20.3395" ry="20.2851"/>
+    <text font-size="12.8" style="fill: #ffffff;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="388.184" y="97.8999">
+      <tspan x="388.184" y="97.8999">A</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="367.844,93.0999 294,93.0999 294,93.1 245.907,93.1 "/>
+    <polygon style="fill: #000000" points="238.407,93.1 248.407,88.1 245.907,93.1 248.407,98.1 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="238.407,93.1 248.407,88.1 245.907,93.1 248.407,98.1 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="495.562,202.42 503,202.42 503,157 455,157 455,93.1 514.534,93.1 "/>
+    <polygon style="fill: #008000" points="522.034,93.1 512.034,98.1 514.534,93.1 512.034,88.1 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="522.034,93.1 512.034,98.1 514.534,93.1 512.034,88.1 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="711.52,93.1 818.817,93.1 818.817,120.566 "/>
+    <polygon style="fill: #000000" points="818.817,128.066 813.817,118.066 818.817,120.566 823.817,118.066 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="818.817,128.066 813.817,118.066 818.817,120.566 823.817,118.066 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="1015.59" y="183.42" width="96.8125" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="1015.59" y="183.42" width="96.8125" height="38"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="1025.27" y1="183.42" x2="1025.27" y2="221.42"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="1102.72" y1="183.42" x2="1102.72" y2="221.42"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="1064" y="199.22">
+      <tspan x="1064" y="199.22">Require user</tspan>
+      <tspan x="1064" y="215.22">to sign-in</tspan>
+    </text>
+  </g>
+  <g>
+    <ellipse style="fill: #0000ff" cx="1064" cy="323.999" rx="20.3395" ry="20.2851"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="1064" cy="323.999" rx="20.3395" ry="20.2851"/>
+    <text font-size="12.8" style="fill: #ffffff;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="1064" y="328.799">
+      <tspan x="1064" y="328.799">A</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="1064,221.42 1064,289.834 1064,289.834 1064,293.978 "/>
+    <polygon style="fill: #000000" points="1064,301.478 1059,291.478 1064,293.978 1069,291.478 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="1064,301.478 1059,291.478 1064,293.978 1069,291.478 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="818.817,274.539 818.817,284 818.894,284 818.894,295.264 "/>
+    <polygon style="fill: #008000" points="818.894,302.764 813.894,292.764 818.894,295.264 823.894,292.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #008000" points="818.894,302.764 813.894,292.764 818.894,295.264 823.894,292.764 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="942.031,202.42 965.434,202.42 965.434,202.42 1005.86,202.42 "/>
+    <polygon style="fill: #ff0000" points="1013.36,202.42 1003.36,207.42 1005.86,202.42 1003.36,197.42 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ff0000" points="1013.36,202.42 1003.36,207.42 1005.86,202.42 1003.36,197.42 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="1064,613.5 1064,620 1064,620 1064,631.464 "/>
+    <polygon style="fill: #000000" points="1064,638.964 1059,628.964 1064,631.464 1069,628.964 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="1064,638.964 1059,628.964 1064,631.464 1069,628.964 "/>
+  </g>
+  <text font-size="12.8" style="fill: #ff0000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="942.031" y="199.77">
+    <tspan x="942.031" y="199.77">No</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #008000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="818.817" y="287.339">
+    <tspan x="818.817" y="287.339">Yes</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #008000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="137.946" y="257.755">
+    <tspan x="137.946" y="257.755">Yes</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #ff0000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="229.739" y="199.77">
+    <tspan x="229.739" y="199.77">No</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #ff0000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="388.184" y="276.489">
+    <tspan x="388.184" y="276.489">No</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #008000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="485.044" y="449.184">
+    <tspan x="485.044" y="449.184">Yes</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #008000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="137.946" y="532.938">
+    <tspan x="137.946" y="532.938">Yes</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #ff0000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="700.701" y="449.184">
+    <tspan x="700.701" y="449.184">No</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #008000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="617.895" y="513.476">
+    <tspan x="617.895" y="513.476">Yes</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #ff0000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="258.163" y="449.184">
+    <tspan x="258.163" y="449.184">No</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #ff0000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="388.185" y="521.241">
+    <tspan x="388.185" y="521.241">No</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #008000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:700" x="495.562" y="199.77">
+    <tspan x="495.562" y="199.77">Yes</tspan>
+  </text>
+</svg>
