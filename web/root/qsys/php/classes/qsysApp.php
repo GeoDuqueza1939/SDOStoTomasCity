@@ -373,27 +373,72 @@ class QSys_App extends App
         else
         {
             $this->generateAPITesterUI();
+            var_dump($_COOKIE);
         }
     }
 
-    private function processRequest($request, $method = 'INTERNAL') : array
+    private function processRequest($request, $method = 'GET', bool $isInternal = false) : array
     {
         $response = [];
+        $msgs = [];
+
         if (isset($request['a']))
         {
             switch ($request['a'])
             {
                 case 'login':
-                    $response = $this->sendResponse('Info', 'Login requested.', ($method !== 'INTERNAL'));
+                    if ($method === 'GET')
+                    {
+                        array_push($msgs, $this->sendResponse('Warning', 'Insecure login detected. (method: GET)', !$isInternal));
+                    }
+                    else
+                    {
+                        array_push($msgs, $this->sendResponse('Info', 'Login requested.', !$isInternal));
+                    }
                     break;
                 case 'logout':
-                    $response = $this->sendResponse('Info', 'Logout requested.', ($method !== 'INTERNAL'));
+                    array_push($msgs, $this->sendResponse('Info', 'Logout requested.', !$isInternal));
+                    break;
+                case 'add':
+                    array_push($msgs, $this->sendResponse('Info', 'Add object requested.', !$isInternal));
+                    
+                    if (isset($request['add']))
+                    {
+                        switch ($request['add'])
+                        {
+                            case 'user':
+                                if ($method === 'GET')
+                                {
+                                    array_push($msgs, $this->sendResponse('Warning', 'Insecure add user request detected. (method: GET)', !$isInternal));
+                                }
+                                else
+                                {
+                                    array_push($msgs, $this->sendResponse('Info', 'Add user requested.', !$isInternal));
+                                }
+                                
+                                break;
+                            default;
+                                array_push($msgs, $response = $this->sendResponse('Error', 'Unknown object requested for adding.', !$isInternal));
+                                break;
+                        }
+                    }
+                    break;
+                case 'get':
+                    array_push($msgs, $this->sendResponse('Info', 'Get object requested.', !$isInternal));
+                    break;
+                case 'edit':
+                    array_push($msgs, $this->sendResponse('Info', 'Edit object requested.', !$isInternal));
+                    break;
+                case 'delete':
+                    array_push($msgs, $this->sendResponse('Info', 'Delete object requested.', !$isInternal));
                     break;
                 default:
-                    $response = $this->sendResponse('Error', 'Unknown action requested.', ($method !== 'INTERNAL'));
+                    array_push($msgs, $this->sendResponse('Error', 'Unknown action requested.', !$isInternal));
                     break;
             }
         }
+
+        $response = (count($msgs) === 1 ? $msgs[0] : (count($msgs) > 1 ? $this->sendResponse('Messages', $msgs, !$isInternal) : []));
 
         return $response;
     }
@@ -566,7 +611,7 @@ window.location.replace("<?php echo($url); ?>");
 </tr>
 </thead>
 <tbody><?php
-            foreach (['GET'=>$_GET, 'POST'=>$_POST, 'RESPONSE-GET'=>$this->processRequest($_GET, 'INTERNAL'), 'RESPONSE-POST'=>$this->processRequest($_POST, 'INTERNAL')] as $method => $data)
+            foreach (['GET'=>$_GET, 'POST'=>$_POST, 'RESPONSE-GET'=>$this->processRequest($_GET, 'GET', true), 'RESPONSE-POST'=>$this->processRequest($_POST, 'POST', true)] as $method => $data)
             {
                 if (is_array($data) || is_object($data))
                 {
@@ -622,7 +667,7 @@ buttonAdd.addEventListener("click", clickEvent=>{
         param.hidden.value = param.value.value;
     });
 
-    let deleteButton = ElementEx.create("button", ElementEx.NO_NS, td[1], null, "type", "button", "style", "margin: 0; padding: 0; vertical-align: top; display: inline-flex; width: 1.5em; height: 1.5em; justify-content: center; align-items: center; border-radius: 50%; background-color: #FF5555;");
+    let deleteButton = ElementEx.create("button", ElementEx.NO_NS, td[1], null, "type", "button", "style", "margin: 0; padding: 0; vertical-align: top; display: inline-flex; width: 1.5em; height: 1.5em; justify-content: center; align-items: center; border-radius: 50%; background-color: #FF5555; color: white;");
     ElementEx.addText("close", ElementEx.create("span", ElementEx.NO_NS, deleteButton, null, "class", "material-icons-round", "style", "margin: 0; padding: 0; line-height: 1.2; font-size: inherit;"));
     paramsContainer.params["param" + i] = param;
 
