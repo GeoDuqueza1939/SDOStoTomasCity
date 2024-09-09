@@ -488,7 +488,7 @@ if (isValidUserSession())
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Carina V. Pedragosa', 'position' => 'Planning Officer III', 'level1' => false, 'level2' => true, 'level3' => false),
                                         array('name' => 'Oliva P. Regalado', 'position' => 'Master Teacher II', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Edwin C. Miranda', 'position' => 'Publish Schools District Supervisor', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Edwin C. Miranda', 'position' => 'Public Schools District Supervisor', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Raymundo F. Hermo', 'position' => 'School Principal III', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Bonifacio DC. Regalado, Jr.', 'position' => 'Head Teacher III', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Mark Anthony Silvestre', 'position' => 'Administrative Assistant III', 'level1' => true, 'level2' => true, 'level3' => false),
