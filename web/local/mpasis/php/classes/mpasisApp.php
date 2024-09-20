@@ -128,7 +128,10 @@ require_once(__FILE_ROOT__ . '/php/snippets/nav_full.php'); // general nav
             
             <h3>Summary</h3>
             <ul>
-                <li><b>Available Positions:</b> <?php echo count($this->getDB_SDO()->select('Position', '*', 'WHERE filled=FALSE')); ?></li>
+                <li><b>Available Positions:</b> <?php
+                    $positions = $this->getDB_SDO()->select('Position', '*', 'WHERE filled=FALSE');
+                    echo count($positions);
+                ?></li>
                 <li><b>Applications Entered:</b> <?php echo count($this->getDB_SDO()->select('Job_Application', '*', ''));?></li>
                 <li><b>Unique Applicants:</b> <?php echo count($this->getDB_SDO()->executeQuery('SELECT Person.personId FROM Job_Application INNER JOIN Person ON Job_Application.personId=Person.personId GROUP BY personId'));?></li>
             </ul>
@@ -139,6 +142,66 @@ require_once(__FILE_ROOT__ . '/php/snippets/nav_full.php'); // general nav
                 <li><b>Disqualified Applications:</b> 0</li>
                 <li><b>Applications Under Processing:</b> 0</li>
             </ul>
+
+            <h3>Positions</h3>
+            <div class="dash-table-positions">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Position</th>
+                            <th>Plantilla Item Number</th>
+                            <th>Salary Grade</th>
+                            <th>Place of Assignment</th>
+                            <th>Category</th>
+                            <th>Filled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (count($positions) === 0) { ?>
+                        <tr>
+                            <td colspan="7">Nothing to show</td>
+                        </tr>
+                    <?php }
+                    else { ?>
+                    <?php
+                        for ($i = 0; $i < count($positions); $i++) { ?>
+                        <tr>
+                            <td><?php echo($i + 1); ?></td>
+                            <td><?php echo($positions[$i]['position_title'] . (is_null($positions[$i]['parenthetical_title']) || $positions[$i]['parenthetical_title'] === '' ? '' : ' (' . $positions[$i]['parenthetical_title'] . ')')); ?></td>
+                            <td><?php echo($positions[$i]['plantilla_item_number']); ?></td>
+                            <td><?php echo($positions[$i]['salary_grade']); ?></td>
+                            <td><?php echo($positions[$i]['place_of_assignment']); ?></td>
+                            <td><?php
+                            switch($positions[$i]['position_categoryId'])
+                            {
+                                case 0:
+                                    echo 'Unknown';
+                                    break;
+                                case 1:
+                                    echo 'Teaching';
+                                    break;
+                                case 2:
+                                    echo 'School Administration';
+                                    break;
+                                case 3:
+                                    echo 'Related-Teaching';
+                                    break;
+                                case 4:
+                                    echo 'Non-Teaching (Non-General Services)';
+                                    break;
+                                case 5:
+                                    echo 'Non-Teaching (General Services)';
+                                    break;
+                            }
+                            ?></td>
+                            <td><?php echo($positions[$i]['filled'] ? 'yes' : 'no'); ?></td>
+                        </tr><?php 
+                        }
+                    } ?>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
 <?php
