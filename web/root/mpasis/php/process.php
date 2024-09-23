@@ -446,7 +446,8 @@ if (isValidUserSession())
                                     }
                                 }
 
-                                $salaryGrade = $dbconn->select('Salary_Table', '*', 'WHERE effectivity_date >= "2023-01-01"');
+                                // $salaryGrade = $dbconn->select('Salary_Table', '*', 'WHERE effectivity_date >= "2023-01-01"');
+                                $salaryGrade = $dbconn->executeQuery('SELECT * FROM Salary_Table WHERE (salary_gradeId, effectivity_date) IN (SELECT salary_gradeId, MAX(effectivity_date) FROM Salary_Table GROUP BY salary_gradeId)');
 
                                 if (!is_null($dbconn->lastException))
                                 {
