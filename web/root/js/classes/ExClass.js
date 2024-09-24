@@ -6841,7 +6841,7 @@ class CARForm extends Old_FormEx
             var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 5 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
             console.log(member);
             signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 5 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "<br>" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 5 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+            htmlToElements("<div class=\"name-position\" style=\"white-space: nowrap;\"><span style=\"display: inline; text-transform: uppercase;\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "</span><!-- <br> -->" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 5 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
                 if (node.classList.contains("name-position"))
