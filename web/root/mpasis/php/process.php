@@ -91,6 +91,8 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         has_specific_training,
         has_more_unrecorded_training,
         train_notes,
+        has_alternative_work_experience_applicable,
+        alternative_work_experience_years,
         has_specific_work_experience,
         has_more_unrecorded_work_experience,
         work_exp_notes,

@@ -825,13 +825,19 @@ class MPASIS_App extends App
         header = this.forms["jobData"].addHeader("Work Experience", 4);
         header.style.gridColumn = "1 / span 12";
         
-        field = this.forms["jobData"].addInputEx("Total years of relevant work experience", "number", "0", "", "required_work_experience_years", "Position");
+        field = this.forms["jobData"].addInputEx("Total years of relevant work experience", "number", "0", "Minimum years of relevant work experience", "required_work_experience_years", "Position");
         field.container.style.gridColumn = "1 / span 6";
-        field.container.style.gridRow = "span 3";
+        field.container.style.gridRow = "span 2";
         field.showColon();
         field.setMin(0);
         field.setMax(99);
         field.setFullWidth();
+
+        field = this.forms["jobData"].addInputEx("Position may require alternative work experience qualification", "checkbox", "", "Select for positions that have alternative work experience requirements that could differ in the number of years. These alternative qualifications should be detailed in the specific work experience field.", "alternative_work_experience", "Position");
+        field.labels[0].style.fontWeight = "bold";
+        field.reverse();
+        field.container.style.gridColumn = "1 / span 6";
+        field.container.style.gridRow = "span 1";
 
         field = this.forms["jobData"].addInputEx("Position requires specific work experience", "checkbox", "", "", "requires-spec-work-exp");
         field.labels[0].style.fontWeight = "bold";
@@ -982,6 +988,10 @@ class MPASIS_App extends App
                     if (key == "plantilla_item_number")
                     {
                         position[key] = plantillaItem;
+                    }
+                    else if (key == "alternative_work_experience")
+                    {
+                        position[key] = this.forms["jobData"].dbInputEx[key].isChecked();
                     }
                     else if (key == "requires-spec-education" || key == "requires-spec-training" || key == "requires-spec-work-exp" || key == "requires-competency" || (key == "specific_education_required" && !this.forms["jobData"].dbInputEx["requires-spec-education"].isChecked()) || (key == "specific_training_required" && !this.forms["jobData"].dbInputEx["requires-spec-training"].isChecked()) || (key == "specific_work_experience_required" && !this.forms["jobData"].dbInputEx["requires-spec-work-exp"].isChecked()) || (key == "competency" && !this.forms["jobData"].dbInputEx["requires-competency"].isChecked()))
                     {}
@@ -1238,7 +1248,7 @@ class MPASIS_App extends App
             var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
             var increment = ScoreSheet.getEducIncrements(parseInt(educField.getValue()), degreeTable.getValue());
             
-            requiredEducIncrement.innerHTML = (appliedPosition == null ? 0 : ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []));
+            requiredEducIncrement.innerHTML = (appliedPosition == null ? 0 : ScoreSheet.getEducIncrements(parseInt(appliedPosition["required_educational_attainment"]), []));
 
             if (appliedPosition != null && increment >= Number.parseInt(requiredEducIncrement.innerHTML) && (specEducAttained.isDisabled() || specEducAttained.isChecked()))
             {
@@ -1460,6 +1470,7 @@ class MPASIS_App extends App
 
         var workExpDiv = createElementEx(NO_NS, "fieldset", applicantDataForm.fieldWrapper, null);
         workExpDiv.style.gridColumn = "1 / span 12";
+
         var workExpContainer = createElementEx(NO_NS, "table", workExpDiv, null, "style", "width: 100%; border-collapse: collapse;");
         row = createElementEx(NO_NS, "tr", createElementEx(NO_NS, "thead", workExpContainer, null), null, "style", "font-size: 0.8em;");
         addText("Work Experience Details", createElementEx(NO_NS, "th", row, null, "class", "bordered", "style", "background-color: lightgray;"));
@@ -1477,6 +1488,29 @@ class MPASIS_App extends App
         var addWorkExpBtn = new InputEx(workExpDiv, "add-applicant-workExp", "buttonEx");
         addWorkExpBtn.setLabelText("+Add a row");
         var workExpInputExs = [];
+
+        var workExpUseAlternative = applicantDataForm.addInputEx("Specify an alternative work experience requirement in years. Clarify in remarks.", "checkbox", "", "", "has_alternative_work_experience_applicable", "Job_Application");
+        workExpUseAlternative.setParent(workExpDiv);
+        workExpUseAlternative.reverse();
+        workExpUseAlternative.setFullWidth();
+        workExpUseAlternative.disable();
+        workExpUseAlternative.hide();
+
+        workExpUseAlternative.inlineTextboxEx = applicantDataForm.addInputEx("Required relevant work experience in years", "text", "0", "Required relevant work experience in years", "alternative_work_experience_years", "Job_Application");
+        workExpUseAlternative.inlineTextboxEx.setParent(workExpUseAlternative.labels[0]);
+        workExpUseAlternative.inlineTextboxEx.hide();
+
+        workExpUseAlternative.handleInlineTextboxExOnCheck = altWorkExpClickEvent=>{ 
+        if (workExpUseAlternative.isChecked())
+            {
+                workExpUseAlternative.inlineTextboxEx.show();
+            }
+            else
+            {
+                workExpUseAlternative.inlineTextboxEx.hide();
+            }
+        };
+        workExpUseAlternative.addEvent("click", workExpUseAlternative.handleInlineTextboxExOnCheck);
 
         var moreWorkExp = new InputEx(workExpDiv, "has_more_unrecorded_work_experience", "checkbox");    
         moreWorkExp.setLabelText("There are more work experience information that were no longer included in this list for encoding.");
@@ -2153,6 +2187,12 @@ class MPASIS_App extends App
         var plantillaChange = changeEvent=>{
             var appliedPosition = getAppliedPosition(document.positions, positionField, parenField, plantillaField);
 
+            if (appliedPosition == null)
+            {
+                alert("Specified position not found. (" + positionField.getValue() + ")");
+                return;
+            }
+
             if (appliedPosition["required_educational_attainment"] == 0)
             {
                 remarkEduc.innerHTML = "(Not Required)";
@@ -2203,6 +2243,16 @@ class MPASIS_App extends App
                 remarkWorkExp.innerHTML = "(Not Qualified)";
                 remarkWorkExp.style.color = "red";
             }
+            if (appliedPosition["alternative_work_experience"] == 0)
+            {
+                workExpUseAlternative.disable();
+                workExpUseAlternative.hide();
+            }
+            else
+            {
+                workExpUseAlternative.show();
+                workExpUseAlternative.enable();
+            }
             if (appliedPosition["specific_work_experience_required"] != null && appliedPosition["specific_work_experience_required"] != "")
             {
                 reqSpecWorkExp.innerHTML = appliedPosition["specific_work_experience_required"];
@@ -2223,13 +2273,14 @@ class MPASIS_App extends App
                 reqCompetency.innerHTML = "NONE";
                 competencyAttained.disable();
             }
-            requiredEducIncrement.innerHTML = ScoreSheet.getEducIncrements(appliedPosition["required_educational_attainment"], []);
-            requiredTrainingIncrement.innerHTML = Math.trunc(appliedPosition["required_training_hours"] / 8) + 1;
-            requiredWorkExpIncrement.innerHTML = Math.trunc(appliedPosition["required_work_experience_years"] * 12 / 6) + 1;
+            requiredEducIncrement.innerHTML = ScoreSheet.getEducIncrements(Number(appliedPosition["required_educational_attainment"]), []);
+            requiredTrainingIncrement.innerHTML = Math.trunc(Number(appliedPosition["required_training_hours"]) / 8) + 1;
+            requiredWorkExpIncrement.innerHTML = Math.trunc(Number(appliedPosition["required_work_experience_years"]) * 12 / 6) + 1;
             remarkElig.innerHTML = (appliedPosition["required_eligibility"].length == 0 ? "Not Required" : "Not Qualified");
             remarkElig.style.color = (appliedPosition["required_eligibility"].length == 0 ? null : "red");
 
         };
+        positionField.addEvent("change", plantillaChange);
         plantillaField.addEvent("change", plantillaChange);
         
         var applicantDataBtnGrp = applicantDataForm.addFormButtonGrp(2);
