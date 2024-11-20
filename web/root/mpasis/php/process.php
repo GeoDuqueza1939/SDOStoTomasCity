@@ -91,8 +91,6 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         has_specific_training,
         has_more_unrecorded_training,
         train_notes,
-        has_alternative_work_experience_applicable,
-        alternative_work_experience_years,
         has_specific_work_experience,
         has_more_unrecorded_work_experience,
         work_exp_notes,
@@ -168,8 +166,10 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
     LEFT JOIN `$dbname`.Address permAdd ON pe.permanent_addressId = permAdd.addressId"
     . (is_null($where) || (is_string($where) && trim($where) == "") ? "" : " WHERE $where")
     . (is_null($limit) || !is_numeric($limit) ? "" : " LIMIT $limit");
-
+    
     $dbResults = $dbconn->executeQuery($query);
+//--,        has_alternative_work_experience_applicable
+//    --alternative_work_experience_years,
 
     if (is_null($dbconn->lastException))
     {
@@ -734,7 +734,7 @@ if (isValidUserSession())
                         {
                             die(json_encode(new ajaxResponse('Info', 'Blank search string')));
                         }
-
+                        
                         logAction('mpasis', 7, array(
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                             'remarks'=>"Retrieve applicant name or application code with the search string: $srcStr"

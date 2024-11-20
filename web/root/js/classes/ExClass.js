@@ -5579,7 +5579,7 @@ class IERForm extends Old_FormEx
                                                     row["education"] = jobApplication[key];
                                                 }
     
-                                                isEducQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(position["required_educational_attainment"], []));
+                                                isEducQualified &&= (ScoreSheet.getEducIncrements(parseInt(jobApplication["educational_attainmentIndex"]), jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(parseInt(position["required_educational_attainment"]), []));
                                                 isEducQualified &&= ((position["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
 
                                                 isQualified &&= isEducQualified;
@@ -6628,7 +6628,7 @@ class CARForm extends Old_FormEx
                                         switch (key)
                                         {
                                             case "educational_attainment":
-                                                isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
+                                                isQualified &&= (ScoreSheet.getEducIncrements(parseInt(jobApplication["educational_attainmentIndex"]), jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(parseInt(positions[0]["required_educational_attainment"]), []));
                                                 isQualified &&= ((positions[0]["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
                                                 break;
                                             case "relevant_training":
@@ -7059,7 +7059,7 @@ class RQAForm extends Old_FormEx
                                         switch (key)
                                         {
                                             case "educational_attainment":
-                                                isQualified &&= (ScoreSheet.getEducIncrements(jobApplication["educational_attainmentIndex"], jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(positions[0]["required_educational_attainment"], []));
+                                                isQualified &&= (ScoreSheet.getEducIncrements(parseInt(jobApplication["educational_attainmentIndex"]), jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(parseInt(positions[0]["required_educational_attainment"]), []));
                                                 isQualified &&= ((positions[0]["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
                                                 break;
                                             case "relevant_training":
