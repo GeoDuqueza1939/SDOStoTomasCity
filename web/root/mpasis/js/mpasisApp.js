@@ -2656,17 +2656,24 @@ class MPASIS_App extends App
         }
     }
 
-    static selectPlantilla(positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx())
+    static selectPlantilla(positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx(), clearParenFieldForAnyPlantilla = true)
     {
         var selectedPlantilla = plantillaField.getValue();
-        parenField.setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
-        parenField.clearList();
-        var temp = document.positions.filter(position=>((((selectedPlantilla == "ANY" || selectedPlantilla == "") && position["position_title"] == positionField.getValue()) || position["plantilla_item_number"] == selectedPlantilla) && position["parenthetical_title"] != null && position["parenthetical_title"] != ""));
-        parenField.fillItems(temp, "parenthetical_title", "plantilla_item_number", "");
-        if (parenField.type == "combo")
+        if (clearParenFieldForAnyPlantilla || selectedPlantilla == "ANY")
         {
-            var filteredOptions = Array.from(parenField.datalist.children).filter(option=>option.getAttribute("data-value") == selectedPlantilla);
-            parenField.setValue((filteredOptions.length > 0 ? filteredOptions[0].value : ""));
+            parenField.setValue(""); // for `combo` text input box only; unnecessary for select element; keep code for future use
+            parenField.clearList();
+            var temp = document.positions.filter(position=>((((selectedPlantilla == "ANY" || selectedPlantilla == "") && position["position_title"] == positionField.getValue()) || position["plantilla_item_number"] == selectedPlantilla) && position["parenthetical_title"] != null && position["parenthetical_title"] != ""));
+            parenField.fillItems(temp, "parenthetical_title", "plantilla_item_number", "");
+        }
+        console.log(parenField.datalist);
+        if (parenField.type == "combo" || (!clearParenFieldForAnyPlantilla && parenField.type == "select")) // !!!!! IMPROVE THIS LOGIC!
+        {
+            if (parenField.datalist != null)
+            {
+                var filteredOptions = Array.from(parenField.datalist.children).filter(option=>option.getAttribute("data-value") == selectedPlantilla);
+                parenField.setValue((filteredOptions.length > 0 ? filteredOptions[0].value : ""));
+            }
         }
         else
         {

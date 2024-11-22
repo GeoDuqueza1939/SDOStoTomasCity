@@ -751,7 +751,7 @@ if (isValidUserSession())
                             die(json_encode(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
                         }
 
-                        $where .= ($plantilla == '' ? "position_title_applied='$positionTitle'" . ($parenTitle == '' ? '' : " AND parenthetical_title_applied=$parenTitle") : "plantilla_item_number_applied='$plantilla'");
+                        $where .= ($plantilla == '' ? "position_title_applied='$positionTitle'" . ($parenTitle == '' ? '' : " AND parenthetical_title_applied='$parenTitle'") : "plantilla_item_number_applied='$plantilla'");
                         
                         logAction('mpasis', 7, array(
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],

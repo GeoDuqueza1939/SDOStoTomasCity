@@ -755,7 +755,7 @@ CREATE TABLE `Job_Application` (
   `number_of_speakership_division_regional_level` tinyint(3) unsigned DEFAULT NULL,
   `number_of_speakership_school_school_level` tinyint(3) unsigned DEFAULT NULL,
   `number_of_speakership_school_sdo_level` tinyint(3) unsigned DEFAULT NULL,
-  `neap_facilitator_accreditation` tinyint(3) unsigned DEFAULT NULL,
+  `neap_facilitator_accreditation` float unsigned DEFAULT NULL,
   `accomplishments_notes` longtext DEFAULT NULL,
   `number_of_app_educ_r_actionplan` tinyint(3) unsigned DEFAULT NULL,
   `number_of_app_educ_r_actionplan_ar` tinyint(3) unsigned DEFAULT NULL,

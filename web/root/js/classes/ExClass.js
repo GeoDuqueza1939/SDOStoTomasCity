@@ -2914,7 +2914,7 @@ class PositionSelectorDialog extends Old_DialogEx
         selPosition.addEvent("change", positionChangeEvent=>btnGrp.inputExs[0].enable(null, selPosition.getValue() != ""));
         selPosition.addEvent("change", positionChangeEvent=>MPASIS_App.selectPosition(selPosition, selParen, selPlantilla));
         selParen.addEvent("change", parenChangeEvent=>MPASIS_App.selectParen(selPosition, selParen, selPlantilla));
-        selPlantilla.addEvent("change", plantillaChangeEvent=>MPASIS_App.selectPlantilla(selPosition, selParen, selPlantilla));
+        selPlantilla.addEvent("change", plantillaChangeEvent=>MPASIS_App.selectPlantilla(selPosition, selParen, selPlantilla, false));
     }
 }
 
@@ -4052,7 +4052,7 @@ class ScoreSheet extends Old_FormEx
                     var educNotes = jobApplication["educ_notes"] ?? "none";
                     var hasSpecEduc = (positionObj["specific_education_required"] == null ? "N/A" : (jobApplication["has_specific_education_required"] != 0 && jobApplication["has_specific_education_required"] != null ? "Yes" : "No"));
                     
-                    var applicantEducIncrement = ScoreSheet.getEducIncrements(educAttainment, degreeTaken);
+                    var applicantEducIncrement = (educAttainment == null ? 0 : ScoreSheet.getEducIncrements(educAttainment, degreeTaken));
                     var incrementObj = document.mpsEducIncrement.filter(increment=>(increment["baseline_educational_attainment"] == positionObj["required_educational_attainment"]));
                     var requiredEducIncrement = incrementObj[0]["education_increment_level"];
                     var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
@@ -6602,7 +6602,7 @@ class CARForm extends Old_FormEx
 
 
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
-                        var response = null, rows = [], row = null, isQualified = true;
+                        var response = null, rows = [], rowsDQ = [], row = null, isQualified = true;
 
                         if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                         {
@@ -6619,6 +6619,58 @@ class CARForm extends Old_FormEx
                                 thisCARForm.jobApplications = JSON.parse(response.content);
 
                                 thisCARForm.carTable.removeAllRows();
+
+                                thisCARForm.jobApplicationsDisqualified = thisCARForm.jobApplications.filter(jobApplication=>{
+                                    isQualified = true;
+
+                                    for (const key in jobApplication)
+                                    {
+                                        switch (key)
+                                        {
+                                            case "educational_attainment":
+                                                isQualified &&= (ScoreSheet.getEducIncrements(parseInt(jobApplication["educational_attainmentIndex"]), jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(parseInt(positions[0]["required_educational_attainment"]), []));
+                                                isQualified &&= ((positions[0]["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
+                                                break;
+                                            case "relevant_training":
+                                                var totalHours = 0;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantTraining of jobApplication[key])
+                                                    {
+                                                        totalHours += (relevantTraining["hours"] ?? 0);
+                                                    }
+                                                }
+                                            
+                                                isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= ((positions[0]["specific_training_required"] == null) || ((jobApplication["has_specific_training"] != 0) && (jobApplication["has_specific_training"] != null)));
+                                                isQualified &&= totalHours >= positions[0]["required_training_hours"];
+                                                break;
+                                            case "relevant_work_experience":
+                                                var totalDuration = null, duration = null;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantWorkExp of jobApplication[key])
+                                                    {
+                                                        duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
+                                                        totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
+                                                    }
+                                                }
+                                                
+                                                isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(positions[0]["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= ((positions[0]["specific_work_experience_required"] == null) || ((jobApplication["has_specific_work_experience"] != 0) && (jobApplication["has_specific_work_experience"] != null)));
+                                                break;
+                                            case "relevant_eligibility":
+                                                var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), positions[0]["required_eligibility"]);
+
+                                                isQualified &&= (valElig != 0);
+                                                break;
+                                            default:
+                                                break;
+                                        }                                    
+                                    }
+
+                                    return !isQualified;
+                                });
 
                                 thisCARForm.jobApplications = thisCARForm.jobApplications.filter(jobApplication=>{
                                     isQualified = true;
@@ -6717,6 +6769,8 @@ class CARForm extends Old_FormEx
                                 
                                 for (const row of rows)
                                 {      
+                                    console.log(row);
+
                                     var isTopRank = false;
 
                                     row["row_number"] = thisCARForm.carTable.rows.length + 1;
@@ -6732,6 +6786,76 @@ class CARForm extends Old_FormEx
                                     if (isTopRank)
                                     {
                                         thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("top-rank");
+                                    }
+                                }
+
+                                
+                                if (thisCARForm.jobApplicationsDisqualified != null || thisCARForm.jobApplicationsDisqualified != undefined)
+                                {
+                                    for (const jobApplication of thisCARForm.jobApplicationsDisqualified)
+                                    {
+                                        var score = 0;
+                                        row = {};
+                                        row["total"] = 0;
+
+                                        row["applicant_name"] = MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], true, false);
+                                        row["application_code"] = jobApplication["application_code"];
+
+                                        var filteredPositions = [];
+                                        
+                                        filteredPositions = document.positions.filter(position=>position["plantilla_item_number"] == jobApplication["plantilla_item_number_applied"]);
+
+                                        if (filteredPositions.length <= 0)
+                                        {
+                                            filteredPositions = document.positions.filter(position=>(position["parenthetical_title"] == jobApplication["parenthetical_title_applied"] && position["position_title"] == jobApplication["position_title_applied"]));
+                                        }
+                
+                                        if (filteredPositions.length <= 0)
+                                        {
+                                            filteredPositions = document.positions.filter(position=>position["position_title"] == jobApplication["position_title_applied"]);
+                                        }
+                
+                                        var position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
+
+                                        thisCARForm.scoreSheetElements = ScoreSheet.getScoreSheetElements(position, jobApplication); // criteria needs to be reselected for every position to properly return all scores
+
+                                        for (const criteria of thisCARForm.scoreSheetElements)
+                                        {
+                                            if (criteria.id != "summary" && criteria.weight != 0)
+                                            {
+                                                score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication));
+                                                row[criteria.id] = score.toFixed(3);
+                                                row["total"] += score;
+                                            }
+
+                                        }
+                                    
+                                        rowsDQ.push(row);
+                                    }
+
+                                    rowsDQ.sort((row1, row2)=>row2["total"] - row1["total"]);
+
+                                    for (const row of rowsDQ)
+                                    {      
+                                        var isTopRank = false;
+
+                                        row["row_number"] = thisCARForm.carTable.rows.length + 1;
+                                        isTopRank = (row["row_number"] <= positions.length * 5 && row["total"] > 0); // also don't include "zero" totals; MAY CHANGE DEPENDING ON HR POLICY
+                                        row["total"] = "<b>" + row["total"].toFixed(3) + "</b>";
+                                        thisCARForm.carTable.addRow(row);
+
+                                        if (row["total"] === "<b>0.000</b>")
+                                        {
+                                            thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("zero-score");
+                                        }
+
+                                        thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("disqualified");
+                                        thisCARForm.carTable.rows.slice(-1)[0]["tr"].style.backgroundColor = "gray";
+
+                                        // if (isTopRank)
+                                        // {
+                                        //     thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("top-rank");
+                                        // }    
                                     }
                                 }
 
