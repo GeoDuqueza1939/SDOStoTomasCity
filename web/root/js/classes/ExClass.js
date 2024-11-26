@@ -6529,8 +6529,61 @@ class CARForm extends Old_FormEx
             field.container.classList.add("car-hide-zero-scores");
             field.check();
             field.reverse();
-            field.addEvent("change", hidePersonalDataEvent=>{
+            field.addEvent("change", hideZeroScoresEvent=>{
                 this.displayExs["car-table"].container.classList.toggle("hide-zero-scores", field.isChecked());
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Include applicants with uncertain qualifications", "checkbox", "", "Include applicants with uncertain qualifications", "car-uncertain-qualification").container);
+         [this.dbInputEx["car-uncertain-qualification"]].forEach(field=>{
+            field.container.classList.add("car-uncertain-qualification");
+            field.check();
+            field.reverse();
+            field.addEvent("change", includeUncertainQualiEvent=>{
+                this.displayExs["car-table"].container.classList.toggle("include-uncertain-qualification", field.isChecked());
+
+                if (field.isChecked())
+                {
+                    this.dbInputEx["car-sort-all"].enable();
+                }
+                else
+                {
+                    this.dbInputEx["car-sort-all"].uncheck();
+                    this.dbInputEx["car-sort-all"].disable();
+                }
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Sort all", "checkbox", "", "Sort all, including applicants with uncertain qualifications", "car-sort-all").container);
+        [this.dbInputEx["car-sort-all"]].forEach(field=>{
+            field.container.classList.add("car-sort-all");
+            field.reverse();
+            field.addEvent("change", sortAllEvent=>{
+                this.displayExs["car-table"].container.classList.toggle("sorted-all", field.isChecked());
+
+                if (field.isChecked())
+                {
+                    let rowsReordered = [];
+
+                    thisCARForm.carTable.rows.forEach(row=>{
+                        rowsReordered.push(row);
+                    });
+
+                    rowsReordered.sort((row1, row2)=>parseFloat(row1.data.total.replace(/<\/?b>/, "")) - parseFloat(row2.data.total.replace(/<\/?b>/, "")));
+
+                    rowsReordered.forEach((row, i) => {
+                        thisCARForm.carTable.tbody.prepend(row.tr);
+
+                        row.td.row_number.innerHTML = rowsReordered.length - (i);
+                    });
+                }
+                else
+                {
+                    thisCARForm.carTable.rows.forEach((row, i, rows)=>{
+                        thisCARForm.carTable.tbody.append(row.tr);
+                        row.td.row_number.innerHTML = (i + 1);
+                    });
+                }
             });
         });
 
@@ -6578,6 +6631,8 @@ class CARForm extends Old_FormEx
         this.carTable.thead.children[1].children[11].setAttribute("rowspan", 2);
         this.carTable.thead.children[0].appendChild(this.carTable.thead.children[1].children[11]);
 
+        this.carTable.rowsOrigOrder = [];
+
         this.dbInputEx["car-select-position-button"].addEvent("click", clickEvent=>{
             var selectPositionDialog = new PositionSelectorDialog(this.app, "car-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
@@ -6619,6 +6674,8 @@ class CARForm extends Old_FormEx
                                 thisCARForm.jobApplications = JSON.parse(response.content);
 
                                 thisCARForm.carTable.removeAllRows();
+
+                                this.dbInputEx["car-sort-all"].uncheck();
 
                                 thisCARForm.jobApplicationsDisqualified = thisCARForm.jobApplications.filter(jobApplication=>{
                                     isQualified = true;
@@ -6789,7 +6846,6 @@ class CARForm extends Old_FormEx
                                     }
                                 }
 
-                                
                                 if (thisCARForm.jobApplicationsDisqualified != null || thisCARForm.jobApplicationsDisqualified != undefined)
                                 {
                                     for (const jobApplication of thisCARForm.jobApplicationsDisqualified)
@@ -6855,9 +6911,13 @@ class CARForm extends Old_FormEx
                                         // if (isTopRank)
                                         // {
                                         //     thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("top-rank");
-                                        // }    
+                                        // }
                                     }
                                 }
+
+                                this.carTable.rowsOrigOrder = thisCARForm.carTable.rows;
+
+                                console.log(this.carTable);
 
                                 selectPositionDialog.close();
 
@@ -7006,7 +7066,9 @@ class CARForm extends Old_FormEx
         carForPrint.document.getElementById("car-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
         carForPrint.document.getElementById("car-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
         carForPrint.document.getElementById("car-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
-        carForPrint.document.getElementById("car-form-input-ex4").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
+        carForPrint.document.getElementById("car-form-input-ex4").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
+        carForPrint.document.getElementById("car-form-input-ex5").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
+        carForPrint.document.getElementById("car-form-input-ex6").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW CAR IS CODED
         
         var printButtonGroup = new InputEx(null, "print-car-controls", "buttonExs");
         carForPrint.document.body.insertBefore(printButtonGroup.container, carForPrint.document.body.children[0]);
