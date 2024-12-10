@@ -6906,7 +6906,7 @@ class CARForm extends Old_FormEx
                                         }
 
                                         thisCARForm.carTable.rows.slice(-1)[0]["tr"].classList.add("disqualified");
-                                        thisCARForm.carTable.rows.slice(-1)[0]["tr"].style.backgroundColor = "gray";
+                                        // thisCARForm.carTable.rows.slice(-1)[0]["tr"].style.backgroundColor = "gray";
 
                                         // if (isTopRank)
                                         // {
