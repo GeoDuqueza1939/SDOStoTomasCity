@@ -7039,7 +7039,7 @@ class CARForm extends Old_FormEx
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 
-        var signatoryAppointer = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
+        var signatoryAppointer = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory-appointer", "", "Appointment conferred by:<br><br>&nbsp;");
         var fieldModeChange = event=>{
             if (event.target.isContentEditable)
             {
@@ -7050,7 +7050,7 @@ class CARForm extends Old_FormEx
                 event.target.setAttribute("contenteditable", true);
             }
         };
-        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"] + "<br>" + document.hrRoles["appointing_officer"]["position"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<span style=\"display: inline; text-transform: uppercase;\">" + document.hrRoles["appointing_officer"]["name"] + "</span>" + document.hrRoles["appointing_officer"]["position"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
             if (node.classList.contains("name-position"))
