@@ -991,7 +991,7 @@ class MPASIS_App extends App
                     }
                     else if (key == "alternative_work_experience")
                     {
-                        position[key] = this.forms["jobData"].dbInputEx[key].isChecked();
+                        // position[key] = this.forms["jobData"].dbInputEx[key].isChecked();
                     }
                     else if (key == "requires-spec-education" || key == "requires-spec-training" || key == "requires-spec-work-exp" || key == "requires-competency" || (key == "specific_education_required" && !this.forms["jobData"].dbInputEx["requires-spec-education"].isChecked()) || (key == "specific_training_required" && !this.forms["jobData"].dbInputEx["requires-spec-training"].isChecked()) || (key == "specific_work_experience_required" && !this.forms["jobData"].dbInputEx["requires-spec-work-exp"].isChecked()) || (key == "competency" && !this.forms["jobData"].dbInputEx["requires-competency"].isChecked()))
                     {}
