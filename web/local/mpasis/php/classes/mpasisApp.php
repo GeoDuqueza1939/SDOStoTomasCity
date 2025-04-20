@@ -40,8 +40,8 @@ class MPASIS_App extends App
         $requiresSignIn = true;
         $pageTitle = $this->getName() . ' | Department of Education | Sto. Tomas City SDO';
         $pageType = PageType::MPASIS;
-        // $addDebug = false;
-        $addDebug = true;
+        $addDebug = false;
+        // $addDebug = true;
 ?>
 <!DOCTYPE html>
 <html lang="en">

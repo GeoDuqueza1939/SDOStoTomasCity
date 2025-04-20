@@ -270,6 +270,11 @@ class DatabaseConnection
 		return $this->lastInsertId;
 	}
 
+	public function getConn() // TEMPORARY ONLY; UNTIL TRANSITIONED TO PDO::prepare()
+	{
+		return $this->conn;
+	}
+
 	public function update($table, $fieldValueStr, $criteriaStr = '')
 	{
 		return $this->executeStatement("UPDATE `$this->dbname`.`$table` SET $fieldValueStr" . ($criteriaStr == '' ? '' : " $criteriaStr"));

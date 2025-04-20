@@ -211,6 +211,9 @@ class MPASIS_App extends App
             case "scoresheet":
                 this.constructScoreSheet();
                 break;
+            case "applicants-upload":
+                this.contructApplicantDataUploadForm();
+                break;
             case "job":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
                 el = htmlToElement("<ul class=\"card-link\"></ul>");
@@ -231,6 +234,10 @@ class MPASIS_App extends App
                 break;
             case "job-data-search":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Search</h2>";
+                break;
+            case "job-data-upload":
+                // this.mainSections["main-" + viewId].innerHTML = "<h2>Upload Positions</h2>";
+                this.contructJobDataUploadForm();
                 break;
             case "evaluation":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Evaluation</h2>";
@@ -1047,6 +1054,420 @@ class MPASIS_App extends App
         status.style.gridColumn = "1 / span 7";
 
         return this.forms["jobData"];
+    }
+
+    contructJobDataUploadForm()
+    {
+        var jobDataUploadForm = null, header = null, downloadCSV = null, fileField = null, uploadBtn = null, preview = null, action = null;
+
+        if (this.forms["jobDataUpload"] != null && this.forms["jobDataUpload"] != undefined)
+        {
+            return this.forms["jobDataUpload"];
+        }
+
+        // jobDataUploadForm = this.forms["jobDataUpload"] = new Old_FormEx(this.mainSections["main-job-data-upload"], "job-data-upload-form-ex", true);
+        jobDataUploadForm = this.forms["jobDataUpload"] = new DataFormEx();
+
+        jobDataUploadForm.setup(this.mainSections["main-job-data-upload"], "form");
+        jobDataUploadForm.container.method = "post";
+        jobDataUploadForm.container.action = "/mpasis/php/process.php";
+        jobDataUploadForm.container.enctype = "multipart/form-data";
+
+        header = jobDataUploadForm.setTitle("Upload Jobs Data", 2);
+
+        // [{"loadPosition":"","position_title":"test","parenthetical_title":"tf","salary_grade":1,"plantilla_item_number":"itme","position_categoryId":1,"place_of_assignment":"SDO Sto. Tomas City","required_educational_attainment":6,"specific_education_required":"x","required_training_hours":0,"specific_training_required":"y","required_work_experience_years":0,"specific_work_experience_required":"z","required_eligibility":[5],"competency":"A"}]
+
+        downloadCSV = jobDataUploadForm.addControlEx("ButtonEx", {
+            parentHTMLElement:jobDataUploadForm.container, 
+            label:"Click to download CSV for data entry:", 
+            caption:"Download", 
+            id:"download-jobs-csv", 
+            name:"download-jobs-csv", 
+            buttonType:"button", 
+            clickCallback:clickCSVDownloadEvent=>{
+                const headers = ["position_title","parenthetical_title","salary_grade","plantilla_item_number","position_categoryId","place_of_assignment","required_educational_attainment","specific_education_required","required_training_hours","specific_training_required","required_work_experience_years","specific_work_experience_required","required_eligibility","competency"];
+                const rows = [headers];
+                let universalBOM = "\uFEFF";
+                let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
+
+                let encodedUri = encodeURI(csvContent);
+
+                let link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "jobs_data.csv");
+                document.body.appendChild(link);
+
+                link.click();
+            }
+        });
+
+        jobDataUploadForm.addLineBreak();
+        jobDataUploadForm.addLineBreak();
+
+        fileField = jobDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:jobDataUploadForm.container, label:"CSV for Upload:", inputType:"file", id:"jobs-csv", name:"jobs-csv"});
+        // fileField.container.classList.remove("textbox-ex");
+        fileField.container.classList.add("file-ex");
+        fileField.vertical = true;
+        fileField.control.style.width = "100%";
+        fileField.control.style.border = "2px inset";
+        fileField.control.style.backgroundColor = "white";
+        fileField.control.style.padding = "1em";
+        fileField.container.style.display = "flex";
+        fileField.control.accept = "text/csv";
+
+        fileField.addEvent("change", fileChangeEvent=>{
+            let table = document.getElementById("jobs-data-preview");
+
+            while (table.uiEx.rows.length > 0)
+            {
+                table.uiEx.deleteRowIndex(0);
+            }
+
+            if (fileChangeEvent.target.value === "")
+            {
+                // NO FILE SELECTED
+            }
+            else
+            {
+                const csvFile = fileField.control.files[0];
+                const reader = new FileReader();
+                reader.onload = function (readEvent) {
+                    let csvData = readEvent.target.result;
+                    let lines = csvData.split(/[\r\n]+/);
+                    let headerRow = lines.shift().split(",");
+                    let datatext = lines.join("\n");
+                    let rows = [];
+
+                    let malformed = false;
+                    
+                    let mode = 0; // 0: data mode; 1: string mode
+                    let index = 0; // will increment after every piece of data; shall reset to zero when array size of headerRow is reached
+                    let ptr = 0; // character pointer
+                    let strVal = ""; // string value accummulator; will reset to empty string when index is incremented
+                    let row = [];
+
+                    while (!malformed && ptr < datatext.length)
+                    {
+                        if (index >= headerRow.length)
+                        {
+                            rows.push(row);
+                            row = [];
+                            index = 0;
+                        }    
+
+                        if (mode === 0)
+                        {
+                            if (datatext[ptr] === "\"")
+                            {
+                                if(strVal === "")
+                                {
+                                    mode = 1;
+                                }
+                                else
+                                {
+                                    malformed = true;
+                                }
+                            }
+                            else if (datatext[ptr] === "," || datatext[ptr] === "\n" || ptr + 1 === datatext.length)
+                            {
+                                row.push(strVal);
+                                strVal = "";
+                                index++;
+
+                                if (index >= headerRow.length)
+                                {
+                                    rows.push(row);
+                                    row = [];
+                                }
+                            }
+                            else
+                            {
+                                strVal += datatext[ptr];
+                            }
+                        }
+                        else if (mode === 1)
+                        {
+                            if (datatext[ptr] === "\"")
+                            {
+                                if (ptr + 1 < datatext.length)
+                                {
+                                    if (datatext[ptr + 1] === "\"")
+                                    {
+                                        strVal += '"';
+                                        ptr++;
+                                    }
+                                    else if (datatext[ptr + 1] === "," || datatext[ptr + 1] === "\n")
+                                    {
+                                        mode = 0;
+                                    }
+                                    else
+                                    {
+                                        malformed = true;
+                                    }
+                                }
+                                else // last item
+                                {
+                                    mode = 0;
+
+                                    row.push(strVal);
+                                    rows.push(row);
+                                    row = [];
+                                    strVal = "";
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                strVal += datatext[ptr];
+                            }
+                        }
+
+                        ptr++;
+                    }
+
+                    if (malformed)
+                    {
+                        alert("CSV is malformed!");
+                    }
+
+                    headerRow.unshift("#");
+                    rows.map((value, index, array)=>{ value.unshift(index + 1); });                    
+
+                    rows.forEach((row, index, rows) => {
+                        let dataRow = [];
+
+                        headerRow.forEach((header, index, headerRow)=>{
+                            dataRow[header] = row[index];
+                        });
+
+                        table.uiEx.addRow(dataRow);
+                    });
+                };
+                reader.readAsText(csvFile);
+            }
+        });
+        
+        jobDataUploadForm.addLineBreak();
+
+        action = jobDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:jobDataUploadForm.container, id:"a", name:"a", inputType:"hidden", value:"upload"});
+        action.container.classList.add("hidden-ex");
+
+        uploadBtn = jobDataUploadForm.addControlEx("ButtonEx", {parentHTMLElement:jobDataUploadForm.container, caption:"Upload", buttonType:"submit"});
+
+        jobDataUploadForm.addLineBreak();
+
+        preview = jobDataUploadForm.addContainerEx("TableEx", {parentHTMLElement:jobDataUploadForm.container, id:"jobs-data-preview"});
+
+        preview.caption = "Data Preview";
+
+        preview.table.border = "1";
+        preview.setupHeaders([{name:"#",text:"#"},{name:"position_title", text:"position_title"},{name:"parenthetical_title", text:"parenthetical_title"},{name:"salary_grade", text:"salary_grade"},{name:"plantilla_item_number", text:"plantilla_item_number"},{name:"position_categoryId", text:"position_categoryId"},{name:"place_of_assignment", text:"place_of_assignment"},{name:"required_educational_attainment", text:"required_educational_attainment"},{name:"specific_education_required", text:"specific_education_required"},{name:"required_training_hours", text:"required_training_hours"},{name:"specific_training_required", text:"specific_training_required"},{name:"required_work_experience_years", text:"required_work_experience_years"},{name:"specific_work_experience_required", text:"specific_work_experience_required"},{name:"required_eligibility", text:"required_eligibility"},{name:"competency", text:"competency"}]);
+    }
+
+    contructApplicantDataUploadForm()
+    {
+        var applicantDataUploadForm = null, header = null, downloadCSV = null, fileField = null, uploadBtn = null, preview = null, action = null;
+
+        if (this.forms["applicantDataUpload"] != null && this.forms["applicantDataUpload"] != undefined)
+        {
+            return this.forms["applicantDataUpload"];
+        }
+
+        // applicantDataUploadForm = this.forms["applicantDataUpload"] = new Old_FormEx(this.mainSections["main-applicants-upload"], "applicants-upload-form-ex", true);
+        applicantDataUploadForm = this.forms["applicantDataUpload"] = new DataFormEx();
+
+        applicantDataUploadForm.setup(this.mainSections["main-applicants-upload"], "form");
+        applicantDataUploadForm.container.method = "post";
+        applicantDataUploadForm.container.action = "/mpasis/php/process.php";
+        applicantDataUploadForm.container.enctype = "multipart/form-data";
+
+        header = applicantDataUploadForm.setTitle("Upload Applicant Data", 2);
+
+        downloadCSV = applicantDataUploadForm.addControlEx("ButtonEx", {
+            parentHTMLElement:applicantDataUploadForm.container, 
+            label:"Click to download CSV for data entry:", 
+            caption:"Download", 
+            id:"download-job-applications-csv", 
+            name:"download-job-applications-csv", 
+            buttonType:"button", 
+            clickCallback:clickCSVDownloadEvent=>{
+                const headers = ["application_code","position_title_applied","plantilla_item_number_applied","given_name","middle_name","family_name","spouse_name","ext_name","addresses","age","sex","civil_status","religion","disabilities","ethnicity","email_addresses","contact_numbers"];
+                const rows = [headers];
+                let universalBOM = "\uFEFF";
+                let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
+
+                let encodedUri = encodeURI(csvContent);
+
+                let link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "job_applications_data.csv");
+                document.body.appendChild(link);
+
+                link.click();
+            }
+        });
+
+        applicantDataUploadForm.addLineBreak();
+        applicantDataUploadForm.addLineBreak();
+
+        fileField = applicantDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:applicantDataUploadForm.container, label:"CSV for Upload:", inputType:"file", id:"job-applications-csv", name:"job-applications-csv"});
+        // fileField.container.classList.remove("textbox-ex");
+        fileField.container.classList.add("file-ex");
+        fileField.vertical = true;
+        fileField.control.style.width = "100%";
+        fileField.control.style.border = "2px inset";
+        fileField.control.style.backgroundColor = "white";
+        fileField.control.style.padding = "1em";
+        fileField.container.style.display = "flex";
+        fileField.control.accept = "text/csv";
+
+        fileField.addEvent("change", fileChangeEvent=>{
+            let table = document.getElementById("applicant-data-preview");
+
+            while (table.uiEx.rows.length > 0)
+            {
+                table.uiEx.deleteRowIndex(0);
+            }
+
+            if (fileChangeEvent.target.value === "")
+            {
+                // NO FILE SELECTED
+            }
+            else
+            {
+                const csvFile = fileField.control.files[0];
+                const reader = new FileReader();
+                reader.onload = function (readEvent) {
+                    let csvData = readEvent.target.result;
+                    let lines = csvData.split(/[\r\n]+/);
+                    let headerRow = lines.shift().split(",");
+                    let datatext = lines.join("\n");
+                    let rows = [];
+
+                    let malformed = false;
+                    
+                    let mode = 0; // 0: data mode; 1: string mode
+                    let index = 0; // will increment after every piece of data; shall reset to zero when array size of headerRow is reached
+                    let ptr = 0; // character pointer
+                    let strVal = ""; // string value accummulator; will reset to empty string when index is incremented
+                    let row = [];
+
+                    while (!malformed && ptr < datatext.length)
+                    {
+                        if (index >= headerRow.length)
+                        {
+                            rows.push(row);
+                            row = [];
+                            index = 0;
+                        }    
+
+                        if (mode === 0)
+                        {
+                            if (datatext[ptr] === "\"")
+                            {
+                                if(strVal === "")
+                                {
+                                    mode = 1;
+                                }
+                                else
+                                {
+                                    malformed = true;
+                                }
+                            }
+                            else if (datatext[ptr] === "," || datatext[ptr] === "\n" || ptr + 1 === datatext.length)
+                            {
+                                row.push(strVal);
+                                strVal = "";
+                                index++;
+
+                                if (index >= headerRow.length)
+                                {
+                                    rows.push(row);
+                                    row = [];
+                                }
+                            }
+                            else
+                            {
+                                strVal += datatext[ptr];
+                            }
+                        }
+                        else if (mode === 1)
+                        {
+                            if (datatext[ptr] === "\"")
+                            {
+                                if (ptr + 1 < datatext.length)
+                                {
+                                    if (datatext[ptr + 1] === "\"")
+                                    {
+                                        strVal += '"';
+                                        ptr++;
+                                    }
+                                    else if (datatext[ptr + 1] === "," || datatext[ptr + 1] === "\n")
+                                    {
+                                        mode = 0;
+                                    }
+                                    else
+                                    {
+                                        malformed = true;
+                                    }
+                                }
+                                else // last item
+                                {
+                                    mode = 0;
+
+                                    row.push(strVal);
+                                    rows.push(row);
+                                    row = [];
+                                    strVal = "";
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                strVal += datatext[ptr];
+                            }
+                        }
+
+                        ptr++;
+                    }
+
+                    if (malformed)
+                    {
+                        alert("CSV is malformed!");
+                    }
+
+                    headerRow.unshift("#");
+                    rows.map((value, index, array)=>{ value.unshift(index + 1); });                    
+
+                    rows.forEach((row, index, rows) => {
+                        let dataRow = [];
+
+                        headerRow.forEach((header, index, headerRow)=>{
+                            dataRow[header] = row[index];
+                        });
+
+                        table.uiEx.addRow(dataRow);
+                    });
+                };
+                reader.readAsText(csvFile);
+            }
+        });
+        
+        applicantDataUploadForm.addLineBreak();
+
+        action = applicantDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:applicantDataUploadForm.container, id:"a", name:"a", inputType:"hidden", value:"upload"});
+        action.container.classList.add("hidden-ex");
+
+        uploadBtn = applicantDataUploadForm.addControlEx("ButtonEx", {parentHTMLElement:applicantDataUploadForm.container, caption:"Upload", buttonType:"submit"});
+
+        applicantDataUploadForm.addLineBreak();
+
+        preview = applicantDataUploadForm.addContainerEx("TableEx", {parentHTMLElement:applicantDataUploadForm.container, id:"applicant-data-preview"});
+
+        preview.caption = "Data Preview";
+
+        preview.table.border = "1";
+        preview.setupHeaders([{name:"#", text:"#"},{name:"application_code", text:"application_code"},{name:"position_title_applied", text:"position_title_applied"},{name:"plantilla_item_number_applied", text:"plantilla_item_number_applied"},{name:"given_name", text:"given_name"},{name:"middle_name", text:"middle_name"},{name:"family_name", text:"family_name"},{name:"spouse_name", text:"spouse_name"},{name:"ext_name", text:"ext_name"},{name:"addresses", text:"addresses"},{name:"age", text:"age"},{name:"sex", text:"sex"},{name:"civil_status", text:"civil_status"},{name:"religion", text:"religion"},{name:"disabilities", text:"disabilities"},{name:"ethnicity", text:"ethnicity"},{name:"email_addresses", text:"email_addresses"},{name:"contact_numbers", text:"contact_numbers"}]);
     }
 
     constructApplicantDataForm()
@@ -1907,6 +2328,9 @@ class MPASIS_App extends App
                                 case "has_more_unrecorded_work_experience":
                                     moreWorkExp.check(applicationObj[key] == 1);
                                     break;
+                                case "has_alternative_work_experience_applicable":
+                                    workExpUseAlternative.check(applicationObj[key] == 1);
+                                    break;
                                 case "relevant_work_experience":
                                     while(workExpInputExs.length > 0)
                                     {
@@ -2383,6 +2807,15 @@ class MPASIS_App extends App
             if (!moreTraining.isDisabled())
             {
                 jobApplication["has_more_unrecorded_training"] = (moreTraining.isChecked() ? 1 : 0);
+            }
+
+            if (workExpUseAlternative.isDisabled())
+            {
+                jobApplication["has_alternative_work_experience_applicable"] = 0;
+            }
+            else
+            {
+                jobApplication["has_alternative_work_experience_applicable"] = (workExpUseAlternative.isChecked() ? 1 : 0);
             }
 
             if (!moreWorkExp.isDisabled())
