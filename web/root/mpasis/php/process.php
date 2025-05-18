@@ -835,6 +835,37 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication) :
     return true;
 }
 
+function dbUpdateCoiNcoi($dbconn, $jobApplication) : bool
+{
+    $fieldStr = '';
+    $valueStr = '';
+    $fieldValueStr = generateFieldValueStr($dbconn, $jobApplication, $fieldStr, $valueStr);
+
+    $fieldStr = '(' . $fieldStr . ')';
+    $valueStr = '(' . $valueStr . ')';
+
+    $existingApplication = $dbconn->select('Job_Application', 'application_code', 'WHERE application_code="' . $jobApplication['application_code'] . '"');
+
+    if (is_null($dbconn->lastException))
+    {
+        if (count($existingApplication) == 0)
+        {
+            // Application code is not found, so DO NOTHING
+        }
+        else
+        {
+            $dbconn->update('Job_Application', $fieldValueStr, 'WHERE application_code="' . $jobApplication['application_code'] . '"');
+        }
+    }
+    else
+    {
+        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        return false;
+    }
+
+    return true;
+}
+
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
@@ -1653,6 +1684,48 @@ if (isValidUserSession())
                         }
 
                         dbAddPosition($dbconn, $dataRow); /// SHOULD ADD AJAX ERROR MESSAGES LATER!!!
+                    }
+
+                    return;
+                }
+                else if (isset($_FILES['coi-ncoi-csv']))
+                {
+                    $file = fopen($_FILES['coi-ncoi-csv']['tmp_name'], 'r');
+                    $rows = [];
+                    $row = null;
+                    $headerRow = [];
+                    $dataRows = [];
+                    $dataRow = [];
+
+                    if ($file === false)
+                    {
+                        die('Cannot open the file');
+                    }
+
+                    while (($row = fgetcsv($file)) !== false)
+                    {
+                        $rows[] = $row;
+                    }
+
+                    $headerRow = array_shift($rows);
+
+
+                    foreach ($rows as $row) {
+                        for ($i = 0; $i < count($row); $i++)
+                        {
+                            $dataRow[str_replace("\u{FEFF}", '', $headerRow[$i])] = ($row[$i] == '' ? NULL : $row[$i]);
+                        }
+                        $dataRows[] = $dataRow;
+                    }
+
+                    foreach ($dataRows as $dataRow)
+                    {
+                        if (!$dbconn->isConnected()) // added due to disconnects
+                        {
+                            $dbconn->connect();
+                        }
+
+                        dbUpdateCoiNcoi($dbconn, $dataRow); /// SHOULD ADD AJAX ERROR MESSAGES LATER!!!
                     }
 
                     return;

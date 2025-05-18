@@ -212,7 +212,7 @@ class MPASIS_App extends App
                 this.constructScoreSheet();
                 break;
             case "applicants-upload":
-                this.contructApplicantDataUploadForm();
+                this.constructApplicantDataUploadForm();
                 break;
             case "job":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Openings</h2>";
@@ -272,6 +272,9 @@ class MPASIS_App extends App
                 break;
             case "car-rqa":
                 this.constructCARRQA();
+                break;
+            case "coi-ncoi-data-upload":
+                this.contructCOINCOIDataUploadForm();
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
@@ -1264,7 +1267,215 @@ class MPASIS_App extends App
         preview.setupHeaders([{name:"#",text:"#"},{name:"position_title", text:"position_title"},{name:"parenthetical_title", text:"parenthetical_title"},{name:"salary_grade", text:"salary_grade"},{name:"plantilla_item_number", text:"plantilla_item_number"},{name:"position_categoryId", text:"position_categoryId"},{name:"place_of_assignment", text:"place_of_assignment"},{name:"required_educational_attainment", text:"required_educational_attainment"},{name:"specific_education_required", text:"specific_education_required"},{name:"required_training_hours", text:"required_training_hours"},{name:"specific_training_required", text:"specific_training_required"},{name:"required_work_experience_years", text:"required_work_experience_years"},{name:"specific_work_experience_required", text:"specific_work_experience_required"},{name:"required_eligibility", text:"required_eligibility"},{name:"competency", text:"competency"}]);
     }
 
-    contructApplicantDataUploadForm()
+    contructCOINCOIDataUploadForm()
+    {
+        var coiNcoiDataUploadForm = null, header = null, downloadCSV = null, fileField = null, uploadBtn = null, preview = null, action = null;
+
+        if (this.forms["coiNcoiDataUpload"] != null && this.forms["coiNcoiDataUpload"] != undefined)
+        {
+            return this.forms["coiNcoiDataUpload"];
+        }
+
+        // coiNcoiDataUploadForm = this.forms["coiNcoiDataUpload"] = new Old_FormEx(this.mainSections["main-job-data-upload"], "job-data-upload-form-ex", true);
+        coiNcoiDataUploadForm = this.forms["coiNcoiDataUpload"] = new DataFormEx();
+
+        coiNcoiDataUploadForm.setup(this.mainSections["main-coi-ncoi-data-upload"], "form");
+        coiNcoiDataUploadForm.container.method = "post";
+        coiNcoiDataUploadForm.container.action = "/mpasis/php/process.php";
+        coiNcoiDataUploadForm.container.enctype = "multipart/form-data";
+
+        header = coiNcoiDataUploadForm.setTitle("Upload COI and NCOI Data", 2);
+
+        // [{"loadPosition":"","position_title":"test","parenthetical_title":"tf","salary_grade":1,"plantilla_item_number":"itme","position_categoryId":1,"place_of_assignment":"SDO Sto. Tomas City","required_educational_attainment":6,"specific_education_required":"x","required_training_hours":0,"specific_training_required":"y","required_work_experience_years":0,"specific_work_experience_required":"z","required_eligibility":[5],"competency":"A"}]
+
+        downloadCSV = coiNcoiDataUploadForm.addControlEx("ButtonEx", {
+            parentHTMLElement:coiNcoiDataUploadForm.container, 
+            label:"Click to download CSV for data entry:", 
+            caption:"Download", 
+            id:"download-coi-ncoi-csv", 
+            name:"download-coi-ncoi-csv", 
+            buttonType:"button", 
+            clickCallback:clickCSVDownloadEvent=>{
+                const headers = ["application_code","ppstcoi","coi_notes","ppstncoi","ncoi_notes"];
+                const rows = [headers];
+                let universalBOM = "\uFEFF";
+                let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
+
+                let encodedUri = encodeURI(csvContent);
+
+                let link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "coi_ncoi_data.csv");
+                document.body.appendChild(link);
+
+                link.click();
+            }
+        });
+
+        coiNcoiDataUploadForm.addLineBreak();
+        coiNcoiDataUploadForm.addLineBreak();
+
+        fileField = coiNcoiDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:coiNcoiDataUploadForm.container, label:"CSV for Upload:", inputType:"file", id:"coi-ncoi-csv", name:"coi-ncoi-csv"});
+        // fileField.container.classList.remove("textbox-ex");
+        fileField.container.classList.add("file-ex");
+        fileField.vertical = true;
+        fileField.control.style.width = "100%";
+        fileField.control.style.border = "2px inset";
+        fileField.control.style.backgroundColor = "white";
+        fileField.control.style.padding = "1em";
+        fileField.container.style.display = "flex";
+        fileField.control.accept = "text/csv";
+
+        fileField.addEvent("change", fileChangeEvent=>{
+            let table = document.getElementById("coi-ncoi-data-preview");
+
+            while (table.uiEx.rows.length > 0)
+            {
+                table.uiEx.deleteRowIndex(0);
+            }
+
+            if (fileChangeEvent.target.value === "")
+            {
+                // NO FILE SELECTED
+            }
+            else
+            {
+                const csvFile = fileField.control.files[0];
+                const reader = new FileReader();
+                reader.onload = function (readEvent) {
+                    let csvData = readEvent.target.result;
+                    let lines = csvData.split(/[\r\n]+/);
+                    let headerRow = lines.shift().split(",");
+                    let datatext = lines.join("\n");
+                    let rows = [];
+
+                    let malformed = false;
+                    
+                    let mode = 0; // 0: data mode; 1: string mode
+                    let index = 0; // will increment after every piece of data; shall reset to zero when array size of headerRow is reached
+                    let ptr = 0; // character pointer
+                    let strVal = ""; // string value accummulator; will reset to empty string when index is incremented
+                    let row = [];
+
+                    while (!malformed && ptr < datatext.length)
+                    {
+                        if (index >= headerRow.length)
+                        {
+                            rows.push(row);
+                            row = [];
+                            index = 0;
+                        }    
+
+                        if (mode === 0)
+                        {
+                            if (datatext[ptr] === "\"")
+                            {
+                                if(strVal === "")
+                                {
+                                    mode = 1;
+                                }
+                                else
+                                {
+                                    malformed = true;
+                                }
+                            }
+                            else if (datatext[ptr] === "," || datatext[ptr] === "\n" || ptr + 1 === datatext.length)
+                            {
+                                row.push(strVal);
+                                strVal = "";
+                                index++;
+
+                                if (index >= headerRow.length)
+                                {
+                                    rows.push(row);
+                                    row = [];
+                                }
+                            }
+                            else
+                            {
+                                strVal += datatext[ptr];
+                            }
+                        }
+                        else if (mode === 1)
+                        {
+                            if (datatext[ptr] === "\"")
+                            {
+                                if (ptr + 1 < datatext.length)
+                                {
+                                    if (datatext[ptr + 1] === "\"")
+                                    {
+                                        strVal += '"';
+                                        ptr++;
+                                    }
+                                    else if (datatext[ptr + 1] === "," || datatext[ptr + 1] === "\n")
+                                    {
+                                        mode = 0;
+                                    }
+                                    else
+                                    {
+                                        malformed = true;
+                                    }
+                                }
+                                else // last item
+                                {
+                                    mode = 0;
+
+                                    row.push(strVal);
+                                    rows.push(row);
+                                    row = [];
+                                    strVal = "";
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                strVal += datatext[ptr];
+                            }
+                        }
+
+                        ptr++;
+                    }
+
+                    if (malformed)
+                    {
+                        alert("CSV is malformed!");
+                    }
+
+                    headerRow.unshift("#");
+                    rows.map((value, index, array)=>{ value.unshift(index + 1); });                    
+
+                    rows.forEach((row, index, rows) => {
+                        let dataRow = [];
+
+                        headerRow.forEach((header, index, headerRow)=>{
+                            dataRow[header] = row[index];
+                        });
+
+                        table.uiEx.addRow(dataRow);
+                    });
+                };
+                reader.readAsText(csvFile);
+            }
+        });
+        
+        coiNcoiDataUploadForm.addLineBreak();
+
+        action = coiNcoiDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:coiNcoiDataUploadForm.container, id:"a", name:"a", inputType:"hidden", value:"upload"});
+        action.container.classList.add("hidden-ex");
+
+        uploadBtn = coiNcoiDataUploadForm.addControlEx("ButtonEx", {parentHTMLElement:coiNcoiDataUploadForm.container, caption:"Upload", buttonType:"submit"});
+
+        coiNcoiDataUploadForm.addLineBreak();
+
+        preview = coiNcoiDataUploadForm.addContainerEx("TableEx", {parentHTMLElement:coiNcoiDataUploadForm.container, id:"coi-ncoi-data-preview"});
+
+        preview.caption = "Data Preview";
+
+        preview.table.border = "1";
+        preview.setupHeaders([{name:"#",text:"#"},{name:"application_code", text:"application_code"},{name:"ppstcoi", text:"ppstcoi"},{name:"coi_notes", text:"coi_notes"},{name:"ppstncoi", text:"ppstncoi"},{name:"ncoi_notes", text:"ncoi_notes"}]);
+    }
+
+    constructApplicantDataUploadForm()
     {
         var applicantDataUploadForm = null, header = null, downloadCSV = null, fileField = null, uploadBtn = null, preview = null, action = null;
 
