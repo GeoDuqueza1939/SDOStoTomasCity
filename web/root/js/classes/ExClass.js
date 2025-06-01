@@ -3700,7 +3700,24 @@ class ScoreSheet extends Old_FormEx
                     scoreSheet.dbInputEx["applicant_name"].setDefaultValue(MPASIS_App.getFullName(scoreSheet.jobApplication["given_name"], scoreSheet.jobApplication["middle_name"], scoreSheet.jobApplication["family_name"], scoreSheet.jobApplication["spouse_name"], scoreSheet.jobApplication["ext_name"], true, false), true);
                     scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"], true);
 
-                    scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
+                    // scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
+
+                    var filteredPositions = [];
+                    
+                    filteredPositions = document.positions.filter(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"]);
+
+                    if (filteredPositions.length <= 0)
+                    {
+                        filteredPositions = document.positions.filter(position=>(position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"] && position["position_title"] == scoreSheet.jobApplication["position_title_applied"]));
+                    }
+
+                    if (filteredPositions.length <= 0)
+                    {
+                        filteredPositions = document.positions.filter(position=>position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
+                    }
+
+                    scoreSheet.positionApplied = (filteredPositions.length > 0 ? filteredPositions[0] : null);
+
                     scoreSheet.scoreSheetElements = ScoreSheet.getScoreSheetElements(scoreSheet.positionApplied, scoreSheet.jobApplication);
 
                     for (const criteria of scoreSheet.scoreSheetElements)
@@ -6117,11 +6134,25 @@ class IESForm extends Old_FormEx
 
                     iesForm.jobApplication = searchResult.data.filter(data=>data["application_code"] == searchResult.getValue())[0];
 
-                    var filteredPositions = document.positions.filter(position=>{
-                        return position["plantilla_item_number"] == iesForm.jobApplication["plantilla_item_number_applied"]
-                        || (position["parenthetical_title"] == iesForm.jobApplication["parenthetical_title_applied"] && position["position_title"] == iesForm.jobApplication["position_title_applied"])
-                        || position["position_title"] == iesForm.jobApplication["position_title_applied"];
-                    });
+                    // var filteredPositions = document.positions.filter(position=>{
+                    //     return position["plantilla_item_number"] == iesForm.jobApplication["plantilla_item_number_applied"]
+                    //     || (position["parenthetical_title"] == iesForm.jobApplication["parenthetical_title_applied"] && position["position_title"] == iesForm.jobApplication["position_title_applied"])
+                    //     || position["position_title"] == iesForm.jobApplication["position_title_applied"];
+                    // });
+
+                    var filteredPositions = [];
+                    
+                    filteredPositions = document.positions.filter(position=>position["plantilla_item_number"] == iesForm.jobApplication["plantilla_item_number_applied"]);
+
+                    if (filteredPositions.length <= 0)
+                    {
+                        filteredPositions = document.positions.filter(position=>(position["parenthetical_title"] == iesForm.jobApplication["parenthetical_title_applied"] && position["position_title"] == iesForm.jobApplication["position_title_applied"]));
+                    }
+
+                    if (filteredPositions.length <= 0)
+                    {
+                        filteredPositions = document.positions.filter(position=>position["position_title"] == iesForm.jobApplication["position_title_applied"]);
+                    }
 
                     iesForm.position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
 
