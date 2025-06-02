@@ -3698,7 +3698,7 @@ class ScoreSheet extends Old_FormEx
             
                     scoreSheet.dbInputEx["application_code"].setDefaultValue(scoreSheet.jobApplication["application_code"], true);
                     scoreSheet.dbInputEx["applicant_name"].setDefaultValue(MPASIS_App.getFullName(scoreSheet.jobApplication["given_name"], scoreSheet.jobApplication["middle_name"], scoreSheet.jobApplication["family_name"], scoreSheet.jobApplication["spouse_name"], scoreSheet.jobApplication["ext_name"], true, false), true);
-                    scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"], true);
+                    scoreSheet.dbInputEx["position_title_applied"].setDefaultValue(scoreSheet.jobApplication["position_title_applied"] + (scoreSheet.jobApplication["parenthetical_position_title_applied"] == null || scoreSheet.jobApplication["parenthetical_position_title_applied"] == "" ? "" : " (" + scoreSheet.jobApplication["parenthetical_position_title_applied"] + ")") + (scoreSheet.jobApplication["plantilla_item_number_applied"] == null || scoreSheet.jobApplication["plantilla_item_number_applied"] == "" ? "" : " - " + scoreSheet.jobApplication["plantilla_item_number_applied"]), true);
 
                     // scoreSheet.positionApplied = document.positions.find(position=>position["plantilla_item_number"] == scoreSheet.jobApplication["plantilla_item_number_applied"] || (position["position_title"] == scoreSheet.jobApplication["position_title_applied"] && position["parenthetical_title"] == scoreSheet.jobApplication["parenthetical_title_applied"]) || position["position_title"] == scoreSheet.jobApplication["position_title_applied"]);
 
@@ -6565,13 +6565,13 @@ class CARForm extends Old_FormEx
             });
         });
 
-        posInfo.appendChild(this.addInputEx("Include applicants with uncertain qualifications", "checkbox", "", "Include applicants with uncertain qualifications", "car-uncertain-qualification").container);
-         [this.dbInputEx["car-uncertain-qualification"]].forEach(field=>{
-            field.container.classList.add("car-uncertain-qualification");
-            field.check();
+        posInfo.appendChild(this.addInputEx("Include applicants with uncertain qualifications", "checkbox", "", "Include applicants with uncertain qualifications", "car-disqualified").container);
+         [this.dbInputEx["car-disqualified"]].forEach(field=>{
+            field.container.classList.add("car-disqualified");
+            // field.check();
             field.reverse();
             field.addEvent("change", includeUncertainQualiEvent=>{
-                this.displayExs["car-table"].container.classList.toggle("include-uncertain-qualification", field.isChecked());
+                this.displayExs["car-table"].container.classList.toggle("include-disqualified", field.isChecked());
 
                 if (field.isChecked())
                 {
@@ -6589,6 +6589,7 @@ class CARForm extends Old_FormEx
         [this.dbInputEx["car-sort-all"]].forEach(field=>{
             field.container.classList.add("car-sort-all");
             field.reverse();
+            field.disable();
             field.addEvent("change", sortAllEvent=>{
                 this.displayExs["car-table"].container.classList.toggle("sorted-all", field.isChecked());
 
@@ -6948,7 +6949,7 @@ class CARForm extends Old_FormEx
 
                                 this.carTable.rowsOrigOrder = thisCARForm.carTable.rows;
 
-                                console.log(this.carTable);
+                                // console.log(this.carTable);
 
                                 selectPositionDialog.close();
 
@@ -7140,6 +7141,7 @@ class RQAForm extends Old_FormEx
         [
             {id:"position",type:"div",label:"Position",tooltip:"Selected position"},
             // {type:"spacer-div"},
+            {id:"plantilla_item_numbers",type:"div",label:"Plantilla Item Number",tooltip:"Plantilla item number(s)"},
             {id:"place_of_assignment",type:"div",label:"Schools Division Office",tooltip:"Place of Assignment"},
             {id:"final_deliberation_date",type:"text",label:"Date of Final Deliberation",tooltip:"Date of Final Deliberation"},
             // {type:"spacer-div"},
@@ -7163,6 +7165,7 @@ class RQAForm extends Old_FormEx
             }
         });
 
+        this.displayExs["plantilla_item_numbers"].setHTMLContent("N/A");
 
         this.dbInputEx["final_deliberation_date"].addEvent("focus", function(event){this.type = "date";});
         this.dbInputEx["final_deliberation_date"].addEvent("blur", function(event){this.type = "text";});
@@ -7177,20 +7180,119 @@ class RQAForm extends Old_FormEx
             });
         });
 
-        posInfo.appendChild(this.addInputEx("Hide zero (0) scores", "checkbox", "", "Hide zero (0) scores", "rqa-hide-zero-scores").container);
-        [this.dbInputEx["rqa-hide-zero-scores"]].forEach(field=>{
-            field.container.classList.add("rqa-hide-zero-scores");
-            field.check();
+        posInfo.appendChild(this.addInputEx("CAR Mode", "checkbox", "", "CAR Mode", "rqa-enable-car-mode").container);
+        [this.dbInputEx["rqa-enable-car-mode"]].forEach(field=>{
+            field.container.classList.add("rqa-enable-car-mode");
             field.reverse();
             field.addEvent("change", hidePersonalDataEvent=>{
-                this.displayExs["rqa-table"].container.classList.toggle("hide-zero-scores", field.isChecked());
+                this.displayExs["rqa-table"].container.classList.toggle("car-mode", field.isChecked());
+
+                this.container.classList.toggle("car-mode", field.isChecked());
+
+                if (field.isChecked())
+                {
+                    this.dbInputEx["rqa-show-zero-scores"].enable();
+                    this.dbInputEx["rqa-disqualified"].enable();
+
+                    this.displayExs["place_of_assignment"].setLabelText("Office/Bureau/Service/Unit where the vacancy exists:");
+
+                    this.setTitle("Comparative Assessment Result (CAR)");
+                }
+                else
+                {
+                    this.dbInputEx["rqa-sort-all"].uncheck();
+                    this.dbInputEx["rqa-sort-all"].disable();
+                    this.dbInputEx["rqa-disqualified"].uncheck();
+                    this.dbInputEx["rqa-disqualified"].disable();
+                    this.dbInputEx["rqa-show-zero-scores"].uncheck();
+                    this.dbInputEx["rqa-show-zero-scores"].disable();
+
+                    this.displayExs["rqa-table"].container.classList.toggle("show-zero-scores", this.dbInputEx["rqa-show-zero-scores"].isChecked());
+                    this.displayExs["rqa-table"].container.classList.toggle("include-disqualified", this.dbInputEx["rqa-disqualified"].isChecked());
+
+                    this.displayExs["rqa-table"].rows.forEach((row, i, rows)=>{
+                        this.displayExs["rqa-table"].tbody.append(row.tr);
+                        row.td.row_number.innerHTML = (i + 1);
+                    });
+                            
+                    this.displayExs["place_of_assignment"].setLabelText("Schools Division Office:");
+
+                    this.setTitle("Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA)");
+
+                }
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Show zero (0) scores", "checkbox", "", "Show zero (0) scores", "rqa-show-zero-scores").container);
+        [this.dbInputEx["rqa-show-zero-scores"]].forEach(field=>{
+            field.container.classList.add("rqa-show-zero-scores");
+            // field.check();
+            field.reverse();
+            field.disable();
+            field.addEvent("change", hidePersonalDataEvent=>{
+                this.displayExs["rqa-table"].container.classList.toggle("show-zero-scores", field.isChecked());
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Include disqualified applicants", "checkbox", "", "Include disqualified applicants", "rqa-disqualified").container);
+         [this.dbInputEx["rqa-disqualified"]].forEach(field=>{
+            field.container.classList.add("rqa-disqualified");
+            // field.check();
+            field.reverse();
+            field.disable();
+            field.addEvent("change", includeUncertainQualiEvent=>{
+                this.displayExs["rqa-table"].container.classList.toggle("include-disqualified", field.isChecked());
+
+                if (field.isChecked())
+                {
+                    this.dbInputEx["rqa-sort-all"].enable();
+                }
+                else
+                {
+                    this.dbInputEx["rqa-sort-all"].uncheck();
+                    this.dbInputEx["rqa-sort-all"].disable();
+                }
+            });
+        });
+
+        posInfo.appendChild(this.addInputEx("Sort all", "checkbox", "", "Sort all, including disqualified applicants", "rqa-sort-all").container);
+        [this.dbInputEx["rqa-sort-all"]].forEach(field=>{
+            field.container.classList.add("rqa-sort-all");
+            field.reverse();
+            field.disable();
+            field.addEvent("change", sortAllEvent=>{
+                this.displayExs["rqa-table"].container.classList.toggle("sorted-all", field.isChecked());
+
+                if (field.isChecked())
+                {
+                    let rowsReordered = [];
+
+                    thisRQAForm.rqaTable.rows.forEach(row=>{
+                        rowsReordered.push(row);
+                    });
+
+                    rowsReordered.sort((row1, row2)=>parseFloat(row1.data.total.replace(/<\/?b>/, "")) - parseFloat(row2.data.total.replace(/<\/?b>/, "")));
+
+                    rowsReordered.forEach((row, i) => {
+                        thisRQAForm.rqaTable.tbody.prepend(row.tr);
+
+                        row.td.row_number.innerHTML = rowsReordered.length - (i);
+                    });
+                }
+                else
+                {
+                    thisRQAForm.rqaTable.rows.forEach((row, i, rows)=>{
+                        thisRQAForm.rqaTable.tbody.append(row.tr);
+                        row.td.row_number.innerHTML = (i + 1);
+                    });
+                }
             });
         });
 
         this.rqaTable = this.addDisplayEx("div-table", "rqa-table");
         this.rqaTable.container.classList.add("rqa-table");
         this.rqaTable.container.classList.add("hide-personal-data");
-        this.rqaTable.container.classList.add("hide-zero-scores");
+        //this.rqaTable.container.classList.add("hide-zero-scores");
 
         this.rqaTable.setHeaders([
             {colHeaderName:"row_number",colHeaderText:"No."},
@@ -7250,7 +7352,7 @@ class RQAForm extends Old_FormEx
                     this.dbInputEx["final_deliberation_date"].setTooltipText(positions[0]["final_deliberation_date"] ?? "");
 
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
-                        var response = null, rows = [], row = null, isQualified = true;
+                        var response = null, rows = [], rowsDQ = [], row = null, isQualified = true;
 
                         if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                         {
@@ -7267,6 +7369,58 @@ class RQAForm extends Old_FormEx
                                 thisRQAForm.jobApplications = JSON.parse(response.content);
 
                                 thisRQAForm.rqaTable.removeAllRows();
+
+                                thisRQAForm.jobApplicationsDisqualified = thisRQAForm.jobApplications.filter(jobApplication=>{
+                                    isQualified = true;
+
+                                    for (const key in jobApplication)
+                                    {
+                                        switch (key)
+                                        {
+                                            case "educational_attainment":
+                                                isQualified &&= (ScoreSheet.getEducIncrements(parseInt(jobApplication["educational_attainmentIndex"]), jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(parseInt(positions[0]["required_educational_attainment"]), []));
+                                                isQualified &&= ((positions[0]["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
+                                                break;
+                                            case "relevant_training":
+                                                var totalHours = 0;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantTraining of jobApplication[key])
+                                                    {
+                                                        totalHours += (relevantTraining["hours"] ?? 0);
+                                                    }
+                                                }
+                                            
+                                                isQualified &&= (Math.trunc(totalHours / 8) + 1 >= Math.trunc(positions[0]["required_training_hours"] / 8) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= ((positions[0]["specific_training_required"] == null) || ((jobApplication["has_specific_training"] != 0) && (jobApplication["has_specific_training"] != null)));
+                                                isQualified &&= totalHours >= positions[0]["required_training_hours"];
+                                                break;
+                                            case "relevant_work_experience":
+                                                var totalDuration = null, duration = null;
+                                                if (jobApplication[key].length > 0)
+                                                {
+                                                    for (const relevantWorkExp of jobApplication[key])
+                                                    {
+                                                        duration = ScoreSheet.getDuration(relevantWorkExp["start_date"], relevantWorkExp["end_date"] ?? MPASIS_App.defaultEndDate);
+                                                        totalDuration = (totalDuration == null ? duration : ScoreSheet.addDuration(totalDuration, duration));
+                                                    }
+                                                }
+                                                
+                                                isQualified &&= (Math.trunc(ScoreSheet.convertDurationToNum(totalDuration) * 12 / 6) + 1 >= Math.trunc(positions[0]["required_work_experience_years"] * 12 / 6) + 1); // MAY ALSO BE SIMPLIFIED MATHEMATICALLY
+                                                isQualified &&= ((positions[0]["specific_work_experience_required"] == null) || ((jobApplication["has_specific_work_experience"] != 0) && (jobApplication["has_specific_work_experience"] != null)));
+                                                break;
+                                            case "relevant_eligibility":
+                                                var valElig = ScoreSheet.validateEligibility(jobApplication[key].map(elig=>elig.eligibilityId), positions[0]["required_eligibility"]);
+
+                                                isQualified &&= (valElig != 0);
+                                                break;
+                                            default:
+                                                break;
+                                        }                                    
+                                    }
+
+                                    return !isQualified;
+                                });
 
                                 thisRQAForm.jobApplications = thisRQAForm.jobApplications.filter(jobApplication=>{
                                     isQualified = true;
@@ -7365,11 +7519,71 @@ class RQAForm extends Old_FormEx
                                 
                                 for (const row of rows)
                                 {      
-                                    // var isQualified = (row["total"] >= 70); // MAY CHANGE DEPENDING ON HR POLICY
-                                    var isQualified = (row["total"] >= 0); // MAY CHANGE DEPENDING ON HR POLICY
+                                    var isZeroScore = (row["total"] == 0);
+                                    var isBelowCutOff = (row["total"] < 50); // DO 7, s. 2023
                                     
-                                    if (isQualified)
+                                    row["row_number"] = thisRQAForm.rqaTable.rows.length + 1;
+                                    row["total"] = "<b>" + row["total"].toFixed(3) + "</b>";
+                                    thisRQAForm.rqaTable.addRow(row);
+
+                                    if (isBelowCutOff)
                                     {
+                                        thisRQAForm.rqaTable.rows.slice(-1)[0]["tr"].classList.add("below-cut-off");
+                                    }
+                                    
+                                    if (isZeroScore)
+                                    {
+                                        thisRQAForm.rqaTable.rows.slice(-1)[0]["tr"].classList.add("zero-score");
+                                    }
+                                }
+
+                                if (thisRQAForm.jobApplicationsDisqualified != null || thisRQAForm.jobApplicationsDisqualified != undefined)
+                                {
+                                    for (const jobApplication of thisRQAForm.jobApplicationsDisqualified)
+                                    {
+                                        var score = 0;
+                                        row = {};
+                                        row["total"] = 0;
+
+                                        row["applicant_name"] = MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], true, false);
+                                        row["application_code"] = jobApplication["application_code"];
+
+                                        var filteredPositions = [];
+                                        
+                                        filteredPositions = document.positions.filter(position=>position["plantilla_item_number"] == jobApplication["plantilla_item_number_applied"]);
+
+                                        if (filteredPositions.length <= 0)
+                                        {
+                                            filteredPositions = document.positions.filter(position=>(position["parenthetical_title"] == jobApplication["parenthetical_title_applied"] && position["position_title"] == jobApplication["position_title_applied"]));
+                                        }
+                
+                                        if (filteredPositions.length <= 0)
+                                        {
+                                            filteredPositions = document.positions.filter(position=>position["position_title"] == jobApplication["position_title_applied"]);
+                                        }
+                
+                                        var position = (filteredPositions.length > 0 ? filteredPositions[0] : null);
+
+                                        thisRQAForm.scoreSheetElements = ScoreSheet.getScoreSheetElements(position, jobApplication); // criteria needs to be reselected for every position to properly return all scores
+
+                                        for (const criteria of thisRQAForm.scoreSheetElements)
+                                        {
+                                            if (criteria.id != "summary" && criteria.weight != 0)
+                                            {
+                                                score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication));
+                                                row[criteria.id] = score.toFixed(3);
+                                                row["total"] += score;
+                                            }
+
+                                        }
+                                    
+                                        rowsDQ.push(row);
+                                    }
+
+                                    rowsDQ.sort((row1, row2)=>row2["total"] - row1["total"]);
+
+                                    for (const row of rowsDQ)
+                                    {      
                                         row["row_number"] = thisRQAForm.rqaTable.rows.length + 1;
                                         row["total"] = "<b>" + row["total"].toFixed(3) + "</b>";
                                         thisRQAForm.rqaTable.addRow(row);
@@ -7378,8 +7592,14 @@ class RQAForm extends Old_FormEx
                                         {
                                             thisRQAForm.rqaTable.rows.slice(-1)[0]["tr"].classList.add("zero-score");
                                         }
+
+                                        thisRQAForm.rqaTable.rows.slice(-1)[0]["tr"].classList.add("disqualified");
                                     }
                                 }
+
+                                this.rqaTable.rowsOrigOrder = thisRQAForm.rqaTable.rows;
+
+                                // console.log(this.rqaTable);
 
                                 selectPositionDialog.close();
 
@@ -7530,7 +7750,10 @@ class RQAForm extends Old_FormEx
         rqaForPrint.document.getElementById("rqa-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
         rqaForPrint.document.getElementById("rqa-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
         rqaForPrint.document.getElementById("rqa-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex4").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex4").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex5").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex6").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        rqaForPrint.document.getElementById("rqa-form-input-ex7").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
         
         var printButtonGroup = new InputEx(null, "print-rqa-controls", "buttonExs");
         rqaForPrint.document.body.insertBefore(printButtonGroup.container, rqaForPrint.document.body.children[0]);

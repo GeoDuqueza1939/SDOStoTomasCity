@@ -934,12 +934,26 @@ table.doc-info tr>:nth-child(3) {
     grid-template-columns: 12.75em auto;
 }
 
+.car-mode .rqa-position-info > .display-ex.place_of_assignment {
+    grid-template-columns: 28.75em auto;
+}
+
+.car-mode .rqa-position-info > .display-ex.plantilla_item_numbers {
+    grid-row: 1;
+    grid-column-start: 3;
+    grid-template-columns: 12em auto;
+}
+
 .rqa-position-info > .input-ex.final_deliberation_date {
     grid-column-start: 3;
 }
 
 .rqa-position-info > .input-ex.final_deliberation_date > .fields {
     grid-template-columns: 14em auto;
+}
+
+.car-mode .rqa-position-info > .input-ex.final_deliberation_date {
+    grid-row: 2;
 }
 
 .rqa-position-info > .input-ex.final_deliberation_date > .fields > label {

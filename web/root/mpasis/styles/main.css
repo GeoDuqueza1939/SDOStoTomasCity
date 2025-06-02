@@ -968,6 +968,16 @@ REINSTATE FOR PRINTOUT
     visibility: hidden;
 }
 
+.car-table > .content > table > tbody > tr.disqualified {
+    display: none;
+    visibility: hidden;
+}
+
+.car-table.include-disqualified > .content > table > tbody > tr.disqualified {
+    display: table-row;
+    visibility: initial;
+}
+
 .car-table.hide-zero-scores > .content > table > tbody > tr.zero-score {
     display: none;
     visibility: hidden;
@@ -1003,8 +1013,25 @@ REINSTATE FOR PRINTOUT
     grid-template-columns: 4.5em auto;
 }
 
+.rqa-position-info > .display-ex.plantilla_item_numbers {
+    display: none;
+    visibility: hidden;
+}
+
+.car-mode .rqa-position-info > .display-ex.plantilla_item_numbers {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 11.5em auto;
+    grid-column-start: 3;
+    visibility: visible;
+}
+
 .rqa-position-info > .display-ex.place_of_assignment {
     grid-template-columns: 12em auto;
+}
+
+.car-mode .rqa-position-info > .display-ex.place_of_assignment {
+    grid-template-columns: 27em auto;
 }
 
 .rqa-position-info > .display-ex > label {}
@@ -1023,6 +1050,10 @@ REINSTATE FOR PRINTOUT
 
 .rqa-position-info > .input-ex.final_deliberation_date {
     display: block;
+}
+
+.car-mode .rqa-position-info > .input-ex.final_deliberation_date {
+    grid-row: 2;
 }
 
 .rqa-position-info > .input-ex.final_deliberation_date > .fields {
@@ -1089,9 +1120,33 @@ REINSTATE FOR PRINTOUT
     visibility: hidden;
 }
 
-.rqa-table.hide-zero-scores > .content > table > tbody > tr.zero-score {
+.rqa-table > .content > table > tbody > tr.below-cut-off {
+    font-style: italic;
+}
+
+.rqa-table > .content > table > tbody > tr.zero-score {
+    color: gray;
+}
+
+.rqa-table > .content > table > tbody > tr.disqualified {
+    background-color: lightgray;
+}
+
+.rqa-table > .content > table > tbody > tr.below-cut-off,
+.rqa-table > .content > table > tbody > tr.zero-score, 
+.rqa-table > .content > table > tbody > tr.disqualified
+{
     display: none;
     visibility: hidden;
+}
+
+.rqa-table.car-mode > .content > table > tbody > tr.below-cut-off:not(.zero-score):not(.disqualified),
+.rqa-table.show-zero-scores > .content > table > tbody > tr.zero-score:not(.disqualified),
+.rqa-table.include-disqualified > .content > table > tbody > tr.disqualified:not(.zero-score),
+.rqa-table.show-zero-scores.include-disqualified > .content > table > tbody > tr.zero-score.disqualified
+{
+    display: table-row;
+    visibility: initial;
 }
 
 .rqa-form > .fields > .rqa-update {
