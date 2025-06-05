@@ -180,5 +180,5 @@ function create_email_composer_ui()
 <?php
 }
 
-create_email_composer_ui();
+//create_email_composer_ui();
 ?>

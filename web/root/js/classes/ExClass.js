@@ -7053,10 +7053,10 @@ class CARForm extends Old_FormEx
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 */
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(i=>{
-            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 5 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
+        [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(i=>{
+            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 4 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
             console.log(member);
-            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 5 ? "chair" : "member")));
+            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 4 ? "chair" : "member")));
             htmlToElements("<div class=\"name-position\" style=\"white-space: nowrap;\"><span style=\"display: inline; text-transform: uppercase;\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "</span><!-- <br> -->" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 5 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
@@ -7066,7 +7066,7 @@ class CARForm extends Old_FormEx
                     node.title = "Please double-click to edit.";
                 }
             });
-            signatoryHRMPSBMember[i].container.classList.add(i == 5 ? "chair" : "member");
+            signatoryHRMPSBMember[i].container.classList.add(i == 4 ? "chair" : "member");
             signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
@@ -7674,6 +7674,8 @@ class RQAForm extends Old_FormEx
         var signatoryHRMPSB = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory-hrmpsb", "", "Prepared by the HRMPSB <br><i>(All members should affix signature)</i>");
         signatory.addContent(signatoryHRMPSB.container);
         signatoryHRMPSB.container.classList.add("hrmpsb");
+
+        signatoryHRMPSB.content.style.gridTemplate = "auto auto /" + " auto".repeat((document.hrRoles["hrmpsb_members"].length + 1) / 2 + 1);
         
         var signatoryHRMPSBMember = [];
         var fieldModeChange = event=>{
@@ -7705,10 +7707,11 @@ class RQAForm extends Old_FormEx
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 */
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(i=>{
-            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 5 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
+        [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(i=>{
+            // var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 5 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
+            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 4 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 3 : i - 4)]));
             console.log(member);
-            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 5 ? "chair" : "member")));
+            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 4 ? "chair" : "member")));
             htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "<br>" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 5 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
                 signatoryHRMPSBMember[i].addContent(node);
                 signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
@@ -7718,7 +7721,7 @@ class RQAForm extends Old_FormEx
                     node.title = "Please double-click to edit.";
                 }
             });
-            signatoryHRMPSBMember[i].container.classList.add(i == 5 ? "chair" : "member");
+            signatoryHRMPSBMember[i].container.classList.add(i == 4 ? "chair" : "member");
             signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
