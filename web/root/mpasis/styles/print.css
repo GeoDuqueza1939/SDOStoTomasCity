@@ -882,7 +882,7 @@ table.doc-info tr>:nth-child(3) {
     flex-direction: column;
     align-items: center;
     justify-content: end;
-    height: 5em;
+    height: 5.85em;
     font-size: 1em;
 }
 
@@ -1051,7 +1051,7 @@ table.doc-info tr>:nth-child(3) {
     flex-direction: column;
     align-items: center;
     justify-content: end;
-    height: 6em;
+    height: 7em;
     font-size: 1em;
 }
 

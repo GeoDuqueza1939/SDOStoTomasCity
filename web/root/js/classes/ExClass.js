@@ -6504,7 +6504,11 @@ class CARForm extends Old_FormEx
 
         this.setTitle("Comparative Assessment Result (CAR)", 2);
 
-        this.position = null;
+        // this.position = null;
+        this.positionTitle = "";
+        this.parenPositionTitle = "";
+        this.plantilla = "";
+        this.salaryGrade = 0;
         this.positions = [];
         this.jobApplications = [];
         this.scoreSheetElements = [];
@@ -6668,14 +6672,19 @@ class CARForm extends Old_FormEx
         this.dbInputEx["car-select-position-button"].addEvent("click", clickEvent=>{
             var selectPositionDialog = new PositionSelectorDialog(this.app, "car-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
-                    var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
-                    var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
-                    var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+                    var positionTitle, parenPositionTitle, plantilla;
+                    thisCARForm.positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                    thisCARForm.parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                    thisCARForm.plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+
+                    [positionTitle, parenPositionTitle, plantilla] = [thisCARForm.positionTitle, thisCARForm.parenPositionTitle, thisCARForm.plantilla];
+
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
                     console.log(positions);
                     this.positions = positions;
+                    thisCARForm.salaryGrade = (this.positions ?? [{"salary_grade":0}])[0]["salary_grade"];
 
                     this.displayExs["position"].setHTMLContent(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
                     this.displayExs["position"].setTooltipText(positions[0]["position_title"] + (positions[0]["parenthetical_title"] == "" || positions[0]["parenthetical_title"] == null ? "" : " (" + positions[0]["parenthetical_title"] + ")"));
@@ -7023,6 +7032,19 @@ class CARForm extends Old_FormEx
         signatory.addContent(signatoryHRMPSB.container);
         signatoryHRMPSB.container.classList.add("hrmpsb");
 
+        var memberSet = (thisCARForm.salaryGrade < 10 ? 1 : 2);
+        document.hrRoles["hrmpsb_members"] = document.hrRoles["hrmpsb_members_ntp_level" + memberSet];
+
+        var height = (document.hrRoles["hrmpsb_members"].length < 5 ? 1 : 2);
+        var mid = (height > 1 ? Math.trunc(document.hrRoles["hrmpsb_members"].length / 2) : document.hrRoles["hrmpsb_members"].length);
+
+        if (mid < 3)
+        {
+            signatoryHRMPSB.container.style.width = "initial";
+        }
+
+        signatoryHRMPSB.content.style.gridTemplate = (height > 1 ? "auto " : "") + "auto /" + " auto".repeat(mid + 1);
+        
         var signatoryHRMPSBMember = [];
         var fieldModeChange = event=>{
             if (event.target.isContentEditable)
@@ -7053,36 +7075,32 @@ class CARForm extends Old_FormEx
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 */
-        [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(i=>{
-            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 4 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
-            console.log(member);
-            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == 4 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\" style=\"white-space: nowrap;\"><span style=\"display: inline; text-transform: uppercase;\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "</span><!-- <br> -->" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 5 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
-                signatoryHRMPSBMember[i].addContent(node);
-                signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
-                if (node.classList.contains("name-position"))
-                {
-                    node.addEventListener("dblclick", fieldModeChange);
-                    node.title = "Please double-click to edit.";
-                }
-            });
-            signatoryHRMPSBMember[i].container.classList.add(i == 4 ? "chair" : "member");
-            signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
-            signatoryHRMPSB.addContent(document.createTextNode(" "));
-        });
+        var reNameFind = /^\[?\b(.+?(?:, Jr|, Sr|, II|, III)?)\b(\.?)(,[^,]+\b\.?)?\]?$/;
+        var reNameReplace = "<span style=\"text-transform: uppercase;\">" + "$1" + "</span>" + "$2$3";
+
+        for (let i = 0; i <= document.hrRoles["hrmpsb_members"].length; i++) {
+            let member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == mid ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisCARForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(mid == document.hrRoles["hrmpsb_members"].length ? i : (i < mid ? i + (mid + document.hrRoles["hrmpsb_members"].length % 2) : i - (mid + 1)))]));
+            if (member !== null)
+            {
+                signatoryHRMPSBMember.push(new DisplayEx(null, "div", "car-printout-signatory-hrmpsb-" + (i == mid ? "chair" : "member")));
+                htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<span>" + member["name"].replace(reNameFind, reNameReplace) + "<br>" + member["position"] + "</span>") + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == mid ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+                    signatoryHRMPSBMember[i].addContent(node);
+                    signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
+                    if (node.classList.contains("name-position"))
+                    {
+                        node.addEventListener("dblclick", fieldModeChange);
+                        node.title = "Please double-click to edit.";
+                    }
+                });
+                signatoryHRMPSBMember[i].container.classList.add(i == mid ? "chair" : "member");
+                signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
+                signatoryHRMPSB.addContent(document.createTextNode(" "));
+            }
+        }
 
         var signatoryAppointer = new DisplayEx(carFormCloneFields, "div", "car-printout-signatory-appointer", "", "Appointment conferred by:<br><br>&nbsp;");
-        var fieldModeChange = event=>{
-            if (event.target.isContentEditable)
-            {
-                event.target.removeAttribute("contenteditable");
-            }
-            else
-            {
-                event.target.setAttribute("contenteditable", true);
-            }
-        };
-        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<span style=\"display: inline; text-transform: uppercase;\">" + document.hrRoles["appointing_officer"]["name"] + "</span>" + document.hrRoles["appointing_officer"]["position"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<span>" + document.hrRoles["appointing_officer"]["name"].replace(reNameFind, reNameReplace) + "<br>" + document.hrRoles["appointing_officer"]["position"] + "</span>") + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
             if (node.classList.contains("name-position"))
@@ -7126,7 +7144,9 @@ class RQAForm extends Old_FormEx
 
         this.setTitle("Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA)", 2);
 
-        this.position = null;
+        this.positionTitle = "";
+        this.parenPositionTitle = "";
+        this.plantilla = "";
         this.positions = [];
         this.jobApplications = [];
         this.scoreSheetElements = [];
@@ -7334,9 +7354,13 @@ class RQAForm extends Old_FormEx
         this.dbInputEx["rqa-select-position-button"].addEvent("click", clickEvent=>{
             var selectPositionDialog = new PositionSelectorDialog(this.app, "rqa-position-selector", [
                 {label:"Select", tooltip:"Load selected position", callbackOnClick:positionSelectEvent=>{
-                    var positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
-                    var parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
-                    var plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+                    var positionTitle, parenPositionTitle, plantilla;
+                    thisRQAForm.positionTitle = selectPositionDialog.formEx.dbInputEx["selected-position"].getValue().trim();
+                    thisRQAForm.parenPositionTitle = selectPositionDialog.formEx.dbInputEx["selected-paren-position"].getValue().trim();
+                    thisRQAForm.plantilla = selectPositionDialog.formEx.dbInputEx["selected-plantilla"].getValue().trim();
+
+                    [positionTitle, parenPositionTitle, plantilla] = [thisRQAForm.positionTitle, thisRQAForm.parenPositionTitle, thisRQAForm.plantilla];
+
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
@@ -7646,7 +7670,7 @@ class RQAForm extends Old_FormEx
         } else {
             rqaForPrint.document.insertBefore(nodeDoctype, rqaForPrint.document.childNodes[0]);
         }
-        rqaForPrint.document.title = "Comparative Assessment Result &ndash; Registry of Qualified Applicants (CAR-RQA) [printer-friendly version]";
+        rqaForPrint.document.title = "Comparative Assessment Result \u2013 Registry of Qualified Applicants (CAR-RQA) [printer-friendly version]";
         rqaForPrint.document.body.classList.add("print");
         
         createElementEx(NO_NS, "base", rqaForPrint.document.head, null, "href", window.location.origin);
@@ -7675,7 +7699,18 @@ class RQAForm extends Old_FormEx
         signatory.addContent(signatoryHRMPSB.container);
         signatoryHRMPSB.container.classList.add("hrmpsb");
 
-        signatoryHRMPSB.content.style.gridTemplate = "auto auto /" + " auto".repeat((document.hrRoles["hrmpsb_members"].length + 1) / 2 + 1);
+        var memberSet = (thisRQAForm.parenPositionTitle === "" || thisRQAForm.parenPositionTitle.toUpperCase().includes("ELEM") || thisRQAForm.parenPositionTitle.toUpperCase().includes("KIN") ? "_elementary" : "_secondary");
+        document.hrRoles["hrmpsb_members"] = document.hrRoles["hrmpsb_members" + memberSet];
+
+        var height = (document.hrRoles["hrmpsb_members"].length < 5 ? 1 : 2);
+        var mid = (height > 1 ? Math.trunc(document.hrRoles["hrmpsb_members"].length / 2) : document.hrRoles["hrmpsb_members"].length);
+
+        if (mid < 3)
+        {
+            signatoryHRMPSB.container.style.width = "initial";
+        }
+
+        signatoryHRMPSB.content.style.gridTemplate = (height > 1 ? "auto " : "") + "auto /" + " auto".repeat(mid + 1);
         
         var signatoryHRMPSBMember = [];
         var fieldModeChange = event=>{
@@ -7707,37 +7742,32 @@ class RQAForm extends Old_FormEx
             signatoryHRMPSB.addContent(document.createTextNode(" "));
         });
 */
-        [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(i=>{
-            // var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 5 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 5 : i - 6)]));
-            var member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == 4 ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(i < 5 ? i + 3 : i - 4)]));
-            console.log(member);
-            signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == 4 ? "chair" : "member")));
-            htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : member["name"] + "<br>" + member["position"]) + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == 5 ? "Chairperson" : "Member") + "</div>").forEach(node=>{
-                signatoryHRMPSBMember[i].addContent(node);
-                signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
-                if (node.classList.contains("name-position"))
-                {
-                    node.addEventListener("dblclick", fieldModeChange);
-                    node.title = "Please double-click to edit.";
-                }
-            });
-            signatoryHRMPSBMember[i].container.classList.add(i == 4 ? "chair" : "member");
-            signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
-            signatoryHRMPSB.addContent(document.createTextNode(" "));
-        });
+        var reNameFind = /^\[?\b(.+?(?:, Jr|, Sr|, II|, III)?)\b(\.?)(,[^,]+\b\.?)?\]?$/;
+        var reNameReplace = "<span style=\"text-transform: uppercase;\">" + "$1" + "</span>" + "$2$3";
+
+        for (let i = 0; i <= document.hrRoles["hrmpsb_members"].length; i++) {
+            let member = (document.hrRoles === null || document.hrRoles === undefined ? null : (i == mid ? document.hrRoles["hrmpsb_chair"] : document.hrRoles["hrmpsb_members"].filter(member=>member["level" + (thisRQAForm.positions[0]["salary_grade"] >= 10 ? 2 : 1)]).reverse()[(mid == document.hrRoles["hrmpsb_members"].length ? i : (i < mid ? i + (mid + document.hrRoles["hrmpsb_members"].length % 2) : i - (mid + 1)))]));
+            if (member !== null)
+            {
+                signatoryHRMPSBMember.push(new DisplayEx(null, "div", "rqa-printout-signatory-hrmpsb-" + (i == mid ? "chair" : "member")));
+                htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<span>" + member["name"].replace(reNameFind, reNameReplace) + "<br>" + member["position"] + "</span>") + "</div> <div class=\"hrmpsb-role\">HRMPSB " + (i == mid ? "Chairperson" : "Member") + "</div>").forEach(node=>{
+                    signatoryHRMPSBMember[i].addContent(node);
+                    signatoryHRMPSBMember[i].addContent(document.createTextNode(" "));
+                    if (node.classList.contains("name-position"))
+                    {
+                        node.addEventListener("dblclick", fieldModeChange);
+                        node.title = "Please double-click to edit.";
+                    }
+                });
+                signatoryHRMPSBMember[i].container.classList.add(i == mid ? "chair" : "member");
+                signatoryHRMPSB.addContent(signatoryHRMPSBMember[i].container);
+                signatoryHRMPSB.addContent(document.createTextNode(" "));
+            }
+        }
 
         var signatoryAppointer = new DisplayEx(rqaFormCloneFields, "div", "rqa-printout-signatory-appointer", "", "Appointment conferred by:<br>&nbsp;");
-        var fieldModeChange = event=>{
-            if (event.target.isContentEditable)
-            {
-                event.target.removeAttribute("contenteditable");
-            }
-            else
-            {
-                event.target.setAttribute("contenteditable", true);
-            }
-        };
-        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : document.hrRoles["appointing_officer"]["name"] + "<br>" + document.hrRoles["appointing_officer"]["position"]) + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
+
+        htmlToElements("<div class=\"name-position\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<span>" + document.hrRoles["appointing_officer"]["name"].replace(reNameFind, reNameReplace) + "<br>" + document.hrRoles["appointing_officer"]["position"] + "</span>") + "</div> <div class=\"hrmpsb-role\">Appointing Authority</div>").forEach(node=>{
             signatoryAppointer.addContent(node);
             signatoryAppointer.addContent(document.createTextNode(" "));
             if (node.classList.contains("name-position"))
@@ -7750,12 +7780,9 @@ class RQAForm extends Old_FormEx
         signatory.addContent(signatoryAppointer.container);
         signatoryAppointer.container.classList.add("appointer");
         
-        rqaForPrint.document.getElementById("rqa-form-input-ex0").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex4").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex5").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
-        rqaForPrint.document.getElementById("rqa-form-input-ex6").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        [0, 2, 3, 4, 5, 6].forEach(val=>{
+            rqaForPrint.document.getElementById("rqa-form-input-ex" + val).parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
+        });
         rqaForPrint.document.getElementById("rqa-form-input-ex7").parentElement.parentElement.parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW RQA IS CODED
         
         var printButtonGroup = new InputEx(null, "print-rqa-controls", "buttonExs");
