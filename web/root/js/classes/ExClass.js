@@ -4008,7 +4008,7 @@ class ScoreSheet extends Old_FormEx
         {
             case "Teacher II":
             case "Teacher III":
-                return criteria;
+                //return criteria;
                 break;
         } 
 
@@ -4300,8 +4300,8 @@ class ScoreSheet extends Old_FormEx
                 ],
                 parentId:null,
                 score:0,
-                weight:(positionCategory == 1 ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),
-                maxPoints:(positionCategory == 1 ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),
+                weight:(positionCategory == 1 ? (salaryGrade > 11 ? 30 : 0) : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),
+                maxPoints:(positionCategory == 1 ? (salaryGrade > 11 ? 30 : 0) : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),
                 min:0,
                 max:0,
                 step:0,
@@ -4320,8 +4320,8 @@ class ScoreSheet extends Old_FormEx
                 ],
                 parentId:null,
                 score:0,
-                weight:(positionCategory == 1 ? 10 : 0),
-                maxPoints:(positionCategory == 1 ? 10 : 0),
+                weight:(positionCategory == 1 && salaryGrade == 11 ? 10 : 0),
+                maxPoints:(positionCategory == 1 && salaryGrade == 11 ? 10 : 0),
                 min:0,
                 max:0,
                 step:0,
@@ -4335,14 +4335,14 @@ class ScoreSheet extends Old_FormEx
                 dbColName:"coi",
                 dbTableName:"",
                 content:[
-                    {id:"ppstcoi",type:"input-number",label:"Applicant's COT Rating",shortLabel:"COT Rating",dbColName:"ppstcoi",dbTableName:"Job_Application",content:[],parentId:"coi",score:1,weight:(positionCategory == 1 ? 35 : 0),maxPoints:0,min:0,max:30,step:0.1},
+                    {id:"ppstcoi",type:"input-number",label:"Applicant's COT Rating (raw score)",shortLabel:"COT Rating",dbColName:"ppstcoi",dbTableName:"Job_Application",content:[],parentId:"coi",score:1,weight:(positionCategory == 1 ? (salaryGrade > 11 ? 25 : 35) : 0),maxPoints:0,min:0,max:(5 * (salaryGrade < 12 ? 6 : (salaryGrade < 14 ? 6 : (salaryGrade < 18 ? 7 : (salaryGrade < 20 ? 8 : 9))))),step:0.1},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"coi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"coi_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"coi_notes",dbTableName:"Job_Application",content:[],parentId:"coi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
-                weight:(positionCategory == 1 ? 35 : 0),
-                maxPoints:(positionCategory == 1 ? 35 : 0),
+                weight:(positionCategory == 1 ? (salaryGrade > 11 ? 25 : 35) : 0),
+                maxPoints:(positionCategory == 1 ? (salaryGrade > 11 ? 25: 35) : 0),
                 min:0,
                 max:0,
                 step:0,
@@ -4357,14 +4357,15 @@ class ScoreSheet extends Old_FormEx
                 dbTableName:"",
                 content:[
                     // {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:30,step:0.1}, // USE THIS FOR OLDER T1 APPLICATIONS IN 2024
-                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:25,step:0.1},
+                    {id:"ppstncoi",type:"input-number",label:(salaryGrade > 11 ? "Portfolio Assessment Score" : "Applicant's TRF Rating"),shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? (salaryGrade > 11 ? 10 : 25) : 0),maxPoints:0,min:0,max:(salaryGrade > 11 ? 10 : 25),step:0.1},
+                    {id:"score_bei",type:"input-number",label:"Behavioral Events Interview",shortLabel:"BEI",dbColName:"score_bei",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? (salaryGrade > 11 ? 5 : 25) : 0),maxPoints:0,min:0,max:(salaryGrade > 11 ? 5 : 25),step:0.1},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"ncoi_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"ncoi_notes",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
                 parentId:null,
                 score:0,
-                weight:(positionCategory == 1 ? 25 : 0),
-                maxPoints:(positionCategory == 1 ? 25 : 0),
+                weight:(positionCategory == 1 ? (salaryGrade > 11 ? 15 : 25) : 0),
+                maxPoints:(positionCategory == 1 ? (salaryGrade > 11 ? 15 : 25) : 0),
                 min:0,
                 max:0,
                 step:0,
