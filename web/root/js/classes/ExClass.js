@@ -4356,7 +4356,8 @@ class ScoreSheet extends Old_FormEx
                 dbColName:"ncoi",
                 dbTableName:"",
                 content:[
-                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:30,step:0.1},
+                    // {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:30,step:0.1}, // USE THIS FOR OLDER T1 APPLICATIONS IN 2024
+                    {id:"ppstncoi",type:"input-number",label:"Applicant's TRF Rating",shortLabel:"TRF Rating",dbColName:"ppstncoi",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:1,weight:(positionCategory == 1 ? 25 : 0),maxPoints:0,min:0,max:25,step:0.1},
                     {id:"",type:"line-break",label:"",dbColName:"",dbTableName:"",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0},
                     {id:"ncoi_notes",type:"textarea",label:"Relevant documents or requirements submitted/Other remarks",dbColName:"ncoi_notes",dbTableName:"Job_Application",content:[],parentId:"ncoi",score:0,weight:-1,maxPoints:0,min:0,max:0,step:0}
                 ],
@@ -4846,9 +4847,9 @@ class ScoreSheet extends Old_FormEx
                                 dbColName:"educationApp_exp_required_relevant",
                                 dbTableName:"",
                                 content:[
-                                    {id:"number_of_app_educ_r_actionplan",type:"input-number",label:"A Only",dbColName:"number_of_app_educ_r_actionplan",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_relevant",score:5,weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
-                                    {id:"number_of_app_educ_r_actionplan_ar",type:"input-number",label:"A and B",dbColName:"number_of_app_educ_r_actionplan_ar",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_relevant",score:7,weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
-                                    {id:"number_of_app_educ_r_actionplan_ar_adoption",type:"input-number",label:"All MOVs",dbColName:"number_of_app_educ_r_actionplan_ar_adoption",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_relevant",score:10,weight:-1,maxPoints:0,min:0,max:"ANY",step:1}
+                                    {id:"number_of_app_educ_r_actionplan",type:"input-number",label:"A Only",dbColName:"number_of_app_educ_r_actionplan",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_relevant",score:(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 9 : 5),weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
+                                    {id:"number_of_app_educ_r_actionplan_ar",type:"input-number",label:"A and B",dbColName:"number_of_app_educ_r_actionplan_ar",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_relevant",score:(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 12 : 7),weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
+                                    {id:"number_of_app_educ_r_actionplan_ar_adoption",type:"input-number",label:"All MOVs",dbColName:"number_of_app_educ_r_actionplan_ar_adoption",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_relevant",score:(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 15 : 10),weight:-1,maxPoints:0,min:0,max:"ANY",step:1}
                                 ],
                                 parentId:"educationApp_exp_required_guide",
                                 score:0,
@@ -4865,9 +4866,9 @@ class ScoreSheet extends Old_FormEx
                                 dbColName:"educationApp_exp_required_not_relevant",
                                 dbTableName:"",
                                 content:[
-                                    {id:"number_of_app_educ_nr_actionplan",type:"input-number",label:"A Only",dbColName:"number_of_app_educ_nr_actionplan",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_not_relevant",score:1,weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
-                                    {id:"number_of_app_educ_nr_actionplan_ar",type:"input-number",label:"A and B",dbColName:"number_of_app_educ_nr_actionplan_ar",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_not_relevant",score:3,weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
-                                    {id:"number_of_app_educ_nr_actionplan_ar_adoption",type:"input-number",label:"All MOVs",dbColName:"number_of_app_educ_nr_actionplan_ar_adoption",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_not_relevant",score:5,weight:-1,maxPoints:0,min:0,max:"ANY",step:1}
+                                    {id:"number_of_app_educ_nr_actionplan",type:"input-number",label:"A Only",dbColName:"number_of_app_educ_nr_actionplan",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_not_relevant",score:(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 3 : 1),weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
+                                    {id:"number_of_app_educ_nr_actionplan_ar",type:"input-number",label:"A and B",dbColName:"number_of_app_educ_nr_actionplan_ar",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_not_relevant",score:(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 6 : 3),weight:-1,maxPoints:0,min:0,max:"ANY",step:1},
+                                    {id:"number_of_app_educ_nr_actionplan_ar_adoption",type:"input-number",label:"All MOVs",dbColName:"number_of_app_educ_nr_actionplan_ar_adoption",dbTableName:"Job_Application",content:[],parentId:"educationApp_exp_required_not_relevant",score:(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 9 : 5),weight:-1,maxPoints:0,min:0,max:"ANY",step:1}
                                 ],
                                 parentId:"educationApp_exp_required_guide",
                                 score:0,
