@@ -7377,6 +7377,29 @@ class RQAForm extends Old_FormEx
                     this.dbInputEx["final_deliberation_date"].setDefaultValue(positions[0]["final_deliberation_date"] ?? "", true);
                     this.dbInputEx["final_deliberation_date"].setTooltipText(positions[0]["final_deliberation_date"] ?? "");
 
+                    console.log(this.positions[0].salary_grade);
+
+                    if (this.positions[0].salary_grade > 11)
+                    {
+                        this.rqaTable.columnHeaders[6].colHeaderName = "performance";
+                        this.rqaTable.columnHeaders[6].colHeaderText = "Performance <br>(30&nbsp;pts)";
+                        this.rqaTable.columnHeaders[6].colHeaderCell.innerHTML = "Performance <br>(30&nbsp;pts)";
+                        this.rqaTable.columnHeaders[7].colHeaderText = "PPST COIs (Classroom Observation) <br>(25&nbsp;pts)";
+                        this.rqaTable.columnHeaders[7].colHeaderCell.innerHTML = "PPST COIs (Classroom Observation) <br>(25&nbsp;pts)";
+                        this.rqaTable.columnHeaders[8].colHeaderText = "PPST NCOIs (Teacher Reflection) <br>(15&nbsp;pts)";
+                        this.rqaTable.columnHeaders[8].colHeaderCell.innerHTML = "PPST NCOIs (Teacher Reflection) <br>(15&nbsp;pts)";
+                    }
+                    else
+                    {
+                        this.rqaTable.columnHeaders[6].colHeaderName = "lept";
+                        this.rqaTable.columnHeaders[6].colHeaderText = "PBET/LET/LEPT Rating <br>(10&nbsp;pts)";
+                        this.rqaTable.columnHeaders[6].colHeaderCell.innerHTML = "PBET/LET/LEPT Rating <br>(10&nbsp;pts)";
+                        this.rqaTable.columnHeaders[7].colHeaderText = "PPST COIs (Classroom Observation) <br>(35&nbsp;pts)";
+                        this.rqaTable.columnHeaders[7].colHeaderCell.innerHTML = "PPST COIs (Classroom Observation) <br>(35&nbsp;pts)";
+                        this.rqaTable.columnHeaders[8].colHeaderText = "PPST NCOIs (Teacher Reflection) <br>(25&nbsp;pts)";
+                        this.rqaTable.columnHeaders[8].colHeaderCell.innerHTML = "PPST NCOIs (Teacher Reflection) <br>(25&nbsp;pts)";
+                    }
+
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
                         var response = null, rows = [], rowsDQ = [], row = null, isQualified = true;
 
