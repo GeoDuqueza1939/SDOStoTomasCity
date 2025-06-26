@@ -274,7 +274,7 @@ class MPASIS_App extends App
                 this.constructCARRQA();
                 break;
             case "coi-ncoi-data-upload":
-                this.contructCOINCOIDataUploadForm();
+                this.contructCOINCOIPotentialDataUploadForm();
                 break;
             case "account":
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Account</h2>";
@@ -1267,7 +1267,7 @@ class MPASIS_App extends App
         preview.setupHeaders([{name:"#",text:"#"},{name:"position_title", text:"position_title"},{name:"parenthetical_title", text:"parenthetical_title"},{name:"salary_grade", text:"salary_grade"},{name:"plantilla_item_number", text:"plantilla_item_number"},{name:"position_categoryId", text:"position_categoryId"},{name:"place_of_assignment", text:"place_of_assignment"},{name:"required_educational_attainment", text:"required_educational_attainment"},{name:"specific_education_required", text:"specific_education_required"},{name:"required_training_hours", text:"required_training_hours"},{name:"specific_training_required", text:"specific_training_required"},{name:"required_work_experience_years", text:"required_work_experience_years"},{name:"specific_work_experience_required", text:"specific_work_experience_required"},{name:"required_eligibility", text:"required_eligibility"},{name:"competency", text:"competency"}]);
     }
 
-    contructCOINCOIDataUploadForm()
+    contructCOINCOIPotentialDataUploadForm()
     {
         var coiNcoiDataUploadForm = null, header = null, downloadCSV = null, fileField = null, uploadBtn = null, preview = null, action = null;
 
@@ -1296,7 +1296,7 @@ class MPASIS_App extends App
             name:"download-coi-ncoi-csv", 
             buttonType:"button", 
             clickCallback:clickCSVDownloadEvent=>{
-                const headers = ["application_code","ppstcoi","coi_notes","ppstncoi","ncoi_notes"];
+                const headers = ["application_code","ppstcoi","coi_notes","ppstncoi","ncoi_notes","score_exam","score_skill","score_bei","potential_notes"];
                 const rows = [headers];
                 let universalBOM = "\uFEFF";
                 let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
@@ -1472,7 +1472,7 @@ class MPASIS_App extends App
         preview.caption = "Data Preview";
 
         preview.table.border = "1";
-        preview.setupHeaders([{name:"#",text:"#"},{name:"application_code", text:"application_code"},{name:"ppstcoi", text:"ppstcoi"},{name:"coi_notes", text:"coi_notes"},{name:"ppstncoi", text:"ppstncoi"},{name:"ncoi_notes", text:"ncoi_notes"}]);
+        preview.setupHeaders([{name:"#",text:"#"},{name:"application_code", text:"application_code"},{name:"ppstcoi", text:"ppstcoi"},{name:"coi_notes", text:"coi_notes"},{name:"ppstncoi", text:"ppstncoi"},{name:"ncoi_notes", text:"ncoi_notes"},{name:"score_exam", text:"score_exam"},{name:"score_skill", text:"score_skill"},{name:"score_bei", text:"score_bei"},{name:"potential_notes", text:"potential_notes"}]);
     }
 
     constructApplicantDataUploadForm()

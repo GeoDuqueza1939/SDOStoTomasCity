@@ -1055,7 +1055,7 @@ if (isValidUserSession())
                                     ],
                                     'hrmpsb_members_ntp_level1' => [
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => '[Name of Org Unit Head]', 'position' => '[Position of Org Unit Head]', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        // array('name' => '[Name of Org Unit Head]', 'position' => '[Position of Org Unit Head]', 'level1' => true, 'level2' => true, 'level3' => false),
                                         // array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV/HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
@@ -1066,7 +1066,7 @@ if (isValidUserSession())
                                     ],
                                     'hrmpsb_members_ntp_level2' => [
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => '[Name of Org Unit Head]', 'position' => '[Position of Org Unit Head]', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        // array('name' => '[Name of Org Unit Head]', 'position' => '[Position of Org Unit Head]', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Carina V. Pedragosa', 'position' => 'NEU Representative-Level 2', 'level1' => true, 'level2' => true, 'level3' => false),
