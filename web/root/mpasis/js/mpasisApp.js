@@ -1502,7 +1502,7 @@ class MPASIS_App extends App
             name:"download-job-applications-csv", 
             buttonType:"button", 
             clickCallback:clickCSVDownloadEvent=>{
-                const headers = ["application_code","position_title_applied","plantilla_item_number_applied","given_name","middle_name","family_name","spouse_name","ext_name","addresses","age","sex","civil_status","religion","disabilities","ethnicity","email_addresses","contact_numbers"];
+                const headers = ["application_code","position_title_applied","parenthetical_title_applied","plantilla_item_number_applied","given_name","middle_name","family_name","spouse_name","ext_name","addresses","age","sex","civil_status","religion","disabilities","ethnicity","email_addresses","contact_numbers"];
                 const rows = [headers];
                 let universalBOM = "\uFEFF";
                 let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
@@ -1678,7 +1678,7 @@ class MPASIS_App extends App
         preview.caption = "Data Preview";
 
         preview.table.border = "1";
-        preview.setupHeaders([{name:"#", text:"#"},{name:"application_code", text:"application_code"},{name:"position_title_applied", text:"position_title_applied"},{name:"plantilla_item_number_applied", text:"plantilla_item_number_applied"},{name:"given_name", text:"given_name"},{name:"middle_name", text:"middle_name"},{name:"family_name", text:"family_name"},{name:"spouse_name", text:"spouse_name"},{name:"ext_name", text:"ext_name"},{name:"addresses", text:"addresses"},{name:"age", text:"age"},{name:"sex", text:"sex"},{name:"civil_status", text:"civil_status"},{name:"religion", text:"religion"},{name:"disabilities", text:"disabilities"},{name:"ethnicity", text:"ethnicity"},{name:"email_addresses", text:"email_addresses"},{name:"contact_numbers", text:"contact_numbers"}]);
+        preview.setupHeaders([{name:"#", text:"#"},{name:"application_code", text:"application_code"},{name:"position_title_applied", text:"position_title_applied"},{name:"parenthetical_title_applied", text:"parenthetical_title_applied"},{name:"plantilla_item_number_applied", text:"plantilla_item_number_applied"},{name:"given_name", text:"given_name"},{name:"middle_name", text:"middle_name"},{name:"family_name", text:"family_name"},{name:"spouse_name", text:"spouse_name"},{name:"ext_name", text:"ext_name"},{name:"addresses", text:"addresses"},{name:"age", text:"age"},{name:"sex", text:"sex"},{name:"civil_status", text:"civil_status"},{name:"religion", text:"religion"},{name:"disabilities", text:"disabilities"},{name:"ethnicity", text:"ethnicity"},{name:"email_addresses", text:"email_addresses"},{name:"contact_numbers", text:"contact_numbers"}]);
     }
 
     constructApplicantDataForm()
