@@ -1056,7 +1056,7 @@ if (isValidUserSession())
                                 $hrRoles = array(
                                     'appointing_officer' => array('name' => 'Neil G. Angeles, CESO VI', 'position' => 'Schools Division Superintendent'),
                                     // 'hrmo' => array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO'),
-                                    'hrmo' => array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO'),
+                                    'hrmo' => array('name' => 'Mark Anthony C. Silvestre', 'position' => 'Administrative Assistant III/OIC-HRMO'),
                                     'hrmpsb_chair' => array('name' => 'Edward D. Garcia', 'position' => 'Assistant Schools Division Superintendent'),
                                     'hrmpsb_secretariat' => [
                                         array('name' => 'Jenina R. Patricio', 'position' => 'Administrative Officer II', 'level1' => true, 'level2' => true, 'level3' => false),
@@ -1068,7 +1068,7 @@ if (isValidUserSession())
                                         // array('name' => '[Name of Org Unit Head]', 'position' => '[Position of Org Unit Head]', 'level1' => true, 'level2' => true, 'level3' => false),
                                         // array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV/HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Mark Anthony C. Silvestre', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Mark Anthony Silvestre', 'position' => 'NEU Representative-Level 1', 'level1' => true, 'level2' => true, 'level3' => false),
                                         // array('name' => 'Carina V. Pedragosa', 'position' => 'Planning Officer III', 'level1' => true, 'level2' => true, 'level3' => false),
                                         // array('name' => 'Edwin C. Miranda', 'position' => 'Public Schools District Supervisor', 'level1' => true, 'level2' => true, 'level3' => false),
@@ -1078,14 +1078,14 @@ if (isValidUserSession())
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
                                         // array('name' => '[Name of Org Unit Head]', 'position' => '[Position of Org Unit Head]', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Mark Anthony C. Silvestre', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Carina V. Pedragosa', 'position' => 'NEU Representative-Level 2', 'level1' => true, 'level2' => true, 'level3' => false),
                                     ],
                                     'hrmpsb_members_elementary' => [
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Jhomar C. Sor, Ed.D.', 'position' => 'CID Chief', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Mark Anthony C. Silvestre', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Bonifacio DC. Regalado, Jr.', 'position' => 'President-PESPA', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Oliva P. Regalado', 'position' => 'President-Elementary Teachers Association', 'level1' => true, 'level2' => true, 'level3' => false),
                                     ],
@@ -1093,7 +1093,7 @@ if (isValidUserSession())
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Jhomar C. Sor, Ed.D.', 'position' => 'CID Chief', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Armina T. Valenzona', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Mark Anthony C. Silvestre', 'position' => 'Administrative Assistant III/OIC-HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Raymundo F. Hermo', 'position' => 'President-NAPSSPHI', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Ysrael P. Lagniton', 'position' => 'President-Secondary Teachers Association', 'level1' => true, 'level2' => true, 'level3' => false),
                                     ]
