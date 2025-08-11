@@ -7035,7 +7035,15 @@ class CARForm extends Old_FormEx
         signatoryHRMPSB.container.classList.add("hrmpsb");
 
         var memberSet = (thisCARForm.salaryGrade < 10 ? 1 : 2);
-        document.hrRoles["hrmpsb_members"] = document.hrRoles["hrmpsb_members_ntp_level" + memberSet];
+
+        if (thisCARForm.displayExs["position"].getHTMLContent().search(/(?:Principal|Head Teacher)/i) >= 0)
+        {
+            document.hrRoles["hrmpsb_members"] = document.hrRoles["hrmpsb_members_" + (thisCARForm.displayExs["position"].getHTMLContent().search(/elem/i) >= 0 ? "elementary" : "secondary") + "_head"];
+        }
+        else
+        {
+            document.hrRoles["hrmpsb_members"] = document.hrRoles["hrmpsb_members_ntp_level" + memberSet];
+        }
 
         var height = (document.hrRoles["hrmpsb_members"].length < 5 ? 1 : 2);
         var mid = (height > 1 ? Math.trunc(document.hrRoles["hrmpsb_members"].length / 2) : document.hrRoles["hrmpsb_members"].length);
