@@ -1464,6 +1464,8 @@ if (isValidUserSession())
                         };
                     }
                     
+                    $valueStr = ""; // TEMPORARY ONLY; ADDED TO AVOID ERRORS DURING ADDING OF POSITION DATA
+
                     logAction('mpasis', 1, array(
                         ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                         'remarks'=>"Added Positions; Value string: $valueStr"
