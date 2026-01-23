@@ -1770,7 +1770,7 @@ class MPASIS_App extends App
         field.container.style.gridColumn = "9 / span 4";
         field.setVertical();
 
-        field = applicantDataForm.addInputEx("Address", "textarea", "", "Present/Permanent Address", "address", "Address"); // use present address for now; prefer localization
+        field = applicantDataForm.addInputEx("Address", "textarea", "", "Present/Permanent Address; should be entered like how it should appear in a letter head", "address", "Address"); // use present address for now; prefer localization
         field.container.style.gridColumn = "1 / span 12";
         field.setVertical();
 
@@ -1812,6 +1812,10 @@ class MPASIS_App extends App
 
         field = applicantDataForm.addInputEx("Contact Number", "text", "", "Contact numbers; if multiple, please separate with semi-colons", "contact_number", "Contact_Number");
         field.container.style.gridColumn = "7 / span 6";
+        field.setVertical();
+
+        field = applicantDataForm.addInputEx("Character References/Other Remarks", "textarea", "", "Character references (with position, address/company affiliation, and contact information); May also add other remarks regarding applicant", "remarks", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
         field.setVertical();
 
         header = applicantDataForm.addHeader("Educational Attainment", 3);

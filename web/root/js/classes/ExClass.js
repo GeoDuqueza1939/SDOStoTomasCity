@@ -5858,7 +5858,7 @@ class IERForm extends Old_FormEx
                 + (thisIERForm.position["parenthetical_title"] === null || thisIERForm.position["parenthetical_title"].trim() === "" ? "" : " (" + thisIERForm.position["parenthetical_title"] + ")"),
             positionAppliedWithPlantilla: thisIERForm.position["position_title"]
                 + (thisIERForm.position["parenthetical_title"] === null || thisIERForm.position["parenthetical_title"].trim() === "" ? "" : " (" + thisIERForm.position["parenthetical_title"] + ")")
-                + (thisIERForm.position["plantilla_item_number"] === null || thisIERForm.position["plantilla_item_number"].trim() === "" || thisIERForm.position["plantilla_item_number"].search("MPASIS-") >= 0 ? "" : " <br><br>" + thisIERForm.position["plantilla_item_number"]),
+                + (thisIERForm.position["plantilla_item_number"] === null || thisIERForm.position["plantilla_item_number"].trim() === "" || thisIERForm.position["plantilla_item_number"].search("MPASIS-") >= 0 || thisIERForm.position["plantilla_item_number"].search("RQA-") >= 0 ? "" : " <br><br>" + thisIERForm.position["plantilla_item_number"]),
             placeOfAssignment: thisIERForm.position["place_of_assignment"],
             educQS: thisIERForm.displayExs["ier-position-qs-education"].content.innerHTML,
             expQS: thisIERForm.displayExs["ier-position-qs-experience"].content.innerHTML,

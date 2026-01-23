@@ -155,7 +155,8 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         score_exam,
         score_skill,
         score_bei,
-        potential_notes
+        potential_notes,
+        remarks
     FROM `$dbname`.Person pe
     INNER JOIN `$dbname`.Job_Application ja ON ja.personId = pe.personId
     LEFT JOIN `$dbname`.ENUM_Educational_Attainment eea ON pe.educational_attainment = eea.index
