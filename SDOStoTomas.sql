@@ -1342,6 +1342,7 @@ CREATE TABLE `Person` (
   `educational_attainment` tinyint(3) unsigned DEFAULT NULL,
   `postgraduate_units` tinyint(3) unsigned DEFAULT NULL COMMENT 'this will be phased-out in favor of a new table',
   `complete_academic_requirements` tinyint(1) DEFAULT NULL,
+  `is_solo_parent` tinyint DEFAULT NULL,
   PRIMARY KEY (`personId`),
   UNIQUE KEY `Person_id_IDX` (`personId`) USING BTREE,
   KEY `Person_FK` (`civil_status`),

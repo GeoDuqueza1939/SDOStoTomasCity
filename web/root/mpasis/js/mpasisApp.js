@@ -1806,6 +1806,10 @@ class MPASIS_App extends App
         field.setVertical();
         field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=ethnicGroup", "ethnic_group", "ethnicityId", "description");
 
+        field = applicantDataForm.addInputEx("Solo Parent", "checkbox", "", "Mark this checkbox if applicant has declared that he/she is a solo parent.", "is_solo_parent", "Person");
+        field.container.style.gridColumn = "1 / span 12";
+        field.reverse();
+
         field = applicantDataForm.addInputEx("Email Address", "email", "", "Email address; if multiple, please separate with semi-colons", "email_address", "Email_Address"); // Multiple cross-reference; Allow adding new
         field.container.style.gridColumn = "1 / span 6";
         field.setVertical();
@@ -2962,6 +2966,10 @@ class MPASIS_App extends App
                     else if (colName == "eligibilityId" || colName == "postgraduate_units" && dbInputEx.isDisabled())
                     {
                         // do nothing
+                    }
+                    else if (colName == "is_solo_parent" && !dbInputEx.isDisabled())
+                    {
+                        jobApplication["personalInfo"][colName] = (dbInputEx.isChecked() ? 1 : 0);
                     }
                     else if (colName == "complete_academic_requirements" && !dbInputEx.isDisabled())
                     {
