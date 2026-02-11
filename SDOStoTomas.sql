@@ -204,7 +204,7 @@ CREATE TABLE `ENUM_Civil_Status` (
 
 LOCK TABLES `ENUM_Civil_Status` WRITE;
 /*!40000 ALTER TABLE `ENUM_Civil_Status` DISABLE KEYS */;
-INSERT INTO `ENUM_Civil_Status` VALUES (1,'Single',NULL),(2,'Married',NULL),(3,'Divorced',NULL),(4,'Widowed',NULL);
+INSERT INTO `ENUM_Civil_Status` VALUES (1,'Single',NULL),(2,'Married',NULL),(3,'Divorced',NULL),(4,'Widowed',NULL),(5,'Separated',NULL);
 /*!40000 ALTER TABLE `ENUM_Civil_Status` ENABLE KEYS */;
 UNLOCK TABLES;
 
