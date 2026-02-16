@@ -283,6 +283,10 @@ body.print {
     text-transform: uppercase;
 }
 
+.print .letter-addressee > * > .address {
+    white-space: pre-wrap;
+}
+
 .print .letter-salutation > * {
     margin: 2em 0;
 }

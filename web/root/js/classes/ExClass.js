@@ -5534,6 +5534,8 @@ class IERForm extends Old_FormEx
                         this.displayExs[obj.id].container.title = obj.text;
                     });
                     
+                    this.app.showScrim();
+
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
                         var response = null, rows = [], row = null, isQualified = true;
     
@@ -5575,6 +5577,10 @@ class IERForm extends Old_FormEx
                                                 break;
                                             case "present_address":
                                                 row["address"] = jobApplication["present_address"] ?? jobApplication["permanent_address"] ?? "";
+                                                if (row["address"].trim() != "")
+                                                {
+                                                    row["address"] = "<p style=\"margin-top: 0; white-space: pre-wrap;\">" + row["address"] + "</p>";
+                                                }
                                                 break;
                                             case "disability":
                                             case "email_address":
@@ -5598,6 +5604,12 @@ class IERForm extends Old_FormEx
                                                     row["education"] = jobApplication[key];
                                                 }
     
+                                                if ((jobApplication["educ_notes"] ?? "").trim() != "")
+                                                {
+                                                    row["education"] += "<p><b><i>Note:</i></b></p>\n";
+                                                    row["education"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["educ_notes"].trim() + "</i></p>\n";
+                                                }
+                                                
                                                 isEducQualified &&= (ScoreSheet.getEducIncrements(parseInt(jobApplication["educational_attainmentIndex"]), jobApplication["degree_taken"]) >= ScoreSheet.getEducIncrements(parseInt(position["required_educational_attainment"]), []));
                                                 isEducQualified &&= ((position["specific_education_required"] == null) || ((jobApplication["has_specific_education_required"] != 0) && (jobApplication["has_specific_education_required"] != null)));
 
@@ -5616,6 +5628,13 @@ class IERForm extends Old_FormEx
                                                     }
     
                                                     row["training_title"] += "</ul>\n";
+
+                                                    if ((jobApplication["train_notes"] ?? "").trim() != "")
+                                                    {
+                                                        row["training_title"] += "<p><b><i>Note:</i></b></p>\n";
+                                                        row["training_title"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["train_notes"].trim() + "</i></p>\n";
+                                                    }
+
                                                     row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
                                                 }
                                             
@@ -5639,6 +5658,13 @@ class IERForm extends Old_FormEx
                                                     }
     
                                                     row["experience_details"] += "</ul>\n";
+
+                                                    if ((jobApplication["work_exp_notes"] ?? "").trim() != "")
+                                                    {
+                                                        row["experience_details"] += "<p><b><i>Note:</i></b></p>\n";
+                                                        row["experience_details"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["work_exp_notes"].trim() + "</i></p>\n";
+                                                    }
+
                                                     row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
                                                 }
                                                 
@@ -5700,6 +5726,8 @@ class IERForm extends Old_FormEx
                                     };
 
                                     createLink.addEventListener("click", this.generateLetterToApplicant);
+
+                                    this.app.closeScrim();
                                 }
                             }
                             // else if (response.type == "Success")
@@ -5917,7 +5945,14 @@ class IERForm extends Old_FormEx
                     ElementEx.addText("\n", p);
                 }
                 [ElementEx.createSimple("span", ElementEx.NO_NS, obj.class, p)].forEach(span=>{
-                    ElementEx.addText(obj.text, span);
+                    if (obj.text.indexOf("<") == -1)
+                    {
+                        ElementEx.addText(obj.text, span);
+                    }
+                    else
+                    {
+                        span.innerHTML += obj.text;
+                    }
                     thisIERForm.attachFieldModeChange(span);
                 });
             });
@@ -5983,7 +6018,7 @@ class IERForm extends Old_FormEx
         });
 
         (event.target.innerHTML === "Qualified" ? [
-            "Please be advised of your assigned application code <span class=\"application-code\">" + letterData.applicationCode + "</span> which shall be used as you proceed with the next stage of the selection process. Failure to reply within 3 days upon receipt of this correspondence will invalidate your application. You may refer to the official issuances of the SDO Sto. Tomas City for the additional announcements in this regard. For inquiries, you may communicate with <a href=\"tel:0437028674\">(043) 702-8674</a>/<a href=\"tel:09556534958\">09556534958</a> and <a href=\"mailto:sdostc.personnel@deped.gov.ph\">sdostc.personnel@deped.gov.ph</a>.",
+            "Please be advised of your assigned application code <span class=\"application-code\">" + letterData.applicationCode + "</span> which shall be used as you proceed with the next stage of the selection process. Failure to reply within 3 days upon receipt of this correspondence will invalidate your application. You may refer to the official issuances of the SDO Sto. Tomas City for the additional announcements in this regard. For inquiries, you may communicate with <a href=\"tel:0432332542\">(043) 233-2542</a>/<a href=\"tel:09484428979\">09484428979</a> and <a href=\"mailto:sdostc.personnel@deped.gov.ph\">sdostc.personnel@deped.gov.ph</a>.",
             "Thank you.",
         ] : [
             "While your qualifications made a favorable impression, we regret to inform you that you did not meet the minimum QS set for the <span class=\"position-applied\">" + letterData.positionApplied + "</span> position. You may, however, continue to submit job applications in response to other vacancy announcements that we publish at <a href=\"https://www.csc.gov.ph/careers\">www.csc.gov.ph/careers</a>, DepEd bulletin boards, and official website at <a href=\"https://depedstotomascity.com.ph\">depedstotomascity.com.ph</a>.",
@@ -6034,9 +6069,9 @@ class IERForm extends Old_FormEx
 
         [
             "<b>Address:</b><!--<span class=\"material-icons-round\">pin_drop</span>--> Brgy. Poblacion IV, Sto. Tomas City, Batangas",
-            "<b>Telephone No.:</b><!--<span class=\"material-icons-round\">phone</span>--> (043) 702-8674",
+            "<b>Telephone No.:</b><!--<span class=\"material-icons-round\">phone</span>--> (043) 233-2542",
             "<b>Email Address:</b><!--<span class=\"material-icons-round\">alternate_email</span>--> <a href=\"mailto:sdo.santotomas@deped.gov.ph\">sdo.santotomas@deped.gov.ph</a>",
-            "<b>Website:</b><!--<span class=\"material-icons-round\">language</span>--> <a href=\"https://depedstotomascity.com.ph\">depedstotomascity.com.ph</a>",
+            "<b>Website:</b><!--<span class=\"material-icons-round\">language</span>--> <a href=\"https://sites.google.com/view/depedstotomascity\">sites.google.com/view/depedstotomascity</a>",
         ].forEach((innerHTML, index)=>{
             if (index > 0)
             {
