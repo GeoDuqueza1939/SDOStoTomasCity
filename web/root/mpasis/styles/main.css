@@ -242,6 +242,8 @@ REINSTATE FOR PRINTOUT
     display: flex;
     align-items: end;
     justify-content: center;
+    white-space: pre-line;
+    text-align: center;
 }
 
 .ier-table {
@@ -266,9 +268,16 @@ REINSTATE FOR PRINTOUT
     font-size: 0.9em;
 }
 
+.ier-table tr {
+    break-inside: avoid-page;       /* Prevents breaking inside the row */
+    page-break-inside: avoid-page;  /* Legacy support for older browsers */
+}
+
 .ier-table tr > * {
     border: 1px solid;
     padding: 0.25em;
+    break-inside: avoid-page;       /* Prevents breaking inside the row */
+    page-break-inside: avoid-page;  /* Legacy support for older browsers */
 }
 
 .ier-table tbody > tr > * {

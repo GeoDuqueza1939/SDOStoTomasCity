@@ -5793,7 +5793,7 @@ class IERForm extends Old_FormEx
         [
             "/styles/default.css",
             "/styles/main.css",
-            "/styles/ExClass.css",
+            // "/styles/ExClass.css", // removed as this allows page-breaks inside table-rows
             "/styles/print.css",
             "/styles/material.io/material-icons.css",
             "/mpasis/styles/main.css",
@@ -5888,7 +5888,7 @@ class IERForm extends Old_FormEx
         [
             "/styles/default.css",
             "/styles/main.css",
-            "/styles/ExClass.css",
+            // "/styles/ExClass.css", // removed as this allows page-breaks inside table-rows
             "/styles/print.css",
             "/styles/material.io/material-icons.css",
             "/mpasis/styles/main.css",
@@ -6483,7 +6483,7 @@ class IESForm extends Old_FormEx
         [
             "/styles/default.css",
             "/styles/main.css",
-            "/styles/ExClass.css",
+            // "/styles/ExClass.css", // removed as this allows page-breaks inside table-rows
             "/styles/print.css",
             "/styles/material.io/material-icons.css",
             "/mpasis/styles/main.css",
@@ -7081,7 +7081,7 @@ class CARForm extends Old_FormEx
         [
             "/styles/default.css",
             "/styles/main.css",
-            "/styles/ExClass.css",
+            // "/styles/ExClass.css", // removed as this allows page-breaks inside table-rows
             "/styles/print.css",
             "/styles/material.io/material-icons.css",
             "/mpasis/styles/main.css",
@@ -7790,7 +7790,7 @@ class RQAForm extends Old_FormEx
         [
             "/styles/default.css",
             "/styles/main.css",
-            "/styles/ExClass.css",
+            // "/styles/ExClass.css", // removed as this allows page-breaks inside table-rows
             "/styles/print.css",
             "/styles/material.io/material-icons.css",
             "/mpasis/styles/main.css",

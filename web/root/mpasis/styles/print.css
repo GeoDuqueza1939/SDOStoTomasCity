@@ -173,6 +173,16 @@
         right: 0.25in;
         margin: 0 !important;
     }
+
+    .print .ier-table > .content > table > thead {
+        display: table-header-group;
+    }
+
+    .print .ier-table > .content > table > * > tr,
+    .print .ier-table > .content > table > * > tr > * {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
 }
 
 @media only screen {
