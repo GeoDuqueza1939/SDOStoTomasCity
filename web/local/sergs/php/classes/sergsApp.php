@@ -1546,6 +1546,8 @@ if (loadData !== null && loadData !== undefined && ElementEx.type(loadData) === 
                     
                                     if (is_null($this->getDB_SDO()->lastException))
                                     {
+                                        while (count($dbResults) > 1) { array_shift($dbResults); } //// HACK TO ALLOW ADDING OF GEO'S SR
+
                                         if (count($dbResults) > 1)
                                         {
                                             $this->error = true;
