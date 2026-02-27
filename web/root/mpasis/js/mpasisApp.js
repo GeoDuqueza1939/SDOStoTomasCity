@@ -1683,7 +1683,7 @@ class MPASIS_App extends App
 
     constructApplicantDataForm()
     {
-        var applicantDataForm = null, header = null, field = null, applicant = null, searchedApplicants = null, row = null, getAppliedPosition;
+        var applicantDataForm = null, header = null, field = null, container = null, applicant = null, searchedApplicants = null, row = null, getAppliedPosition;
 
         if (this.forms["applicantData"] != null && this.forms["applicantData"] != undefined)
         {
@@ -1818,9 +1818,23 @@ class MPASIS_App extends App
         field.container.style.gridColumn = "7 / span 6";
         field.setVertical();
 
-        field = applicantDataForm.addInputEx("Character References/Other Remarks", "textarea", "", "Character references (with position, address/company affiliation, and contact information); May also add other remarks regarding applicant", "remarks", "Job_Application");
+        field = applicantDataForm.addInputEx("Character References/Other Remarks", "textarea", "", "Character references (with position, address/company affiliation, and contact information); May also add other remarks regarding applicant", "remarks", "Job_Application", true);
         field.container.style.gridColumn = "1 / span 12";
         field.setVertical();
+
+        field = applicantDataForm.addInputEx("Include in IER", "checkbox", "", "Included this application in the respective Initial Evaluation Result", "include_in_ier", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
+        field.reverse();
+        field.check();
+
+        field = applicantDataForm.addInputEx("Applicant has attended the Open Ranking/Comparative Assessments", "checkbox", "", "Applicant has attended the Open Ranking/Comparative Assessments", "has_attended_open_ranking", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
+        field.reverse();
+
+        field = applicantDataForm.addInputEx("Include in CAR", "checkbox", "", "Included this application in the respective Comparative Assessment Result", "include_in_car", "Job_Application");
+        field.container.style.gridColumn = "1 / span 12";
+        field.reverse();
+        field.check();
 
         header = applicantDataForm.addHeader("Educational Attainment", 3);
         header.style.gridColumn = "1 / span 12";
@@ -3003,6 +3017,18 @@ class MPASIS_App extends App
                 else // if (tableName == "Job_Application")
                 {
                     if (colName.indexOf("has_specific_") == 0 && !dbInputEx.isDisabled())
+                    {
+                        jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
+                    }
+                    else if (colName == "include_in_ier" && !dbInputEx.isDisabled())
+                    {
+                        jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
+                    }
+                    else if (colName == "has_attended_open_ranking" && !dbInputEx.isDisabled())
+                    {
+                        jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
+                    }
+                    else if (colName == "include_in_car" && !dbInputEx.isDisabled())
                     {
                         jobApplication[colName] = (dbInputEx.isChecked() ? 1 : 0);
                     }

@@ -5451,7 +5451,7 @@ class IERForm extends Old_FormEx
         posInfo.appendChild(this.addInputEx("Add HRMO e-signature", "checkbox", "", "Add HRMO e-signature", "ier-add-hrmo-e-sign").container);
         [this.dbInputEx["ier-add-hrmo-e-sign"]].forEach(field=>{
             field.container.classList.add("ier-add-hrmo-e-sign");
-            field.check();
+            // field.check();
             field.reverse();
         });
 
@@ -5617,9 +5617,12 @@ class IERForm extends Old_FormEx
                                                 break;
                                             case "relevant_training":
                                                 var totalHours = 0;
+
+                                                row["training_title"] = "";
+
                                                 if (jobApplication[key].length > 0)
                                                 {
-                                                    row["training_title"] = "<ul>\n";
+                                                    row["training_title"] += "<ul>\n";
                                                     
                                                     for (const relevantTraining of jobApplication[key])
                                                     {
@@ -5628,13 +5631,16 @@ class IERForm extends Old_FormEx
                                                     }
     
                                                     row["training_title"] += "</ul>\n";
+                                                }
 
-                                                    if ((jobApplication["train_notes"] ?? "").trim() != "")
-                                                    {
-                                                        row["training_title"] += "<p><b><i>Note:</i></b></p>\n";
-                                                        row["training_title"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["train_notes"].trim() + "</i></p>\n";
-                                                    }
+                                                if ((jobApplication["train_notes"] ?? "").trim() != "")
+                                                {
+                                                    row["training_title"] += "<p><b><i>Note:</i></b></p>\n";
+                                                    row["training_title"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["train_notes"].trim() + "</i></p>\n";
+                                                }
 
+                                                if (jobApplication[key].length > 0)
+                                                {
                                                     row["training_hours"] = "Total hours of training: " + totalHours + (totalHours == 1 ? "\xA0hour" : "\xA0hours");
                                                 }
                                             
@@ -5646,9 +5652,12 @@ class IERForm extends Old_FormEx
                                                 break;
                                             case "relevant_work_experience":
                                                 var totalDuration = null, duration = null;
+
+                                                row["experience_details"] = "";
+
                                                 if (jobApplication[key].length > 0)
                                                 {
-                                                    row["experience_details"] = "<ul>\n";
+                                                    row["experience_details"] += "<ul>\n";
                                                     
                                                     for (const relevantWorkExp of jobApplication[key])
                                                     {
@@ -5658,13 +5667,16 @@ class IERForm extends Old_FormEx
                                                     }
     
                                                     row["experience_details"] += "</ul>\n";
+                                                }
 
-                                                    if ((jobApplication["work_exp_notes"] ?? "").trim() != "")
-                                                    {
-                                                        row["experience_details"] += "<p><b><i>Note:</i></b></p>\n";
-                                                        row["experience_details"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["work_exp_notes"].trim() + "</i></p>\n";
-                                                    }
+                                                if ((jobApplication["work_exp_notes"] ?? "").trim() != "")
+                                                {
+                                                    row["experience_details"] += "<p><b><i>Note:</i></b></p>\n";
+                                                    row["experience_details"] += "<p style=\"white-space: pre-wrap;\"><i>" + jobApplication["work_exp_notes"].trim() + "</i></p>\n";
+                                                }
 
+                                                if (jobApplication[key].length > 0)
+                                                {
                                                     row["experience_years"] = ScoreSheet.convertDurationToString(totalDuration);
                                                 }
                                                 
@@ -5897,8 +5909,8 @@ class IERForm extends Old_FormEx
             applicantLastName: event.target.rowData["applicant_name"].slice(0, event.target.rowData["applicant_name"].search(",")),
             applicantAddress: event.target.rowData["address"],
             educApplicant: event.target.rowData["education"] ?? "None",
-            expApplicant: "Relevant work experience: " + (event.target.rowData["experience_years"] ?? "None"),
-            trainingApplicant: event.target.rowData["training_hours"] ?? "Total hours of training: None",
+            expApplicant: "Relevant work experience: " + (event.target.rowData["experience_years"] ?? "None") + "<br><br>" + (event.target.rowData["experience_details"] ?? ""),
+            trainingApplicant: (event.target.rowData["training_hours"] ?? "Total hours of training: None") + "<br><br>" + (event.target.rowData["training_title"] ?? ""),
             eligApplicant: event.target.rowData["eligibility"] ?? "None",
             educQualified: (event.target.qualifications["educ"] ? "Q" : "Disq") + "ualified",
             expQualified: (event.target.qualifications["exp"] ? "Q" : "Disq") + "ualified",
@@ -6034,8 +6046,10 @@ class IERForm extends Old_FormEx
             p.innerHTML += "<img src=\"/mpasis/images/esign.png\" alt=\"(Signed)\" class=\"letter-signature\">";
 
             [
-                {class:"name",text:"Jessamae O. Castromero"},
-                {class:"position",text:"Administrative Officer IV\u2013HRMO"},
+                // {class:"name",text:"Jessamae O. Castromero"},
+                // {class:"position",text:"Administrative Officer IV\u2013HRMO"},
+                {class:"name",text:"Buenalyn M. Motel"},
+                {class:"position",text:"Administrative Officer IV\u2013HRMO II"},
             ].forEach((obj, index)=>{
                 if (index > 0)
                 {
@@ -6755,7 +6769,10 @@ class CARForm extends Old_FormEx
 
                                 this.dbInputEx["car-sort-all"].uncheck();
 
-                                thisCARForm.jobApplicationsDisqualified = thisCARForm.jobApplications.filter(jobApplication=>{
+                                thisCARForm.jobApplicationsExcluded = thisCARForm.jobApplications.filter(jobApplication=>(!jobApplication.include_in_car));
+                                thisCARForm.jobApplicationsIncluded = thisCARForm.jobApplications.filter(jobApplication=>(jobApplication.include_in_car));
+
+                                thisCARForm.jobApplicationsDisqualified = thisCARForm.jobApplicationsIncluded.filter(jobApplication=>{
                                     isQualified = true;
 
                                     for (const key in jobApplication)
@@ -6807,7 +6824,7 @@ class CARForm extends Old_FormEx
                                     return !isQualified;
                                 });
 
-                                thisCARForm.jobApplications = thisCARForm.jobApplications.filter(jobApplication=>{
+                                thisCARForm.jobApplications = thisCARForm.jobApplicationsIncluded.filter(jobApplication=>{
                                     isQualified = true;
 
                                     for (const key in jobApplication)
@@ -6890,7 +6907,7 @@ class CARForm extends Old_FormEx
                                     {
                                         if (criteria.id != "summary" && criteria.weight != 0)
                                         {
-                                            score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication));
+                                            score = (jobApplication["has_attended_open_ranking"] ? (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication)) : 0);
                                             row[criteria.id] = score.toFixed(3);
                                             row["total"] += score;
                                         }
@@ -7462,7 +7479,10 @@ class RQAForm extends Old_FormEx
 
                                 thisRQAForm.rqaTable.removeAllRows();
 
-                                thisRQAForm.jobApplicationsDisqualified = thisRQAForm.jobApplications.filter(jobApplication=>{
+                                thisRQAForm.jobApplicationsExcluded = thisRQAForm.jobApplications.filter(jobApplication=>(!jobApplication.include_in_car));
+                                thisRQAForm.jobApplicationsIncluded = thisRQAForm.jobApplications.filter(jobApplication=>(jobApplication.include_in_car));
+
+                                thisRQAForm.jobApplicationsDisqualified = thisRQAForm.jobApplicationsIncluded.filter(jobApplication=>{
                                     isQualified = true;
 
                                     for (const key in jobApplication)
@@ -7514,7 +7534,7 @@ class RQAForm extends Old_FormEx
                                     return !isQualified;
                                 });
 
-                                thisRQAForm.jobApplications = thisRQAForm.jobApplications.filter(jobApplication=>{
+                                thisRQAForm.jobApplications = thisRQAForm.jobApplicationsIncluded.filter(jobApplication=>{
                                     isQualified = true;
 
                                     for (const key in jobApplication)
@@ -7597,7 +7617,7 @@ class RQAForm extends Old_FormEx
                                     {
                                         if (criteria.id != "summary" && criteria.weight != 0)
                                         {
-                                            score = (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication));
+                                            score = (jobApplication["has_attended_open_ranking"] ? (MPASIS_App.isDefined(criteria.getPointsManually) ? criteria.getPointsManually(1) : IESForm.getPoints(criteria, jobApplication)) : 0);
                                             row[criteria.id] = score.toFixed(3);
                                             row["total"] += score;
                                         }

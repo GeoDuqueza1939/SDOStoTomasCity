@@ -331,7 +331,7 @@ body.print {
     display: block;
     height: 4em;
     margin-bottom: -1.5em;
-    margin-left: 4em;
+    margin-left: 1em;
 }
 
 .print .letter-closing .letter-sender > .name {
