@@ -5507,7 +5507,15 @@ class IERForm extends Old_FormEx
                     this.displayExs["ier-position"].setHTMLContent(positionString);
                     this.displayExs["ier-position"].addContent(this.dbInputEx["ier-select-position-button"].container);
                     
-                    var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
+                    // var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
+                    var position = document.positions.filter(position=>(
+                        position["position_title"] == positionTitle && (
+                            (plantilla != "ANY" && plantilla != "" && position["plantilla_item_number"].trim() == plantilla) || 
+                            (plantilla == "ANY" || plantilla == "") && (
+                                parenPositionTitle == "" || (parenPositionTitle != "" && position["parenthetical_title"].trim() == parenPositionTitle)
+                            )
+                        )
+                    ))[0];
 
                     thisIERForm.position = position;
                     
@@ -6732,7 +6740,15 @@ class CARForm extends Old_FormEx
 
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
-                    var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    // var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    var position = document.positions.filter(position=>(
+                        position["position_title"] == positionTitle && (
+                            (plantilla != "ANY" && plantilla != "" && position["plantilla_item_number"].trim() == plantilla) || 
+                            (plantilla == "ANY" || plantilla == "") && (
+                                parenPositionTitle == "" || (parenPositionTitle != "" && position["parenthetical_title"].trim() == parenPositionTitle)
+                            )
+                        )
+                    ));
                     console.log(positions);
                     this.positions = positions;
                     thisCARForm.salaryGrade = (this.positions ?? [{"salary_grade":0}])[0]["salary_grade"];
@@ -7425,7 +7441,15 @@ class RQAForm extends Old_FormEx
 
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
-                    var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    // var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
+                    var position = document.positions.filter(position=>(
+                        position["position_title"] == positionTitle && (
+                            (plantilla != "ANY" && plantilla != "" && position["plantilla_item_number"].trim() == plantilla) || 
+                            (plantilla == "ANY" || plantilla == "") && (
+                                parenPositionTitle == "" || (parenPositionTitle != "" && position["parenthetical_title"].trim() == parenPositionTitle)
+                            )
+                        )
+                    ));
                     console.log(positions);
                     this.positions = positions;
 
