@@ -1729,7 +1729,15 @@ class MPASIS_App extends App
         plantillaField.setVertical();
 
         getAppliedPosition = function(positionsArray, positionField = new InputEx(), parenField = new InputEx(), plantillaField = new InputEx()){
-            return document.positions.filter(position=>((position["parenthetical_title"] == parenField.getValue().trim() || plantillaField.getValue().trim() == "ANY" || plantillaField.getValue().trim() == "") && position["position_title"] == positionField.getValue().trim() || position["plantilla_item_number"] == plantillaField.getValue().trim()))[0];
+            return positionsArray.filter(position=>(
+                position["position_title"] == positionField.getValue().trim() && (
+                    (plantillaField.getValue().trim() != "ANY" && plantillaField.getValue().trim() != "" && position["plantilla_item_number"].trim() == plantillaField.getValue().trim()) || 
+                    (plantillaField.getValue().trim() == "ANY" || plantillaField.getValue().trim() == "") && (
+                        parenField.getValue().trim() == "" || (parenField.getValue().trim() != "" && position["parenthetical_title"].trim() == parenField.getValue().trim())
+                    )
+                )
+            ))[0];
+            // return document.positions.filter(position=>((position["parenthetical_title"] == parenField.getValue().trim() || plantillaField.getValue().trim() == "ANY" || plantillaField.getValue().trim() == "") && position["position_title"] == positionField.getValue().trim() || position["plantilla_item_number"] == plantillaField.getValue().trim()))[0];
         }
 
         header = applicantDataForm.addHeader("Personal Information", 3);
@@ -3258,7 +3266,8 @@ class MPASIS_App extends App
             throw("Invalid argument: givenName:" + givenName);
         }
 
-        nameArr = [givenName, middleName, familyName, spouseName, extName];
+        // nameArr = [givenName, middleName, familyName, spouseName, extName];
+        nameArr = [givenName, middleName, familyName, spouseName];
 
         if (!includeMaidenMiddleName && this.isDefined(middleName) && !this.isEmptySpaceString(middleName) && this.isDefined(familyName) && !this.isEmptySpaceString(familyName) && this.isDefined(spouseName) && !this.isEmptySpaceString(spouseName))
         {
@@ -3273,7 +3282,7 @@ class MPASIS_App extends App
 
                 if (MPASIS_App.isDefined(lastName) && !MPASIS_App.isEmptySpaceString(lastName))
                 {
-                    nameArr.unshift(lastName + ", ");
+                    nameArr.unshift(lastName + ",");
                     break;
                 }
             }
@@ -3293,7 +3302,7 @@ class MPASIS_App extends App
             nameArr[1] = this.getNameInitials(nameArr[1]);
         }
         
-        return nameArr.filter(name=>this.isDefined(name) && !this.isEmptySpaceString(name)).join(" ");
+        return nameArr.filter(name=>this.isDefined(name) && !this.isEmptySpaceString(name)).join(" ") + (!lastNameFirst && (this.isDefined(extName) && !this.isEmptySpaceString(extName)) ? ", " + extName.trim() : "");
     }
 
     static getNameInitials(nameStr)

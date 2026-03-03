@@ -1222,3 +1222,7 @@ REINSTATE FOR PRINTOUT
 .dialog-ex.assign-roles .dialog-content tbody > tr > * > button[class^=selector-link-] > span[class^=material-]:hover {
     color: red;
 }
+
+[class^=req-spec-] {
+    white-space: pre-wrap;
+}

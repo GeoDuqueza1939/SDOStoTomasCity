@@ -269,6 +269,8 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             {
                 return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
+
+            $dbResults[$i]['application_history'] = dbRetrieveJobApplicationHistory($dbconn, $dbResults[$i]['application_code'], false);
         }
 
         return json_encode(new ajaxResponse(($isDebug ? 'Debug' : 'Data'), json_encode($dbResults)));
@@ -879,6 +881,34 @@ function dbUpdateCoiNcoi($dbconn, $jobApplication) : bool
     }
 
     return true;
+}
+
+function dbRetrieveJobApplicationHistory($dbconn, $applicationCode, $encode = true)
+{
+    $applicationHistory = [];
+
+    if (is_null($applicationCode) || trim($applicationCode) == '')
+    {
+        echo(json_encode(new ajaxResponse('Error', 'Application code cannot be blank or NULL')));
+        return false;
+    }
+
+    $applicationHistory = $dbconn->select('MPASIS_History', '*', 'WHERE application_code = "' . $applicationCode . '" OR remarks LIKE "' . $applicationCode . '"');
+
+    if (is_null($dbconn->lastException))
+    {
+        if (count($applicationHistory) == 0)
+        {
+            // No history found, so DO NOTHING
+        }
+    }
+    else
+    {
+        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        return false;
+    }
+
+    return ($encode ? json_encode(new ajaxResponse('Data', json_encode($applicationHistory))) : $applicationHistory);
 }
 
 // TEST ONLY !!!!!!!!!!!!!

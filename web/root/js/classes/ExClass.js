@@ -5517,6 +5517,8 @@ class IERForm extends Old_FormEx
                         )
                     ))[0];
 
+                    console.log(position);
+
                     thisIERForm.position = position;
                     
                     this.displayExs["ier-position-salary-grade"].setHTMLContent("SG-" + position["salary_grade"] + " (" + Intl.NumberFormat("en-PH", {style: "currency", currency: "PHP", maximumFractionDigits: 2, roundingIncrement: 5}).format(parseFloat(document.salaryGrade.filter(sg=>sg["salary_grade"] == position["salary_grade"] && sg["step_increment"] == 1)[0]["salary"])) + ")");
@@ -5534,8 +5536,8 @@ class IERForm extends Old_FormEx
                     // this.displayExs["ier-position-qs-experience"].setHTMLContent("<b>" + (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") + (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? "" : " (" + position["specific_work_experience_required"] + ")") + "</b>");
                     [
                         {id:"ier-position-qs-education", text:(position["specific_education_required"] == null || position["specific_education_required"] == "" ? document.enumEducationalAttainment.find(educAttainment=>educAttainment["index"] == position["required_educational_attainment"])["educational_attainment"] : position["specific_education_required"])},
-                        {id:"ier-position-qs-training", text:(position["required_training_hours"] <= 0 ? "None required" : (position["specific_training_required"] == null || position["specific_training_required"] == "" ? position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training" : position["specific_training_required"]))},
-                        {id:"ier-position-qs-experience", text:(position["required_work_experience_years"] <= 0 ? "None required" : (position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience" : position["specific_work_experience_required"]))},
+                        {id:"ier-position-qs-training", text:(position["specific_training_required"] == null || position["specific_training_required"] == "" ? (position["required_training_hours"] <= 0 ? "None required" : position["required_training_hours"] + (position["required_training_hours"] == 1 ? " hour" : " hours") + " of relevant training") : position["specific_training_required"])},
+                        {id:"ier-position-qs-experience", text:(position["specific_work_experience_required"] == null || position["specific_work_experience_required"] == "" ? (position["required_work_experience_years"] <= 0 ? "None required" : position["required_work_experience_years"] + (position["required_work_experience_years"] == 1 ? " year" : " years") + " of relevant experience") : position["specific_work_experience_required"])},
                         {id:"ier-position-qs-eligibility",text:eligString}
                     ].forEach(obj=>{
                         this.displayExs[obj.id].setHTMLContent(obj.text);
@@ -5749,6 +5751,9 @@ class IERForm extends Old_FormEx
 
                                     this.app.closeScrim();
                                 }
+
+                                this.dbInputEx["ier-print-button"].enable();
+                                this.dbInputEx["ier-download-csv-button"].enable();
                             }
                             // else if (response.type == "Success")
                             // {
@@ -5769,14 +5774,92 @@ class IERForm extends Old_FormEx
         });
 
         this.addInputEx("Print", "buttonEx", "Print", "Print the Initial Evaluation Result form", "ier-print-button");
-
         this.dbInputEx["ier-print-button"].addEvent("click", this.generatePrinterFriendly);
+        this.dbInputEx["ier-print-button"].disable();
+        
+        this.addSpacer();
 
+        this.addInputEx("Download CSV", "buttonEx", "Download CSV", "Download the Initial Evaluation Result data for mailmerge", "ier-download-csv-button");
+        this.dbInputEx["ier-download-csv-button"].addEvent("click", downloadCSVClickEvent=>{
+                const headers = [
+                    "Position",
+                    "Education QS",
+                    "Training QS",
+                    "Experience QS",
+                    "Eligibility QS",
+                    "Application Code",
+                    "Name of Applicant (last name first)",
+                    "Name of Applicant",
+                    "Salutation Name",
+                    "Address",
+                    "Education",
+                    "Remarks on Education",
+                    "Training",
+                    "Remarks on Training",
+                    "Experience",
+                    "Remarks on Experience",
+                    "Eligibility",
+                    "Remarks on Eligibility",
+                    "Remarks",
+                    "Date Evaluated"
+                ];
+                const rows = [headers];
+
+                this.displayExs["ier-table"].rows.forEach(row=>{
+                    let jobApplication = row.td["remarks"].getElementsByTagName("A")[0].jobApplication;
+                    let qualifications = row.td["remarks"].getElementsByTagName("A")[0].qualifications;
+
+                    rows.push([
+                        this.position["position_title"] + (this.position["parenthetical_title"] === null || this.position["parenthetical_title"].trim() === "" ? "" : " (" + this.position["parenthetical_title"] + ")") + (this.position["plantilla_item_number"] === null || this.position["plantilla_item_number"].trim() === "" || this.position["plantilla_item_number"].search("MPASIS-") >= 0 || this.position["plantilla_item_number"].search("RQA-") >= 0 ? "" : " <br><br>" + this.position["plantilla_item_number"]),
+                        "\"" + this.displayExs["ier-position-qs-education"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                        "\"" + this.displayExs["ier-position-qs-training"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                        "\"" + this.displayExs["ier-position-qs-experience"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                        "\"" + this.displayExs["ier-position-qs-eligibility"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                        jobApplication["application_code"],
+                        // "\"" + jobApplication["applicant_name"] + "\"",
+                        "\"" + MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], true, true, false) + "\"",
+                        // "\"" + jobApplication["applicant_name"].substr(jobApplication["applicant_name"].indexOf(",") + 1).trim() + " " + jobApplication["applicant_name"].substr(0, jobApplication["applicant_name"].indexOf(",")) + "\"",
+                        "\"" + MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], false, true, false) + "\"",
+                        (jobApplication["sex"] == "Male" ? "Mr. " : "Ms. ") + jobApplication["applicant_name"].substr(0, jobApplication["applicant_name"].indexOf(",")),
+                        "\"" + row.td["address"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                        "\"" + row.td["education"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                        (qualifications.educ ? "Qualified" : "Disqualified"),
+                        "\"" + row.td["training_title"].innerText.replace(/\n\n+/g, "\n") + "\n" + row.td["training_hours"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                        (qualifications.training ? "Qualified" : "Disqualified"),
+                        "\"" + row.td["experience_details"].innerText.replace(/\n\n+/g, "\n") + "\n" + row.td["experience_years"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                        (qualifications.exp ? "Qualified" : "Disqualified"),
+                        "\"" + row.td["eligibility"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                        (qualifications.elig ? "Qualified" : (this.position["position_categoryId"] == 1 ? "" : "Disqualified")),
+                        (qualifications.educ && qualifications.training && qualifications.exp && (this.position["position_categoryId"] == 1 || qualifications.elig) ? "QUALIFIED" : "DISQUALIFIED"),
+                        new Date((jobApplication["application_history"] ?? [{"timestamp":Date.now().toString()}])[0]["timestamp"]).toLocaleDateString()
+                    ]);
+                });
+
+                let universalBOM = "\uFEFF";
+                // let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
+                let csvContent = rows.map(e => e.join(",")).join("\r\n");
+
+                // let encodedUri = encodeURI(csvContent);
+
+                const blob = new Blob([universalBOM, csvContent], { type: 'text/csv;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                let link = document.createElement("a");
+                // link.setAttribute("href", encodedUri);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "ier_" + this.displayExs["ier-position"].content.innerText + ".csv");
+                document.body.appendChild(link);
+
+                link.click();
+        });
+        this.dbInputEx["ier-download-csv-button"].disable();
+        
         this.dbInputEx["ier-select-position-button"].fields[0].click();
     }
 
     generatePrinterFriendly(ierPrintClickEvent)
     {
+        console.log(ierPrintClickEvent);
         var thisIERForm = ierPrintClickEvent.target.inputEx.parentFormEx, ierForPrint = window.open("", "_blank");
 
         var nodeDoctype = ierForPrint.document.implementation.createDocumentType("html", "", "");
@@ -5849,6 +5932,7 @@ class IERForm extends Old_FormEx
         ierForPrint.document.getElementById("ier-form-input-ex2").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex4").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex5").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
 
         var printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
         ierForPrint.document.body.insertBefore(printButtonGroup.container, ierForPrint.document.body.children[0]);
@@ -6741,7 +6825,7 @@ class CARForm extends Old_FormEx
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     // var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
-                    var position = document.positions.filter(position=>(
+                    var positions = document.positions.filter(position=>(
                         position["position_title"] == positionTitle && (
                             (plantilla != "ANY" && plantilla != "" && position["plantilla_item_number"].trim() == plantilla) || 
                             (plantilla == "ANY" || plantilla == "") && (
@@ -7442,7 +7526,7 @@ class RQAForm extends Old_FormEx
                     var positionString = positionTitle + (parenPositionTitle == "" ? " " : " (" + parenPositionTitle + ")") + (plantilla == "" ? " " : " [<i>Plantilla Item No. " + plantilla + "</i>] ");
 
                     // var positions = document.positions.filter(position=>(position["plantilla_item_number"] == plantilla || ((position["parenthetical_title"] == parenPositionTitle && parenPositionTitle != "" && parenPositionTitle != null) || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle));
-                    var position = document.positions.filter(position=>(
+                    var positions = document.positions.filter(position=>(
                         position["position_title"] == positionTitle && (
                             (plantilla != "ANY" && plantilla != "" && position["plantilla_item_number"].trim() == plantilla) || 
                             (plantilla == "ANY" || plantilla == "") && (
