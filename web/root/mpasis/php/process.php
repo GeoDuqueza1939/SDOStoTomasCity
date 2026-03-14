@@ -30,7 +30,7 @@ class ajaxResponse_Extra implements JsonSerializable
         );
 	}
 	
-	// override to allow json_encode() to convert an instance of this class
+	// override to allow json_encode_ex() to convert an instance of this class
 	//public function jsonSerialize () : mixed
 	#[\ReturnTypeWillChange]
 	public function jsonSerialize ()
@@ -38,6 +38,33 @@ class ajaxResponse_Extra implements JsonSerializable
 		return $this->to_array();
     }
 };
+
+function utf8ize($mixed) {
+    if (is_array($mixed)) {
+        foreach ($mixed as $key => $value) {
+            $mixed[$key] = utf8ize($value);
+        }
+    } elseif (is_object($mixed)) {
+        foreach ($mixed as $key => $value) {
+            $mixed->$key = utf8ize($value);
+        }
+    } elseif (is_string($mixed)) {
+        // Convert to UTF-8 if not already
+        if (!mb_check_encoding($mixed, 'UTF-8')) {
+            return mb_convert_encoding($mixed, 'UTF-8', 'auto');
+        }
+    }
+    return $mixed;
+}
+
+function json_encode_ex($ajaxData)
+{
+    $ajaxData = utf8ize($ajaxData);
+    $json = json_encode($ajaxData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    return ($json === false ? json_encode(new ajaxResponse('Error', json_last_error_msg())) : $json);
+}
+
 require_once('../../path.php');
 
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
@@ -47,11 +74,11 @@ require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 function sendDebug($data)
 {
-    echo(json_encode(new ajaxResponse('Debug', json_encode($data))));
+    echo(json_encode_ex(new ajaxResponse('Debug', json_encode_ex($data))));
     exit;
 }
 
-function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = null, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
+function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = null, $isDebug = false) // return a json_encode_exd ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
     global $dbname;
 
@@ -176,6 +203,8 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
 //--,        has_alternative_work_experience_applicable
 //    --alternative_work_experience_years,
 
+    // return (json_encode_ex_ex(new ajaxResponse('Data', $dbResults)));
+
     if (is_null($dbconn->lastException))
     {
         for ($i = 0; $i < count($dbResults); $i++)
@@ -200,7 +229,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->executeQuery("SELECT person_disabilityId, pd.disabilityId as disabilityId, disability FROM Disability d INNER JOIN Person_Disability pd ON d.disabilityId=pd.disabilityId WHERE personId='" . $dbResults[$i]['personId'] . "'");
@@ -211,7 +240,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Email_Address", "email_address", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
@@ -222,7 +251,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Contact_Number", "contact_numberId, contact_number", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
@@ -233,7 +262,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Relevant_Training", "relevant_trainingId, descriptive_name, hours", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
@@ -244,7 +273,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Relevant_Work_Experience", "relevant_work_experienceId, descriptive_name, start_date, end_date", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
@@ -255,7 +284,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             // $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
@@ -267,16 +296,16 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults[$i]['application_history'] = dbRetrieveJobApplicationHistory($dbconn, $dbResults[$i]['application_code'], false);
         }
 
-        return json_encode(new ajaxResponse(($isDebug ? 'Debug' : 'Data'), json_encode($dbResults)));
+        return json_encode_ex(new ajaxResponse(($isDebug ? 'Debug' : 'Data'), json_encode_ex($dbResults)));
     }
         
-    return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+    return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
 }
 
 function selectRecordAllColumns(DatabaseConnection $dbconn, $tableName) // CANNOT USE JOINS!!!
@@ -285,11 +314,11 @@ function selectRecordAllColumns(DatabaseConnection $dbconn, $tableName) // CANNO
     
     if (is_null($dbconn->lastException))
     {
-        return json_encode(new ajaxResponse('Data', json_encode($dbResults)));
+        return json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults)));
     }
     else
     {
-        die(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+        die(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
     }
 }
 
@@ -352,7 +381,7 @@ function dbAddPosition($dbconn, $positionData) : bool // return false when error
     }
     else
     {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
         return false;
     }
 
@@ -364,14 +393,14 @@ function dbAddPosition($dbconn, $positionData) : bool // return false when error
 
             if (!is_null($dbconn->lastException))
             {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                 return false;        
             }
         }
     }
     else
     {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
         return false;
     }
 
@@ -437,7 +466,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }    
             }
@@ -465,7 +494,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }    
             }
@@ -493,7 +522,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }    
             }
@@ -524,7 +553,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                         return false;
                     }    
                 }
@@ -598,7 +627,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
             if (!is_null($dbconn->lastException))
             {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                 return false;
             }
         }
@@ -615,7 +644,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
             }
             else
             {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                 return false;
             }
         }
@@ -641,14 +670,14 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
                         if (!is_null($dbconn->lastException))
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                             return false;
                         }    
                     }
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }    
             }
@@ -667,7 +696,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
                 if (!is_null($dbconn->lastException))
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }    
             }
@@ -699,7 +728,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
                 if (!is_null($dbconn->lastException))
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }    
             }
@@ -718,7 +747,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
                 if (!is_null($dbconn->lastException))
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                     return false;
                 }
             }
@@ -770,7 +799,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
     
     if (!is_null($dbconn->lastException))
     {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
         return false;
     }
 
@@ -795,7 +824,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
         if (!is_null($dbconn->lastException))
         {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
             return false;
         }
     }
@@ -820,7 +849,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
         if (!is_null($dbconn->lastException))
         {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
             return false;
         }
     }
@@ -844,7 +873,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
         if (!is_null($dbconn->lastException))
         {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
             return false;
         }
     }
@@ -876,7 +905,7 @@ function dbUpdateCoiNcoi($dbconn, $jobApplication) : bool
     }
     else
     {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
         return false;
     }
 
@@ -889,7 +918,7 @@ function dbRetrieveJobApplicationHistory($dbconn, $applicationCode, $encode = tr
 
     if (is_null($applicationCode) || trim($applicationCode) == '')
     {
-        echo(json_encode(new ajaxResponse('Error', 'Application code cannot be blank or NULL')));
+        echo(json_encode_ex(new ajaxResponse('Error', 'Application code cannot be blank or NULL')));
         return false;
     }
 
@@ -904,23 +933,23 @@ function dbRetrieveJobApplicationHistory($dbconn, $applicationCode, $encode = tr
     }
     else
     {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
         return false;
     }
 
-    return ($encode ? json_encode(new ajaxResponse('Data', json_encode($applicationHistory))) : $applicationHistory);
+    return ($encode ? json_encode_ex(new ajaxResponse('Data', json_encode_ex($applicationHistory))) : $applicationHistory);
 }
 
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
-    // echo(json_encode(new ajaxResponse('Info','test reply')));
-    // echo(json_encode(new ajaxResponse('Data',['a'=>'test reply'])));
+    // echo(json_encode_ex(new ajaxResponse('Info','test reply')));
+    // echo(json_encode_ex(new ajaxResponse('Data',['a'=>'test reply'])));
     // $fieldStr = '';
     // $valueStr = '';
-    // echo(json_encode(new ajaxResponse('Data', generateFieldValueStr(['a'=>'test reply','b'=>'hello, world'], $fieldStr, $valueStr))));
-    // echo(json_encode(new ajaxResponse('Data', $fieldStr)));
-    // echo(json_encode(new ajaxResponse('Data', $valueStr)));
+    // echo(json_encode_ex(new ajaxResponse('Data', generateFieldValueStr(['a'=>'test reply','b'=>'hello, world'], $fieldStr, $valueStr))));
+    // echo(json_encode_ex(new ajaxResponse('Data', $fieldStr)));
+    // echo(json_encode_ex(new ajaxResponse('Data', $valueStr)));
     ?>
 
 <form class="data-form-ex" method="post" action="/mpasis/php/process.php" enctype="multipart/form-data"><h2>Upload Jobs Data</h2><span class="textbox-ex file-ex vertical" style="display: flex;"><label class="label-ex" for="jobs-csv">CSV for Upload:</label> <input type="file" id="jobs-csv" name="jobs-csv" accept="text/csv" style="width: 100%; border: 2px inset; background-color: white; padding: 1em;"></span><br><span class="textbox-ex hidden-ex"><input type="hidden" id="a" name="a" value="upload"></span><span class="button-ex"><button type="submit" id="ButtonEx1">Upload</button></span></form>
@@ -935,7 +964,7 @@ if (isValidUserSession())
 {    
     if (isset($_REQUEST['q']) && $_REQUEST['q'] == 'login') // UNUSED
     {
-        echo json_encode(new ajaxResponse('User', json_encode(array('Username'=>$_SESSION['user'], 'UserId'=>1 * $_SESSION['user_id']))));
+        echo json_encode_ex(new ajaxResponse('User', json_encode_ex(array('Username'=>$_SESSION['user'], 'UserId'=>1 * $_SESSION['user_id']))));
         return;
 	}
     elseif (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout') // UNUSED
@@ -943,7 +972,7 @@ if (isValidUserSession())
         $redirectToLogin = false;
         require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
 
-        echo json_encode(new ajaxResponse('Success', 'Signed out.'));
+        echo json_encode_ex(new ajaxResponse('Success', 'Signed out.'));
         return;
     }
     elseif (isset($_REQUEST['a']))
@@ -962,7 +991,7 @@ if (isValidUserSession())
                             ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
                             "username_op"=>$_REQUEST['k']
                         ));
-                        echo(json_encode(new ajaxResponse('Data', json_encode(fetchUser($dbconn, '', $criteriaStr)))));
+                        echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex(fetchUser($dbconn, '', $criteriaStr)))));
                         return;
                         break;
                     case 'tempuser':
@@ -988,11 +1017,11 @@ if (isValidUserSession())
                                 ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
                                 "username_op"=>$_REQUEST['k']
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1018,11 +1047,11 @@ if (isValidUserSession())
                                 ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                                 'remarks'=>'Search the name: ' . $_REQUEST['name']
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($results))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($results))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1066,7 +1095,7 @@ if (isValidUserSession())
 
                                 if (!is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                                     return;
                                 }
 
@@ -1074,7 +1103,7 @@ if (isValidUserSession())
 
                                 if (!is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                                     return;
                                 }
 
@@ -1082,7 +1111,7 @@ if (isValidUserSession())
 
                                 if (!is_null($dbconn->lastException))
                                 {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                                     return;
                                 }
 
@@ -1151,26 +1180,26 @@ if (isValidUserSession())
                                 if (is_null($dbconn->lastException))
                                 {
                                     // var_dump($positions);
-                                    // var_dump(json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]));
+                                    // var_dump(json_encode_ex(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]));
 
                                     // var_dump(json_last_error());
 
-                                    // echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory]))));
-                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]))));
+                                    // echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory]))));
+                                    echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]))));
                                 }
                                 else
                                 {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                                 }
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                                echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                             }
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1191,11 +1220,11 @@ if (isValidUserSession())
                             //     'remarks'=>'Retrieve all positions info'
                             // ));
     
-                            // echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            // echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         // return;
                         break;
@@ -1208,11 +1237,11 @@ if (isValidUserSession())
                                 ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                                 'remarks'=>'Retrieve all position titles only'
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1228,11 +1257,11 @@ if (isValidUserSession())
                                 'position_title'=>$_REQUEST['positionTitle'],
                                 'remarks'=>'Retrieve parenthetical titles with specified position title'
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1249,11 +1278,11 @@ if (isValidUserSession())
                                 'position_title'=>$_REQUEST['positionTitle'],
                                 'remarks'=>'Retrieve plantilla item numbers with specified position title and parenthetical title'
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1264,11 +1293,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1278,11 +1307,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1291,11 +1320,11 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1305,11 +1334,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1319,11 +1348,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1333,11 +1362,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1347,11 +1376,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1361,11 +1390,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1375,11 +1404,11 @@ if (isValidUserSession())
     
                         // if (is_null($dbconn->lastException))
                         // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                        //     echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         // }
                         // else
                         // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        //     echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         // }
                         return;
                         break;
@@ -1387,7 +1416,7 @@ if (isValidUserSession())
                         $srcStr = (isset($_REQUEST['srcStr']) ? $_REQUEST['srcStr'] : "");
                         if ($srcStr == '')
                         {
-                            die(json_encode(new ajaxResponse('Info', 'Blank search string')));
+                            die(json_encode_ex(new ajaxResponse('Info', 'Blank search string')));
                         }
                         
                         logAction('mpasis', 7, array(
@@ -1403,7 +1432,7 @@ if (isValidUserSession())
                         $where = '';
                         if ($positionTitle == '' && $plantilla == '')
                         {
-                            die(json_encode(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
+                            die(json_encode_ex(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
                         }
 
                         $where .= ($plantilla == '' ? "position_title_applied='$positionTitle'" . ($parenTitle == '' ? '' : " AND parenthetical_title_applied='$parenTitle'") : "plantilla_item_number_applied='$plantilla'");
@@ -1441,12 +1470,12 @@ if (isValidUserSession())
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                             'remarks'=>"Added Eligibility; Value string: $valueStr"
                         ));
-                        // echo(json_encode(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
-                        echo(json_encode(new ajaxResponse('Success', 'Eligibility successfully added')));
+                        // echo(json_encode_ex(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
+                        echo(json_encode_ex(new ajaxResponse('Success', 'Eligibility successfully added')));
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                     }
                     
                     return;
@@ -1471,11 +1500,11 @@ if (isValidUserSession())
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                             'remarks'=>"Added Specific Education; Value string: $valueStr"
                         ));
-                        echo(json_encode(new ajaxResponse('Success', 'Specific course/education successfully added')));
+                        echo(json_encode_ex(new ajaxResponse('Success', 'Specific course/education successfully added')));
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                     }
                     
                     return;
@@ -1486,7 +1515,7 @@ if (isValidUserSession())
 
                     if (is_null($positions) || count($positions) <= 0)
                     {
-                        echo(json_encode(new ajaxResponse('Warning', 'Submitted positions length is zero. Please add position data along with plantilla item numbers to continue.')));
+                        echo(json_encode_ex(new ajaxResponse('Warning', 'Submitted positions length is zero. Please add position data along with plantilla item numbers to continue.')));
                     
                         return;    
                     }
@@ -1505,7 +1534,7 @@ if (isValidUserSession())
                         ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                         'remarks'=>"Added Positions; Value string: $valueStr"
                     ));
-                    echo(json_encode(new ajaxResponse('Success', 'Successfully added/updated Position details!')));
+                    echo(json_encode_ex(new ajaxResponse('Success', 'Successfully added/updated Position details!')));
                     
                     return;
                 }
@@ -1527,7 +1556,7 @@ if (isValidUserSession())
                         'position_title'=>$jobApplication['position_title_applied']
                     ));
                     
-                    echo(json_encode(new ajaxResponse('Success', 'Application has been successfully saved with <b>Application Code: ' . $jobApplication['application_code'] . '</b>.')));
+                    echo(json_encode_ex(new ajaxResponse('Success', 'Application has been successfully saved with <b>Application Code: ' . $jobApplication['application_code'] . '</b>.')));
                     return;
                 }
                 elseif (isset($_REQUEST['user']))
@@ -1559,7 +1588,7 @@ if (isValidUserSession())
                         }
                     }
 
-                    // echo(json_encode(new ajaxResponse('Success', $applicationCode)));
+                    // echo(json_encode_ex(new ajaxResponse('Success', $applicationCode)));
                     // return;
 
                     $dbconn->update('Job_Application', $fieldValueStr, "WHERE application_code='$applicationCode'");
@@ -1571,12 +1600,12 @@ if (isValidUserSession())
                             'application_code'=>$applicationCode,
                             'position_title'=>$jobApplication['position_title_applied']
                         ));
-                        echo(json_encode(new ajaxResponse('Success', "Application Code: $applicationCode has been successfully updated!")));
+                        echo(json_encode_ex(new ajaxResponse('Success', "Application Code: $applicationCode has been successfully updated!")));
                         return;
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details' . '<br><br>' . $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
+                        echo(json_encode_ex(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details' . '<br><br>' . $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
                         return;
                     }
                 }
@@ -1600,7 +1629,7 @@ if (isValidUserSession())
 
                     if ($_SESSION['user']['username'] == $username)
                     {
-                        die(json_encode(new ajaxResponse('Error', 'A user cannot delete own account')));
+                        die(json_encode_ex(new ajaxResponse('Error', 'A user cannot delete own account')));
                     }
                     
                     $user = fetchUser($dbconn, $username)[0];
@@ -1620,11 +1649,11 @@ if (isValidUserSession())
                             ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                             ($isTempUser ? 'temp_' : '') . 'username_op'=>$username
                         ));
-                        echo(json_encode(new ajaxResponse('Success', 'User: ' . $_REQUEST['username'] . ' has been deleted.')));
+                        echo(json_encode_ex(new ajaxResponse('Success', 'User: ' . $_REQUEST['username'] . ' has been deleted.')));
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', 'Deletion of user: ' . $_REQUEST['username'] . ' failed.')));
+                        echo(json_encode_ex(new ajaxResponse('Error', 'Deletion of user: ' . $_REQUEST['username'] . ' failed.')));
                     }
                 }
                 return;
@@ -1673,30 +1702,30 @@ if (isValidUserSession())
                                     ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
                                     "temp_username_op"=>$tempUser['username']
                                 ));
-                                echo(json_encode(new ajaxResponse('Success', 'Temporary User successfully created')));
+                                echo(json_encode_ex(new ajaxResponse('Success', 'Temporary User successfully created')));
                                 return;
                             }
                             else
                             {
-                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details')));
+                                echo(json_encode_ex(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details')));
                                 return;
                             }
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', 'Username is required')));
+                            echo(json_encode_ex(new ajaxResponse('Error', 'Username is required')));
                             return;
                         }
                     }
                     else
                     {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting personal details')));
+                        echo(json_encode_ex(new ajaxResponse('Error', 'Exception encountered while inserting personal details')));
                         return;
                     }
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', 'Given Name is required')));
+                    echo(json_encode_ex(new ajaxResponse('Error', 'Given Name is required')));
                     return;
                 }
 
@@ -1708,12 +1737,12 @@ if (isValidUserSession())
                 
                 if (is_null($dbconn->lastException))
                 {
-                    echo(json_encode(new ajaxResponse('Salary', $dbResults[0]['salary'])));
+                    echo(json_encode_ex(new ajaxResponse('Salary', $dbResults[0]['salary'])));
                     return;
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                     return;
                 }
 
@@ -1952,13 +1981,13 @@ else // NOT SIGNED-IN
         $redirectToLogin = false;
         require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
 
-        echo json_encode(new ajaxResponse('Success', 'Signed out.'));
+        echo json_encode_ex(new ajaxResponse('Success', 'Signed out.'));
         return;
     }
     else
     {
-        die(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));
+        die(json_encode_ex(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode_ex($_REQUEST))));
     }
 }
 
-die(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
+die(json_encode_ex(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode_ex($_REQUEST))));
