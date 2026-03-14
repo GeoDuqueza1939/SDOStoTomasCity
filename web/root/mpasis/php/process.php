@@ -1704,7 +1704,7 @@ if (isValidUserSession())
             case 'getSalaryFromSG':
                 $salaryGrade = $_REQUEST['sg'];
 
-                $dbResults = $dbconn->select('Salary_Table', 'salary', 'WHERE salary_grade="' . $salaryGrade . '" AND step_increment=1 AND effectivity_date="2023/1/1"');
+                $dbResults = $dbconn->select('Salary_Table', 'salary', 'WHERE salary_grade="' . $salaryGrade . '" AND step_increment=1  ORDER BY effectivity_date DESC');
                 
                 if (is_null($dbconn->lastException))
                 {
