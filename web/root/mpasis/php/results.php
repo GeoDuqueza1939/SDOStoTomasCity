@@ -30,7 +30,7 @@ class ajaxResponse_Extra implements JsonSerializable
         );
 	}
 	
-	// override to allow json_encode() to convert an instance of this class
+	// override to allow json_encode_ex() to convert an instance of this class
 	//public function jsonSerialize () : mixed
 	#[\ReturnTypeWillChange]
 	public function jsonSerialize ()
@@ -38,6 +38,33 @@ class ajaxResponse_Extra implements JsonSerializable
 		return $this->to_array();
     }
 };
+
+function utf8ize($mixed) {
+    if (is_array($mixed)) {
+        foreach ($mixed as $key => $value) {
+            $mixed[$key] = utf8ize($value);
+        }
+    } elseif (is_object($mixed)) {
+        foreach ($mixed as $key => $value) {
+            $mixed->$key = utf8ize($value);
+        }
+    } elseif (is_string($mixed)) {
+        // Convert to UTF-8 if not already
+        if (!mb_check_encoding($mixed, 'UTF-8')) {
+            return mb_convert_encoding($mixed, 'UTF-8', 'auto');
+        }
+    }
+    return $mixed;
+}
+
+function json_encode_ex($ajaxData)
+{
+    $ajaxData = utf8ize($ajaxData);
+    $json = json_encode($ajaxData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    return ($json === false ? json_encode(new ajaxResponse('Error', json_last_error_msg())) : $json);
+}
+
 require_once('../../path.php');
 
 require_once(__FILE_ROOT__ . '/php/classes/db.php');
@@ -47,11 +74,11 @@ require_once(__FILE_ROOT__ . '/php/secure/validateUser.php');
 
 function sendDebug($data)
 {
-    echo(json_encode(new ajaxResponse('Debug', json_encode($data))));
+    echo(json_encode_ex(new ajaxResponse('Debug', json_encode_ex($data))));
     exit;
 }
 
-function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = null, $isDebug = false) // return a json_encoded ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
+function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit = null, $isDebug = false) // return a json_encode_exd ajaxResponse; $where can be a string of colname='value' or colname LIKE 'value' pairs
 {
     global $dbname;
 
@@ -168,8 +195,6 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
     . (is_null($limit) || !is_numeric($limit) ? "" : " LIMIT $limit");
     
     $dbResults = $dbconn->executeQuery($query);
-//--,        has_alternative_work_experience_applicable
-//    --alternative_work_experience_years,
 
     if (is_null($dbconn->lastException))
     {
@@ -195,7 +220,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->executeQuery("SELECT person_disabilityId, pd.disabilityId as disabilityId, disability FROM Disability d INNER JOIN Person_Disability pd ON d.disabilityId=pd.disabilityId WHERE personId='" . $dbResults[$i]['personId'] . "'");
@@ -206,7 +231,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Email_Address", "email_address", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
@@ -217,7 +242,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Contact_Number", "contact_numberId, contact_number", "WHERE personId='" . $dbResults[$i]['personId'] . "'");
@@ -228,7 +253,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Relevant_Training", "relevant_trainingId, descriptive_name, hours", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
@@ -239,7 +264,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
             $dbResults2 = $dbconn->select("Relevant_Work_Experience", "relevant_work_experienceId, descriptive_name, start_date, end_date", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
@@ -250,10 +275,9 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
 
-            // $dbResults2 = $dbconn->select("Relevant_Eligibility", "relevant_eligibilityId, eligibilityId", "WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
             $dbResults2 = $dbconn->executeQuery("SELECT relevant_eligibilityId, Relevant_Eligibility.eligibilityId, eligibility, eligibility_abbrev FROM Relevant_Eligibility INNER JOIN Eligibility ON Relevant_Eligibility.eligibilityId=Eligibility.eligibilityId WHERE application_code='" . $dbResults[$i]['application_code'] . "'");
 
             if (is_null($dbconn->lastException))
@@ -262,14 +286,14 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
             }
             else
             {
-                return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+                return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
             }
         }
 
-        return json_encode(new ajaxResponse(($isDebug ? 'Debug' : 'Data'), json_encode($dbResults)));
+        return json_encode_ex(new ajaxResponse(($isDebug ? 'Debug' : 'Data'), json_encode_ex($dbResults)));
     }
         
-    return json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
+    return json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage()));
 }
 
 function selectRecordAllColumns(DatabaseConnection $dbconn, $tableName) // CANNOT USE JOINS!!!
@@ -278,11 +302,11 @@ function selectRecordAllColumns(DatabaseConnection $dbconn, $tableName) // CANNO
     
     if (is_null($dbconn->lastException))
     {
-        return json_encode(new ajaxResponse('Data', json_encode($dbResults)));
+        return json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults)));
     }
     else
     {
-        die(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+        die(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
     }
 }
 
@@ -312,539 +336,16 @@ function generateFieldValueStr($dbconn, $valuesArr, &$fieldStr, &$valueStr, $fil
     return $fieldValueStr;
 }
 
-function dbAddPosition($dbconn, $positionData) : bool // return false when error is encountered
-{
-    $fieldStr = '';
-    $valueStr = '';
-    $fieldValueStr = generateFieldValueStr($dbconn, $positionData, $fieldStr, $valueStr, function($array, $key, $value) { return ($key != 'required_eligibility' && $key != 'loadPosition'); });
-
-    // foreach($position as $key=>$value)
-    // {
-    //     if ($key != 'required_eligibility' && $key != 'loadPosition')
-    //     {
-    //         $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-    //         $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
-            // $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . '$key=' . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-    //     }
-    // }
-    $fieldStr = '(' . $fieldStr . ')';
-    $valueStr = '(' . $valueStr . ')';
-
-    $existingPosition = $dbconn->select('Position', 'plantilla_item_number', 'WHERE plantilla_item_number="' . $positionData['plantilla_item_number'] . '"');
-
-    if (is_null($dbconn->lastException))
-    {
-        if (count($existingPosition) == 0)
-        {
-            $dbconn->insert('Position', $fieldStr, $valueStr);
-        }
-        else
-        {
-            $dbconn->update('Position', $fieldValueStr, 'WHERE plantilla_item_number="' . $positionData['plantilla_item_number'] . '"');
-        }
-    }
-    else
-    {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-        return false;
-    }
-
-    if (is_null($dbconn->lastException))
-    {
-        foreach($positionData['required_eligibility'] as $reqElig)
-        {
-            $dbconn->insert('Required_Eligibility', '(plantilla_item_number, eligibilityId)', '("' . $positionData['plantilla_item_number'] . '", "' . $reqElig . '")');
-
-            if (!is_null($dbconn->lastException))
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;        
-            }
-        }
-    }
-    else
-    {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-        return false;
-    }
-
-    return true;
-}
-
-function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication) : bool
-{
-    $param = [];
-    $updatePerson = false;
-    $updateJobApplication = false;
-    $personId = null;
-    $applicationCode = $jobApplication['application_code'];
-
-    if (isset($jobApplication['application_code']))
-    {
-        $param['application_code'] = $jobApplication['application_code'];
-    }
-
-    if (isset($jobApplication['position_title_applied']))
-    {
-        $param['position_title'] = $jobApplication['position_title_applied'];
-    }
-
-    if (isset($jobApplication['plantilla_item_number_applied']))
-    {
-        $param['plantilla_item_number'] = $jobApplication['plantilla_item_number_applied'];
-    }
-
-    logAction("mpasis", 6, $param);
-    
-    $personalInfo = $jobApplication["personalInfo"];
-
-    if (isset($jobApplication["personalInfo"]["personId"]))
-    {
-        $updatePerson = true;
-        $personId = $jobApplication["personalInfo"]["personId"];
-    }
-
-    $fieldStr = '';
-    $valueStr = '';
-
-    $addressIds = [];
-
-    if (isset($personalInfo["addresses"]) && count($personalInfo["addresses"]) > 0)
-    {
-        foreach ($personalInfo["addresses"] as $address) {
-            $fieldStr = '(address)';
-            $valueStr = "('$address')";
-
-            $dbconn->insert('Address', $fieldStr, $valueStr);
-
-            if (is_null($dbconn->lastException))
-            {
-                array_push($addressIds, $dbconn->lastInsertId);
-            }
-            else
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }    
-        }
-    } // $addressIds[0]: present; $addressIds[1]: permanent;
-
-    if (isset($personalInfo["religion"]))
-    {
-        $religion = $personalInfo["religion"];
-        $fieldStr = '(religion)';
-        $valueStr = "('$religion')";
-
-        $dbResults = $dbconn->select('Religion', 'religionId', "WHERE religion='" . $religion . "'");
-
-        if (is_null($dbconn->lastException) && count($dbResults) > 0)
-        {
-            $religionId = $dbResults[0]['religionId'];
-        }
-        else
-        {
-            $dbconn->insert('Religion', $fieldStr, $valueStr);
-
-            if (is_null($dbconn->lastException))
-            {
-                $religionId = $dbconn->lastInsertId;
-            }
-            else
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }    
-        }
-    }
-
-    if (isset($personalInfo["ethnicity"]))
-    {
-        $ethnicity = $personalInfo["ethnicity"];
-        $fieldStr = '(ethnic_group)';
-        $valueStr = "('$ethnicity')";
-
-        $dbResults = $dbconn->select('Ethnicity', 'ethnicityId', "WHERE ethnic_group='" . $ethnicity . "'");
-
-        if (is_null($dbconn->lastException) && count($dbResults) > 0)
-        {
-            $ethnicityId = $dbResults[0]['ethnicityId'];
-        }
-        else
-        {
-            $dbconn->insert('Ethnicity', $fieldStr, $valueStr);
-
-            if (is_null($dbconn->lastException))
-            {
-                $ethnicityId = $dbconn->lastInsertId;
-            }
-            else
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }    
-        }
-    }
-
-    if (isset($personalInfo["disabilities"]) && count($personalInfo["disabilities"]) > 0)
-    {
-        $disabilityIds = [];
-
-        foreach ($personalInfo["disabilities"] as $disability)
-        {
-            $fieldStr = '(disability)';
-            $valueStr = "('$disability')";
-
-            $dbResults = $dbconn->select('Disability', 'disabilityId', "WHERE disability='" . $disability . "'");
-
-            if (is_null($dbconn->lastException) && count($dbResults) > 0)
-            {
-                array_push($disabilityIds, $dbResults[0]['disabilityId']);
-            }
-            else
-            {
-                $dbconn->insert('Disability', $fieldStr, $valueStr);
-
-                if (is_null($dbconn->lastException))
-                {
-                    array_push($disabilityIds, $dbconn->lastInsertId);
-                }
-                else
-                {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                    return false;
-                }    
-            }
-        }
-    }
-
-    $fieldStr = '';
-    $valueStr = '';
-    $fieldValueStr = '';
-
-    foreach($personalInfo as $key=>$value)
-    {
-        if ($key != 'personId' && $key != "addresses" && $key != "religion" && $key != "disabilities" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers" && $key != 'degree_taken')
-        {
-            if ($updatePerson)
-            {
-                $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "$key='$value'";
-            }
-            else
-            {
-                $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-                $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
-            }
-        }
-    }
-    
-    for ($i = 0; $i < count($addressIds); $i++)
-    {
-        if ($updatePerson)
-        {
-            $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . ($i == 0 ? 'present' : 'permanent') . '_addressId' . "='$addressIds[$i]'";
-        }
-        else
-        {
-            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$addressIds[$i]'";
-            $fieldStr .= ($fieldStr == '' ? '' : ', ') . ($i == 0 ? 'present' : 'permanent') . '_addressId';
-        }
-    }
-
-    // var_dump($personalInfo);
-
-    if (isset($religionId))
-    {
-        if ($updatePerson)
-        {
-            $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "religionId='$religionId'";
-        }
-        else
-        {
-            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$religionId'";
-            $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'religionId';
-        }
-    }
-    
-    if (isset($ethnicityId))
-    {
-        if ($updatePerson)
-        {
-            $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "ethnicityId='$ethnicityId'";
-        }
-        else
-        {
-            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$ethnicityId'";
-            $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'ethnicityId';
-        }
-    }
-
-    if ($updatePerson)
-    {
-        $dbconn->update('Person', $fieldValueStr, "WHERE personId=$personId");
-
-        if (!is_null($dbconn->lastException))
-        {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-            return false;
-        }
-    }
-    else
-    {
-        $fieldStr = '(' . $fieldStr . ')';
-        $valueStr = '(' . $valueStr . ')';
-
-        $dbconn->insert('Person', $fieldStr, $valueStr);
-
-        if (is_null($dbconn->lastException))
-        {
-            $personId = $dbconn->lastInsertId;
-        }
-        else
-        {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-            return false;
-        }
-    }
-
-    $dbconn->delete("Email_Address", "WHERE personId='$personId'");
-
-    if (isset($personalInfo["email_addresses"]) && count($personalInfo["email_addresses"]) > 0)
-    {
-        foreach ($personalInfo["email_addresses"] as $email_address)
-        {
-            $fieldStr = '(email_address, personId)';
-            $valueStr = "('$email_address', '$personId')";
-
-            $dbResults = $dbconn->select('Email_Address', 'personId', "WHERE email_address='" . $email_address . "'");
-
-            if (is_null($dbconn->lastException))
-            {
-                if (count($dbResults) == 0)
-                {
-                    $dbconn->insert('Email_Address', $fieldStr, $valueStr);
-
-                    if (!is_null($dbconn->lastException))
-                    {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                        return false;
-                    }    
-                }
-            }
-            else
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }    
-        }
-    }
-
-    $dbconn->delete("Contact_Number", "WHERE personId='$personId'");
-
-    if (isset($personalInfo["contact_numbers"]) && count($personalInfo["contact_numbers"]) > 0)
-    {
-        foreach ($personalInfo["contact_numbers"] as $contact_number)
-        {
-            $fieldStr = '(contact_number, personId)';
-            $valueStr = "('$contact_number', '$personId')";
-
-            $dbconn->insert('Contact_Number', $fieldStr, $valueStr);
-
-            if (!is_null($dbconn->lastException))
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }    
-        }
-    }
-
-    $dbconn->delete("Degree_Taken", "WHERE personId='$personId'");
-
-    if (isset($personalInfo["degree_taken"]) && count($personalInfo["degree_taken"]) > 0)
-    {
-        
-        foreach ($personalInfo["degree_taken"] as $degree_taken)
-        {
-            $fieldStr = '';
-            $valueStr = '';
-
-            foreach ($degree_taken as $key=>$value)
-            {
-                $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-                $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
-            }
-
-            $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$personId'";
-            $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'personId';
-
-            $fieldStr = '(' . $fieldStr . ')';
-            $valueStr = '(' . $valueStr . ')';
-
-            $dbconn->insert('Degree_Taken', $fieldStr, $valueStr);
-
-            if (!is_null($dbconn->lastException))
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }    
-        }
-    }
-
-    $dbconn->delete("Person_Disability", "WHERE personId='$personId'");
-
-    if (isset($disabilityIds))
-    {
-        foreach ($disabilityIds as $disabilityId)
-        {
-            $fieldStr = '(disabilityId, personId)';
-            $valueStr = "('$disabilityId', '$personId')";
-
-            $dbconn->insert('Person_Disability', $fieldStr, $valueStr);
-
-            if (!is_null($dbconn->lastException))
-            {
-                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                return false;
-            }
-        }
-    }
-
-    $fieldStr = '';
-    $valueStr = '';
-    $fieldValueStr = '';
-    
-    $dbResults = $dbconn->select('Job_Application', "*" , "WHERE application_code='$applicationCode'");
-
-    if (is_null($dbconn->lastException) && !is_null($dbResults) && is_array($dbResults) && count($dbResults) > 0)
-    {
-        $updateJobApplication = true;
-    }
-
-    foreach ($jobApplication as $key=>$value) {
-        if ($key != "personalInfo" && $key != "relevantEligibility" && $key != "relevantTraining" && $key != "relevantWorkExp")
-        {
-            if ($updateJobApplication)
-            {
-                $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "$key=" . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-            }
-            else
-            {
-                $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-                $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
-            }
-        }
-    }
-
-    if ($updateJobApplication)
-    {
-        $fieldValueStr .= ($fieldValueStr == '' ? '' : ', ') . "personId=$personId";
-
-        $dbconn->update('Job_Application', $fieldValueStr, "WHERE application_code='$applicationCode'");
-    }
-    else
-    {
-        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$personId'";
-        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'personId';
-
-        $fieldStr = '(' . $fieldStr . ')';
-        $valueStr = '(' . $valueStr . ')';
-
-        $dbconn->insert('Job_Application', $fieldStr, $valueStr);
-    }
-    
-    if (!is_null($dbconn->lastException))
-    {
-        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-        return false;
-    }
-
-    $dbconn->delete("Relevant_Training", "WHERE application_code='$applicationCode'");
-
-    foreach ($jobApplication["relevantTraining"] as $relevantTraining) {
-        $fieldStr = '';
-        $valueStr = '';
-        
-        foreach ($relevantTraining as $key=>$value) {
-            $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;   
-        }
-
-        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
-        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
-
-        $fieldStr = '(' . $fieldStr . ')';
-        $valueStr = '(' . $valueStr . ')';
-
-        $dbconn->insert('Relevant_Training', $fieldStr, $valueStr);
-
-        if (!is_null($dbconn->lastException))
-        {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-            return false;
-        }
-    }
-
-    $dbconn->delete("Relevant_Work_Experience", "WHERE application_code='$applicationCode'");
-    
-    foreach ($jobApplication["relevantWorkExp"] as $relevantWorkExp) {
-        $fieldStr = '';
-        $valueStr = '';
-        
-        foreach ($relevantWorkExp as $key=>$value) {
-            $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-            $fieldStr .= ($fieldStr == '' ? '' : ', ') . $key;
-        }
-        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
-        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
-
-        $fieldStr = '(' . $fieldStr . ')';
-        $valueStr = '(' . $valueStr . ')';
-
-        $dbconn->insert('Relevant_Work_Experience', $fieldStr, $valueStr);
-
-        if (!is_null($dbconn->lastException))
-        {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-            return false;
-        }
-    }
-
-    $dbconn->delete("Relevant_Eligibility", "WHERE application_code='$applicationCode'");
-    
-    foreach ($jobApplication["relevantEligibility"] as $value) {
-        $fieldStr = '';
-        $valueStr = '';
-
-        $valueStr .= ($fieldStr == '' ? '' : ', ') . ($value == '' || is_null($value) ? 'NULL' : "'$value'");
-        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'eligibilityId';
-
-        $valueStr .= ($fieldStr == '' ? '' : ', ') . "'$applicationCode'";
-        $fieldStr .= ($fieldStr == '' ? '' : ', ') . 'application_code';
-
-        $fieldStr = '(' . $fieldStr . ')';
-        $valueStr = '(' . $valueStr . ')';
-
-        $dbconn->insert('Relevant_Eligibility', $fieldStr, $valueStr);
-
-        if (!is_null($dbconn->lastException))
-        {
-            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-            return false;
-        }
-    }
-
-    return true;
-}
-
 // TEST ONLY !!!!!!!!!!!!!
 if (isset($_REQUEST['test']))
 {
-    // echo(json_encode(new ajaxResponse('Info','test reply')));
-    // echo(json_encode(new ajaxResponse('Data',['a'=>'test reply'])));
+    // echo(json_encode_ex(new ajaxResponse('Info','test reply')));
+    // echo(json_encode_ex(new ajaxResponse('Data',['a'=>'test reply'])));
     // $fieldStr = '';
     // $valueStr = '';
-    // echo(json_encode(new ajaxResponse('Data', generateFieldValueStr(['a'=>'test reply','b'=>'hello, world'], $fieldStr, $valueStr))));
-    // echo(json_encode(new ajaxResponse('Data', $fieldStr)));
-    // echo(json_encode(new ajaxResponse('Data', $valueStr)));
+    // echo(json_encode_ex(new ajaxResponse('Data', generateFieldValueStr(['a'=>'test reply','b'=>'hello, world'], $fieldStr, $valueStr))));
+    // echo(json_encode_ex(new ajaxResponse('Data', $fieldStr)));
+    // echo(json_encode_ex(new ajaxResponse('Data', $valueStr)));
     ?>
 
 <form class="data-form-ex" method="post" action="/mpasis/php/process.php" enctype="multipart/form-data"><h2>Upload Jobs Data</h2><span class="textbox-ex file-ex vertical" style="display: flex;"><label class="label-ex" for="jobs-csv">CSV for Upload:</label> <input type="file" id="jobs-csv" name="jobs-csv" accept="text/csv" style="width: 100%; border: 2px inset; background-color: white; padding: 1em;"></span><br><span class="textbox-ex hidden-ex"><input type="hidden" id="a" name="a" value="upload"></span><span class="button-ex"><button type="submit" id="ButtonEx1">Upload</button></span></form>
@@ -859,7 +360,7 @@ if (isValidUserSession())
 {    
     if (isset($_REQUEST['q']) && $_REQUEST['q'] == 'login') // UNUSED
     {
-        echo json_encode(new ajaxResponse('User', json_encode(array('Username'=>$_SESSION['user'], 'UserId'=>1 * $_SESSION['user_id']))));
+        echo json_encode_ex(new ajaxResponse('User', json_encode_ex(array('Username'=>$_SESSION['user'], 'UserId'=>1 * $_SESSION['user_id']))));
         return;
 	}
     elseif (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout') // UNUSED
@@ -867,59 +368,19 @@ if (isValidUserSession())
         $redirectToLogin = false;
         require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
 
-        echo json_encode(new ajaxResponse('Success', 'Signed out.'));
+        echo json_encode_ex(new ajaxResponse('Success', 'Signed out.'));
         return;
     }
     elseif (isset($_REQUEST['a']))
     {
         $dbconn = new DatabaseConnection($dbtype, $servername, $dbuser, $dbpass, $dbname, []);
-
+        
+        /*
         switch($_REQUEST['a'])
         {
             case 'fetch':
                 switch($_REQUEST['f'])
                 {
-                    case 'users':
-                        $criteriaStr = (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE All_User.username LIKE "%' . trim($_REQUEST['k']) . '%" OR given_name LIKE "%' . trim($_REQUEST['k']) . '%" OR middle_name LIKE "%' . trim($_REQUEST['k']) . '%" OR family_name LIKE "%' . trim($_REQUEST['k']) . '%" OR spouse_name LIKE "%' . trim($_REQUEST['k']) . '%" OR ext_name LIKE "%' . trim($_REQUEST['k']) . '%"');
-                        
-                        logAction('mpasis', 11, array(
-                            ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
-                            "username_op"=>$_REQUEST['k']
-                        ));
-                        echo(json_encode(new ajaxResponse('Data', json_encode(fetchUser($dbconn, '', $criteriaStr)))));
-                        return;
-                        break;
-                    case 'tempuser':
-                        $dbResults = $dbconn->executeQuery(
-                            "SELECT 
-                                given_name,
-                                middle_name,
-                                family_name,
-                                spouse_name,
-                                ext_name,
-                                username,
-                                sergs_access_level,
-                                opms_access_level,
-                                mpasis_access_level
-                            FROM `$dbname`.Person
-                            INNER JOIN `$dbname`.Temp_User
-                            ON Person.personId=Temp_User.personId" . (isset($_REQUEST['k']) && trim($_REQUEST['k']) == 'all' ? '' : ' WHERE Temp_User.username LIKE "' . trim($_REQUEST['k']) . '";')
-                        );
-    
-                        if (is_null($dbconn->lastException))
-                        {
-                            logAction('mpasis', 17, array(
-                                ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
-                                "username_op"=>$_REQUEST['k']
-                            ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
-                        return;
-                        break;
                     case 'searchApplicationByName':
                         $dbResults = $dbconn->executeQuery(
                             "SELECT
@@ -942,122 +403,11 @@ if (isValidUserSession())
                                 ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                                 'remarks'=>'Search the name: ' . $_REQUEST['name']
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($results))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($results))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        }
-                        return;
-                        break;
-                    case 'initial-data':
-                        $positions = $dbconn->select('Position', '*', '');
-
-                        if (is_null($dbconn->lastException))
-                        {
-                            $requiredEligibilities = $dbconn->executeQuery(
-                                'SELECT
-                                    required_eligibilityId,
-                                    plantilla_item_number,
-                                    re.eligibilityId,
-                                    e1.eligibility,
-                                    re.eligibilityId2,
-                                    e2.eligibility AS eligibility2,
-                                    re.eligibilityId3,
-                                    e3.eligibility AS eligibility3
-                                FROM Required_Eligibility re INNER JOIN Eligibility e1 ON re.eligibilityId=e1.eligibilityId
-                                LEFT JOIN Eligibility e2 ON re.eligibilityId2=e2.eligibilityId
-                                LEFT JOIN Eligibility e3 ON re.eligibilityId3=e3.eligibilityId
-                                ;'
-                            );
-
-                            if (is_null($dbconn->lastException))
-                            {
-                                for ($i = 0; $i < count($positions); $i++) {
-                                    $positions[$i]['required_eligibility'] = [];
-
-                                    foreach ($requiredEligibilities as $requiredEligibility)
-                                    {
-                                        if ($requiredEligibility['plantilla_item_number'] == $positions[$i]['plantilla_item_number'])
-                                        {
-                                            array_push($positions[$i]['required_eligibility'], $requiredEligibility);
-                                        }
-                                    }
-                                }
-
-                                // $salaryGrade = $dbconn->select('Salary_Table', '*', 'WHERE effectivity_date >= "2023-01-01"');
-                                $salaryGrade = $dbconn->executeQuery('SELECT * FROM Salary_Table RIGHT JOIN (SELECT MAX(effectivity_date) as effectivity_date FROM (SELECT effectivity_date FROM Salary_Table GROUP BY effectivity_date) AS a) AS b ON Salary_Table.effectivity_date = b.effectivity_date;');
-
-                                if (!is_null($dbconn->lastException))
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $positionCategory = $dbconn->select('Position_Category', '*', '');
-
-                                if (!is_null($dbconn->lastException))
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $educIncrementTable = $dbconn->select('MPS_Increment_Table_Education', '*', '');
-
-                                if (!is_null($dbconn->lastException))
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                    return;
-                                }
-
-                                $enumEducAttainment = $dbconn->select('ENUM_Educational_Attainment', '*', '');
-
-                                $hrRoles = array(
-                                    'appointing_officer' => array('name' => 'Neil G. Angeles, CESO VI', 'position' => 'Schools Division Superintendent'),
-                                    'hrmo' => array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO'),
-                                    'hrmpsb_chair' => array('name' => 'Edward D. Garcia', 'position' => 'Assistant Schools Division Superintendent'),
-                                    'hrmpsb_secretariat' => [
-                                        array('name' => 'Jenina R. Patricio', 'position' => 'Administrative Officer II', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        // array('name' => 'NameA', 'position' => 'PositionA', 'level1' => true, 'level2' => false, 'level3' => false),
-                                        // array('name' => 'NameB', 'position' => 'PositionB', 'level1' => false, 'level2' => true, 'level3' => false),
-                                    ],
-                                    'hrmpsb_members' => [
-                                        array('name' => 'Jhomar C. Sor, Ed.D.', 'position' => 'CID Chief', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV/HRMO', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Carina V. Pedragosa', 'position' => 'Planning Officer III', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Oliva P. Regalado', 'position' => 'Master Teacher II', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Edwin C. Miranda', 'position' => 'Public Schools District Supervisor', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Raymundo F. Hermo', 'position' => 'School Principal III', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Bonifacio DC. Regalado, Jr.', 'position' => 'Head Teacher III', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Mark Anthony Silvestre', 'position' => 'Administrative Assistant III', 'level1' => true, 'level2' => true, 'level3' => false),
-                                    ]
-                                );
-
-                                if (is_null($dbconn->lastException))
-                                {
-                                    // var_dump($positions);
-                                    // var_dump(json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]));
-
-                                    // var_dump(json_last_error());
-
-                                    // echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory]))));
-                                    echo(json_encode(new ajaxResponse('Data', json_encode(['positions'=>$positions, 'salary_grade'=>$salaryGrade, 'mps_increment_table_education'=>$educIncrementTable, 'enum_educational_attainment'=>$enumEducAttainment, 'position_category'=>$positionCategory, 'hr_roles'=>$hrRoles]))));
-                                }
-                                else
-                                {
-                                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                                }
-                            }
-                            else
-                            {
-                                echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                            }
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1069,22 +419,6 @@ if (isValidUserSession())
 
                         echo(selectRecordAllColumns($dbconn, 'Position'));
                         return;
-                        // $dbResults = $dbconn->select('Position', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                            // logAction('mpasis', 3, array(
-                            //     ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            //     'remarks'=>'Retrieve all positions info'
-                            // ));
-    
-                            // echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
-                        // return;
                         break;
                     case 'positionTitles':
                         $dbResults = $dbconn->select('Position', 'position_title', 'GROUP BY position_title');
@@ -1095,11 +429,11 @@ if (isValidUserSession())
                                 ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
                                 'remarks'=>'Retrieve all position titles only'
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1115,11 +449,11 @@ if (isValidUserSession())
                                 'position_title'=>$_REQUEST['positionTitle'],
                                 'remarks'=>'Retrieve parenthetical titles with specified position title'
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
@@ -1136,41 +470,20 @@ if (isValidUserSession())
                                 'position_title'=>$_REQUEST['positionTitle'],
                                 'remarks'=>'Retrieve plantilla item numbers with specified position title and parenthetical title'
                             ));
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
                     case 'positionCategory':
                         echo(selectRecordAllColumns($dbconn, 'Position_Category'));
-
-                        // $dbResults = $dbconn->select('Position_Category', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'educLevel':
                         echo(selectRecordAllColumns($dbconn, 'ENUM_Educational_Attainment'));
-                        // $dbResults = $dbconn->select('ENUM_Educational_Attainment', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'univEducLevel':
@@ -1178,103 +491,43 @@ if (isValidUserSession())
     
                         if (is_null($dbconn->lastException))
                         {
-                            echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
+                            echo(json_encode_ex(new ajaxResponse('Data', json_encode_ex($dbResults))));
                         }
                         else
                         {
-                            echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                            echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                         }
                         return;
                         break;
                     case 'specEduc':
                         echo(selectJobApplications($dbconn, 'Specific_Education'));
-                        // $dbResults = $dbconn->select('Specific_Education', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'civilStatus':
                         echo(selectRecordAllColumns($dbconn, 'ENUM_Civil_Status'));
-                        // $dbResults = $dbconn->select('ENUM_Civil_Status', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'disability':
                         echo(selectRecordAllColumns($dbconn, 'Disability'));
-                        // $dbResults = $dbconn->select('Disability', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'ethnicGroup':
                         echo(selectRecordAllColumns($dbconn, 'Ethnicity'));
-                        // $dbResults = $dbconn->select('Ethnicity', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'religion':
                         echo(selectRecordAllColumns($dbconn, 'Religion'));
-                        // $dbResults = $dbconn->select('Religion', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'eligibilities':
                         echo(selectRecordAllColumns($dbconn, 'Eligibility'));
-                        // $dbResults = $dbconn->select('Eligibility', '*', '');
-    
-                        // if (is_null($dbconn->lastException))
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Data', json_encode($dbResults))));
-                        // }
-                        // else
-                        // {
-                        //     echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                        // }
                         return;
                         break;
                     case 'applicationsByApplicantOrCode':
                         $srcStr = (isset($_REQUEST['srcStr']) ? $_REQUEST['srcStr'] : "");
                         if ($srcStr == '')
                         {
-                            die(json_encode(new ajaxResponse('Info', 'Blank search string')));
+                            die(json_encode_ex(new ajaxResponse('Info', 'Blank search string')));
                         }
                         
                         logAction('mpasis', 7, array(
@@ -1290,7 +543,7 @@ if (isValidUserSession())
                         $where = '';
                         if ($positionTitle == '' && $plantilla == '')
                         {
-                            die(json_encode(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
+                            die(json_encode_ex(new ajaxResponse('Error', 'Invalid position and plantilla item number strings')));
                         }
 
                         $where .= ($plantilla == '' ? "position_title_applied='$positionTitle'" . ($parenTitle == '' ? '' : " AND parenthetical_title_applied='$parenTitle'") : "plantilla_item_number_applied='$plantilla'");
@@ -1307,283 +560,6 @@ if (isValidUserSession())
                         break;
                 }
                 break;
-            case 'add':
-                if (isset($_REQUEST['eligibilities']))
-                {
-                    $eligibilities = json_decode($_REQUEST['eligibilities'], true);
-    
-                    $errMsg = '';
-                    $valueStr = '';
-    
-                    foreach ($eligibilities as $eligibility)
-                    {
-                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $eligibility['eligibility'] . '","' . $eligibility['description'] . '")';
-                    }
-    
-                    $dbconn->insert('Eligibility', '(eligibility, description)', $valueStr);
-    
-                    if (is_null($dbconn->lastException))
-                    {
-                        logAction('mpasis', 0, array(
-                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            'remarks'=>"Added Eligibility; Value string: $valueStr"
-                        ));
-                        // echo(json_encode(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
-                        echo(json_encode(new ajaxResponse('Success', 'Eligibility successfully added')));
-                    }
-                    else
-                    {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                    }
-                    
-                    return;
-                }
-                elseif (isset($_REQUEST['specEducs'])) // THIS SECTION NEEDS TO BE MODIFIED IF EVER IT IS TO BE USED AGAIN; SPECIFIC_EDUCATION REQUIRES A JOB_APPLICATION
-                {
-                    $specEducs = json_decode($_REQUEST['specEducs'], true);
-                    
-                    $errMsg = '';
-                    $valueStr = '';
-                    
-                    foreach ($specEducs as $specEduc)
-                    {                        
-                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $specEduc['specific_education'] . '","' . $specEduc['description'] . '")';
-                    }
-    
-                    $dbconn->insert('Specific_Education', '(specific_education, description)', $valueStr);
-    
-                    if (is_null($dbconn->lastException))
-                    {
-                        logAction('mpasis', 0, array(
-                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            'remarks'=>"Added Specific Education; Value string: $valueStr"
-                        ));
-                        echo(json_encode(new ajaxResponse('Success', 'Specific course/education successfully added')));
-                    }
-                    else
-                    {
-                        echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
-                    }
-                    
-                    return;
-                }
-                elseif (isset($_REQUEST['positions']))
-                {
-                    $positions = json_decode($_REQUEST['positions'], true);
-
-                    if (is_null($positions) || count($positions) <= 0)
-                    {
-                        echo(json_encode(new ajaxResponse('Warning', 'Submitted positions length is zero. Please add position data along with plantilla item numbers to continue.')));
-                    
-                        return;    
-                    }
-
-                    foreach($positions as $position)
-                    {
-                        if (!dbAddPosition($dbconn, $position)) // if error
-                        {
-                            return;
-                        };
-                    }
-                    
-                    logAction('mpasis', 1, array(
-                        ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                        'remarks'=>"Added Positions; Value string: $valueStr"
-                    ));
-                    echo(json_encode(new ajaxResponse('Success', 'Successfully added/updated Position details!')));
-                    
-                    return;
-                }
-                elseif (isset($_REQUEST['jobApplication']))
-                {
-                    $jobApplication = json_decode($_REQUEST['jobApplication'], true);
-                    $updateJobApplication = false;
-    
-                    if (!dbAddJobApplication($dbconn, $jobApplication, $updateJobApplication)) // if error
-                    {
-                        return;
-                    }
-
-                    logAction('mpasis', ($updateJobApplication ? 8 : 6), array(
-                        ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                        'application_code'=>$jobApplication['application_code'],
-                        'position_title'=>$jobApplication['position_title_applied']
-                    ));
-                    
-                    echo(json_encode(new ajaxResponse('Success', 'Application has been successfully saved with <b>Application Code: ' . $jobApplication['application_code'] . '</b>.')));
-                    return;
-                }
-                elseif (isset($_REQUEST['user']))
-                {
-                    echo(addUser($dbconn, json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
-                    return;
-                }
-                break;
-            case 'update':
-                if (isset($_REQUEST['jobApplication']))
-                {
-                    $jobApplication = json_decode($_REQUEST['jobApplication'], true);
-                    $applicationCode = $jobApplication['application_code'];
-
-                    $fieldValueStr = '';
-
-                    foreach ($jobApplication as $key=>$value)
-                    {
-                        switch ($key)
-                        {
-                            case 'applicant_name':
-                            case 'application_code':
-                            case 'position_title_applied':
-                                // do nothing
-                                break;
-                            default:
-                                $fieldValueStr .= (trim($fieldValueStr) == '' ? '' : ', ') . $key . '=' . (is_null($value) || $value == '' ? 'NULL' : "'$value'") . '';
-                                break;
-                        }
-                    }
-
-                    // echo(json_encode(new ajaxResponse('Success', $applicationCode)));
-                    // return;
-
-                    $dbconn->update('Job_Application', $fieldValueStr, "WHERE application_code='$applicationCode'");
-
-                    if (is_null($dbconn->lastException))
-                    {
-                        logAction('mpasis', 8, array(
-                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            'application_code'=>$applicationCode,
-                            'position_title'=>$jobApplication['position_title_applied']
-                        ));
-                        echo(json_encode(new ajaxResponse('Success', "Application Code: $applicationCode has been successfully updated!")));
-                        return;
-                    }
-                    else
-                    {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details' . '<br><br>' . $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                        return;
-                    }
-                }
-                elseif (isset($_REQUEST['passd']))
-                {
-                    echo(changePassword($dbconn, json_decode($_REQUEST['passd'], true)));
-                }
-                elseif (isset($_REQUEST['user']))
-                {
-                    echo(updateUser($dbconn, json_decode($_REQUEST['user'], true), json_decode($_REQUEST['person'], true)));
-                }
-                return;
-                break;
-            case 'delete':
-                if (isset($_REQUEST['username']) && isset($_REQUEST['temp_user']))
-                {
-                    
-                    $username = $_REQUEST['username'];
-                    $isTempUser = $_REQUEST['temp_user'];
-                    $user = null;
-
-                    if ($_SESSION['user']['username'] == $username)
-                    {
-                        die(json_encode(new ajaxResponse('Error', 'A user cannot delete own account')));
-                    }
-                    
-                    $user = fetchUser($dbconn, $username)[0];
-                    
-                    if ($isTempUser)
-                    {
-                        $dbconn->delete('Person', 'WHERE personId=\'' . $user['personId'] . '\'');
-                    }
-                    else
-                    {
-                        $dbconn->delete('User', "WHERE username='$username'");
-                    }
-
-                    if (is_null($dbconn->lastException))
-                    {
-                        logAction('mpasis', ($isTempUser ? 21 : 15), array(
-                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
-                            ($isTempUser ? 'temp_' : '') . 'username_op'=>$username
-                        ));
-                        echo(json_encode(new ajaxResponse('Success', 'User: ' . $_REQUEST['username'] . ' has been deleted.')));
-                    }
-                    else
-                    {
-                        echo(json_encode(new ajaxResponse('Error', 'Deletion of user: ' . $_REQUEST['username'] . ' failed.')));
-                    }
-                }
-                return;
-                break;
-            case 'addTempUser':
-                $person = json_decode($_REQUEST['person'], true);
-                $tempUser = json_decode($_REQUEST['tempUser'], true);
-
-                if (isset($person['given_name']))
-                {
-                    $fieldStr = '';
-                    $valueStr = '';
-
-                    foreach ($person as $key=>$value) {
-                        $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
-                        $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
-                    }
-
-                    $personId = $dbconn->insert('Person', "($fieldStr)", "($valueStr)");
-                    // $personId = 1;
-
-                    if (is_null($dbconn->lastException))
-                    {
-                        if (isset($tempUser['username']))
-                        {
-                            $fieldStr = '';
-                            $valueStr = '';
-                            
-                            $tempUser['personId'] = $personId;
-
-                            if (isset($tempUser['password']))
-                            {
-                                $tempUser['password'] = trim(hash('ripemd320', $tempUser['password']));
-                            }
-
-                            foreach ($tempUser as $key=>$value) {
-                                $valueStr .= (trim($fieldStr) == '' ? '': ', ') . "'$value'";
-                                $fieldStr .= (trim($fieldStr) == '' ? '': ', ') . $key;
-                            }
-
-                            $dbconn->insert('Temp_User', "($fieldStr)", "($valueStr)");
-
-                            if (is_null($dbconn->lastException))
-                            {
-                                logAction('mpasis', 16, array(
-                                    ($_SESSION['user']["is_temporary_user"] ? 'temp_' : '') . "username"=>$_SESSION['user']['username'],
-                                    "temp_username_op"=>$tempUser['username']
-                                ));
-                                echo(json_encode(new ajaxResponse('Success', 'Temporary User successfully created')));
-                                return;
-                            }
-                            else
-                            {
-                                echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting temporary user details')));
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            echo(json_encode(new ajaxResponse('Error', 'Username is required')));
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        echo(json_encode(new ajaxResponse('Error', 'Exception encountered while inserting personal details')));
-                        return;
-                    }
-                }
-                else
-                {
-                    echo(json_encode(new ajaxResponse('Error', 'Given Name is required')));
-                    return;
-                }
-
-                break;
             case 'getSalaryFromSG':
                 $salaryGrade = $_REQUEST['sg'];
 
@@ -1591,206 +567,1175 @@ if (isValidUserSession())
                 
                 if (is_null($dbconn->lastException))
                 {
-                    echo(json_encode(new ajaxResponse('Salary', $dbResults[0]['salary'])));
+                    echo(json_encode_ex(new ajaxResponse('Salary', $dbResults[0]['salary'])));
                     return;
                 }
                 else
                 {
-                    echo(json_encode(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                    echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
                     return;
                 }
 
                 break;
-            case 'resetPassd':
-                echo(resetPassword($dbconn));
-                return;
-                break;
-            case 'log':
-                break;
-            case 'upload':
-                if (isset($_FILES['jobs-csv']))
-                {
-                    $file = fopen($_FILES['jobs-csv']['tmp_name'], 'r');
-                    $rows = [];
-                    $row = null;
-                    $headerRow = [];
-                    $dataRows = [];
-                    $dataRow = [];
-
-                    if ($file === false)
-                    {
-                        die('Cannot open the file');
-                    }
-
-                    while (($row = fgetcsv($file)) !== false)
-                    {
-                        $rows[] = $row;
-                    }
-
-                    $headerRow = array_shift($rows);
-
-
-                    foreach ($rows as $row) {
-                        for ($i = 0; $i < count($row); $i++)
-                        {
-                            if ($headerRow[$i] === 'required_eligibility')
-                            {
-                                $dataRow[$headerRow[$i]] = ($row[$i] == '' ? NULL : json_decode($row[$i]));
-                            }
-                            else
-                            {
-                                $dataRow[str_replace("\u{FEFF}", '', $headerRow[$i])] = ($row[$i] == '' ? NULL : $row[$i]);
-                            }
-                        }
-                        $dataRows[] = $dataRow;
-                    }
-
-                    foreach ($dataRows as $dataRow)
-                    {
-                        if (!$dbconn->isConnected()) // added due to disconnects
-                        {
-                            $dbconn->connect();
-                        }
-
-                        dbAddPosition($dbconn, $dataRow); /// SHOULD ADD AJAX ERROR MESSAGES LATER!!!
-                    }
-
-                    return;
-                }
-                else if (isset($_FILES['job-applications-csv']))
-                {
-                    $file = fopen($_FILES['job-applications-csv']['tmp_name'], 'r');
-                    $rows = [];
-                    $row = null;
-                    $headerRow = [];
-                    $dataRows = [];
-                    $dataRow = [];
-                    $personalInfo = [];
-
-                    if ($file === false)
-                    {
-                        die('Cannot open the file');
-                    }
-
-                    while (($row = fgetcsv($file)) !== false)
-                    {
-                        $rows[] = $row;
-                    }
-
-                    $headerRow = array_shift($rows);
-
-                    foreach ($rows as $row) {
-                        $personalInfo = [];
-                        $dataRow['personalInfo'] = $personalInfo;
-                        for ($i = 0; $i < count($row); $i++)
-                        {
-                            if ($headerRow[$i] === "\u{FEFF}" . "application_code" || $headerRow[$i] === 'position_title_applied' || $headerRow[$i] === 'plantilla_item_number_applied')
-                            {
-                                $dataRow[str_replace("\u{FEFF}", '', $headerRow[$i])] = ($row[$i] == '' ? NULL : $row[$i]);
-                            }
-                            else
-                            {
-                                if ($headerRow[$i] === 'disabilities' || $headerRow[$i] === 'email_addresses' || $headerRow[$i] === 'contact_numbers')
-                                {
-                                    $row[$i] = str_replace('[', '["', str_replace(']', '"]', str_replace(',', '","', $row[$i])));
-    
-                                    $dataRow['personalInfo'][$headerRow[$i]] = ($row[$i] == '' ? [] : json_decode($row[$i]));
-                                }
-                                else if ($headerRow[$i] === 'addresses')
-                                {
-                                    $row[$i] = str_replace('[', '["', str_replace(']', '"]', str_replace("\n", '\n', $row[$i])));
-
-                                    $dataRow['personalInfo'][$headerRow[$i]] = ($row[$i] == '' ? [] : json_decode($row[$i]));
-                                }
-                                else
-                                {
-                                    $dataRow['personalInfo'][$headerRow[$i]] = ($row[$i] == '' ? NULL : $row[$i]);
-                                }
-                            }
-                        }
-                        $dataRows[] = $dataRow;
-                    }
-
-                    foreach ($dataRows as $dataRow)
-                    {
-                        if (!$dbconn->isConnected()) // added due to disconnects
-                        {
-                            $dbconn->connect();
-                        }
-
-                        $updateJobApplication = false;
-
-                        dbAddJobApplication($dbconn, $dataRow, $updateJobApplication); /// SHOULD ADD AJAX ERROR MESSAGES LATER!!!
-                    }
-                    
-                    // echo ('<div style="white-space: pre;">');
-                    // var_dump($headerRow);
-                    // echo ('<br><br>');
-                    // var_dump($dataRows);
-                    // echo ('</div>');
-
-                    return;
-
-
-                    /*
-{
-    "personalInfo": {
-        "addresses": [
-            "Door 6 Recto Apartment, Levitown Subdivision"
-        ],
-        "disabilities": [],
-        "email_addresses": [
-            "geovaniduqueza1939@yahoo.com"
-        ],
-        "contact_numbers": [
-            "09153032914"
-        ],
-        "degree_taken": [],
-        "given_name": "Geo",
-        "middle_name": "P.",
-        "family_name": "Duqueza",
-        "age": 4,
-        "sex": "Male",
-        "civil_status": "2",
-        "ethnicity": "",
-        "educational_attainment": null
-    },
-    "relevantTraining": [],
-    "relevantWorkExp": [],
-    "relevantEligibility": [],
-    "position_title_applied": "Teacher I",
-    "plantilla_item_number_applied": "TCH1-000000-0000",
-    "application_code": "yttghsfd",
-    "has_specific_education_required": 0,
-    "has_specific_training": null,
-    "has_alternative_work_experience_applicable": 0,
-    "alternative_work_experience_years": "0",
-    "has_specific_work_experience": null,
-    "has_specific_competency_required": null,
-    "has_more_unrecorded_training": 0,
-    "has_more_unrecorded_work_experience": 0
-}
-                    */
-
-                }
+            default:
                 break;
         }
+        */
+
+        $criteria = [
+            [
+                "id"=>"summary",
+                "type"=>"summary",
+                "label"=>"Summary of Ratings",
+                "dbColName"=>"summary",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"summary_criteria","type"=>"summary-header","label"=>"Criteria","dbColName"=>"summary_criteria","dbTableName"=>"","content"=>[],"parentId"=>"summary","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"summary_weight","type"=>"summary-header","label"=>"Weight","dbColName"=>"summary_weight","dbTableName"=>"","content"=>[],"parentId"=>"summary","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"summary_score","type"=>"summary-header","label"=>"Score","dbColName"=>"summary_score","dbTableName"=>"","content"=>[],"parentId"=>"summary","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"summary_total_label","type"=>"summary-footer","label"=>"Grand Total:","dbColName"=>"summary_total_label","dbTableName"=>"","content"=>[],"parentId"=>"summary","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"summary_total_weight","type"=>"summary-footer","label"=>"0%","dbColName"=>"summary_total_weight","dbTableName"=>"","content"=>[],"parentId"=>"summary","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"summary_total_score","type"=>"summary-footer","label"=>"0.000","dbColName"=>"summary_total_score","dbTableName"=>"","content"=>[],"parentId"=>"summary","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>-1,
+                "maxPoints"=>0,
+                "min"=>0,
+                "max"=>0,
+                "step"=>0
+            ],
+            [
+                "id"=>"education",
+                "type"=>"criteria1",
+                "label"=>"Education",
+                "dbColName"=>"education",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"educational_attainment","type"=>"display","label"=>"Highest level of education attained","dbColName"=>"educational_attainment","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"degrees_taken","type"=>"display-list-bullet-disc","label"=>"Degrees taken","dbColName"=>"degrees_taken","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"has_specific_education_required","type"=>"display","label"=>"Has taken education required for the position","dbColName"=>"has_specific_education_required","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"educ_notes","type"=>"display","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"educ_notes","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"educIncrementsApplicant","type"=>"display","label"=>"Applicant's education increment level","dbColName"=>"educIncrementsApplicant","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"educIncrementsQS","type"=>"display","label"=>"Base increment level (Qualification Standard)","dbColName"=>"educIncrementsQS","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"educIncrements","type"=>"display","label"=>"Number of increments above the Qualification Standard","dbColName"=>"educIncrements","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"isEducQualified","type"=>"display-check","label"=>"Applicant is qualified","dbColName"=>"isEducQualified","dbTableName"=>"","content"=>[],"parentId"=>"education","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 5 || ($positionCategory == 4 && $salaryGrade != 24) ? 5 : 10),
+                "maxPoints"=>($positionCategory == 5 || ($positionCategory == 4 && $salaryGrade != 24) ? 5 : 10),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"educ_notes",
+                "getPointsManually"=>function($mode = 0){
+                    $score = 0;
+                    $scoreSheetElementUI = null;
+                    /*
+                    
+                    var educAttainment = jobApplication["educational_attainmentIndex"];
+                    var degreeTaken = jobApplication["degree_taken"];
+                    var educNotes = jobApplication["educ_notes"] ?? "none";
+                    var hasSpecEduc = (positionObj["specific_education_required"] == null ? "N/A" : (jobApplication["has_specific_education_required"] != 0 && jobApplication["has_specific_education_required"] != null ? "Yes" : "No"));
+                    
+                    var applicantEducIncrement = (educAttainment == null ? 0 : ScoreSheet.getEducIncrements(educAttainment, degreeTaken));
+                    var incrementObj = document.mpsEducIncrement.filter(increment=>(increment["baseline_educational_attainment"] == positionObj["required_educational_attainment"]));
+                    var requiredEducIncrement = incrementObj[0]["education_increment_level"];
+                    var educIncrementAboveQS = applicantEducIncrement - requiredEducIncrement;
+
+                    if (mode == 0)
+                    [
+                        scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "education")[0];
+                        scoreSheetElementUI.displays["educational_attainment"].displayEx.setHTMLContent(jobApplication["educational_attainment"]);
+                        scoreSheetElementUI.displays["degrees_taken"].contentWrapper.innerHTML = "";
+                        for (const degree of degreeTaken)
+                        [
+                            scoreSheetElementUI.displays["degrees_taken"].contentWrapper.appendChild(htmlToElement("<li>" + MPASIS_App.convertDegreeObjToStr(degree) + "</li>"));
+                        ]
+    
+                        if (scoreSheetElementUI.displays["degrees_taken"].contentWrapper.innerHTML.trim() == "" && !scoreSheetElementUI.displays["degrees_taken"].contentWrapper.classList.contains("hidden"))
+                        [
+                            scoreSheetElementUI.displays["degrees_taken"].contentWrapper.classList.add("hidden");
+                            scoreSheetElementUI.displays["degrees_taken"].displayEx.setVertical(false);
+                            scoreSheetElementUI.displays["degrees_taken"].contentWrapper.parentElement.appendChild(document.createTextNode("(no info)"));
+                        ]
+                        scoreSheetElementUI.displays["has_specific_education_required"].displayEx.setHTMLContent(hasSpecEduc);
+                        scoreSheetElementUI.displays["educ_notes"].displayEx.setHTMLContent(educNotes);
+                        scoreSheetElementUI.displays["educIncrementsApplicant"].displayEx.setHTMLContent(applicantEducIncrement.toString());
+                        scoreSheetElementUI.displays["educIncrementsQS"].displayEx.setHTMLContent(requiredEducIncrement.toString());
+                        scoreSheetElementUI.displays["educIncrements"].displayEx.setHTMLContent(educIncrementAboveQS.toString());
+                        scoreSheetElementUI.displays["isEducQualified"].displayEx.check((hasSpecEduc == "N/A" || hasSpecEduc == "Yes") && applicantEducIncrement >= requiredEducIncrement);
+                    ]
+
+                    score = ScoreSheet.getEducScore(educIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
+                    
+                    */
+                    return $score;
+                }
+            ],
+            [
+                "id"=>"training",
+                "type"=>"criteria1",
+                "label"=>"Training",
+                "dbColName"=>"training",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"relevant_training_hours","type"=>"display","label"=>"Total number of relevant training hours","dbColName"=>"relevant_training_hours","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"relevant_training_count","type"=>"display","label"=>"Number of relevant trainings considered","dbColName"=>"relevant_training_count","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"has_specific_training","type"=>"display","label"=>"Has undergone required training for the position","dbColName"=>"has_specific_training","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"has_more_unrecorded_training","type"=>"display","label"=>"Has unconsidered trainings","dbColName"=>"has_more_unrecorded_training","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"train_notes","type"=>"display","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"train_notes","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"trainIncrementsApplicant","type"=>"display","label"=>"Applicant's training increment level","dbColName"=>"trainIncrementsApplicant","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"trainIncrementsQS","type"=>"display","label"=>"Base increment level (Qualification Standard)","dbColName"=>"trainIncrementsQS","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"trainIncrements","type"=>"display","label"=>"Number of increments above the Qualification Standard","dbColName"=>"trainIncrements","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"isTrainingQualified","type"=>"display-check","label"=>"Applicant is qualified","dbColName"=>"isTrainingQualified","dbTableName"=>"","content"=>[],"parentId"=>"training","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 5 || ($positionCategory == 4 && ($salaryGrade <= 9 || $salaryGrade == 24)) ? 5 : 10),
+                "maxPoints"=>($positionCategory == 5 || ($positionCategory == 4 && ($salaryGrade <= 9 || $salaryGrade == 24)) ? 5 : 10),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"train_notes",
+                "getPointsManually"=>function($mode = 0){
+                    $score = 0;
+                    $scoreSheetElementUI = null;
+                    /*
+
+                    var relevantTrainings = jobApplication["relevant_training"];
+                    var trainNotes = jobApplication["train_notes"] ?? "none";
+                    var relevantTrainingHours = (relevantTrainings.length > 0 ? relevantTrainings.map(training=>training["hours"]).reduce((total, nextVal)=>total + nextVal) : 0);
+                    var applicantTrainingIncrement = Math.trunc(relevantTrainingHours / 8 + 1);
+                    var hasSpecTraining = (positionObj["specific_training_required"] == null ? "N/A" : (jobApplication["has_specific_training"] != 0 && jobApplication["has_specific_training"] != null ? "Yes" : "No"));
+                    var hasMoreTraining = (jobApplication["has_more_unrecorded_training"] == null ? "N/A" : (jobApplication["has_more_unrecorded_training"] == 1 ? "Yes" : "No"));
+                    var requiredTrainingHours = positionObj["required_training_hours"];
+                    var requiredTrainingIncrement = Math.trunc(requiredTrainingHours / 8 + 1);
+                    var trainingIncrementAboveQS = applicantTrainingIncrement - requiredTrainingIncrement;
+                    
+                    if (mode == 0)
+                    [
+                        scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "training")[0];
+                        scoreSheetElementUI.displays["relevant_training_hours"].displayEx.setHTMLContent(relevantTrainingHours.toString());
+                        scoreSheetElementUI.displays["relevant_training_count"].displayEx.setHTMLContent(relevantTrainings.length.toString());
+                        scoreSheetElementUI.displays["has_specific_training"].displayEx.setHTMLContent(hasSpecTraining);
+                        scoreSheetElementUI.displays["has_more_unrecorded_training"].displayEx.setHTMLContent(hasMoreTraining);
+                        scoreSheetElementUI.displays["train_notes"].displayEx.setHTMLContent(trainNotes);
+                        scoreSheetElementUI.displays["trainIncrementsApplicant"].displayEx.setHTMLContent(applicantTrainingIncrement.toString());
+                        scoreSheetElementUI.displays["trainIncrementsQS"].displayEx.setHTMLContent(requiredTrainingIncrement.toString());
+                        scoreSheetElementUI.displays["trainIncrements"].displayEx.setHTMLContent(trainingIncrementAboveQS.toString());
+                        scoreSheetElementUI.displays["isTrainingQualified"].displayEx.check((hasSpecTraining == "N/A" || hasSpecTraining == "Yes") && applicantTrainingIncrement >= requiredTrainingIncrement && relevantTrainingHours >= requiredTrainingHours);
+                    ]
+
+                    score = ScoreSheet.getTrainingScore(trainingIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
+                    
+                    */
+                    return $score;
+                }
+            ],
+            [
+                "id"=>"experience",
+                "type"=>"criteria1",
+                "label"=>"Experience",
+                "dbColName"=>"experience",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"relevant_work_experience_years","type"=>"display","label"=>"Total number of years of relevant work experience","dbColName"=>"relevant_work_experience_years","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"relevant_work_experience_count","type"=>"display","label"=>"Number of relevant employment considered","dbColName"=>"relevant_work_experience_count","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"has_specific_work_experience","type"=>"display","label"=>"Has the required work experience for the position","dbColName"=>"has_specific_work_experience","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"has_more_unrecorded_work_experience","type"=>"display","label"=>"Has unconsidered employment","dbColName"=>"has_more_unrecorded_work_experience","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"work_exp_notes","type"=>"display","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"work_exp_notes","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"expIncrementsApplicant","type"=>"display","label"=>"Applicant's work experience increment level","dbColName"=>"expIncrementsApplicant","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"expIncrementsQS","type"=>"display","label"=>"Base increment level (Qualification Standard)","dbColName"=>"expIncrementsQS","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"expIncrements","type"=>"display","label"=>"Number of increments above the Qualification Standard","dbColName"=>"expIncrements","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"isWorkExpQualified","type"=>"display-check","label"=>"Applicant is qualified","dbColName"=>"isWorkExpQualified","dbTableName"=>"","content"=>[],"parentId"=>"experience","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory > 3 ? ($salaryGrade > 9 ? 15 : 20) : 10),
+                "maxPoints"=>($positionCategory > 3 ? ($salaryGrade > 9 ? 15 : 20) : 10),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"work_exp_notes",
+                "getPointsManually"=>function($mode = 0){
+                    $score = 0;
+                    $scoreSheetElementUI = null;
+                    /*
+                    [
+    
+                        var relevantWorkExp = jobApplication["relevant_work_experience"];
+                        var workExpNotes = jobApplication["work_exp_notes"] ?? "none";
+                        var relevantWorkExpDuration = (relevantWorkExp.length > 0 ? relevantWorkExp.map(workExp=>ScoreSheet.getDuration(workExp["start_date"], (workExp["end_date"] == null || workExp["end_date"] == "" ? MPASIS_App.defaultEndDate : workExp["end_date"]))).reduce(ScoreSheet.addDuration): ["y"=>0, "m"=>0, "d"=>0]);
+                        var applicantWorkExpIncrement = Math.trunc(ScoreSheet.convertDurationToNum(relevantWorkExpDuration) * 12 / 6 + 1);
+                        var hasSpecWorkExp = (positionObj["specific_work_experience_required"] == null ? "N/A" : (jobApplication["has_specific_work_experience"] != 0 && jobApplication["has_specific_work_experience"] != null ? "Yes" : "No"));
+                        var hasMoreWorkExp = (jobApplication["has_more_unrecorded_work_experience"] == null ? "N/A" : (jobApplication["has_more_unrecorded_work_experience"] == 1 ? "Yes" : "No"));
+                        var requiredWorkExpYears = positionObj["required_work_experience_years"];
+                        var requiredWorkExpIncrement = Math.trunc(requiredWorkExpYears * 12 / 6 + 1);
+                        var workExpIncrementAboveQS = applicantWorkExpIncrement - requiredWorkExpIncrement;
+                        
+                        if (mode == 0)
+                        [
+                            scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "experience")[0];
+                            scoreSheetElementUI.displays["relevant_work_experience_years"].displayEx.setHTMLContent(ScoreSheet.convertDurationToString(relevantWorkExpDuration));
+                            scoreSheetElementUI.displays["relevant_work_experience_count"].displayEx.setHTMLContent(relevantWorkExp.length.toString());
+                            scoreSheetElementUI.displays["has_specific_work_experience"].displayEx.setHTMLContent(hasSpecWorkExp);
+                            scoreSheetElementUI.displays["has_more_unrecorded_work_experience"].displayEx.setHTMLContent(hasMoreWorkExp);
+                            scoreSheetElementUI.displays["work_exp_notes"].displayEx.setHTMLContent(workExpNotes);
+                            scoreSheetElementUI.displays["expIncrementsApplicant"].displayEx.setHTMLContent(applicantWorkExpIncrement.toString());
+                            scoreSheetElementUI.displays["expIncrementsQS"].displayEx.setHTMLContent(requiredWorkExpIncrement.toString());
+                            scoreSheetElementUI.displays["expIncrements"].displayEx.setHTMLContent(workExpIncrementAboveQS.toString());
+                            scoreSheetElementUI.displays["isWorkExpQualified"].displayEx.check((hasSpecWorkExp == "N/A" || hasSpecWorkExp == "Yes") && applicantWorkExpIncrement >= requiredWorkExpIncrement);
+                        ]
+    
+                        score = ScoreSheet.getWorkExpScore(workExpIncrementAboveQS, positionObj["position_categoryId"], positionObj["salary_grade"]);
+                        
+                        ]
+                    */
+                    return $score;
+                }
+            ],
+            [
+                "id"=>"performance",
+                "type"=>"criteria1",
+                "label"=>"Performance",
+                "dbColName"=>"performance",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"position_req_work_exp","type"=>"display-check","label"=>"Position applied requires prior work experience (non-entry level)","dbColName"=>"position_req_work_exp","dbTableName"=>"","content"=>[],"parentId"=>"performance","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"applicant_has_prior_exp","type"=>"display-check","label"=>"Applicant has prior work experience","dbColName"=>"applicant_has_prior_exp","dbTableName"=>"","content"=>[],"parentId"=>"performance","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"performance","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"most_recent_performance_rating","type"=>"input-number","label"=>"Most recent relevant 1-year Performance Rating attained","shortLabel"=>"Perf. Rating","dbColName"=>"most_recent_performance_rating","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"performance","score"=>1,"weight"=>((positionCategory == 1 && salaryGrade == 11) || !(positionRequiresExp || applicantHasPriorWorkExp) ? 0 : (positionCategory == 1 ? 30 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20)))),"maxPoints"=>0,"min"=>0,"max"=>5,"step"=>0.1],
+                    ["id"=>"performance_cse_gwa_rating","type"=>"input-number","label"=>"CSE Rating/GWA in the highest academic/grade level earned (actual/equivalent)", "shortLabel"=>"CSE Rating/GWA","dbColName"=>"performance_cse_gwa_rating","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"performance","score"=>1,"weight"=>(positionCategory == 1 || positionRequiresExp || applicantHasPriorWorkExp ? 0 : (positionCategory == 5 ? 10 : (positionCategory == 2 || positionCategory == 3 && salaryGrade == 24 ? 25 : 20))),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0.1,"getPointsManually"=>function($mode = 0){
+                            $value = ($mode == 0 ? $this->inputEx->getValue() : $jobApplication[$this->dbColName]);
+                            $obj = ($mode == 0 ? $this->scoreSheetElement : $this);
+                            /*
+                            [
+        
+                                if (mode == 0)
+                                [
+                                    var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
+            
+                                    if (value == 0)
+                                    [
+                                        scoreSheetElementUI.fields["performance_cse_honor_grad"].inputEx.enable();
+                                    ]
+                                    else
+                                    [
+                                        scoreSheetElementUI.fields["performance_cse_honor_grad"].inputEx.disable();
+                                        scoreSheetElementUI.fields["performance_cse_honor_grad"].inputEx.setDefaultValue(0, true);
+                                    ]
+                                ]
+        
+                            ]
+                            */
+                            return $obj->score * $value / ($obj->weight < 0 ? 1 : $obj->max / $obj->weight);
+                        }
+                    ],
+                    [
+                        "id"=>"performance_cse_honor_grad",
+                        "type"=>"input-radio-select",
+                        "label"=>"Please select the applicable item if applicant is an honor graduate",
+                        "label"=>"Honor Grad.",
+                        "dbColName"=>"performance_cse_honor_grad",
+                        "dbTableName"=>"Job_Application",
+                        "content"=>[
+                            ["id"=>"","type"=>"input-list-item","label"=>"None","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"performance_cse_honor_grad","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                            ["id"=>"","type"=>"input-list-item","label"=>"Cum Laude","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"performance_cse_honor_grad","score"=>18,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                            ["id"=>"","type"=>"input-list-item","label"=>"Magna Cum Laude","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"performance_cse_honor_grad","score"=>19,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                            ["id"=>"","type"=>"input-list-item","label"=>"Summa Cum Laude","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"performance_cse_honor_grad","score"=>20,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                        ],
+                        "parentId"=>"performance",
+                        "score"=>1,
+                        "weight"=>($positionCategory == 1 || $positionRequiresExp || $applicantHasPriorWorkExp ? 0 : ($positionCategory == 5 ? 10 : ($positionCategory == 2 || $positionCategory == 3 && $salaryGrade == 24 ? 25 : 20))),
+                        "maxPoints"=>0,
+                        "min"=>0,
+                        "max"=>20,
+                        "step"=>0,
+                        "getPointsManually"=>function($mode = 0){
+                            $value = ($mode == 0 ? $this->inputEx->getValue() : $jobApplication[$this->dbColName]);
+                            $obj = ($mode == 0 ? $this->scoreSheetElement : $this);
+                            /*
+                            [
+    
+                                if (mode == 0)
+                                [
+                                    var scoreSheetElementUI = this.scoreSheet.scoreSheetElementUIs.filter(sseUI=>sseUI.scoreSheetElement.id == "performance")[0];
+        
+                                    if (value == 0)
+                                    [
+                                        scoreSheetElementUI.fields["performance_cse_gwa_rating"].inputEx.enable();
+                                    ]
+                                    else
+                                    [
+                                        scoreSheetElementUI.fields["performance_cse_gwa_rating"].inputEx.disable();
+                                        scoreSheetElementUI.fields["performance_cse_gwa_rating"].inputEx.setDefaultValue(0, true);
+                                    ]
+                                ]
+        
+                                ]
+                                */
+                            return $obj->score * $value / ($obj->weight < 0 ? 1 : $obj->max / $obj->weight);
+                        }
+                    ],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"performance","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"performance_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"performance_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"performance","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 ? ($salaryGrade > 11 ? 30 : 0) : ($positionCategory == 5 ? 10 : ($positionCategory == 2 || $positionCategory == 3 && $salaryGrade == 24 ? 25 : 20))),
+                "maxPoints"=>($positionCategory == 1 ? ($salaryGrade > 11 ? 30 : 0) : ($positionCategory == 5 ? 10 : ($positionCategory == 2 || $positionCategory == 3 && $salaryGrade == 24 ? 25 : 20))),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"performance_notes"
+            ],
+            [
+                "id"=>"lept",
+                "type"=>"criteria1",
+                "label"=>"PBET/LET/LEPT Rating",
+                "dbColName"=>"lept",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"lept_rating","type"=>"input-number","label"=>"Applicant's PBET/LET/LEPT Rating","shortLabel"=>"LEPT Rating","dbColName"=>"lept_rating","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"lept","score"=>1,"weight"=>(positionCategory == 1 ? 10 : 0),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0.1],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"lept","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"lept_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"lept_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"lept","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 && $salaryGrade == 11 ? 10 : 0),
+                "maxPoints"=>($positionCategory == 1 && $salaryGrade == 11 ? 10 : 0),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"lept_notes"
+            ],
+            [
+                "id"=>"coi",
+                "type"=>"criteria1",
+                "label"=>"PPST Classroom Observable Indicators",
+                "sublabel"=>"Demonstration Teaching using COT-RSP",
+                "dbColName"=>"coi",
+                "dbTableName"=>"",
+                "content"=>[
+                    ["id"=>"ppstcoi","type"=>"input-number","label"=>"Applicant's COT Rating (raw score)","shortLabel"=>"COT Rating","dbColName"=>"ppstcoi","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"coi","score"=>1,"weight"=>(positionCategory == 1 ? (salaryGrade > 11 ? 25 : 35) : 0),"maxPoints"=>0,"min"=>0,"max"=>(5 * (salaryGrade < 12 ? 6 : (salaryGrade < 14 ? 6 : (salaryGrade < 18 ? 7 : (salaryGrade < 20 ? 8 : 9))))),"step"=>0.1],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"coi","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"coi_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"coi_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"coi","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 ? ($salaryGrade > 11 ? 25 : 35) : 0),
+                "maxPoints"=>($positionCategory == 1 ? ($salaryGrade > 11 ? 25 : 35) : 0),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"coi_notes"
+            ],
+            [
+                "id"=>"ncoi",
+                "type"=>"criteria1",
+                "label"=>"PPST Non-Classroom Observable Indicators",
+                "sublabel"=>"Teacher Reflection",
+                "dbColName"=>"ncoi",
+                "dbTableName"=>"",
+                "content"=>[
+                    // ["id"=>"ppstncoi","type"=>"input-number","label"=>"Applicant's TRF Rating","shortLabel"=>"TRF Rating","dbColName"=>"ppstncoi","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"ncoi","score"=>1,"weight"=>(positionCategory == 1 ? 25 : 0),"maxPoints"=>0,"min"=>0,"max"=>30,"step"=>0.1], // USE THIS FOR OLDER T1 APPLICATIONS IN 2024
+                    ["id"=>"ppstncoi","type"=>"input-number","label"=>(salaryGrade > 11 ? "Portfolio Assessment Score" : "Applicant's TRF Rating"),"shortLabel"=>"TRF Rating","dbColName"=>"ppstncoi","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"ncoi","score"=>1,"weight"=>(positionCategory == 1 ? (salaryGrade > 11 ? 10 : 25) : 0),"maxPoints"=>0,"min"=>0,"max"=>(salaryGrade > 11 ? 10 : 25),"step"=>0.1],
+                    ["id"=>"score_bei","type"=>"input-number","label"=>"Behavioral Events Interview","shortLabel"=>"BEI","dbColName"=>"score_bei","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"ncoi","score"=>1,"weight"=>(positionCategory == 1 ? (salaryGrade > 11 ? 5 : 0) : 0),"maxPoints"=>0,"min"=>0,"max"=>5,"step"=>0.1],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"ncoi","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"ncoi_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"ncoi_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"ncoi","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 ? ($salaryGrade > 11 ? 15 : 25) : 0),
+                "maxPoints"=>($positionCategory == 1 ? ($salaryGrade > 11 ? 15 : 25) : 0),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"ncoi_notes"
+            ],
+            [
+                "id"=>"accomplishments",
+                "type"=>"criteria1",
+                "label"=>"Outstanding Accomplishments",
+                "dbColName"=>"accomplishments",
+                "dbTableName"=>"",
+                "content"=>[
+                    [
+                        "id"=>"awards",
+                        "type"=>"criteria2",
+                        "label"=>"Awards and Recognition",
+                        "dbColName"=>"awards",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            [
+                                "id"=>"citation",
+                                "type"=>"criteria3",
+                                "label"=>"Citation or Commendation",
+                                "dbColName"=>"citation",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_citation_movs","type"=>"input-number","label"=>"Number of letters of citation/commendation presented by applicant","dbColName"=>"number_of_citation_movs","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"citation","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1,"getPointsManually"=>function($mode = 0){
+                                        $value = ($mode == 0 ? $this->inputEx->getValue() : $jobApplication[$this->dbColName]);
+
+                                        return ($value > 2 ? 4 : ($value < 1 ? 0 : $value + 1));
+                                    }],
+                                ],
+                                "parentId"=>"awards",
+                                "score"=>0,
+                                "weight"=>($positionCategory > 3 ? -1 : 0),
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"academic_award",
+                                "type"=>"criteria3",
+                                "label"=>"Academic or Inter-School Award MOVs",
+                                "dbColName"=>"academic_award",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_academic_award_movs","type"=>"input-number","label"=>"Number of award certificates/MOVs presented by applicant","dbColName"=>"number_of_academic_award_movs","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"academic_award","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1,"getPointsManually"=>function($mode = 0){
+                                        $value = ($mode == 0 ? $this->inputEx->getValue() : $jobApplication[$this->dbColName]);
+
+                                        return ($value > 2 ? 4 : ($value < 1 ? 0 : $value + 1));
+                                    }],
+                                ],
+                                "parentId"=>"awards",
+                                "score"=>0,
+                                "weight"=>($positionCategory > 2 ? -1 : 0),
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"outstanding_emp_award",
+                                "type"=>"criteria3",
+                                "label"=>"Outstanding Employee Award MOVs",
+                                "dbColName"=>"outstanding_emp_award",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    [
+                                        "id"=>"outstanding_emp_award_external",
+                                        "type"=>"criteria4",
+                                        "label"=>"Number of awards from external institution",
+                                        "dbColName"=>"outstanding_emp_award_external",
+                                        "dbTableName"=>"",
+                                        "content"=>[
+                                            ["id"=>"number_of_awards_external_office_search","type"=>"input-number","label"=>"Local office search","dbColName"=>"number_of_awards_external_office_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_external","score"=>(positionCategory == 3 ? 1 : 2),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                            ["id"=>"number_of_awards_external_org_level_search","type"=>"input-number","label"=>"Organization-level search or higher","dbColName"=>"number_of_awards_external_org_level_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_external","score"=>(positionCategory == 3 ? 2 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                        ],
+                                        "parentId"=>"outstanding_emp_award",
+                                        "score"=>0,
+                                        "weight"=>-1,
+                                        "maxPoints"=>0,
+                                        "min"=>0,
+                                        "max"=>0,
+                                        "step"=>0
+                                    ],    
+                                    [
+                                        "id"=>"outstanding_emp_award_co",
+                                        "type"=>"criteria4",
+                                        "label"=>"Number of awards from the Central Office",
+                                        "dbColName"=>"outstanding_emp_award_co",
+                                        "dbTableName"=>"",
+                                        "content"=>[
+                                            ["id"=>"number_of_awards_central_co_level_search","type"=>"input-number","label"=>"Central Office search","dbColName"=>"number_of_awards_central_co_level_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_co","score"=>(positionCategory == 3 ? 1 : 2),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                            ["id"=>"number_of_awards_central_national_search","type"=>"input-number","label"=>"National-level search or higher","dbColName"=>"number_of_awards_central_national_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_co","score"=>(positionCategory == 3 ? 2 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                        ],
+                                        "parentId"=>"outstanding_emp_award",
+                                        "score"=>0,
+                                        "weight"=>-1,
+                                        "maxPoints"=>0,
+                                        "min"=>0,
+                                        "max"=>0,
+                                        "step"=>0
+                                    ],        
+                                    [
+                                        "id"=>"outstanding_emp_award_ro",
+                                        "type"=>"criteria4",
+                                        "label"=>"Number of awards from the Regional Office",
+                                        "dbColName"=>"outstanding_emp_award_ro",
+                                        "dbTableName"=>"",
+                                        "content"=>[
+                                            ["id"=>"number_of_awards_regional_ro_level_search","type"=>"input-number","label"=>"Regional Office search","dbColName"=>"number_of_awards_regional_ro_level_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_ro","score"=>(positionCategory == 3 ? 1 : 2),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                            ["id"=>"number_of_awards_regional_national_search","type"=>"input-number","label"=>"National-level search or higher","dbColName"=>"number_of_awards_regional_national_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_ro","score"=>(positionCategory == 3 ? 2 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                        ],"parentId"=>"outstanding_emp_award",
+                                        "score"=>0,
+                                        "weight"=>-1,
+                                        "maxPoints"=>0,
+                                        "min"=>0,
+                                        "max"=>0,
+                                        "step"=>0
+                                    ],        
+                                    [
+                                        "id"=>"outstanding_emp_award_sdo",
+                                        "type"=>"criteria4",
+                                        "label"=>"Number of awards from the Schools Division Office",
+                                        "dbColName"=>"outstanding_emp_award_sdo",
+                                        "dbTableName"=>"",
+                                        "content"=>[
+                                            ["id"=>"number_of_awards_division_sdo_level_search","type"=>"input-number","label"=>"Division-/provincial-/city-level search","dbColName"=>"number_of_awards_division_sdo_level_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_sdo","score"=>(positionCategory == 3 ? 1 : 2),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                            ["id"=>"number_of_awards_division_national_search","type"=>"input-number","label"=>"Regional-level search or higher","dbColName"=>"number_of_awards_division_national_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_sdo","score"=>(positionCategory == 3 ? 2 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                        ],
+                                        "parentId"=>"outstanding_emp_award",
+                                        "score"=>0,
+                                        "weight"=>-1,
+                                        "maxPoints"=>0,
+                                        "min"=>0,
+                                        "max"=>0,
+                                        "step"=>0
+                                    ],    
+                                    [
+                                        "id"=>"outstanding_emp_award_school",
+                                        "type"=>"criteria4",
+                                        "label"=>"Number of awards from schools",
+                                        "dbColName"=>"outstanding_emp_award_school",
+                                        "dbTableName"=>"",
+                                        "content"=>[
+                                            ["id"=>"number_of_awards_school_school_level_search","type"=>"input-number","label"=>"School-/municipality-/district-level search","dbColName"=>"number_of_awards_school_school_level_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_school","score"=>(positionCategory == 3 ? 1 : 2),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                            ["id"=>"number_of_awards_school_sdo_level_search","type"=>"input-number","label"=>"Division-level search or higher","dbColName"=>"number_of_awards_school_sdo_level_search","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"outstanding_emp_award_school","score"=>(positionCategory == 3 ? 2 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                        ],
+                                        "parentId"=>"outstanding_emp_award",
+                                        "score"=>0,
+                                        "weight"=>-1,
+                                        "maxPoints"=>0,
+                                        "min"=>0,
+                                        "max"=>0,
+                                        "step"=>0
+                                    ]
+                                ],
+                                "parentId"=>"awards",
+                                "score"=>0,
+                                "weight"=>($positionCategory > 1 ? -1 : 0),
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"trainer_award",
+                                "type"=>"criteria3",
+                                "label"=>"Awards as Trainer/Coach",
+                                "dbColName"=>"trainer_award",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    [
+                                        "id"=>"trainer_award_level",
+                                        "type"=>"input-radio-select",
+                                        "label"=>"Please select the applicant's highest level of award as a trainer or coach",
+                                        "dbColName"=>"trainer_award_level",
+                                        "dbTableName"=>"Job_Application",
+                                        "content"=>[
+                                            ["id"=>"","type"=>"input-list-item","label"=>"None","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainer_award_level","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                            ["id"=>"","type"=>"input-list-item","label"=>"Champion or Highest Placer in the Division/Provincial Level","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainer_award_level","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                            ["id"=>"","type"=>"input-list-item","label"=>"Champion or Highest Placer in the Regional Level","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainer_award_level","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                            ["id"=>"","type"=>"input-list-item","label"=>"Champion or Highest Placer in the National Level","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainer_award_level","score"=>3,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                                        ],
+                                        "parentId"=>"trainer_award",
+                                        "score"=>1,
+                                        "weight"=>-1,
+                                        "maxPoints"=>0,
+                                        "min"=>0,
+                                        "max"=>0,
+                                        "step"=>0
+                                    ]
+                                ],
+                                "parentId"=>"awards",
+                                "score"=>0,
+                                "weight"=>($positionCategory == 2 ? -1 : 0),
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ]
+                        ],
+                        "parentId"=>"accomplishments",
+                        "score"=>0,
+                        "weight"=>($positionCategory > 1 ? -1 : 0),
+                        "maxPoints"=>($positionCategory == 1 ? 0 : ($positionCategory == 2 ? 7 : ($positionCategory == 3 ? 2 : 4))),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    [
+                        "id"=>"research",
+                        "type"=>"criteria2",
+                        "label"=>"Research and Innovation",
+                        "dbColName"=>"research",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            [
+                                "id"=>"research_guide",
+                                "type"=>"display-list-upper-alpha",
+                                "label"=>"Guide",
+                                "dbColName"=>"",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"","type"=>"list-item","label"=>"Proposal","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"research_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Accomplishment Report","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"research_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Certification of Utilization","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"research_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Certification of Adoption","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"research_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Proof of Citation by Other Researchers","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"research_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                                ],
+                                "parentId"=>"research",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            ["id"=>"number_of_research_proposal_only","type"=>"input-number","label"=>"A only","dbColName"=>"number_of_research_proposal_only","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"research","score"=>(positionCategory == 3 ? 2 : 1),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_research_proposal_ar","type"=>"input-number","label"=>"A and B","dbColName"=>"number_of_research_proposal_ar","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"research","score"=>(positionCategory == 3 ? 3 : 2),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_research_proposal_ar_util","type"=>"input-number","label"=>"A, B, and C","dbColName"=>"number_of_research_proposal_ar_util","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"research","score"=>(positionCategory == 3 ? 4 : 3),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_research_proposal_ar_util_adopt","type"=>"input-number","label"=>"A, B, C, and D","dbColName"=>"number_of_research_proposal_ar_util_adopt","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"research","score"=>(positionCategory == 3 ? 5 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_research_proposal_ar_util_cite","type"=>"input-number","label"=>"A, B, C, and E","dbColName"=>"number_of_research_proposal_ar_util_cite","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"research","score"=>(positionCategory == 3 ? 5 : 4),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                        ],
+                        "parentId"=>"accomplishments",
+                        "score"=>0,
+                        "weight"=>($positionCategory > 1 ? -1 : 0),
+                        "maxPoints"=>($positionCategory == 1 ? 0 : ($positionCategory == 2 ? 4 : ($positionCategory == 3 ? 5 : 4))),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    [
+                        "id"=>"smetwg",
+                        "type"=>"criteria2",
+                        "label"=>"Subject Matter Expert/Membership in National Technical Working Groups (TWGs) or Committees",
+                        "dbColName"=>"smetwg",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            [
+                                "id"=>"smetwg_guide",
+                                "type"=>"display-list-upper-alpha",
+                                "label"=>"Guide",
+                                "dbColName"=>"smetwg_guide",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"","type"=>"list-item","label"=>"Issuance/Memorandum","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"smetwg_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Certificate","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"smetwg_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Output/Adoption by the organization","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"smetwg_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                                ],
+                                "parentId"=>"smetwg",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            ["id"=>"number_of_smetwg_issuance_cert","type"=>"input-number","label"=>"A and B only","dbColName"=>"number_of_smetwg_issuance_cert","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"smetwg","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_smetwg_issuance_cert_output","type"=>"input-number","label"=>"All MOVs","dbColName"=>"number_of_smetwg_issuance_cert_output","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"smetwg","score"=>3,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                        ],
+                        "parentId"=>"accomplishments",
+                        "score"=>0,
+                        "weight"=>($positionCategory > 1 ? -1 : 0),
+                        "maxPoints"=>($positionCategory == 1 ? 0 : 3),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    [
+                        "id"=>"speakership",
+                        "type"=>"criteria2",
+                        "label"=>"Resource Speakership/Learning Facilitation",
+                        "dbColName"=>"speakership",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            [
+                                "id"=>"speakership_external",
+                                "type"=>"criteria4",
+                                "label"=>"Number of resource speakership/learning facilitation from external institution",
+                                "dbColName"=>"speakership_external",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_speakership_external_office_level","type"=>"input-number","label"=>"Local office-level speakership","dbColName"=>"number_of_speakership_external_office_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_external","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_speakership_external_org_level_level","type"=>"input-number","label"=>"Organization-level speakership or higher","dbColName"=>"number_of_speakership_external_org_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_external","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"speakership",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"speakership_co",
+                                "type"=>"criteria4",
+                                "label"=>"Number of resource speakership/learning facilitation from the Central Office",
+                                "dbColName"=>"speakership_co",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_speakership_central_co_level","type"=>"input-number","label"=>"Central Office-level speakership","dbColName"=>"number_of_speakership_central_co_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_co","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_speakership_central_national_level","type"=>"input-number","label"=>"National-level speakership or higher","dbColName"=>"number_of_speakership_central_national_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_co","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"speakership",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"speakership_ro",
+                                "type"=>"criteria4",
+                                "label"=>"Number of resource speakership/learning facilitation from the Regional Office",
+                                "dbColName"=>"speakership_ro",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_speakership_regional_ro_level","type"=>"input-number","label"=>"Regional Office-level speakership","dbColName"=>"number_of_speakership_regional_ro_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_ro","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_speakership_regional_national_level","type"=>"input-number","label"=>"National-level speakership or higher","dbColName"=>"number_of_speakership_regional_national_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_ro","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"speakership",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"speakership_sdo",
+                                "type"=>"criteria4",
+                                "label"=>"Number of resource speakership/learning facilitation from the Schools Division Office",
+                                "dbColName"=>"speakership_sdo",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_speakership_division_sdo_level","type"=>"input-number","label"=>"Division-/provincial-/city-level speakership","dbColName"=>"number_of_speakership_division_sdo_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_sdo","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_speakership_division_regional_level","type"=>"input-number","label"=>"Regional-level speakership or higher","dbColName"=>"number_of_speakership_division_regional_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_sdo","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"speakership",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"speakership_school",
+                                "type"=>"criteria4",
+                                "label"=>"Number of resource speakership/learning facilitation from schools",
+                                "dbColName"=>"speakership_school",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_speakership_school_school_level","type"=>"input-number","label"=>"School/municipal/district speakership","dbColName"=>"number_of_speakership_school_school_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_school","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_speakership_school_sdo_level","type"=>"input-number","label"=>"Division-level speakership or higher","dbColName"=>"number_of_speakership_school_sdo_level","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"speakership_school","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"speakership",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ]
+                        ],
+                        "parentId"=>"accomplishments",
+                        "score"=>0,
+                        "weight"=>($positionCategory > 1 ? -1 : 0),
+                        "maxPoints"=>($positionCategory == 1 ? 0 : 2),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    [
+                        "id"=>"neap",
+                        "type"=>"criteria2",
+                        "label"=>"NEAP Accredited Learning Facilitator",
+                        "dbColName"=>"neap",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            [
+                                "id"=>"neap_facilitator_accreditation",
+                                "type"=>"input-radio-select",
+                                "label"=>"Please select the applicant's highest level of accreditation as NEAP Learning Facilitator",
+                                "dbColName"=>"neap_facilitator_accreditation",
+                                "dbTableName"=>"Job_Application",
+                                "content"=>[
+                                    ["id"=>"","type"=>"input-list-item","label"=>"None","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"neap_facilitator_accreditation","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"input-list-item","label"=>"Accredited by Regional Trainer","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"neap_facilitator_accreditation","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"input-list-item","label"=>"Accredited by National Trainer","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"neap_facilitator_accreditation","score"=>1.5,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"input-list-item","label"=>"Accredited by National Assessor","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"neap_facilitator_accreditation","score"=>2,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                                ],
+                                "parentId"=>"neap",
+                                "score"=>1,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ]
+                        ],
+                        "parentId"=>"accomplishments",
+                        "score"=>0,
+                        "weight"=>($positionCategory > 1 ? -1 : 0),
+                        "maxPoints"=>($positionCategory == 1 ? 0 : 2),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"accomplishments","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"accomplishments_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"accomplishments_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"accomplishments","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 ? 0 : ($positionCategory == 5 || ($positionCategory == 3 && 16 <= $salaryGrade && $salaryGrade <= 23)? 5 : 10)),
+                "maxPoints"=>($positionCategory == 1 ? 0 : ($positionCategory == 5 || ($positionCategory == 3 && 16 <= $salaryGrade && $salaryGrade <= 23)? 5 : 10)),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"accomplishments_notes"
+            ],
+            [
+                "id"=>"educationApp",
+                "type"=>"criteria1",
+                "label"=>"Application of Education",
+                "dbColName"=>"educationApp",
+                "dbTableName"=>"",
+                "content"=>[
+                    [
+                        "id"=>"educationApp_exp_required",
+                        "type"=>"criteria4",
+                        "label"=>"For Positions with Experience Requirement",
+                        "dbColName"=>"educationApp_exp_required",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            [
+                                "id"=>"educationApp_exp_required_guide",
+                                "type"=>"display-list-upper-alpha",
+                                "label"=>"Guide",
+                                "dbColName"=>"educationApp_exp_required_guide",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"","type"=>"list-item","label"=>"Action Plan approved by the Head of Office","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"educationApp_exp_required_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Accomplishment Report verified by the Head of Office","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"educationApp_exp_required_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                                    ["id"=>"","type"=>"list-item","label"=>"Certification of utilization/adoption signed by the Head of Office","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"educationApp_exp_required_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                                ],
+                                "parentId"=>"educationApp_exp_required",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"educationApp_exp_required_relevant",
+                                "type"=>"criteria4",
+                                "label"=>"Relevant",
+                                "dbColName"=>"educationApp_exp_required_relevant",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_app_educ_r_actionplan","type"=>"input-number","label"=>"A Only","dbColName"=>"number_of_app_educ_r_actionplan","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_required_relevant","score"=>(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 9 : 5),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_app_educ_r_actionplan_ar","type"=>"input-number","label"=>"A and B","dbColName"=>"number_of_app_educ_r_actionplan_ar","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_required_relevant","score"=>(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 12 : 7),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_app_educ_r_actionplan_ar_adoption","type"=>"input-number","label"=>"All MOVs","dbColName"=>"number_of_app_educ_r_actionplan_ar_adoption","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_required_relevant","score"=>(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 15 : 10),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"educationApp_exp_required_guide",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ],
+                            [
+                                "id"=>"educationApp_exp_required_not_relevant",
+                                "type"=>"criteria4",
+                                "label"=>"Not Relevant",
+                                "dbColName"=>"educationApp_exp_required_not_relevant",
+                                "dbTableName"=>"",
+                                "content"=>[
+                                    ["id"=>"number_of_app_educ_nr_actionplan","type"=>"input-number","label"=>"A Only","dbColName"=>"number_of_app_educ_nr_actionplan","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_required_not_relevant","score"=>(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 3 : 1),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_app_educ_nr_actionplan_ar","type"=>"input-number","label"=>"A and B","dbColName"=>"number_of_app_educ_nr_actionplan_ar","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_required_not_relevant","score"=>(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 6 : 3),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                                    ["id"=>"number_of_app_educ_nr_actionplan_ar_adoption","type"=>"input-number","label"=>"All MOVs","dbColName"=>"number_of_app_educ_nr_actionplan_ar_adoption","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_required_not_relevant","score"=>(positionCategory == 3 && (salaryGrade == 27 || (salaryGrade >= 16 && salaryGrade <= 23)) ? 9 : 5),"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                                ],
+                                "parentId"=>"educationApp_exp_required_guide",
+                                "score"=>0,
+                                "weight"=>-1,
+                                "maxPoints"=>0,
+                                "min"=>0,
+                                "max"=>0,
+                                "step"=>0
+                            ]
+                        ],
+                        "parentId"=>"educationApp",
+                        "score"=>0,
+                        "weight"=>($positionRequiresExp ? -1 : 0),
+                        "maxPoints"=>($positionRequiresExp ? ($positionCategory == 1 || $positionCategory == 5 ? 0 : ($positionCategory == 3 && 16 <= $salaryGrade && $salaryGrade <= 23 ? 15 : 10)) : 0),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],            
+                    [
+                        "id"=>"educationApp_exp_not_required",
+                        "type"=>"criteria4",
+                        "label"=>"For Positions with No Experience Requirement",
+                        "dbColName"=>"educationApp_exp_not_required",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            ["id"=>"app_educ_gwa","type"=>"input-number","label"=>"Applicant’s GWA in the highest academic/grade level earned (actual/equivalent)","dbColName"=>"app_educ_gwa","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp_exp_not_required","score"=>1,"weight"=>(positionCategory == 3 && 16 <= salaryGrade && salaryGrade <= 23 ? 15 : 10),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0]
+                        ],
+                        "parentId"=>"educationApp",
+                        "score"=>0,
+                        "weight"=>($positionRequiresExp ? 0 : -1),
+                        "maxPoints"=>($positionRequiresExp ? ($positionCategory == 1 || $positionCategory == 5 ? 0 : ($positionCategory == 3 && 16 <= $salaryGrade && $salaryGrade <= 23 ? 15 : 10)) : 0),
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"educationApp","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"education_app_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"education_app_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"educationApp","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 || $positionCategory == 5 ? 0 : ($positionCategory == 3 && 16 <= $salaryGrade && $salaryGrade <= 23 ? 15 : 10)),
+                "maxPoints"=>($positionCategory == 1 || $positionCategory == 5 ? 0 : ($positionCategory == 3 && 16 <= $salaryGrade && $salaryGrade <= 23 ? 15 : 10)),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"education_app_notes"
+            ],
+            [
+                "id"=>"trainingApp",
+                "type"=>"criteria1",
+                "label"=>"Application of Learning and Development",
+                "dbColName"=>"trainingApp",
+                "dbTableName"=>"",
+                "content"=>[
+                    [
+                        "id"=>"trainingApp_guide",
+                        "type"=>"display-list-upper-alpha",
+                        "label"=>"Guide",
+                        "dbColName"=>"trainingApp_exp_guide",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            ["id"=>"","type"=>"list-item","label"=>"Certificate of Training","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainingApp_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                            ["id"=>"","type"=>"list-item","label"=>"Action Plan/Re-entry Action Plan/Job Embedded Learning/Impact Project signed by Head of Office","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainingApp_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                            ["id"=>"","type"=>"list-item","label"=>"Accomplishment Report adopted by local level","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainingApp_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                            ["id"=>"","type"=>"list-item","label"=>"Accomplishment Report adopted by different local level/higher level","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainingApp_guide","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                        ],
+                        "parentId"=>"trainingApp",
+                        "score"=>0,
+                        "weight"=>-1,
+                        "maxPoints"=>0,
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    [
+                        "id"=>"trainingApp_relevant",
+                        "type"=>"criteria4",
+                        "label"=>"Relevant",
+                        "dbColName"=>"trainingApp_relevant",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            ["id"=>"number_of_app_train_relevant_cert_ap","type"=>"input-number","label"=>"A and B","dbColName"=>"number_of_app_train_relevant_cert_ap","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp_relevant","score"=>5,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_app_train_relevant_cert_ap_arlocal","type"=>"input-number","label"=>"A, B, and C","dbColName"=>"number_of_app_train_relevant_cert_ap_arlocal","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp_relevant","score"=>7,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_app_train_relevant_cert_ap_arlocal_arother","type"=>"input-number","label"=>"All MOVs","dbColName"=>"number_of_app_train_relevant_cert_ap_arlocal_arother","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp_relevant","score"=>10,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                        ],
+                        "parentId"=>"trainingApp_guide",
+                        "score"=>0,
+                        "weight"=>-1,
+                        "maxPoints"=>0,
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    [
+                        "id"=>"trainingApp_not_relevant",
+                        "type"=>"criteria4",
+                        "label"=>"Not Relevant",
+                        "dbColName"=>"trainingApp_not_relevant",
+                        "dbTableName"=>"",
+                        "content"=>[
+                            ["id"=>"number_of_app_train_not_relevant_cert_ap","type"=>"input-number","label"=>"A and B","dbColName"=>"number_of_app_train_not_relevant_cert_ap","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp_not_relevant","score"=>1,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_app_train_not_relevant_cert_ap_arlocal","type"=>"input-number","label"=>"A, B, and C","dbColName"=>"number_of_app_train_not_relevant_cert_ap_arlocal","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp_not_relevant","score"=>3,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1],
+                            ["id"=>"number_of_app_train_not_relevant_cert_ap_arlocal_arother","type"=>"input-number","label"=>"All MOVs","dbColName"=>"number_of_app_train_not_relevant_cert_ap_arlocal_arother","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp_not_relevant","score"=>5,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>"ANY","step"=>1]
+                        ],
+                        "parentId"=>"trainingApp_guide",
+                        "score"=>0,
+                        "weight"=>-1,
+                        "maxPoints"=>0,
+                        "min"=>0,
+                        "max"=>0,
+                        "step"=>0
+                    ],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"trainingApp","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"training_app_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"training_app_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"trainingApp","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 || $positionCategory == 5 ? 0 : 10),
+                "maxPoints"=>($positionCategory == 1 || $positionCategory == 5 ? 0 : 10),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"training_app_notes"
+            ],
+            [
+                "id"=>"potential",
+                "type"=>"criteria1",
+                "label"=>"Potential",
+                "sublabel"=>"Written Test, BEI" + ($positionCategory < 3 ? "" : ", Work Sample Test"),
+                "dbColName"=>"potential",
+                "dbTableName"=>"",
+                "content"=>[
+                    // ["id"=>"score_exam","type"=>"input-number","label"=>"Written Examination","shortLabel"=>"Exam","dbColName"=>"score_exam","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>1,"weight"=>(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade < 20 ? 10 : 5))),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0.1],
+                    // ["id"=>"score_skill","type"=>"input-number","label"=>"Skills or Work Sample Test","shortLabel"=>"Skills Test","dbColName"=>"score_skill","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>1,"weight"=>(positionCategory < 3 ? 0 : (positionCategory == 5 ? -1 : (positionCategory == 3 && salaryGrade == 24 ? 5 : 10))),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0.1],
+                    // ["id"=>"score_bei","type"=>"input-number","label"=>"Behavioral Events Interview","shortLabel"=>"BEI","dbColName"=>"score_bei","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>1,"weight"=>(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 5))),"maxPoints"=>0,"min"=>0,"max"=>(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 5))),"step"=>0.1],
+                    ["id"=>"score_exam","type"=>"input-number","label"=>"Written Examination","shortLabel"=>"Exam","dbColName"=>"score_exam","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>1,"weight"=>(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade < 20 ? 10 : 10))),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0.1],
+                    ["id"=>"score_skill","type"=>"input-number","label"=>"Skills or Work Sample Test","shortLabel"=>"Skills Test","dbColName"=>"score_skill","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>1,"weight"=>(positionCategory < 3 ? 0 : (positionCategory == 5 ? -1 : (positionCategory == 3 && salaryGrade == 24 ? 0 : 0))),"maxPoints"=>0,"min"=>0,"max"=>100,"step"=>0.1],
+                    ["id"=>"score_bei","type"=>"input-number","label"=>"Behavioral Events Interview","shortLabel"=>"BEI","dbColName"=>"score_bei","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>1,"weight"=>(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 10))),"maxPoints"=>0,"min"=>0,"max"=>(positionCategory == 1 ? -1 : (positionCategory == 5 ? -1 : (positionCategory == 2 && salaryGrade >= 20 ? 10 : 10))),"step"=>0.1],
+                    ["id"=>"","type"=>"line-break","label"=>"","dbColName"=>"","dbTableName"=>"","content"=>[],"parentId"=>"potential","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0],
+                    ["id"=>"potential_notes","type"=>"textarea","label"=>"Relevant documents or requirements submitted/Other remarks","dbColName"=>"potential_notes","dbTableName"=>"Job_Application","content"=>[],"parentId"=>"potential","score"=>0,"weight"=>-1,"maxPoints"=>0,"min"=>0,"max"=>0,"step"=>0]
+                ],
+                "parentId"=>null,
+                "score"=>0,
+                "weight"=>($positionCategory == 1 ? 0 : ($positionCategory == 5 ? 55 : ($positionCategory == 2 || ($positionCategory == 3 && $salaryGrade == 24) ? 15 : 20))),
+                "maxPoints"=>($positionCategory == 1 ? 0 : ($positionCategory == 5 ? 55 : ($positionCategory == 2 || ($positionCategory == 3 && $salaryGrade == 24) ? 15 : 20))),
+                "min"=>0,
+                "max"=>0,
+                "step"=>0,
+                "notesId"=>"potential_notes"
+            ],
+        ];
+        
+        $criteria_count = array_reduce($criteria, function($carry, $item) {return $carry + ($item['weight'] >= 0 ? 1 : 0);}, 0);
+
+
+        $positionTitle = $_REQUEST['positionTitle'] ?? '';
+        $parenTitle = $_REQUEST['parenTitle'] ?? '';
+        $plantilla = $_REQUEST['plantilla'] ?? '';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparative Assessment Results | MPaSIS</title>
+    <!-- <link rel="stylesheet" href="/mpasis/css/mpasisApp.css"> -->
+     <style>
+        .car-table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 1px solid;
+        }
+
+        .car-table > * > tr > * {
+            border: 1px solid;
+            padding: 0.25em;
+        }
+     </style>
+</head>
+<body>
+    <div class="car-display">
+        <h1 class="car-display-title">Comparative Assessment Results</h1>
+        <main class="car-main">
+            <form id="car-filter-form" class="car-filter-form" method="get" action="/mpasis/php/results.php">
+                <input type="hidden" name="a" value="retrieve">
+                <span class="textbox-ex"><label class="label-ex" for="position-title-input">Position Title:</label> <select id="position-title-input" name="positionTitle">
+                    <optgroup>
+                        <?php 
+                        
+                        $positions = ($dbconn->select('Position', 'DISTINCT position_title', 'ORDER BY position_title'));
+
+                        if (is_null($dbconn->lastException))
+                        {
+                            for ($i = 0; $i < count($positions); $i++)
+                            {
+                                $position = $positions[$i];
+                                echo '<option value="' . htmlspecialchars($position['position_title']) . '"' . ($positionTitle == $position['position_title'] ? ' selected' : '') . '>' . htmlspecialchars($position['position_title']) . '</option>';
+                            }
+                        }
+                        else
+                        {
+                            echo '<option value="" disabled>Error fetching position titles</option>';
+                        }
+
+                        ?>
+                    </optgroup>
+                </select></span>
+                <span class="textbox-ex"><label class="label-ex" for="paren-title-input">Parenthetical Title:</label> <select id="paren-title-input" name="parenTitle"></select></span>
+                <span class="textbox-ex"><label class="label-ex" for="plantilla-input">Plantilla Item Number:</label> <select id="plantilla-input" name="plantilla"></select></span>
+                <span class="button-ex"><button type="submit" id="car-filter-submit">Filter</button></span>
+            </form>
+
+            <br>
+
+            <div class="car-table-container">
+                <table class="car-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">#</th>
+                            <th rowspan="2">Applicant Code</th>
+                            <th colspan="<?php
+                            print($criteria_count);
+                            ?>">Comparative Assessment Results</th>
+                        </tr>
+                        <tr><?php
+                            for ($i = 0; $i < count($criteria); $i++)
+                            {
+                                if ($criteria[$i]['weight'] >= 0)
+                                {
+                                    echo '<th>' . htmlspecialchars($criteria[$i]['label']) . '</th>';
+                                }
+                            }
+
+                        ?></tr>
+                    </thead>
+                    <tbody id="car-table-body">
+                        <tr>
+                            <td colspan="<?php print(2 + $criteria_count); ?>">Nothing to show</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <?php
+                $data = [
+                    "name" => "Alice",
+                    "callback" => function() { echo('Hello, world!'); },
+                ];
+
+                $json = json_encode($data);
+                echo $json;
+
+                $decoded = json_decode($json, true);
+
+                call_user_func($decoded['callback']);
+
+                // var_dump(selectJobApplications($dbconn, "position_title_applied='$positionTitle'" . ($parenTitle != '' ? " AND parenthetical_title_applied='$parenTitle'" : '') . ($plantilla != '' ? " AND plantilla_item_number_applied='$plantilla'" : '')));
+            ?>
+        </main>        
+    </div>
+</body>
+</html>
+
+<?php
+        
+        return;
     }
 }
 else // NOT SIGNED-IN
 {
-    if (isset($_REQUEST['a']) && $_REQUEST['a'] == 'logout') // UNUSED
-    {
-        $redirectToLogin = false;
-        require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
-
-        echo json_encode(new ajaxResponse('Success', 'Signed out.'));
-        return;
-    }
-    else
-    {
-        die(json_encode(new ajaxResponse('Error', 'Session has expired or was disconnected. Please refresh to sign in again.<br><br>Server Request: ' . json_encode($_REQUEST))));
-    }
+    $redirectToLogin = true;
+    require_once(__FILE_ROOT__ . '/php/secure/process_signout.php');
 }
 
-die(json_encode(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode($_REQUEST))));
+// invalid query
+die(json_encode_ex(new ajaxResponse('Error', 'Unknown query.<br><br>Server Request: ' . json_encode_ex($_REQUEST))));
