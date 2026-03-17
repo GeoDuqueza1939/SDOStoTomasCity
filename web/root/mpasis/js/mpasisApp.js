@@ -3276,7 +3276,7 @@ class MPASIS_App extends App
 
         if (lastNameFirst)
         {
-            for (var i = nameArr.length - 2; i > 0; i--)
+            for (var i = nameArr.length - 1; i > 0; i--)
             {
                 var lastName = nameArr.splice(i, 1)[0];
 
@@ -3873,20 +3873,23 @@ class JobApplicationSelectorDialog extends Old_DialogEx
         };
 
         var keyEventFunc = keyEvent=>{
-            this.getApplicantListBox().clearList();
-
-            this.getApplicantListBox().show();
-
-            this.getApplicantListBox().setStatusMsgTimeout = -1;
-            this.getApplicantListBox().showWait("Retrieving . . .");
-
-            this.getApplicantListBox().fillItemsFromServer(MPASIS_App.processURL, "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + this.getApplicantQueryBox().getValue(), "applicant_option_label", "application_code");
+            if (keyEvent.key === "Enter")
+            {
+                this.getApplicantListBox().clearList();
+    
+                this.getApplicantListBox().show();
+    
+                this.getApplicantListBox().setStatusMsgTimeout = -1;
+                this.getApplicantListBox().showWait("Retrieving . . .");
+    
+                this.getApplicantListBox().fillItemsFromServer(MPASIS_App.processURL, "a=fetch&f=applicationsByApplicantOrCode&srcStr=" + this.getApplicantQueryBox().getValue(), "applicant_option_label", "application_code");
+            }
         }
 
         // this.getApplicantQueryBox().addEvent("change", keyEventFunc);
-        this.getApplicantQueryBox().addEvent("keyup", keyEventFunc);
+        // this.getApplicantQueryBox().addEvent("keyup", keyEventFunc);
         // this.getApplicantQueryBox().addEvent("keydown", keyEventFunc);
-        // this.getApplicantQueryBox().addEvent("keypress", keyEventFunc);
+        this.getApplicantQueryBox().addEvent("keypress", keyEventFunc);
     }
 
     getApplicantListBox()
