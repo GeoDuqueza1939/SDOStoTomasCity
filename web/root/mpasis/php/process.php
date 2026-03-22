@@ -200,8 +200,8 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
     . (is_null($limit) || !is_numeric($limit) ? "" : " LIMIT $limit");
     
     $dbResults = $dbconn->executeQuery($query);
-//--,        has_alternative_work_experience_applicable
-//    --alternative_work_experience_years,
+    // --has_alternative_work_experience_applicable,
+    // --alternative_work_experience_years,
 
     // return (json_encode_ex_ex(new ajaxResponse('Data', $dbResults)));
 
