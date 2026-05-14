@@ -1118,10 +1118,10 @@ if (isValidUserSession())
                                 $enumEducAttainment = $dbconn->select('ENUM_Educational_Attainment', '*', '');
 
                                 $hrRoles = array(
-                                    'appointing_officer' => array('name' => 'Neil G. Angeles, CESO VI', 'position' => 'Schools Division Superintendent'),
+                                    'appointing_officer' => array('name' => 'Neil G. Angeles, CESO V', 'position' => 'Schools Division Superintendent'),
                                     // 'hrmo' => array('name' => 'Jessamae O. Castromero', 'position' => 'Administrative Officer IV - HRMO'),
-                                    'hrmo' => array('name' => 'Buenalyn M. Motel', 'position' => 'Administrative Officer IV/HRMO II'),
-                                    'hrmpsb_chair' => array('name' => 'Edward D. Garcia', 'position' => 'Assistant Schools Division Superintendent'),
+                                    'hrmo' => array('name' => 'Buenalyn M. Motel', 'position' => 'Administrative Officer IV-HRMO II'),
+                                    'hrmpsb_chair' => array('name' => 'Edward D. Garcia, CESO VI', 'position' => 'Assistant Schools Division Superintendent'),
                                     'hrmpsb_secretariat' => [
                                         array('name' => 'Jenina R. Patricio', 'position' => 'Administrative Officer II', 'level1' => true, 'level2' => true, 'level3' => false),
                                         // array('name' => 'NameA', 'position' => 'PositionA', 'level1' => true, 'level2' => false, 'level3' => false),
@@ -1165,7 +1165,7 @@ if (isValidUserSession())
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Buenalyn M. Motel', 'position' => 'Administrative Officer IV/HRMO II', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Bonifacio DC. Regalado, Jr.', 'position' => 'President-PESPA', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Oliva P. Regalado', 'position' => 'President-Elementary Teachers Association', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Michael S. Bautista', 'position' => 'President-Teachers Association', 'level1' => true, 'level2' => true, 'level3' => false),
                                     ],
                                     'hrmpsb_members_secondary' => [
                                         array('name' => 'Guillerma L. Bilog, Ed.D.', 'position' => 'SGOD Chief', 'level1' => true, 'level2' => true, 'level3' => false),
@@ -1173,7 +1173,7 @@ if (isValidUserSession())
                                         array('name' => 'Catalina M. Calinawan', 'position' => 'Administrative Officer V', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Buenalyn M. Motel', 'position' => 'Administrative Officer IV/HRMO II', 'level1' => true, 'level2' => true, 'level3' => false),
                                         array('name' => 'Raymundo F. Hermo', 'position' => 'President-NAPSSPHI', 'level1' => true, 'level2' => true, 'level3' => false),
-                                        array('name' => 'Ysrael P. Lagniton', 'position' => 'President-Secondary Teachers Association', 'level1' => true, 'level2' => true, 'level3' => false),
+                                        array('name' => 'Michael S. Bautista', 'position' => 'President-Teachers Association', 'level1' => true, 'level2' => true, 'level3' => false),
                                     ],
                                 );
 
