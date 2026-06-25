@@ -1,4 +1,5 @@
-        <a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="<?php echo(__BASE__); ?>/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
+        <!-- <a id="nav-logo-link" href="https://www.depedstotomascity.com.ph/" title="DepEd-Sto. Tomas City SDO"><img src="<?php echo(__BASE__); ?>/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a> -->
+        <a id="nav-logo-link" href="https://sites.google.com/view/depedstotomascity/" title="DepEd-Sto. Tomas City SDO" target="_blank" rel="noopener noreferrer"><img src="<?php echo(__BASE__); ?>/images/logo-depedstotomas.webp" alt="Logo-Department of Education, Sto. Tomas City SDO" id="nav-logo" /></a>
         <ul id="nav">
 <?php
     $ISId = ($pageType === PageType::SERGS ? 2 : ($pageType === PageType::OPMS ? 3 : ($pageType === PageType::MPASIS ? 4 : 1)));
