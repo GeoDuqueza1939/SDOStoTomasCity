@@ -26,7 +26,7 @@ function getUnicodeCharacter(cp) {
 
 class MPASIS_App extends App
 {
-    static processURL = "/mpasis/php/process.php";
+    static processURL = "";
     // static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
     // static defaultEndDate = "2024-03-15"; // Teacher I SPIMS
     // static defaultEndDate = (new Date()).toLocaleDateString();
@@ -35,6 +35,8 @@ class MPASIS_App extends App
     constructor(container)
     {
         super(container);
+
+        MPASIS_App.processURL = document.querySelector("base").href + "/mpasis/php/process.php";;
 
         // change nav links into click event listeners
         this.navbar = Array.from(container.querySelectorAll("#navbar"))[0];

@@ -6,6 +6,12 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <title><?php echo($pageTitle);?></title>
+<base href="<?php echo(__BASE__); ?>/">
+<style>
+    :root {
+        --base-path: "<?php echo(__BASE__); ?>";
+    }
+</style>
 <link href="<?php echo(__BASE__); ?>/styles/default.css" rel="stylesheet" />
 <link href="<?php echo(__BASE__); ?>/styles/main.css" rel="stylesheet" />
 <link href="<?php echo(__BASE__); ?>/styles/ExClass.css" rel="stylesheet" />
@@ -46,7 +52,8 @@ switch ($pageType)
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"> ?>
-<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
+<!-- <link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet"> -->
+<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.php" rel="stylesheet">
 <link href="<?php echo(__BASE__); ?>/sergs/styles/main.css" rel="stylesheet" /><?php
         if ($pageId === 'print')
         { ?>
@@ -60,7 +67,8 @@ switch ($pageType)
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
         // <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" /> ?>
-<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
+<!-- <link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet"> -->
+<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.php" rel="stylesheet">
 <link href="<?php echo(__BASE__); ?>/opms/styles/main.css" rel="stylesheet" /><?php
         break;
     case PageType::MPASIS:
@@ -68,13 +76,15 @@ switch ($pageType)
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
         // <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
         // <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" /> ?>
-<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
+<!-- <link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet"> -->
+<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.php" rel="stylesheet">
 <link href="<?php echo(__BASE__); ?>/mpasis/styles/main.css" rel="stylesheet" /><?php
         break;
     case PageType::QMIS:
         break;
     case PageType::QMISPROPER: ?>
-<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet">
+<!-- <link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.css" rel="stylesheet"> -->
+<link href="<?php echo(__BASE__); ?>/styles/material.io/material-icons.php" rel="stylesheet">
 <link href="<?php echo(__BASE__); ?>/qmis/proper/styles/main.css" rel="stylesheet" /><?php
         break;
 }

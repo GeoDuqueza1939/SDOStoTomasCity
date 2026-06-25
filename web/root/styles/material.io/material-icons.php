@@ -1,9 +1,18 @@
+<?php 
+
+header('Content-Type: text/css');
+
+require_once('../../path.php');
+
+?>
+
 @font-face {
     font-family: 'Material Icons';
     font-style: normal;
     font-weight: 400;
     /* src: url(/test/fonts/Material-Icons.woff2) format('woff2'); */
-    src: url(/fonts/Material-Icons.woff2) format('woff2');
+    /* src: url(/fonts/Material-Icons.woff2) format('woff2'); */
+    src: url(<?php echo(__BASE__); ?>/fonts/Material-Icons.woff2) format('woff2');
 }
 
 @font-face {
@@ -11,7 +20,8 @@
     font-style: normal;
     font-weight: 400;
     /* src: url(/test/fonts/Material-Icons-Outlined.woff2) format('woff2'); */
-    src: url(/fonts/Material-Icons-Outlined.woff2) format('woff2');
+    /* src: url(/fonts/Material-Icons-Outlined.woff2) format('woff2'); */
+    src: url(<?php echo(__BASE__); ?>/fonts/Material-Icons-Outlined.woff2) format('woff2');
 }
 
 @font-face {
@@ -19,7 +29,8 @@
     font-style: normal;
     font-weight: 400;
     /* src: url(/test/fonts/Material-Icons-Round.woff2) format('woff2'); */
-    src: url(/fonts/Material-Icons-Round.woff2) format('woff2');
+    /* src: url(/fonts/Material-Icons-Round.woff2) format('woff2'); */
+    src: url(<?php echo(__BASE__); ?>/fonts/Material-Icons-Round.woff2) format('woff2');
 }
 
 @font-face {
@@ -27,7 +38,8 @@
     font-style: normal;
     font-weight: 100 700;
     /* src: url(/test/fonts/Material-Symbols-Rounded.woff2) format('woff2'); */
-    src: url(/fonts/Material-Symbols-Rounded.woff2) format('woff2');
+    /* src: url(/fonts/Material-Symbols-Rounded.woff2) format('woff2'); */
+    src: url(<?php echo(__BASE__); ?>/fonts/Material-Symbols-Rounded.woff2) format('woff2');
 }
 
 .material-icons {
