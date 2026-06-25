@@ -125,7 +125,12 @@ class MPASIS_App extends App
             case "sdo-home":
                 console.log("Going Home");
                 MPASIS_App.setCookie("current_view", "", -1);
-                window.location = "/";
+                let base = document.querySelector("base").href;
+                if (base.endsWith("/"))
+                {
+                    base = base.slice(0, -1);
+                }
+                window.location = base + "/";
                 break;
             case "signout":
                 MPASIS_App.setCookie("user", "", -1);
