@@ -210,7 +210,7 @@ require_once(__FILE_ROOT__ . '/php/snippets/html_tail.php');
 ?>
     </div>
 </body>
-<script src="/mpasis/js/mpasisApp.js"></script>
+<script src="<?php echo(__BASE__); ?>/mpasis/js/mpasisApp.js"></script>
 </html>
 <?php
     } // function run()
