@@ -184,6 +184,7 @@ function selectJobApplications(DatabaseConnection $dbconn, $where = "", $limit =
         score_bei,
         potential_notes,
         is_solo_parent,
+        is_pregnant,
         include_in_ier,
         has_attended_open_ranking,
         include_in_car,
@@ -528,36 +529,11 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
             }
         }
 
-        if (isset($personalInfo["disabilities"]) && count($personalInfo["disabilities"]) > 0)
+        $disabilityIds = $personalInfo["disability"];
+
+        if (isset($disabilityIds) && count($disabilityIds) > 1)
         {
-            $disabilityIds = [];
-
-            foreach ($personalInfo["disabilities"] as $disability)
-            {
-                $fieldStr = '(disability)';
-                $valueStr = "('$disability')";
-
-                $dbResults = $dbconn->select('Disability', 'disabilityId', "WHERE disability='" . $disability . "'");
-
-                if (is_null($dbconn->lastException) && count($dbResults) > 0)
-                {
-                    array_push($disabilityIds, $dbResults[0]['disabilityId']);
-                }
-                else
-                {
-                    $dbconn->insert('Disability', $fieldStr, $valueStr);
-
-                    if (is_null($dbconn->lastException))
-                    {
-                        array_push($disabilityIds, $dbconn->lastInsertId);
-                    }
-                    else
-                    {
-                        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage() . '<br><br>Last SQL Statement: ' . $dbconn->lastSQLStr)));
-                        return false;
-                    }    
-                }
-            }
+            $disabilityIds = array_filter($disabilityIds, function($disabilityId) { return $disabilityId != 1; });
         }
 
         $fieldStr = '';
@@ -566,7 +542,7 @@ function dbAddJobApplication($dbconn, $jobApplication, &$updateJobApplication, &
 
         foreach($personalInfo as $key=>$value)
         {
-            if ($key != 'personId' && $key != "addresses" && $key != "religion" && $key != "disabilities" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers" && $key != 'degree_taken')
+            if ($key != 'personId' && $key != "addresses" && $key != "religion" && $key != "disability" && $key != "ethnicity" && $key != "email_addresses" && $key != "contact_numbers" && $key != 'degree_taken')
             {
                 if ($updatePerson)
                 {
@@ -1412,6 +1388,10 @@ if (isValidUserSession())
                         // }
                         return;
                         break;
+                    case 'disabilities':
+                        echo(selectRecordAllColumns($dbconn, 'Disability'));
+                        return;
+                        break;
                     case 'applicationsByApplicantOrCode':
                         $srcStr = (isset($_REQUEST['srcStr']) ? $_REQUEST['srcStr'] : "");
                         if ($srcStr == '')
@@ -1472,6 +1452,36 @@ if (isValidUserSession())
                         ));
                         // echo(json_encode_ex(new ajaxResponse('Success', $_REQUEST['eligibilities'])));
                         echo(json_encode_ex(new ajaxResponse('Success', 'Eligibility successfully added')));
+                    }
+                    else
+                    {
+                        echo(json_encode_ex(new ajaxResponse('Error', $dbconn->lastException->getMessage())));
+                    }
+                    
+                    return;
+                }
+                else if (isset($_REQUEST['disabilities']))
+                {
+                    $disabilities = json_decode($_REQUEST['disabilities'], true);
+    
+                    $errMsg = '';
+                    $valueStr = '';
+    
+                    foreach ($disabilities as $disability)
+                    {
+                        $valueStr .= ($valueStr == '' ? '' : ', ') . '("' . $disability['disability'] . '","' . $disability['description'] . '")';
+                    }
+    
+                    $disabilityId = $dbconn->insert('Disability', '(disability, description)', $valueStr);
+    
+                    if (is_null($dbconn->lastException))
+                    {
+                        logAction('mpasis', 0, array(
+                            ($_SESSION['user']['is_temporary_user'] ? 'temp_' : '') . 'username'=>$_SESSION['user']['username'],
+                            'remarks'=>"Added Disability Category; Value string: $valueStr"
+                        ));
+                        echo(json_encode_ex(new ajaxResponse('Success', 'Disability Category successfully added')));
+                        // echo(json_encode_ex(new ajaxResponse('Data', selectRecordAllColumns($dbconn, 'Disability'))));
                     }
                     else
                     {
@@ -1933,19 +1943,19 @@ if (isValidUserSession())
 {
     "personalInfo": {
         "addresses": [
-            "Door 6 Recto Apartment, Levitown Subdivision"
+            "#29 Santos Rd., Novaliches, Manila"
         ],
         "disabilities": [],
         "email_addresses": [
-            "geovaniduqueza1939@yahoo.com"
+            "juand@yahoo.com"
         ],
         "contact_numbers": [
-            "09153032914"
+            "09001234567"
         ],
         "degree_taken": [],
-        "given_name": "Geo",
+        "given_name": "Juan",
         "middle_name": "P.",
-        "family_name": "Duqueza",
+        "family_name": "Dela Cruz",
         "age": 4,
         "sex": "Male",
         "civil_status": "2",
