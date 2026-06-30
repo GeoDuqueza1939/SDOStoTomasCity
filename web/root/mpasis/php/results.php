@@ -1685,7 +1685,7 @@ if (isset($_REQUEST['test']))
     // echo(json_encode_ex(new ajaxResponse('Data', $valueStr)));
     ?>
 
-<form class="data-form-ex" method="post" action="/mpasis/php/process.php" enctype="multipart/form-data"><h2>Upload Jobs Data</h2><span class="textbox-ex file-ex vertical" style="display: flex;"><label class="label-ex" for="jobs-csv">CSV for Upload:</label> <input type="file" id="jobs-csv" name="jobs-csv" accept="text/csv" style="width: 100%; border: 2px inset; background-color: white; padding: 1em;"></span><br><span class="textbox-ex hidden-ex"><input type="hidden" id="a" name="a" value="upload"></span><span class="button-ex"><button type="submit" id="ButtonEx1">Upload</button></span></form>
+<form class="data-form-ex" method="post" action="<?php echo(__BASE__); ?>/mpasis/php/process.php" enctype="multipart/form-data"><h2>Upload Jobs Data</h2><span class="textbox-ex file-ex vertical" style="display: flex;"><label class="label-ex" for="jobs-csv">CSV for Upload:</label> <input type="file" id="jobs-csv" name="jobs-csv" accept="text/csv" style="width: 100%; border: 2px inset; background-color: white; padding: 1em;"></span><br><span class="textbox-ex hidden-ex"><input type="hidden" id="a" name="a" value="upload"></span><span class="button-ex"><button type="submit" id="ButtonEx1">Upload</button></span></form>
 
     <?php
 
@@ -1751,7 +1751,7 @@ if (isset($_REQUEST['test']))
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparative Assessment Results | MPaSIS</title>
-    <!-- <link rel="stylesheet" href="/mpasis/css/mpasisApp.css"> -->
+    <!-- <link rel="stylesheet" href="<?php echo(__BASE__); ?>/mpasis/css/mpasisApp.css"> -->
      <style>
         .car-table {
             border-collapse: collapse;
@@ -1769,7 +1769,7 @@ if (isset($_REQUEST['test']))
     <div class="car-display">
         <h1 class="car-display-title">Comparative Assessment Results</h1>
         <main class="car-main">
-            <form id="car-filter-form" class="car-filter-form" method="get" action="/mpasis/php/results.php" style="display: grid;">
+            <form id="car-filter-form" class="car-filter-form" method="get" action="<?php echo(__BASE__); ?>/mpasis/php/results.php" style="display: grid;">
                 <input type="hidden" name="a" value="retrieve">
                 <span class="textbox-ex"><label class="label-ex" for="position-title-input">Position Title:</label> <select id="position-title-input" name="positionTitle">
                     <optgroup>

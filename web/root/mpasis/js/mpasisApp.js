@@ -30,7 +30,7 @@ class MPASIS_App extends App
     // static defaultEndDate = "2023-04-05";// (new Date()).toLocaleDateString();
     // static defaultEndDate = "2024-03-15"; // Teacher I SPIMS
     // static defaultEndDate = (new Date()).toLocaleDateString();
-    static defaultEndDate = "2024-05-16";
+    static defaultEndDate = "2024-05-16"; // THIS SHOULD BE EVENTUALLY RELEGATED TO THE DATABASE UPON THE INTRODUCTION OF THE HIRING CYCLE
 
     constructor(container)
     {
@@ -136,31 +136,7 @@ class MPASIS_App extends App
                 MPASIS_App.setCookie("user", "", -1);
                 MPASIS_App.setCookie("current_view", "", -1);
                 postData(MPASIS_App.processURL, "app=mpasis&a=logout", postEvent=>{
-                    // var response;
-
-                    // if (postEvent.target.readyState == 4 && postEvent.target.status == 200)
-                    // {
-                    //     response = JSON.parse(postEvent.target.responseText);
-
-                    //     if (response.type == "Error")
-                    //     {
-                    //         console.log("ERROR: " + response.content);
-                    //         MPASIS_App.setCookie("user", "", -1);
-                    //         MPASIS_App.setCookie("current_view", "", -1);
-                    //         window.location.reload(true);
-                    //     }
-                    //     else if (response.type == "Debug")
-                    //     {
-                    //         console.log("DEBUG: " + response.content);
-                    //     }
-                    //     else if (response.type == "Success")
-                    //     {
-                            // console.log(response.content);
-                            // MPASIS_App.setCookie("user", "", -1);
-                            // MPASIS_App.setCookie("current_view", "", -1);
-                            window.location.reload(true);
-                    //     }
-                    // }
+                    window.location.reload(true);
                 });
                 break;
             default:
@@ -243,7 +219,6 @@ class MPASIS_App extends App
                 this.mainSections["main-" + viewId].innerHTML = "<h2>Job Search</h2>";
                 break;
             case "job-data-upload":
-                // this.mainSections["main-" + viewId].innerHTML = "<h2>Upload Positions</h2>";
                 this.contructJobDataUploadForm();
                 break;
             case "evaluation":
@@ -506,7 +481,6 @@ class MPASIS_App extends App
         field = this.forms["jobData"].addInputEx("Load Position", "buttonEx", "", "Load Position", "loadPosition");
         field.container.style.gridColumn = "1 / span 12";
         field.container.classList.add("right");
-        //field.disable();
         this.forms["jobData"].dbInputEx["loadPosition"].addEvent("click", (loadPositionClickEvent)=>{
             var retrievePositionDialog = null;
             if (loadPositionClickEvent.target.innerHTML == "Load Position")
@@ -1075,17 +1049,14 @@ class MPASIS_App extends App
             return this.forms["jobDataUpload"];
         }
 
-        // jobDataUploadForm = this.forms["jobDataUpload"] = new Old_FormEx(this.mainSections["main-job-data-upload"], "job-data-upload-form-ex", true);
         jobDataUploadForm = this.forms["jobDataUpload"] = new DataFormEx();
 
         jobDataUploadForm.setup(this.mainSections["main-job-data-upload"], "form");
         jobDataUploadForm.container.method = "post";
-        jobDataUploadForm.container.action = "/mpasis/php/process.php";
+        jobDataUploadForm.container.action = document.querySelector("base").href + "/mpasis/php/process.php";
         jobDataUploadForm.container.enctype = "multipart/form-data";
 
         header = jobDataUploadForm.setTitle("Upload Jobs Data", 2);
-
-        // [{"loadPosition":"","position_title":"test","parenthetical_title":"tf","salary_grade":1,"plantilla_item_number":"itme","position_categoryId":1,"place_of_assignment":"SDO Sto. Tomas City","required_educational_attainment":6,"specific_education_required":"x","required_training_hours":0,"specific_training_required":"y","required_work_experience_years":0,"specific_work_experience_required":"z","required_eligibility":[5],"competency":"A"}]
 
         downloadCSV = jobDataUploadForm.addControlEx("ButtonEx", {
             parentHTMLElement:jobDataUploadForm.container, 
@@ -1115,7 +1086,6 @@ class MPASIS_App extends App
         jobDataUploadForm.addLineBreak();
 
         fileField = jobDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:jobDataUploadForm.container, label:"CSV for Upload:", inputType:"file", id:"jobs-csv", name:"jobs-csv"});
-        // fileField.container.classList.remove("textbox-ex");
         fileField.container.classList.add("file-ex");
         fileField.vertical = true;
         fileField.control.style.width = "100%";
@@ -1283,17 +1253,14 @@ class MPASIS_App extends App
             return this.forms["coiNcoiDataUpload"];
         }
 
-        // coiNcoiDataUploadForm = this.forms["coiNcoiDataUpload"] = new Old_FormEx(this.mainSections["main-job-data-upload"], "job-data-upload-form-ex", true);
         coiNcoiDataUploadForm = this.forms["coiNcoiDataUpload"] = new DataFormEx();
 
         coiNcoiDataUploadForm.setup(this.mainSections["main-coi-ncoi-data-upload"], "form");
         coiNcoiDataUploadForm.container.method = "post";
-        coiNcoiDataUploadForm.container.action = "/mpasis/php/process.php";
+        coiNcoiDataUploadForm.container.action = document.querySelector("base").href + "/mpasis/php/process.php";
         coiNcoiDataUploadForm.container.enctype = "multipart/form-data";
 
         header = coiNcoiDataUploadForm.setTitle("Upload COI and NCOI Data", 2);
-
-        // [{"loadPosition":"","position_title":"test","parenthetical_title":"tf","salary_grade":1,"plantilla_item_number":"itme","position_categoryId":1,"place_of_assignment":"SDO Sto. Tomas City","required_educational_attainment":6,"specific_education_required":"x","required_training_hours":0,"specific_training_required":"y","required_work_experience_years":0,"specific_work_experience_required":"z","required_eligibility":[5],"competency":"A"}]
 
         downloadCSV = coiNcoiDataUploadForm.addControlEx("ButtonEx", {
             parentHTMLElement:coiNcoiDataUploadForm.container, 
@@ -1323,7 +1290,6 @@ class MPASIS_App extends App
         coiNcoiDataUploadForm.addLineBreak();
 
         fileField = coiNcoiDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:coiNcoiDataUploadForm.container, label:"CSV for Upload:", inputType:"file", id:"coi-ncoi-csv", name:"coi-ncoi-csv"});
-        // fileField.container.classList.remove("textbox-ex");
         fileField.container.classList.add("file-ex");
         fileField.vertical = true;
         fileField.control.style.width = "100%";
@@ -1491,12 +1457,11 @@ class MPASIS_App extends App
             return this.forms["applicantDataUpload"];
         }
 
-        // applicantDataUploadForm = this.forms["applicantDataUpload"] = new Old_FormEx(this.mainSections["main-applicants-upload"], "applicants-upload-form-ex", true);
         applicantDataUploadForm = this.forms["applicantDataUpload"] = new DataFormEx();
 
         applicantDataUploadForm.setup(this.mainSections["main-applicants-upload"], "form");
         applicantDataUploadForm.container.method = "post";
-        applicantDataUploadForm.container.action = "/mpasis/php/process.php";
+        applicantDataUploadForm.container.action = document.querySelector("base").href + "/mpasis/php/process.php";
         applicantDataUploadForm.container.enctype = "multipart/form-data";
 
         header = applicantDataUploadForm.setTitle("Upload Applicant Data", 2);
@@ -1529,7 +1494,6 @@ class MPASIS_App extends App
         applicantDataUploadForm.addLineBreak();
 
         fileField = applicantDataUploadForm.addControlEx("TextboxEx", {parentHTMLElement:applicantDataUploadForm.container, label:"CSV for Upload:", inputType:"file", id:"job-applications-csv", name:"job-applications-csv"});
-        // fileField.container.classList.remove("textbox-ex");
         fileField.container.classList.add("file-ex");
         fileField.vertical = true;
         fileField.control.style.width = "100%";
@@ -1744,7 +1708,6 @@ class MPASIS_App extends App
                     )
                 )
             ))[0];
-            // return document.positions.filter(position=>((position["parenthetical_title"] == parenField.getValue().trim() || plantillaField.getValue().trim() == "ANY" || plantillaField.getValue().trim() == "") && position["position_title"] == positionField.getValue().trim() || position["plantilla_item_number"] == plantillaField.getValue().trim()))[0];
         }
 
         header = applicantDataForm.addHeader("Personal Information", 3);
@@ -1779,7 +1742,6 @@ class MPASIS_App extends App
         field = new DisplayEx(applicantDataForm.fieldWrapper, "span", "", " "); // A sort of make-shift spacer
         field.container.style.gridColumn = "5 / span 4";
 
-
         field = applicantDataForm.addInputEx("Ext. Name", "text", "", "Extension Name (e.g., Jr., III, etc.)", "ext_name", "Person");
         field.setPlaceholderText("(optional)");
         field.container.style.gridColumn = "9 / span 4";
@@ -1807,24 +1769,44 @@ class MPASIS_App extends App
         field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=civilStatus", "civil_status", "index", "description");
 
         field = applicantDataForm.addInputEx("Religion", "combo", "", "Religious Affiliation", "religion", "Person"); // Cross-reference; Allow adding new
-        field.container.style.gridColumn = "1 / span 4";
+        field.container.style.gridColumn = "1 / span 6";
         field.setVertical();
         field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=religion", "religion", "religionId", "description");
 
-        field = applicantDataForm.addInputEx("Disability", "combo", "", "Disability; if multiple, please separate with semi-colons", "disability", "Person_Disability"); // Multiple cross-reference; Allow adding new
-        field.container.style.gridColumn = "5 / span 4";
-        field.setVertical();
-        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=disability", "disability", "disabilityId", "description");
-
         field = applicantDataForm.addInputEx("Ethnic Group", "combo", "", "Ethnic Group", "ethnicity", "Person"); // Cross-reference; Allow adding new
-        field.container.style.gridColumn = "9 / span 4";
+        field.container.style.gridColumn = "1 / span 6";
         field.setVertical();
         field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=ethnicGroup", "ethnic_group", "ethnicityId", "description");
 
         field = applicantDataForm.addInputEx("Solo Parent", "checkbox", "", "Mark this checkbox if applicant has declared that he/she is a solo parent.", "is_solo_parent", "Person");
-        field.container.style.gridColumn = "1 / span 12";
+        field.container.style.gridColumn = "3 / span 4";
         field.reverse();
 
+        field = applicantDataForm.addInputEx("Pregnant", "checkbox", "", "Mark this checkbox if female applicant has declared pregnancy.", "is_pregnant", "Person");
+        field.container.style.gridColumn = "3 / span 4";
+        field.reverse();
+
+        field = applicantDataForm.addInputEx("Disability", "checkbox-select", "", "Please select all the disabilities declared by the applicant", "disability", "Person", true);
+        field.container.style.gridColumn = "7 / span 6";
+        field.container.style.gridRow = "9 / span 4";
+        field.setVertical();
+        field.showColon();
+        field.reverse();
+
+        let disabilityField = field; 
+
+        field.runAfterFilling = function(){
+            let parentEx = this;
+            MPASIS_App.processURL = document.querySelector("base").href + "/mpasis/php/process.php";
+
+            this.setAsExtendableList(true, "+Add disability", clickEvent=>{
+                let addDisabilityBtn = clickEvent.target.inputEx;
+                let addDisabilityDialog = new AddDisability();
+                addDisabilityDialog.setup(app.main, disabilityField, "add-disability-dialog");
+            });            
+        };
+        field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=disabilities", "disability", "disabilityId", "description");
+        
         field = applicantDataForm.addInputEx("Email Address", "email", "", "Email address; if multiple, please separate with semi-colons", "email_address", "Email_Address"); // Multiple cross-reference; Allow adding new
         field.container.style.gridColumn = "1 / span 6";
         field.setVertical();
@@ -1885,7 +1867,7 @@ class MPASIS_App extends App
         addText("NONE", reqSpecEduc);
         displaySpecEduc.addContent(reqSpecEduc);
         displaySpecEduc.addLineBreak(2);
-        var specEducAttained = applicantDataForm.addInputEx("Applicant possesses this specific educational requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required education.", "has_specific_education_required", "Job_Application");
+        let specEducAttained = applicantDataForm.addInputEx("Applicant possesses this specific educational requirement", "checkbox", "", "Mark this checkbox if applicant has attained this required education.", "has_specific_education_required", "Job_Application");
         displaySpecEduc.addContent(specEducAttained.container);
         specEducAttained.reverse();
         specEducAttained.disable();
@@ -2344,7 +2326,7 @@ class MPASIS_App extends App
 
         field.runAfterFilling = function(){
             var parentEx = this;
-            MPASIS_App.processURL = "/mpasis/php/process.php";
+            MPASIS_App.processURL = document.querySelector("base").href + "/mpasis/php/process.php";
 
             this.removeItemAt(this.inputExs.findIndex(inputEx=>Number.parseInt(inputEx.fields[0].value) == 4)); // Remove RA 1080 entry which is only used as a general/umbrella requirement for positions
 
@@ -2490,7 +2472,7 @@ class MPASIS_App extends App
             {
                 var retrieveApplicant = (applicationObj, newApplication = false)=>{
                         
-                    // console.log(applicationObj, applicantDataForm.dbInputEx);
+                    console.log("Retrieved", applicationObj, applicantDataForm.dbInputEx);
 
                     if (!newApplication)
                     {
@@ -2509,6 +2491,7 @@ class MPASIS_App extends App
                                 case "position_title_applied":
                                 case "parenthetical_title_applied":
                                 case "plantilla_item_number_applied":
+                                case "has_specific_education_required": // this one needs to be processed before educational attainment
                                     // do nothing; whatever needs to be done here needs to be done earlier
                                     break;
                                 case "sex":
@@ -2518,6 +2501,12 @@ class MPASIS_App extends App
                                     applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["civil_statusIndex"], true);
                                     break;
                                 case "disability":
+                                    if (applicationObj[key].length == 0)
+                                    {
+                                        applicationObj[key].push({"person_disabilityId": 1870, disabilityId: 1, "disability": "No declared disability"});
+                                    }
+                                    applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj[key].map((item)=>item["disabilityId"]), true);
+                                    break;
                                 case "email_address":
                                 case "contact_number":
                                     if (applicationObj[key].length > 0)
@@ -2528,6 +2517,7 @@ class MPASIS_App extends App
                                 case "degree_taken":
                                     break;
                                 case "educational_attainment":
+                                    applicantDataForm.dbInputEx["has_specific_education_required"].check(applicationObj["has_specific_education_required"] == 1);
                                     applicantDataForm.dbInputEx[key].setDefaultValue(applicationObj["educational_attainmentIndex"], true);
                                     applicantDataForm.dbInputEx["degree_taken"].setDefaultValue(applicationObj["degree_taken"]);
                                     applicantDataForm.dbInputEx["degree_taken"].setValue("degree_takenId", applicationObj["degree_taken"]);
@@ -2970,7 +2960,7 @@ class MPASIS_App extends App
             var jobApplication = {};
             jobApplication["personalInfo"] = {};
             jobApplication["personalInfo"]["addresses"] = [];
-            jobApplication["personalInfo"]["disabilities"] = [];
+            jobApplication["personalInfo"]["disability"] = [];
             jobApplication["personalInfo"]["email_addresses"] = [];
             jobApplication["personalInfo"]["contact_numbers"] = [];
             jobApplication["personalInfo"]["degree_taken"] = [];
@@ -3000,6 +2990,10 @@ class MPASIS_App extends App
                     {
                         jobApplication["personalInfo"][colName] = (dbInputEx.isChecked() ? 1 : 0);
                     }
+                    else if (colName == "is_pregnant" && !dbInputEx.isDisabled())
+                    {
+                        jobApplication["personalInfo"][colName] = (dbInputEx.isChecked() ? 1 : 0);
+                    }
                     else if (colName == "complete_academic_requirements" && !dbInputEx.isDisabled())
                     {
                         jobApplication["personalInfo"][colName] = (dbInputEx.isChecked() ? 1 : 0);
@@ -3012,10 +3006,6 @@ class MPASIS_App extends App
                 else if (tableName == "Address")
                 {
                     jobApplication["personalInfo"]["addresses"] = [dbInputEx.getValue()];
-                }
-                else if (tableName == "Person_Disability")
-                {
-                    jobApplication["personalInfo"]["disabilities"] = dbInputEx.getValue().split(";").map(disability=>disability.trim()).filter(disability=>disability!="");
                 }
                 else if (tableName == "Email_Address")
                 {
@@ -3087,18 +3077,9 @@ class MPASIS_App extends App
                 jobApplication["has_more_unrecorded_work_experience"] = (moreWorkExp.isChecked() ? 1 : 0);
             }
 
-            // console.log(applicantDataForm.dataLoaded);
-            // if (applicantDataBtnGrp.inputExs[0].getLabelText() == "Update")
             if ("personId" in applicantDataForm.dataLoaded)
             {
                 jobApplication["personalInfo"]["personId"] = applicantDataForm.dataLoaded["personId"];
-                // for (const key in applicantDataForm.dataLoaded)
-                // {
-                //     if (!(key in jobApplication))
-                //     {
-                //         jobApplication[key] = applicantDataForm.dataLoaded[key]; // load missing data from previously loaded dataset
-                //     }
-                // }
             }
 
             for (const degree of jobApplication["personalInfo"]["degree_taken"])
@@ -3107,7 +3088,7 @@ class MPASIS_App extends App
             }
 
             // DEBUG
-            console.log(jobApplication);
+            // console.log("For Sending:", jobApplication);
             
             // return;
             // DEBUG
@@ -3385,6 +3366,88 @@ class MPASIS_App extends App
     }
 }
 
+class AddDisability extends DialogEx
+{
+    constructor()
+    {
+        super();
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), field = new InputEx(), id = "")
+    {
+        super.setup(parentHTMLElement);
+        let thisDialog = this;
+        this.field = field;
+
+        this.scrim.classList.add("add-disability-dialog");
+        this.caption = "Add Disability";
+        this.captionHeaderLevel = 3;
+        this.addDataFormEx("div");
+        this.dataFormEx.id = id;
+
+        this.statusMsgTimeout = 3000;
+
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"disability", label:"Disability:", tooltip:"New disability category", addContainerClass:obj=>obj.container.classList.add("new-disability"), vertical:false, dbInfo:{column:"disability", table:"Disability"}});
+        this.dataFormEx.addSpacer();
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"description", label:"Description:", tooltip:"Description of the disability", addContainerClass:obj=>obj.container.classList.add("new-disability-description"), vertical:false, dbInfo:{column:"description", table:"Disability"}});
+        
+        this.setupDialogButtons([
+            {caption:"Save",tooltip:"Save new disability category",clickCallback:addDisabilityDialogEvent=>{
+                let newDisability = {};
+                newDisability["disability"] = this.dataFormEx.dbControls["disability"].value;
+                newDisability["description"] = this.dataFormEx.dbControls["description"].value;
+                if (newDisability["disability"] == "")
+                {
+                    this.raiseError("Disability name should not be blank.");
+                }
+                else
+                {
+                    if (newDisability["description"] == "")
+                    {
+                        newDisability["description"] = NULL;
+                    }
+
+                    postData(MPASIS_App.processURL, "app=mpasis&a=add&disabilities=" + packageData([newDisability]), (event)=>{
+                        let response;
+
+                        if (event.target.readyState == 4 && event.target.status == 200)
+                        {
+                            response = JSON.parse(event.target.responseText);
+
+                            if (response.type == "Error")
+                            {
+                                this.raiseError("ERROR: " + response.content);
+                            }
+                            else if (response.type == "Success")
+                            {
+                                this.showSuccess(response.content);
+
+                                this.dataFormEx.dbControls["disability"].disable();
+                                this.dataFormEx.dbControls["description"].disable();
+                                this.buttonGrpEx.controlExs.forEach(controlEx=>controlEx.disable());
+                                
+                                let timeout = setTimeout(()=>{
+                                    clearTimeout(timeout);
+                                    timeout = null;
+                                    
+                                    this.field.clearList();
+                                    this.field.fillItemsFromServer(MPASIS_App.processURL, "app=mpasis&a=fetch&f=disabilities", "disability", "disabilityId", "description");
+                                    
+                                    this.close();
+                                }, 3000);
+                            }
+                        }
+                    });
+                }
+
+            }},
+            {caption:"Close",tooltip:"Close dialog box",clickCallback:addDisabilityDialogEvent=>this.close()},
+        ]);
+
+    }
+}
+
 class AssignRoles extends DialogEx
 {
     #rolesTableEx = null;
@@ -3455,7 +3518,6 @@ class UserEditor extends DialogEx
 
     setup(parentHTMLElement = new HTMLElement(), app = new App(), id = "", mode = 0, userData = null)
     {
-        // super(app.main, id);
         super.setup(parentHTMLElement);
         let thisDialog = this;
         console.log(app.main);
@@ -3480,42 +3542,6 @@ class UserEditor extends DialogEx
         this.dataFormEx.container.name = "user-editor-form";
         this.dataFormEx.container.setAttribute("method", "POST");
 
-        // [
-        //     {label:"Employee ID", type:"input", colName:"employeeId", table:"User", tooltip:""},
-        //     {label:"Temporary account only", type:"checkbox", colName:"temp_user", table:"", tooltip:"Temporary accounts are accounts that are not bound to employee information"},
-        //     {label:"Given Name", type:"input", colName:"given_name", table:"Person", tooltip:"Enter the applicant's given name. This is required."},
-        //     {label:"Middle Name", type:"input", colName:"middle_name", table:"Person", tooltip:"Enter the applicant's middle name. For married women, please enter the maiden middle name. Leave blank for none."},
-        //     {label:"Family Name", type:"input", colName:"family_name", table:"Person", tooltip:"Enter the applicant's family name. For married women, please enter the maiden last name."},
-        //     {label:"Spouse Name", type:"input", colName:"spouse_name", table:"Person", tooltip:"For married women, please enter the spouse's last name. Leave blank for none."},
-        //     {label:"Ext. Name", type:"input", colName:"ext_name", table:"Person", tooltip:"Enter the applicant's extension name (e.g., Jr., III, etc.). Leave blank for none."},
-        //     {label:"Username", type:"input", colName:"username", table:"All_User", tooltip:""}
-        // ].forEach(field=>{
-        //     this.dataFormEx.addControlEx(field.label, field.type, (mode == 1 && field.colName != "temp_user" && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? "" : ""), field.tooltip, field.colName, field.table);
-        //     this.dataFormEx.dbInputEx[field.colName].container.classList.add(field.colName);
-        //     if (field.colName.includes("_name"))
-        //     {
-        //         // this.formEx.dbInputEx[field.colName].setWidth("11em");
-        //     }
-        //     if (field.colName == "employeeId")
-        //     {
-        //         // this.formEx.dbInputEx[field.colName].setWidth("9em");
-        //         this.formEx.dbInputEx[field.colName].showColon();
-        //     }
-        //     if (field.type == "checkbox")
-        //     {
-        //         this.formEx.dbInputEx[field.colName].reverse();
-        //     }
-        //     else if (field.colName == "username")
-        //     {
-        //         this.formEx.dbInputEx[field.colName].showColon();
-        //     }
-        //     if (this.mode != 0 && field.colName == "temp_user")
-        //     {
-        //         this.formEx.dbInputEx[field.colName].check(userData[field.colName]);
-        //     }
-        //     this.formEx.addSpacer();
-        // });
-
         this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
         this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"a", name:"a", inputType:"hidden", value:(this.mode == 0 ? "add" : "update")});
         this.dataFormEx.addSpacer();
@@ -3537,21 +3563,6 @@ class UserEditor extends DialogEx
         this.dataFormEx.addSpacer();
 
         this.dataFormEx.addContainerEx(FrameEx.UIExType, {caption:"Access Levels:", addContainerClass:obj=>obj.container.classList.add("user-editor-access-levels"), dbInfo:{column:"user-editor-access-levels"}});
-        // this.dataFormEx.displayExs["user-editor-access-levels"].showColon();
-        // this.dataFormEx.dbContainers["user-editor-access-levels"].container.classList.add("user-editor-access-levels");
-
-        // [
-        //     {label:"SeRGS", type:"number", colName:"sergs_access_level", table:"All_User", tooltip:"Access level for the Service Record Generation System"},
-        //     {label:"OPMS", type:"number", colName:"opms_access_level", table:"All_User", tooltip:"Access level for the Online Performance Management System"},
-        //     {label:"MPaSIS", type:"number", colName:"mpasis_access_level", table:"All_User", tooltip:"Access level for the Merit Promotion and Selection Information System"}
-        // ].forEach(field=>{
-        //     this.formEx.addInputEx(field.label, field.type, (mode == 1 && MPASIS_App.isDefined(userData) ? userData[field.colName] ?? 0 : 0), field.tooltip, field.colName, field.table);
-        //     this.formEx.displayExs["user-editor-access-levels"].addContent(this.formEx.dbInputEx[field.colName].container);
-        //     this.formEx.dbInputEx[field.colName].setMin(0);
-        //     this.formEx.dbInputEx[field.colName].setMax(field.label == "MPaSIS" ? 4 : 10);
-        //     this.formEx.dbInputEx[field.colName].fields[0].classList.add("right");
-        //     this.formEx.addSpacer();
-        // });
 
         this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"SeRGS:", id:"sergs_access_level", name:"sergs_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["sergs_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"sergs_access_level"}});
         this.dataFormEx.addControlEx(NumberFieldEx.UIExType, {label:"OPMS:", id:"opms_access_level", name:"opms_access_level", value:(mode == 1 && MPASIS_App.isDefined(userData) ? userData["opms_access_level"] ?? 0 : 0), parentHTMLElement:this.dataFormEx.dbContainers["user-editor-access-levels"].container, addContainerClass:obj=>obj.container.classList.add("access-level"), min:0, max:10, dbInfo:{table:"All_User", column:"opms_access_level"}});
@@ -3659,104 +3670,6 @@ class UserEditor extends DialogEx
 
         this.buttonGrpEx.controlExs[0].control.setAttribute("form", "add-employee-dialog");
         this.buttonGrpEx.controlExs[1].control.setAttribute("form", "add-employee-dialog");
-
-        // var dialog = this;
-        // var form = this.formEx;
-        // var btnGrp = form.addFormButtonGrp(2);
-        // btnGrp.container.classList.add("user-editor-buttons");
-        // form.addStatusPane();
-        // btnGrp.inputExs[0].setLabelText("Save");
-        // btnGrp.inputExs[0].setTooltipText("");
-        /*
-        btnGrp.inputExs[0].addEvent("click", (event)=>{
-            var person = {};
-            var user = {};
-            var error = "";
-
-            for (const dbColName in form.dbInputEx) {
-                var value = form.dbInputEx[dbColName].getValue();
-                if (dbColName == "temp_user")
-                {
-                    user[dbColName] = form.dbInputEx[dbColName].isChecked();
-                }
-                else if ((MPASIS_App.isDefined(value) && !MPASIS_App.isEmptySpaceString(value)) || typeof(value) == "number")
-                {
-                    if (form.dbTableName[dbColName] == "Person")
-                    {
-                        person[dbColName] = value;
-                    }
-                    else
-                    {
-                        user[dbColName] = value;
-                    }
-                }
-                else if (dbColName == "employeeId" && !form.dbInputEx["temp_user"].isChecked())
-                {
-                    error += "Employee ID should not be blank for non-temporary user accounts.<br>";
-                }
-                else if (dbColName == "given_name" && form.dbInputEx["temp_user"].isChecked())
-                {
-                    error += "Given Name should not be blank.<br>";
-                }
-                else if (dbColName == "username")
-                {
-                    error += "Username should not be blank.<br>";
-                }
-            }
-
-            user["personId"] = dialog.data["personId"];
-
-            if (error != "")
-            {
-                form.raiseError(error);
-            }
-            else
-            {
-                // // DEBUG
-                // console.log(form.dbInputEx, person, user, MPASIS_App.processURL);
-
-                // return;
-                // // DEBUG
-
-                postData(MPASIS_App.processURL, "app=mpasis&a=" + (form.mode == 0 ? "add" : "update") + "&person=" + packageData(person) + "&user=" + packageData(user), async (event)=>{
-                    var response;
-
-                    if (event.target.readyState == 4 && event.target.status == 200)
-                    {
-                        response = JSON.parse(event.target.responseText);
-
-                        if (response.type == "Error")
-                        {
-                            form.raiseError(response.content);
-                        }
-                        else if (response.type == "Success")
-                        {
-                            form.showSuccess(response.content);
-                            dialog.app.temp["searchButton"].fields[0].click();
-                            await sleep(3000);
-                            dialog.close();
-                        }
-                        else if (response.type == "Debug")
-                        {
-                            new MsgBox(form.container.parentElement, response.content, "OK");
-                            console.log(response.content);
-                        }
-                        else
-                        {
-                            console.log(response.content, event.target);
-                        }
-                    }
-                });
-            }
-        });
-        */
-        // btnGrp.inputExs[1].setLabelText("Close");
-        // btnGrp.inputExs[1].setTooltipText("");
-        // btnGrp.inputExs[1].addEvent("click", event=>{
-        //     this.close();
-        // });
-
-        // form.container.parentElement.appendChild(btnGrp.container);
 
         // TEMP
         this.dataFormEx.dbControls["employeeId"].control.disabled = true;
@@ -3893,10 +3806,7 @@ class JobApplicationSelectorDialog extends Old_DialogEx
             }
         }
 
-        // this.getApplicantQueryBox().addEvent("change", keyEventFunc);
-        // this.getApplicantQueryBox().addEvent("keyup", keyEventFunc);
-        // this.getApplicantQueryBox().addEvent("keydown", keyEventFunc);
-        this.getApplicantQueryBox().addEvent("keypress", keyEventFunc);
+        this.getApplicantQueryBox().addEvent("keypress", keyEventFunc); // no need to  use change, keyup, or keydown events
     }
 
     getApplicantListBox()

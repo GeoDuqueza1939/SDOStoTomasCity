@@ -5853,6 +5853,14 @@ class IERForm extends Old_FormEx
                 link.click();
         });
         this.dbInputEx["ier-download-csv-button"].disable();
+
+        this.addDisplayEx("div-table", "pwd-summary");
+        this.displayExs["pwd-summary"].container.classList.add("pwd-summary");
+        this.displayExs["pwd-summary"].setLabelText("PWD Summary");
+        this.displayExs["pwd-summary"].setHeaders([
+            {colHeaderName:"pwd-category", colHeaderText:"PWD Category"},
+            {colHeaderName:"total", colHeaderText:"Total"},
+        ]);
         
         this.dbInputEx["ier-select-position-button"].fields[0].click();
     }
