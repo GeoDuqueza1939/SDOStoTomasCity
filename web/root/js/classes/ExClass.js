@@ -5547,7 +5547,15 @@ class IERForm extends Old_FormEx
                     this.app.showScrim();
 
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
-                        var response = null, rows = [], row = null, isQualified = true;
+                        let response = null, rows = [], row = null, isQualified = true;
+                        let round = 0;
+                        let eop_count = [], eop_category = [];
+
+                        eop_category["is_solo_parent"] = "Solo Parent";
+                        eop_count["is_solo_parent"] = 0;
+                        
+                        eop_category["is_pregnant"] = "Pregnant";
+                        eop_count["is_pregnant"] = 0;
     
                         if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                         {
@@ -5567,6 +5575,8 @@ class IERForm extends Old_FormEx
 
                                 thisIERForm.fetchedApplications.sort((a, b)=>(a["application_code"] > b["application_code"] ? 1 : (a["application_code"] < b["application_code"] ? -1 : 0)));
     
+                                console.log(thisIERForm.fetchedApplications);
+
                                 for (const jobApplication of thisIERForm.fetchedApplications)
                                 {
                                     isQualified = true;
@@ -5854,11 +5864,11 @@ class IERForm extends Old_FormEx
         });
         this.dbInputEx["ier-download-csv-button"].disable();
 
-        this.addDisplayEx("div-table", "pwd-summary");
-        this.displayExs["pwd-summary"].container.classList.add("pwd-summary");
-        this.displayExs["pwd-summary"].setLabelText("PWD Summary");
-        this.displayExs["pwd-summary"].setHeaders([
-            {colHeaderName:"pwd-category", colHeaderText:"PWD Category"},
+        this.addDisplayEx("div-table", "eop-summary");
+        this.displayExs["eop-summary"].container.classList.add("eop-summary");
+        this.displayExs["eop-summary"].setLabelText("EOP Summary");
+        this.displayExs["eop-summary"].setHeaders([
+            {colHeaderName:"eop-category", colHeaderText:"EOP Category"},
             {colHeaderName:"total", colHeaderText:"Total"},
         ]);
         
