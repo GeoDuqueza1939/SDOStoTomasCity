@@ -5864,13 +5864,13 @@ class IERForm extends Old_FormEx
         });
         this.dbInputEx["ier-download-csv-button"].disable();
 
-        this.addDisplayEx("div-table", "eop-summary");
-        this.displayExs["eop-summary"].container.classList.add("eop-summary");
-        this.displayExs["eop-summary"].setLabelText("EOP Summary");
-        this.displayExs["eop-summary"].setHeaders([
-            {colHeaderName:"eop-category", colHeaderText:"EOP Category"},
-            {colHeaderName:"total", colHeaderText:"Total"},
-        ]);
+        // this.addDisplayEx("div-table", "eop-summary");
+        // this.displayExs["eop-summary"].container.classList.add("eop-summary");
+        // this.displayExs["eop-summary"].setLabelText("EOP Summary");
+        // this.displayExs["eop-summary"].setHeaders([
+        //     {colHeaderName:"eop-category", colHeaderText:"EOP Category"},
+        //     {colHeaderName:"total", colHeaderText:"Total"},
+        // ]);
         
         this.dbInputEx["ier-select-position-button"].fields[0].click();
     }
