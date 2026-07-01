@@ -3448,6 +3448,78 @@ class AddDisability extends DialogEx
     }
 }
 
+class EOPStatDisplay extends DialogEx
+{
+    constructor()
+    {
+        super();
+    }
+
+    setup(parentHTMLElement = new HTMLElement(), eopCategory = [], eopApplicant = [])
+    {
+        super.setup(parentHTMLElement);
+        let thisDialog = this;
+        let eopData = [];
+        let eopTable = null;
+
+        this.scrim.classList.add("eop-stat-dialog");
+        this.caption = "EOP Statistics";
+        this.captionHeaderLevel = 3;
+        this.addDataFormEx("div");
+
+        eopData.push({"eop-category":"Solo Parent", "total":eopApplicant["Solo Parent"].length, "applicants":eopApplicant["Solo Parent"]});
+        eopData.push({"eop-category":"Pregnant", "total":eopApplicant["Pregnant"].length, "applicants":eopApplicant["Pregnant"]});
+
+        eopData.push({"eop-category":"PWD (All)", "total":eopApplicant["PWD"].length, "applicants":eopApplicant["PWD"]});
+
+        for (const category of eopCategory["Disability"].filter(disability=>disability != "No declared disability"))
+        {
+            eopData.push({"eop-category":category, "total":eopApplicant[category].length, "applicants":eopApplicant[category]});
+        }
+
+        this.dataFormEx.addControlEx(TextboxEx.UIExType, {id:"app", name:"app", inputType:"hidden", value:"MPaSIS"});
+        this.dataFormEx.addContainerEx(TableEx.UIExType, {id:"eop-stat-table", name:"eop-stat-table", addContainerClass:obj=>obj.container.classList.add("eop-stat-table"), vertical:false, dbInfo:{column:"eop-stat-table", table:"EOP_Stat"}});
+        eopTable = this.dataFormEx.dbContainers["eop-stat-table"];
+        eopTable.setupHeaders([{name:"eop-category", text:"Category"}, {name:"total", text:"Count"}]);
+        for (const row of eopData)
+        {
+            eopTable.addRow(row);
+            
+            if (row["total"] == 0)
+            {
+                eopTable.rows.slice(-1)[0].td["total"].addEventListener("click", event=>{
+                    new MessageBox().setup(parentHTMLElement, row["eop-category"], "<em>No applicants found.<em>");
+                });
+            }
+            else
+            {
+                eopTable.rows.slice(-1)[0].td["total"].addEventListener("click", event=>{
+                    new MessageBox().setup(parentHTMLElement, row["eop-category"] + ": " + row["total"] + " applicant" + (row["total"] != 1 ? "s" : ""), row["applicants"].map(applicant=>applicant["applicant_name"]).join("<br>"));
+                });
+            }
+
+            if (eopCategory["Disability"].filter(disability=>disability != "No declared disability").includes(row["eop-category"]))
+            {
+                eopTable.rows.slice(-1)[0].tr.classList.add("eop-subcategory");
+            }
+
+            if (row["eop-category"] == "PWD (All)")
+            {
+                eopTable.rows.slice(-1)[0].td["total"].title = "Unique applicants only.";
+            }   
+        }
+        this.dataFormEx.addSpacer();
+        
+        this.setupDialogButtons([
+            // {caption:"Print",tooltip:"Print EOP statistics",clickCallback:addDisabilityDialogEvent=>{
+            //     new MessageBox().setup(parentHTMLElement, "Print EOP Statistics", "TO IMPLEMENT");
+            // }},
+            {caption:"Close",tooltip:"Close dialog box",clickCallback:addDisabilityDialogEvent=>this.close()},
+        ]);
+
+    }
+}
+
 class AssignRoles extends DialogEx
 {
     #rolesTableEx = null;

@@ -5384,6 +5384,9 @@ class IERForm extends Old_FormEx
         this.fetchedApplications = null; // variable to hold the fetched job applications data
         this.rowData = [];
 
+        this.eop_category = [];
+        this.eop_applicant = [];
+
         posInfo = this.addBox("ier-position-info", false);
         posInfo.classList.add("ier-position-info");
 
@@ -5455,6 +5458,22 @@ class IERForm extends Old_FormEx
             field.reverse();
         });
 
+        this.addInputEx("Print", "buttonEx", "Print", "Print the Initial Evaluation Result form", "ier-print-button-top");
+        this.dbInputEx["ier-print-button-top"].addEvent("click", this.generatePrinterFriendly);
+        this.dbInputEx["ier-print-button-top"].disable();
+        
+        this.addSpacer();
+
+        this.addInputEx("Show EOP Statistics", "buttonEx", "Show EOP Statistics", "Show EOP Statistics", "ier-eop-button-top");
+        this.dbInputEx["ier-eop-button-top"].addEvent("click", this.showEOPStat);
+        this.dbInputEx["ier-eop-button-top"].disable();
+        
+        this.addSpacer();
+
+        this.addInputEx("Download CSV", "buttonEx", "Download CSV", "Download the Initial Evaluation Result data for mailmerge", "ier-download-csv-button-top");
+        this.dbInputEx["ier-download-csv-button-top"].addEvent("click", this.downloadCSV);
+        this.dbInputEx["ier-download-csv-button-top"].disable();
+
         this.addDisplayEx("div-table", "ier-table");
         this.displayExs["ier-table"].container.classList.add("ier-table");
         this.displayExs["ier-table"].container.classList.add("hide-personal-data");
@@ -5510,14 +5529,12 @@ class IERForm extends Old_FormEx
                     // var position = document.positions.filter(position=>((position["parenthetical_title"] == parenPositionTitle || plantilla == "ANY" || plantilla == "") && position["position_title"] == positionTitle || position["plantilla_item_number"] == plantilla))[0];
                     var position = document.positions.filter(position=>(
                         position["position_title"] == positionTitle && (
-                            (plantilla != "ANY" && plantilla != "" && position["plantilla_item_number"].trim() == plantilla) || 
+                            (plantilla != "ANY" && plantilla != "" && (position["plantilla_item_number"] ?? "").trim() == plantilla) || 
                             (plantilla == "ANY" || plantilla == "") && (
-                                parenPositionTitle == "" || (parenPositionTitle != "" && position["parenthetical_title"].trim() == parenPositionTitle)
+                                parenPositionTitle == "" || (parenPositionTitle != "" && (position["parenthetical_title"] ?? "").trim() == parenPositionTitle)
                             )
                         )
                     ))[0];
-
-                    console.log(position);
 
                     thisIERForm.position = position;
                     
@@ -5549,14 +5566,7 @@ class IERForm extends Old_FormEx
                     postData(MPASIS_App.processURL, "app=mpasis&a=fetch&f=applicationsByPosition" + (positionTitle == "" ? "" : "&positionTitle=" + positionTitle) + (parenPositionTitle == "" ? "" : "&parenTitle=" + parenPositionTitle) + (plantilla == "" || plantilla == "ANY" ? "" : "&plantilla=" + plantilla), fetchJobApplicationsEvent=>{
                         let response = null, rows = [], row = null, isQualified = true;
                         let round = 0;
-                        let eop_count = [], eop_category = [];
 
-                        eop_category["is_solo_parent"] = "Solo Parent";
-                        eop_count["is_solo_parent"] = 0;
-                        
-                        eop_category["is_pregnant"] = "Pregnant";
-                        eop_count["is_pregnant"] = 0;
-    
                         if (fetchJobApplicationsEvent.target.readyState == 4 && fetchJobApplicationsEvent.target.status == 200)
                         {
                             response = JSON.parse(fetchJobApplicationsEvent.target.responseText);
@@ -5575,7 +5585,27 @@ class IERForm extends Old_FormEx
 
                                 thisIERForm.fetchedApplications.sort((a, b)=>(a["application_code"] > b["application_code"] ? 1 : (a["application_code"] < b["application_code"] ? -1 : 0)));
     
-                                console.log(thisIERForm.fetchedApplications);
+                                this.eop_category = [];
+                                this.eop_applicant = [];
+
+                                if (!this.eop_category.includes("Solo Parent"))
+                                {
+                                    this.eop_category.push("Solo Parent");
+                                    this.eop_applicant["Solo Parent"] = [];
+                                }
+                                
+                                if (!this.eop_category.includes("Pregnant"))
+                                {
+                                    this.eop_category.push("Pregnant");
+                                    this.eop_applicant["Pregnant"] = [];
+                                }
+
+                                if (!this.eop_category.includes("Disability"))
+                                {
+                                    this.eop_category.push("Disability");
+                                    this.eop_category["Disability"] = ["No declared disability"];
+                                    this.eop_applicant["No declared disability"] = [];
+                                }
 
                                 for (const jobApplication of thisIERForm.fetchedApplications)
                                 {
@@ -5732,7 +5762,34 @@ class IERForm extends Old_FormEx
                                                 break;
                                         }                                    
                                     }
-    
+
+                                    // EOP Data Start
+                                    for (const disability of jobApplication["disability"].map(disability=>disability.disability))
+                                    {
+                                        if (!this.eop_category["Disability"].includes(disability))
+                                        {
+                                            this.eop_category["Disability"].push(disability);
+                                            this.eop_applicant[disability] = [];
+                                        }
+                                        this.eop_applicant[disability].push(jobApplication);
+                                    }
+
+                                    if (jobApplication["disability"] == null || jobApplication["disability"].length == 0)
+                                    {
+                                        this.eop_applicant["No declared disability"].push(jobApplication);
+                                    }
+
+                                    if (jobApplication["is_solo_parent"] == 1)
+                                    {
+                                        this.eop_applicant["Solo Parent"].push(jobApplication);    
+                                    }
+
+                                    if (jobApplication["is_pregnant"] == 1)
+                                    {
+                                        this.eop_applicant["Pregnant"].push(jobApplication);
+                                    }
+                                    // EOP Data End
+                                    
                                     row["remarks"] = (isQualified ? "Qualified" : "Disqualified");
                                     
                                     rows.push(row);
@@ -5762,8 +5819,21 @@ class IERForm extends Old_FormEx
                                     this.app.closeScrim();
                                 }
 
-                                this.dbInputEx["ier-print-button"].enable();
-                                this.dbInputEx["ier-download-csv-button"].enable();
+                                // combine PWD data
+                                this.eop_applicant["PWD"] = [];
+                                for (const dis_key of this.eop_category["Disability"].filter(disability=>disability != "No declared disability"))
+                                {
+                                    this.eop_applicant["PWD"] = this.eop_applicant["PWD"].concat(this.eop_applicant[dis_key]);
+                                }
+                                this.eop_applicant["PWD"] = Array.from(new Set(this.eop_applicant["PWD"]));
+
+                                // enable buttons
+                                this.dbInputEx["ier-print-button-top"].enable();
+                                this.dbInputEx["ier-eop-button-top"].enable();
+                                this.dbInputEx["ier-download-csv-button-top"].enable();
+                                this.dbInputEx["ier-print-button-bottom"].enable();
+                                this.dbInputEx["ier-eop-button-bottom"].enable();
+                                this.dbInputEx["ier-download-csv-button-bottom"].enable();
                             }
                             // else if (response.type == "Success")
                             // {
@@ -5783,101 +5853,27 @@ class IERForm extends Old_FormEx
             ]);
         });
 
-        this.addInputEx("Print", "buttonEx", "Print", "Print the Initial Evaluation Result form", "ier-print-button");
-        this.dbInputEx["ier-print-button"].addEvent("click", this.generatePrinterFriendly);
-        this.dbInputEx["ier-print-button"].disable();
+        this.addInputEx("Print", "buttonEx", "Print", "Print the Initial Evaluation Result form", "ier-print-button-bottom");
+        this.dbInputEx["ier-print-button-bottom"].addEvent("click", this.generatePrinterFriendly);
+        this.dbInputEx["ier-print-button-bottom"].disable();
         
         this.addSpacer();
 
-        this.addInputEx("Download CSV", "buttonEx", "Download CSV", "Download the Initial Evaluation Result data for mailmerge", "ier-download-csv-button");
-        this.dbInputEx["ier-download-csv-button"].addEvent("click", downloadCSVClickEvent=>{
-                const headers = [
-                    "Position",
-                    "Education QS",
-                    "Training QS",
-                    "Experience QS",
-                    "Eligibility QS",
-                    "Application Code",
-                    "Name of Applicant (last name first)",
-                    "Name of Applicant",
-                    "Salutation Name",
-                    "Address",
-                    "Education",
-                    "Remarks on Education",
-                    "Training",
-                    "Remarks on Training",
-                    "Experience",
-                    "Remarks on Experience",
-                    "Eligibility",
-                    "Remarks on Eligibility",
-                    "Remarks",
-                    "Date Evaluated"
-                ];
-                const rows = [headers];
-
-                this.displayExs["ier-table"].rows.forEach(row=>{
-                    let jobApplication = row.td["remarks"].getElementsByTagName("A")[0].jobApplication;
-                    let qualifications = row.td["remarks"].getElementsByTagName("A")[0].qualifications;
-
-                    rows.push([
-                        this.position["position_title"] + (this.position["parenthetical_title"] === null || this.position["parenthetical_title"].trim() === "" ? "" : " (" + this.position["parenthetical_title"] + ")") + (this.position["plantilla_item_number"] === null || this.position["plantilla_item_number"].trim() === "" || this.position["plantilla_item_number"].search("MPASIS-") >= 0 || this.position["plantilla_item_number"].search("RQA-") >= 0 ? "" : " <br><br>" + this.position["plantilla_item_number"]),
-                        "\"" + this.displayExs["ier-position-qs-education"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
-                        "\"" + this.displayExs["ier-position-qs-training"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
-                        "\"" + this.displayExs["ier-position-qs-experience"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
-                        "\"" + this.displayExs["ier-position-qs-eligibility"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
-                        jobApplication["application_code"],
-                        // "\"" + jobApplication["applicant_name"] + "\"",
-                        "\"" + MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], true, true, false) + "\"",
-                        // "\"" + jobApplication["applicant_name"].substr(jobApplication["applicant_name"].indexOf(",") + 1).trim() + " " + jobApplication["applicant_name"].substr(0, jobApplication["applicant_name"].indexOf(",")) + "\"",
-                        "\"" + MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], false, true, false) + "\"",
-                        (jobApplication["sex"] == "Male" ? "Mr. " : "Ms. ") + jobApplication["applicant_name"].substr(0, jobApplication["applicant_name"].indexOf(",")),
-                        "\"" + row.td["address"].innerText.replace(/\n\n+/g, "\n") + "\"",
-                        "\"" + row.td["education"].innerText.replace(/\n\n+/g, "\n") + "\"",
-                        (qualifications.educ ? "Qualified" : "Disqualified"),
-                        "\"" + row.td["training_title"].innerText.replace(/\n\n+/g, "\n") + "\n" + row.td["training_hours"].innerText.replace(/\n\n+/g, "\n") + "\"",
-                        (qualifications.training ? "Qualified" : "Disqualified"),
-                        "\"" + row.td["experience_details"].innerText.replace(/\n\n+/g, "\n") + "\n" + row.td["experience_years"].innerText.replace(/\n\n+/g, "\n") + "\"",
-                        (qualifications.exp ? "Qualified" : "Disqualified"),
-                        "\"" + row.td["eligibility"].innerText.replace(/\n\n+/g, "\n") + "\"",
-                        (qualifications.elig ? "Qualified" : (this.position["position_categoryId"] == 1 ? "" : "Disqualified")),
-                        (qualifications.educ && qualifications.training && qualifications.exp && (this.position["position_categoryId"] == 1 || qualifications.elig) ? "QUALIFIED" : "DISQUALIFIED"),
-                        new Date((jobApplication["application_history"] ?? [{"timestamp":Date.now().toString()}])[0]["timestamp"]).toLocaleDateString()
-                    ]);
-                });
-
-                let universalBOM = "\uFEFF";
-                // let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
-                let csvContent = rows.map(e => e.join(",")).join("\r\n");
-
-                // let encodedUri = encodeURI(csvContent);
-
-                const blob = new Blob([universalBOM, csvContent], { type: 'text/csv;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-
-                let link = document.createElement("a");
-                // link.setAttribute("href", encodedUri);
-                link.setAttribute("href", url);
-                link.setAttribute("download", "ier_" + this.displayExs["ier-position"].content.innerText + ".csv");
-                document.body.appendChild(link);
-
-                link.click();
-        });
-        this.dbInputEx["ier-download-csv-button"].disable();
-
-        // this.addDisplayEx("div-table", "eop-summary");
-        // this.displayExs["eop-summary"].container.classList.add("eop-summary");
-        // this.displayExs["eop-summary"].setLabelText("EOP Summary");
-        // this.displayExs["eop-summary"].setHeaders([
-        //     {colHeaderName:"eop-category", colHeaderText:"EOP Category"},
-        //     {colHeaderName:"total", colHeaderText:"Total"},
-        // ]);
+        this.addInputEx("Show EOP Statistics", "buttonEx", "Show EOP Statistics", "Show EOP Statistics", "ier-eop-button-bottom");
+        this.dbInputEx["ier-eop-button-bottom"].addEvent("click", this.showEOPStat);
+        this.dbInputEx["ier-eop-button-bottom"].disable();
         
+        this.addSpacer();
+
+        this.addInputEx("Download CSV", "buttonEx", "Download CSV", "Download the Initial Evaluation Result data for mailmerge", "ier-download-csv-button-bottom");
+        this.dbInputEx["ier-download-csv-button-bottom"].addEvent("click", this.downloadCSV);
+        this.dbInputEx["ier-download-csv-button-bottom"].disable();
+
         this.dbInputEx["ier-select-position-button"].fields[0].click();
     }
 
     generatePrinterFriendly(ierPrintClickEvent)
     {
-        console.log(ierPrintClickEvent);
         var thisIERForm = ierPrintClickEvent.target.inputEx.parentFormEx, ierForPrint = window.open("", "_blank");
 
         var nodeDoctype = ierForPrint.document.implementation.createDocumentType("html", "", "");
@@ -5889,18 +5885,18 @@ class IERForm extends Old_FormEx
         ierForPrint.document.title = "Initial Evaluation Report (IER) [printer-friendly version]";
         ierForPrint.document.body.classList.add("print");
 
-        createElementEx(NO_NS, "base", ierForPrint.document.head, null, "href", window.location.origin);
+        createElementEx(NO_NS, "base", ierForPrint.document.head, null, "href", window.location.origin + document.querySelector("base").href);
 
         [
             "/styles/default.css",
             "/styles/main.css",
             // "/styles/ExClass.css", // removed as this allows page-breaks inside table-rows
             "/styles/print.css",
-            "/styles/material.io/material-icons.css",
+            "/styles/material.io/material-icons.php",
             "/mpasis/styles/main.css",
             "/mpasis/styles/print.css"
         ].forEach(cssURL=>{
-            ierForPrint.document.head.appendChild(htmlToElement("<link href=\"" + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
+            ierForPrint.document.head.appendChild(htmlToElement("<link href=\"" + document.querySelector("base").href + cssURL + "\" type=\"text/css\" rel=\"stylesheet\">"));
         });
 
         
@@ -5921,7 +5917,7 @@ class IERForm extends Old_FormEx
                 event.target.setAttribute("contenteditable", true);
             }
         };
-        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<img src=\"/mpasis/images/esign.png\" alt=\"(Signed)\" class=\"ier-signature" + (thisIERForm.dbInputEx["ier-add-hrmo-e-sign"].isChecked() ? "" : " hidden") + "\"><span style=\"text-transform: uppercase; display: inline;\">" + document.hrRoles["hrmo"]["name"] + "</span>" + document.hrRoles["hrmo"]["position"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
+        htmlToElements("<div class=\"name\">" + (document.hrRoles === null || document.hrRoles === undefined ? "" : "<img src=\"" + document.querySelector("base").href + "/mpasis/images/esign.png\" alt=\"(Signed)\" class=\"ier-signature" + (thisIERForm.dbInputEx["ier-add-hrmo-e-sign"].isChecked() ? "" : " hidden") + "\"><span style=\"text-transform: uppercase; display: inline;\">" + document.hrRoles["hrmo"]["name"] + "</span>" + document.hrRoles["hrmo"]["position"]) + "</div> <div class=\"position\">Human Resource Management Officer</div> <div class=\"date\"></div>").forEach(node=>{
             signatory.addContent(node);
             signatory.addContent(document.createTextNode(" "));
             if (node.classList.contains("name") || node.classList.contains("date"))
@@ -5951,6 +5947,10 @@ class IERForm extends Old_FormEx
         ierForPrint.document.getElementById("ier-form-input-ex3").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex4").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
         ierForPrint.document.getElementById("ier-form-input-ex5").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex6").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex7").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex8").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
+        ierForPrint.document.getElementById("ier-form-input-ex9").parentElement.parentElement.remove(); // MAY CHANGE DEPENDING ON HOW IER IS CODED
 
         var printButtonGroup = new InputEx(null, "print-ier-controls", "buttonExs");
         ierForPrint.document.body.insertBefore(printButtonGroup.container, ierForPrint.document.body.children[0]);
@@ -6229,6 +6229,87 @@ class IERForm extends Old_FormEx
         printButtonGroup.addItem("<span class=\"material-symbols-rounded red\">tab_close</span>", "", "Close Tab/Window").addEvent("click", clickPrintEvent=>{letterForPrint.close()});
 
         letterForPrint.alert("Please click on the print button to continue");
+    }
+
+    showEOPStat(event)
+    {
+        let eopDialog = new EOPStatDisplay();
+        eopDialog.setup(app.main, this.inputEx.parentFormEx.eop_category, this.inputEx.parentFormEx.eop_applicant);
+    }
+
+    downloadCSV(event) {
+        const headers = [
+            "Position",
+            "Education QS",
+            "Training QS",
+            "Experience QS",
+            "Eligibility QS",
+            "Application Code",
+            "Name of Applicant (last name first)",
+            "Name of Applicant",
+            "Salutation Name",
+            "Address",
+            "Education",
+            "Remarks on Education",
+            "Training",
+            "Remarks on Training",
+            "Experience",
+            "Remarks on Experience",
+            "Eligibility",
+            "Remarks on Eligibility",
+            "Remarks",
+            "Date Evaluated"
+        ];
+        const rows = [headers];
+
+        let thisIERForm = this.inputEx.parentFormEx;
+
+        thisIERForm.displayExs["ier-table"].rows.forEach(row=>{
+            let jobApplication = row.td["remarks"].getElementsByTagName("A")[0].jobApplication;
+            let qualifications = row.td["remarks"].getElementsByTagName("A")[0].qualifications;
+
+            rows.push([
+                thisIERForm.position["position_title"] + (thisIERForm.position["parenthetical_title"] === null || thisIERForm.position["parenthetical_title"].trim() === "" ? "" : " (" + thisIERForm.position["parenthetical_title"] + ")") + (thisIERForm.position["plantilla_item_number"] === null || thisIERForm.position["plantilla_item_number"].trim() === "" || thisIERForm.position["plantilla_item_number"].search("MPASIS-") >= 0 || thisIERForm.position["plantilla_item_number"].search("RQA-") >= 0 ? "" : " <br><br>" + thisIERForm.position["plantilla_item_number"]),
+                "\"" + thisIERForm.displayExs["ier-position-qs-education"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                "\"" + thisIERForm.displayExs["ier-position-qs-training"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                "\"" + thisIERForm.displayExs["ier-position-qs-experience"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                "\"" + thisIERForm.displayExs["ier-position-qs-eligibility"].content.innerText.replace(/\n\n+/g, "\n") + "\"",
+                jobApplication["application_code"],
+                // "\"" + jobApplication["applicant_name"] + "\"",
+                "\"" + MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], true, true, false) + "\"",
+                // "\"" + jobApplication["applicant_name"].substr(jobApplication["applicant_name"].indexOf(",") + 1).trim() + " " + jobApplication["applicant_name"].substr(0, jobApplication["applicant_name"].indexOf(",")) + "\"",
+                "\"" + MPASIS_App.getFullName(jobApplication["given_name"], jobApplication["middle_name"], jobApplication["family_name"], jobApplication["spouse_name"], jobApplication["ext_name"], false, true, false) + "\"",
+                (jobApplication["sex"] == "Male" ? "Mr. " : "Ms. ") + jobApplication["applicant_name"].substr(0, jobApplication["applicant_name"].indexOf(",")),
+                "\"" + row.td["address"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                "\"" + row.td["education"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                (qualifications.educ ? "Qualified" : "Disqualified"),
+                "\"" + row.td["training_title"].innerText.replace(/\n\n+/g, "\n") + "\n" + row.td["training_hours"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                (qualifications.training ? "Qualified" : "Disqualified"),
+                "\"" + row.td["experience_details"].innerText.replace(/\n\n+/g, "\n") + "\n" + row.td["experience_years"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                (qualifications.exp ? "Qualified" : "Disqualified"),
+                "\"" + row.td["eligibility"].innerText.replace(/\n\n+/g, "\n") + "\"",
+                (qualifications.elig ? "Qualified" : (thisIERForm.position["position_categoryId"] == 1 ? "" : "Disqualified")),
+                (qualifications.educ && qualifications.training && qualifications.exp && (thisIERForm.position["position_categoryId"] == 1 || qualifications.elig) ? "QUALIFIED" : "DISQUALIFIED"),
+                new Date((jobApplication["application_history"] ?? [{"timestamp":Date.now().toString()}])[0]["timestamp"]).toLocaleDateString()
+            ]);
+        });
+
+        let universalBOM = "\uFEFF";
+        // let csvContent = "data:text/csv;charset=utf-8," + universalBOM + rows.map(e => e.join(",")).join("\r\n");
+        let csvContent = rows.map(e => e.join(",")).join("\r\n");
+
+        // let encodedUri = encodeURI(csvContent);
+
+        const blob = new Blob([universalBOM, csvContent], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        let link = document.createElement("a");
+        // link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "ier_" + thisIERForm.displayExs["ier-position"].content.innerText + ".csv");
+        document.body.appendChild(link);
+
+        link.click();
     }
 
     attachFieldModeChange(element)

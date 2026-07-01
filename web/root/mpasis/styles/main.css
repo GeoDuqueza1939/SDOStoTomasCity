@@ -351,6 +351,48 @@ REINSTATE FOR PRINTOUT
     visibility: visible;
 }
 
+#eop-stat-table {
+    /* border: 1px solid; */
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#eop-stat-table > * > tr > * {
+    border: 1px solid;
+    padding: 0.25em;
+}
+
+#eop-stat-table > thead > tr > * {
+    border-color: darkgray;
+    border-style: outset;
+    background-color: gray;
+}
+
+#eop-stat-table > tbody > tr > * {
+    background-color: white;
+}
+
+#eop-stat-table > tbody > tr > :nth-child(2) {
+    text-align: center;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+    border-color: black;
+}
+
+#eop-stat-table > tbody > tr > :nth-child(2):hover {
+    color: darkblue;
+    font-weight: bold;
+}
+
+#eop-stat-table > tbody > tr.eop-subcategory > * {
+    font-style: italic;
+}
+
+#eop-stat-table > tbody > tr.eop-subcategory > :first-child {
+    padding-left: 1em;
+}
+
 .query-results-users {
     display: block;
     max-width: 100%;
