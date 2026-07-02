@@ -630,6 +630,20 @@ REINSTATE FOR PRINTOUT
     vertical-align: baseline;
 }
 
+.add-disability-dialog .dialog-content > .data-form-ex {
+    display: block;
+}
+
+.add-disability-dialog .dialog-content > .data-form-ex > * {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.add-disability-dialog .dialog-content > .data-form-ex > * + * {
+    margin-top: 0.25em;
+}
+
 .password-editor > .dialog {
     overflow-x: hidden;
     overflow-y: auto;
